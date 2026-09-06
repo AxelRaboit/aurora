@@ -493,6 +493,9 @@ backend:
       seo: Search engines
       gallery: Gallery
     terms: Terms
+    related_posts: Related posts
+    related_posts_hint: "Other posts this one can point to, for instance to offer them in a 'Publication' zone of its grid."
+    related_posts_empty: No related post yet.
     thumbnail: Thumbnail
     thumbnail_hint: "The picture that stands for this publication wherever it is listed: an archive card, a grid zone linking to it, the preview of a shared link."
     thumbnail_image: Image

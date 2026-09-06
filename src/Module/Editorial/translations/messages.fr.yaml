@@ -493,6 +493,9 @@ backend:
       seo: Moteurs de recherche
       gallery: Galerie
     terms: Termes
+    related_posts: Publications liées
+    related_posts_hint: "D'autres publications que celle-ci peut citer, par exemple pour les proposer dans une zone « Publication » de sa grille."
+    related_posts_empty: Aucune publication liée pour le moment.
     thumbnail: Vignette
     thumbnail_hint: "L'image qui représente cette publication partout où elle est listée : une carte d'archive, une zone de grille qui pointe vers elle, l'aperçu d'un lien partagé."
     thumbnail_image: Image

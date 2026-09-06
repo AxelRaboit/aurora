@@ -5,6 +5,19 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### La zone "Publication" de la grille ne proposait jamais aucune publication
+Le champ « Publication à afficher » restait vide dans tous les cas : le
+backend gérait déjà entièrement les publications liées (relation, sauvegarde,
+sérialisation), mais aucun écran de l'éditeur ne permettait de choisir quelles
+publications lier. L'onglet Paramétrage propose maintenant une recherche pour
+retrouver une publication par son titre et l'ajouter aux publications liées de
+celle en cours d'édition, avec la liste de celles déjà liées et un moyen de les
+retirer.
+
 ## [0.9.41] - 2026-09-06
 
 ### Corrigé
