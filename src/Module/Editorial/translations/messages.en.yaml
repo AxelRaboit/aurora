@@ -454,7 +454,14 @@ backend:
         lead: Standfirst
         small: Fine print
       full_bleed: Full width
-      full_bleed_hint: "The picture leaves the column and spans the screen."
+      full_bleed_hint: "The zone leaves the column and spans the screen. Words stay centred at the page's width; a picture goes edge to edge."
+      surface: Background
+      surface_hint: "What the zone sits on. It is what makes a run of zones read as sections."
+      surfaces:
+        none: None
+        card: Card
+        soft: Tinted
+        accent: Accent
       code: Snippet
       code_placeholder: "function hello() { … }"
       code_language: Language

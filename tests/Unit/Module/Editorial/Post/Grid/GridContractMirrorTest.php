@@ -50,6 +50,7 @@ final class GridContractMirrorTest extends TestCase
         yield 'scales' => [GridNormalizer::SCALES, 'ZONE_SCALES'];
         yield 'alignments' => [GridNormalizer::ALIGNMENTS, 'ZONE_ALIGNMENTS'];
         yield 'zone types' => [GridNormalizer::ZONE_TYPES, 'ZONE_TYPES'];
+        yield 'surfaces' => [GridNormalizer::SURFACES, 'SURFACES'];
     }
 
     /**

@@ -169,14 +169,6 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                 :label="t('backend.posts.grid.align')"
                 :options="alignOptions"
             />
-            <!-- Only outside a stack: inside one there is no column to escape,
-                 and the normaliser would zero it anyway. -->
-            <AppToggle
-                v-if="!inStack"
-                v-model="bound.fullBleed.value"
-                :label="t('backend.posts.grid.full_bleed')"
-                :hint="t('backend.posts.grid.full_bleed_hint')"
-            />
             <div class="rounded-lg border border-dashed border-line p-3 space-y-4">
                 <p class="text-xs uppercase tracking-wide text-muted">
                     {{ t("backend.posts.grid.translated_fields", { locale }) }}

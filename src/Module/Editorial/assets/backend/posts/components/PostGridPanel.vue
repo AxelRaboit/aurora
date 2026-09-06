@@ -323,6 +323,29 @@ function resizeZone(index, columns) {
                     />
                 </div>
 
+                <!-- What the zone sits on, and whether that surface takes the
+                     whole screen. Here rather than with the fields of one type,
+                     because it belongs to every type - and beside the width,
+                     because a background and a width are the same question
+                     asked twice: how much room does this take, and where does
+                     it stop.
+
+                     Full width is top level only: inside a stack there is no
+                     column to escape, and the normaliser would zero it. -->
+                <div class="space-y-1.5">
+                    <AppChoiceRow
+                        v-model="zoneFields(index).surface.value"
+                        :label="t('backend.posts.grid.surface')"
+                        :hint="t('backend.posts.grid.surface_hint')"
+                        :options="zoneChoices.surface"
+                    />
+                    <AppToggle
+                        v-model="zoneFields(index).fullBleed.value"
+                        :label="t('backend.posts.grid.full_bleed')"
+                        :hint="t('backend.posts.grid.full_bleed_hint')"
+                    />
+                </div>
+
                 <!-- A stack holds zones instead of content, so it shows them
                      here: same fields, one level down. The share row is the
                      width row over again - inside a stack the axis of flow is

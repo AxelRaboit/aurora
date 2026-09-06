@@ -163,6 +163,20 @@ final readonly class GridNormalizer
     public const array TEXT_SIZES = ['normal', 'lead', 'small'];
 
     /**
+     * What a zone sits on.
+     *
+     * Nothing else in the grid draws a background, so a page of ten zones is
+     * ten things on one flat sheet, in the same rhythm, none of them able to
+     * read as a section. A surface is what turns a run of zones into a page:
+     * a card lifts one out, a tint groups several, an accent says "this is
+     * the one to act on".
+     *
+     * Shared, like the width beside it - a translated page does not repaint
+     * its own sections.
+     */
+    public const array SURFACES = ['none', 'card', 'soft', 'accent'];
+
+    /**
      * Enough for a process, a row of figures or a short FAQ, and few enough
      * that the list stays a list. Past this it is a page of its own.
      */
@@ -508,9 +522,13 @@ final readonly class GridNormalizer
                 // How a text zone is set. Design, so shared - a standfirst is
                 // a standfirst in every language.
                 'textSize' => $this->values->oneOf($entry['textSize'] ?? null, self::TEXT_SIZES, self::TEXT_SIZES[0]),
-                // A picture that escapes its column and spans the viewport.
-                // Only meaningful at the top level: inside a stack there is
-                // no column to escape.
+                // What the zone sits on. Every type can have one: a card of
+                // figures, a tinted FAQ, a call to action on accent.
+                'surface' => $this->values->oneOf($entry['surface'] ?? null, self::SURFACES, self::SURFACES[0]),
+                // A zone that escapes its column and spans the viewport -
+                // a picture, or the band a surface draws behind one. Only
+                // meaningful at the top level: inside a stack there is no
+                // column to escape.
                 'fullBleed' => $allowStacks && (bool) ($entry['fullBleed'] ?? false),
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
