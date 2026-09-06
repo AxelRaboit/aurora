@@ -83,16 +83,18 @@ final readonly class GridViewBuilder
      */
     public function buildForEditor(array $layout, array $content, string $locale, ?int $currentPostId = null): array
     {
-        return $this->resolve($layout, $content, $locale, $currentPostId);
+        return $this->resolve($layout, $content, $locale, $currentPostId, forEditor: true);
     }
 
     /**
      * @param array<string, mixed> $rawLayout
      * @param array<string, mixed> $rawContent
+     * @param bool                 $forEditor  whether the zones are going to a
+     *                                         screen that will send them back
      *
      * @return array<string, mixed>
      */
-    private function resolve(array $rawLayout, array $rawContent, string $locale, ?int $currentPostId = null): array
+    private function resolve(array $rawLayout, array $rawContent, string $locale, ?int $currentPostId = null, bool $forEditor = false): array
     {
         $layout = $this->gridNormalizer->normalizeLayout($rawLayout);
         $content = $this->gridNormalizer->normalizeContent($rawContent, $layout);
@@ -100,7 +102,7 @@ final readonly class GridViewBuilder
         $documents = $this->documents($layout);
         $posts = $this->posts($layout);
 
-        $resolve = function (array $zone) use (&$resolve, $content, $documents, $posts, $locale, $currentPostId): array {
+        $resolve = function (array $zone) use (&$resolve, $content, $documents, $posts, $locale, $currentPostId, $forEditor): array {
             $held = $content['zones'][$zone['id']];
 
             return [
@@ -168,8 +170,16 @@ final readonly class GridViewBuilder
                     && null !== $held['url'] && '' !== $held['url']
                         ? ['label' => $held['label'], 'url' => $held['url']]
                         : null,
+                // Two readers, two shapes, one key - and the key belongs to
+                // the stored list, which is what the editor sends back. A
+                // page reads the entries with their words; the editor reads
+                // the list it will hand over again, and giving it the view
+                // instead cost a page its item texts: the arrangement it
+                // returned had no ids the words could hang on.
                 'items' => GridNormalizer::ZONE_ITEMS === $zone['type']
-                    ? $this->itemsView($zone, $held, $documents)
+                    ? ($forEditor
+                        ? $this->itemsForEditor($zone, $documents)
+                        : $this->itemsView($zone, $held, $documents))
                     : null,
                 'postList' => GridNormalizer::ZONE_POST_LIST === $zone['type']
                     ? $this->postListView($zone, $locale, $currentPostId)
@@ -341,6 +351,44 @@ final readonly class GridViewBuilder
             'columns' => (int) $zone['columns'],
             'entries' => $entries,
         ];
+    }
+
+    /**
+     * The same entries, in the shape the editor keeps them in.
+     *
+     * Identity and order exactly as stored - the ids are what each entry's
+     * words are filed under, so an arrangement that comes back without them
+     * comes back as different entries - plus the picture resolved, so the
+     * picker shows the logo it already holds rather than a number.
+     *
+     * Blank entries are kept, unlike the page's view: a row typed into
+     * tomorrow is a row today.
+     *
+     * @param array<string, mixed>          $zone
+     * @param array<int, DocumentInterface> $documents
+     *
+     * @return list<array{id: string, mediaId: int|null, media: array<string, mixed>|null}>
+     */
+    private function itemsForEditor(array $zone, array $documents): array
+    {
+        $items = [];
+
+        foreach (is_array($zone['items'] ?? null) ? $zone['items'] : [] as $item) {
+            $id = $item['id'] ?? null;
+            if (!is_string($id)) {
+                continue;
+            }
+
+            $mediaId = $item['mediaId'] ?? null;
+
+            $items[] = [
+                'id' => $id,
+                'mediaId' => is_int($mediaId) ? $mediaId : null,
+                'media' => $this->mediaData($documents[$mediaId] ?? null, ''),
+            ];
+        }
+
+        return $items;
     }
 
     /**
