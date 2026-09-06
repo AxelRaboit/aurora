@@ -1,12 +1,31 @@
 {# One level of menu entries, with their children in a hover panel.
 
    An entry with no URL is a heading: the renderer keeps it when it has
-   children, so it can title a group without pretending to be a link. #}
+   children, so it can title a group without pretending to be a link.
+
+   Two states arrive from MenuRenderer and they are not the same thing.
+   `isActive` is the branch the page belongs to - it drives the look, and
+   stays lit on /fr/projets/onyx while the entry points at /fr/projets.
+   `isCurrent` is the page itself, and only it may carry `aria-current`:
+   the attribute names one destination, and a screen reader announcing
+   three of them says less than one saying nothing. #}
+
+{% macro linkClass(item, hoverGroup) %}
+    {%- if item.isActive -%}
+        text-primary font-medium underline decoration-accent decoration-2 underline-offset-8
+    {%- else -%}
+        text-secondary {{ hoverGroup ? 'group-hover:text-primary' : 'hover:text-primary' }}
+    {%- endif -%}
+{% endmacro %}
+
+{% import _self as menu %}
+
 {% for item in items %}
     {% if item.children is empty %}
         <a
             href="{{ item.url }}"
-            class="text-secondary hover:text-primary transition-colors {{ item.cssClass }}"
+            class="transition-colors {{ menu.linkClass(item, false) }} {{ item.cssClass }}"
+            {% if item.isCurrent %}aria-current="page"{% endif %}
             {% if item.openInNewTab %}target="_blank" rel="noopener"{% endif %}
         >{{ item.label }}</a>
     {% else %}
@@ -14,11 +33,12 @@
             {% if item.url %}
                 <a
                     href="{{ item.url }}"
-                    class="text-secondary group-hover:text-primary transition-colors {{ item.cssClass }}"
+                    class="transition-colors {{ menu.linkClass(item, true) }} {{ item.cssClass }}"
+                    {% if item.isCurrent %}aria-current="page"{% endif %}
                     {% if item.openInNewTab %}target="_blank" rel="noopener"{% endif %}
                 >{{ item.label }}</a>
             {% else %}
-                <span class="text-secondary group-hover:text-primary transition-colors cursor-default {{ item.cssClass }}">{{ item.label }}</span>
+                <span class="transition-colors cursor-default {{ menu.linkClass(item, true) }} {{ item.cssClass }}">{{ item.label }}</span>
             {% endif %}
             <div class="absolute left-0 top-full z-20 hidden min-w-48 flex-col gap-2 rounded-lg border border-line bg-bg p-3 shadow-lg group-hover:flex group-focus-within:flex">
                 {{ include('Frontend/themes/default/partials/menu.html.twig', {items: item.children}) }}
