@@ -30,6 +30,7 @@ const props = defineProps({
     post: { type: Object, default: null },
     postTypes: { type: Array, default: () => [] },
     taxonomies: { type: Array, default: () => [] },
+    forms: { type: Array, default: () => [] },
     locales: { type: Array, default: () => [] },
     statusOptions: { type: Array, default: () => [] },
     createPath: { type: String, required: true },
@@ -92,6 +93,8 @@ const postTypeOptions = props.postTypes.map((type) => ({ value: type.id, label: 
  * taxonomy it came from; two taxonomies can both hold a "Photographie", and
  * the prefix is what tells them apart in the dropdown.
  */
+const formOptions = props.forms.map((form) => ({ value: form.id, label: form.title }));
+
 const termOptions = props.taxonomies.flatMap((taxonomy) =>
     (taxonomy.terms ?? []).map((term) => ({
         value: term.id,
@@ -474,6 +477,7 @@ function termLabel(term) {
                         <PostGridPanel
                             :post-type-options="postTypeOptions"
                             :term-options="termOptions"
+                            :form-options="formOptions"
                             :layout="form.gridLayout"
                             :content="current.grid"
                             :locale="locale"

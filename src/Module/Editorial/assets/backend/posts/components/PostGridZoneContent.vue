@@ -36,6 +36,8 @@ const props = defineProps({
     postTypeOptions: { type: Array, default: () => [] },
     /** The terms it may narrow to, across every taxonomy. */
     termOptions: { type: Array, default: () => [] },
+    /** The active forms a zone may pose. */
+    formOptions: { type: Array, default: () => [] },
     /** The shapes a media zone may be cropped to. */
     ratioOptions: { type: Array, default: () => [] },
     /** How much of its zone's width a picture may take. */
@@ -188,6 +190,19 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                 v-model="bound.cardVariant.value"
                 :label="t('backend.posts.grid.card_variant')"
                 :options="choices.cardVariant ?? []"
+            />
+        </template>
+
+        <template v-else-if="zone.type === 'form'">
+            <!-- Shared, not translated: a form carries its own translations
+                 and the page picks the right one, exactly as a linked
+                 publication does. -->
+            <AppSelect
+                v-model="bound.formId.value"
+                :label="t('backend.posts.grid.zone_form')"
+                :hint="t('backend.posts.grid.zone_form_hint')"
+                :options="formOptions"
+                :placeholder="t('backend.posts.grid.list_any')"
             />
         </template>
 

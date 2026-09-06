@@ -47,6 +47,8 @@ const props = defineProps({
     postTypeOptions: { type: Array, default: () => [] },
     /** The terms it may narrow to, across every taxonomy. */
     termOptions: { type: Array, default: () => [] },
+    /** The active forms a zone may pose. */
+    formOptions: { type: Array, default: () => [] },
     previewPath: { type: String, required: true },
 });
 
@@ -399,6 +401,7 @@ function resizeZone(index, columns) {
                                 :post-options="postOptions"
                                 :post-type-options="postTypeOptions"
                                 :term-options="termOptions"
+                                :form-options="formOptions"
                                 :ratio-options="ratioOptions"
                                 :scale-options="scaleOptions"
                                 :align-options="alignOptions"
@@ -437,6 +440,7 @@ function resizeZone(index, columns) {
                     :post-options="postOptions"
                     :post-type-options="postTypeOptions"
                     :term-options="termOptions"
+                    :form-options="formOptions"
                     :ratio-options="ratioOptions"
                     :scale-options="scaleOptions"
                     :align-options="alignOptions"

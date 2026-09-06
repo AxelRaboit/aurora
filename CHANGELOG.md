@@ -5,6 +5,25 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.52] - 2026-09-06
+
+### Ajouté
+
+#### Un formulaire peut être posé dans n'importe quelle page
+Un formulaire avait sa page à lui, à `/{langue}/forms/{slug}`, et c'était le
+seul endroit où on pouvait le remplir. La nouvelle zone **Formulaire** le pose
+au bas d'une page de service — là où quelqu'un qui vient de lire ce que vous
+proposez est disposé à le remplir, plutôt qu'après un lien qui lui demande
+d'aller ailleurs d'abord.
+
+C'est le même formulaire, pas une copie : la zone monte le composant que sa
+propre page monte et envoie vers la même adresse. La validation, la limite de
+débit et le message de confirmation restent une seule implémentation.
+
+Un formulaire désactivé n'est pas proposé dans l'éditeur et ne se dessine pas
+s'il l'était : sa page répond déjà 404, et une zone ne doit pas être un moyen
+de contourner ça.
+
 ## [0.9.51] - 2026-09-06
 
 ### Ajouté

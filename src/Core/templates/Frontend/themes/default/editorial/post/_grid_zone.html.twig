@@ -117,6 +117,23 @@
             {% endfor %}
         </div>
 
+    {% elseif zone.type == 'form' and zone.form %}
+        {# The same component the form's own page mounts, posting to the same
+           endpoint - so the validation, the rate limit and the confirmation
+           are one implementation wherever the form is drawn. #}
+        <div class="not-prose space-y-4">
+            {% if zone.form.title %}
+                <h2 class="m-0 text-xl font-semibold text-primary">{{ zone.form.title }}</h2>
+            {% endif %}
+            {% if zone.form.description %}
+                <p class="m-0 text-secondary">{{ zone.form.description }}</p>
+            {% endif %}
+            <div {{ vue_component('editorial/frontend/FormRender', {
+                form: zone.form.data,
+                submitPath: zone.form.submitPath,
+            }) }}></div>
+        </div>
+
     {% elseif zone.type == 'video' %}
         {% if zone.video %}
             {# The src is built from an extracted id against a whitelist

@@ -113,6 +113,16 @@ final readonly class GridNormalizer
      */
     public const string ZONE_POST_LIST = 'postList';
 
+    /**
+     * A form of the site, posed inside a page.
+     *
+     * A form already has a page of its own at `/{locale}/forms/{slug}`. This
+     * puts the same form at the bottom of a service page, which is where
+     * somebody who has just read what you offer is willing to fill one in -
+     * rather than after a link that asks them to go somewhere else first.
+     */
+    public const string ZONE_FORM = 'form';
+
     /** How loudly a button is drawn. */
     public const array BUTTON_VARIANTS = ['solid', 'outline', 'ghost'];
 
@@ -252,6 +262,7 @@ final readonly class GridNormalizer
         self::ZONE_SEPARATOR,
         self::ZONE_ITEMS,
         self::ZONE_POST_LIST,
+        self::ZONE_FORM,
     ];
 
     /**
@@ -463,6 +474,10 @@ final readonly class GridNormalizer
                 // Read by the single-publication zone too: the two draw the
                 // same card, so they offer the same densities.
                 'cardVariant' => $this->values->oneOf($entry['cardVariant'] ?? null, self::CARD_VARIANTS, self::CARD_VARIANTS[0]),
+                // Which form the zone poses. Shared: a form carries its own
+                // translations, so the page picks the right one rather than
+                // naming a different form per language.
+                'formId' => $this->values->id($entry['formId'] ?? null),
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
                 'children' => self::ZONE_STACK === $type
