@@ -51,7 +51,7 @@ const gradientId = `aurora-bg-${instanceUid}`;
             font-weight="700"
             text-anchor="middle"
             fill="white"
-        >V</text>
+        >A</text>
         <line
             x1="20"
             y1="52"

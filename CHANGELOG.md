@@ -5,6 +5,16 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.41] - 2026-09-06
+
+### Corrigé
+
+#### Le logo du sidemenu affichait la lettre "V"
+Reliquat du tout premier nom du projet, **Velox**, renommé en Aurora depuis
+longtemps. Le logo par défaut du menu latéral (`AppLogo.vue`) était un SVG
+généré à la main avec la lettre codée en dur — tout le reste de l'application
+avait suivi le renommage, sauf ce texte. Il affiche maintenant "A".
+
 ## [0.9.40] - 2026-09-01
 
 ### Ajouté

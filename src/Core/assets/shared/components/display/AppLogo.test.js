@@ -22,9 +22,9 @@ describe("AppLogo", () => {
         expect(svg.attributes("height")).toBe("64");
     });
 
-    it("contains the letter V as the logo mark", () => {
+    it("contains the letter A as the logo mark", () => {
         const wrapper = mount(AppLogo);
-        expect(wrapper.find("text").text()).toBe("V");
+        expect(wrapper.find("text").text()).toBe("A");
     });
 
     it("renders a linearGradient with a unique id", () => {
