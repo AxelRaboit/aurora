@@ -958,12 +958,23 @@ export function usePostGrid(layout, content) {
      * `items` is filled in separately because a translation written before
      * item lists existed has every other key and not that one - reading it as
      * absent would throw on the first entry added.
+     *
+     * An empty one arrives as `[]` rather than `{}`, PHP having no way to say
+     * which it meant, and an array takes `items[id] = …` quietly and loses it
+     * on `JSON.stringify`. So the shape is checked, not just the presence:
+     * this is where a page's item texts were dropped between the screen they
+     * were typed on and the server.
      */
     function heldFor(zone) {
         content.value.zones[zone.id] ??= newZoneContent();
-        content.value.zones[zone.id].items ??= {};
 
-        return content.value.zones[zone.id];
+        const held = content.value.zones[zone.id];
+
+        if (!held.items || Array.isArray(held.items)) {
+            held.items = {};
+        }
+
+        return held;
     }
 
     // Built once per index and cached: the template calls zoneFields(index) on
