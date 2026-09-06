@@ -149,7 +149,7 @@ final class GridNormalizerTest extends TestCase
                 'id', 'type', 'span', 'offset', 'newRow', 'ratio', 'scale', 'align',
                 'mediaId', 'mediaUrl', 'postId', 'variant', 'size', 'separatorStyle',
                 'display', 'columns', 'items', 'postTypeId', 'termId', 'limit',
-                'cardVariant', 'formId', 'children',
+                'cardVariant', 'formId', 'language', 'textSize', 'fullBleed', 'children',
             ],
             array_keys($zone),
             'switching a zone type in the editor must not lose what was picked',

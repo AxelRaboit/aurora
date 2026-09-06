@@ -21,6 +21,7 @@ import AppIconButton from "@/shared/components/action/AppIconButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppTextarea from "@/shared/components/form/input/AppTextarea.vue";
+import AppToggle from "@/shared/components/form/toggle/AppToggle.vue";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -38,6 +39,8 @@ const props = defineProps({
     termOptions: { type: Array, default: () => [] },
     /** The active forms a zone may pose. */
     formOptions: { type: Array, default: () => [] },
+    /** True for a zone inside a stack, where the row controls do not apply. */
+    inStack: { type: Boolean, default: false },
     /** The shapes a media zone may be cropped to. */
     ratioOptions: { type: Array, default: () => [] },
     /** How much of its zone's width a picture may take. */
@@ -104,6 +107,12 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
 <template>
     <div class="space-y-4">
         <template v-if="zone.type === 'text'">
+            <AppChoiceRow
+                v-model="bound.textSize.value"
+                :label="t('backend.posts.grid.text_size')"
+                :hint="t('backend.posts.grid.text_size_hint')"
+                :options="choices.textSize ?? []"
+            />
             <div class="rounded-lg border border-dashed border-line p-3 space-y-2">
                 <p class="text-xs uppercase tracking-wide text-muted">
                     {{ t("backend.posts.grid.translated_fields", { locale }) }}
@@ -160,6 +169,14 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                 :label="t('backend.posts.grid.align')"
                 :options="alignOptions"
             />
+            <!-- Only outside a stack: inside one there is no column to escape,
+                 and the normaliser would zero it anyway. -->
+            <AppToggle
+                v-if="!inStack"
+                v-model="bound.fullBleed.value"
+                :label="t('backend.posts.grid.full_bleed')"
+                :hint="t('backend.posts.grid.full_bleed_hint')"
+            />
             <div class="rounded-lg border border-dashed border-line p-3 space-y-4">
                 <p class="text-xs uppercase tracking-wide text-muted">
                     {{ t("backend.posts.grid.translated_fields", { locale }) }}
@@ -191,6 +208,30 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                 :label="t('backend.posts.grid.card_variant')"
                 :options="choices.cardVariant ?? []"
             />
+        </template>
+
+        <template v-else-if="zone.type === 'code'">
+            <AppSelect
+                v-model="bound.language.value"
+                :label="t('backend.posts.grid.code_language')"
+                :hint="t('backend.posts.grid.code_language_hint')"
+                :options="choices.language ?? []"
+                :placeholder="t('backend.posts.grid.code_language_none')"
+            />
+            <div class="rounded-lg border border-dashed border-line p-3 space-y-2">
+                <p class="text-xs uppercase tracking-wide text-muted">
+                    {{ t("backend.posts.grid.translated_fields", { locale }) }}
+                </p>
+                <!-- Per language like any other text: a snippet often carries
+                     comments, and a comment is written for a reader. -->
+                <AppTextarea
+                    v-model="bound.code.value"
+                    :label="t('backend.posts.grid.code')"
+                    :placeholder="t('backend.posts.grid.code_placeholder')"
+                    :rows="8"
+                    class="font-mono"
+                />
+            </div>
         </template>
 
         <template v-else-if="zone.type === 'form'">

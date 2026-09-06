@@ -5,6 +5,35 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.53] - 2026-09-06
+
+### Ajouté
+
+#### Une zone Code, colorée
+Un extrait, avec son langage choisi dans une liste : bash, CSS, HTML,
+JavaScript, JSON, Markdown, PHP, Python, SQL, TypeScript, YAML.
+
+Le serveur envoie un `<pre><code>` ordinaire, lisible tel quel ; la coloration
+arrive ensuite, dans le navigateur. Un lecteur sans JavaScript garde donc
+l'extrait entier dans un cadre à chasse fixe, ce qui est le comportement voulu
+et non un repli. La bibliothèque — une cinquantaine de kilo-octets compressés
+— n'est téléchargée que si la page contient réellement un extrait ; les autres
+paient un `querySelector` et rien de plus.
+
+Le colorateur existait déjà, pour l'aperçu Markdown du back-office. Sa liste
+de langages a quitté le module Notes pour un module partagé : deux copies,
+c'était un langage ajouté pour un lecteur et manquant pour un rédacteur.
+
+#### Trois mises en forme pour une zone Texte
+**Normal**, **Chapô** — le premier paragraphe grossit et s'éclaircit, ce qu'est
+une accroche — et **Mentions**, plus petit et plus discret.
+
+#### Une image peut sortir de sa colonne
+Une case « Pleine largeur » sur une zone Image : la figure quitte la colonne
+de l'article et traverse l'écran. Sans `100vw`, qui compte la barre de
+défilement et offre à la page une barre horizontale en prime. L'option ne
+s'affiche pas dans une pile, où il n'y a pas de colonne à quitter.
+
 ## [0.9.52] - 2026-09-06
 
 ### Ajouté
