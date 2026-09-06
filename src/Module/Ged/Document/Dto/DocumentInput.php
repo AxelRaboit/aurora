@@ -36,6 +36,12 @@ class DocumentInput implements DocumentInputInterface
         // (regenerated on upload/crop), so they are NOT carried by the DTO.
         public readonly ?float $focalX = null,
         public readonly ?float $focalY = null,
+        // Set together or not at all: a remote document with no credit
+        // cannot legally be displayed, and a credit with nothing to credit
+        // is noise. `UnsplashImporter` is what fills all three.
+        public readonly ?string $sourceUrl = null,
+        public readonly ?string $attributionName = null,
+        public readonly ?string $attributionUrl = null,
     ) {}
 
     public function getTitle(): string
@@ -126,5 +132,20 @@ class DocumentInput implements DocumentInputInterface
     public function getFocalY(): ?float
     {
         return $this->focalY;
+    }
+
+    public function getSourceUrl(): ?string
+    {
+        return $this->sourceUrl;
+    }
+
+    public function getAttributionName(): ?string
+    {
+        return $this->attributionName;
+    }
+
+    public function getAttributionUrl(): ?string
+    {
+        return $this->attributionUrl;
     }
 }

@@ -35,6 +35,9 @@ class DocumentInputFactory implements DocumentInputFactoryInterface
             folderId: isset($data['folderId']) ? (int) $data['folderId'] : null,
             focalX: isset($data['focalX']) ? (float) $data['focalX'] : null,
             focalY: isset($data['focalY']) ? (float) $data['focalY'] : null,
+            sourceUrl: Str::trimOrNullFromArray($data, 'sourceUrl'),
+            attributionName: Str::trimOrNullFromArray($data, 'attributionName'),
+            attributionUrl: Str::trimOrNullFromArray($data, 'attributionUrl'),
         );
     }
 }

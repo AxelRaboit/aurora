@@ -8,6 +8,7 @@ use Aurora\Core\Content\ContentValueNormalizer;
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Repository\DocumentRepository;
+use Aurora\Module\Ged\Document\Service\DocumentCreditPresenter;
 use Aurora\Module\Ged\Document\Service\DocumentUrlGenerator;
 
 /**
@@ -28,6 +29,7 @@ final readonly class BannerViewBuilder
     public function __construct(
         private DocumentRepository $documentRepository,
         private DocumentUrlGenerator $documentUrlGenerator,
+        private DocumentCreditPresenter $creditPresenter,
         private BannerNormalizer $bannerNormalizer,
         private ContentValueNormalizer $values,
     ) {}
@@ -248,6 +250,9 @@ final readonly class BannerViewBuilder
             // things in two banners, and the document's alt describes the file.
             'alt' => '' !== $alt ? $alt : (string) $media->getAlt(),
             'focalPosition' => $this->documentUrlGenerator->focalPositionCss($media),
+            // Null for anything we host ourselves. Present, and displayed by
+            // the template, for a stock photo whose licence requires it.
+            'credit' => $this->creditPresenter->present($media),
         ];
     }
 }

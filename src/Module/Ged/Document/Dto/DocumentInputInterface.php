@@ -44,4 +44,10 @@ interface DocumentInputInterface
     public function getFocalX(): ?float;
 
     public function getFocalY(): ?float;
+
+    public function getSourceUrl(): ?string;
+
+    public function getAttributionName(): ?string;
+
+    public function getAttributionUrl(): ?string;
 }

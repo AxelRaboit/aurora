@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.43] - 2026-09-06
+
+### Ajouté
+
+#### Chercher une photo Unsplash depuis le sélecteur d'images
+Le sélecteur d'images du back-office a un second onglet, « Unsplash », partout
+où un champ demande une image : vignette, bannière, zones image de la grille,
+galerie. On tape une recherche, on choisit une photo, elle arrive dans la
+médiathèque comme n'importe quel autre média.
+
+La photo n'est pas téléchargée, et ce n'est pas un raccourci : les conditions
+d'utilisation d'Unsplash interdisent de réhéberger ce que leur API renvoie.
+Un document peut donc désormais pointer vers une image distante — `filePath`
+reste vide, `sourceUrl` porte l'adresse. Les tailles responsives sont demandées
+au CDN d'Unsplash (256, 800, 1920 px) plutôt que générées ici, donc le rendu
+reste identique côté page.
+
+Deux obligations de leur licence sont tenues automatiquement : le crédit du
+photographe s'affiche sous la photo partout où elle est rendue, avec les liens
+`utm` qu'ils demandent, et chaque sélection leur est signalée.
+
+Sans clé API, l'onglet reste visible mais annonce simplement qu'il n'est pas
+configuré. Rien d'autre ne change.
+
+### Dans aurora-client
+
+Renseigner `UNSPLASH_ACCESS_KEY` dans `.env.local` pour activer l'onglet — la
+clé s'obtient sur https://unsplash.com/oauth/applications. Laissée vide,
+l'intégration reste inactive et le reste de la GED fonctionne comme avant. Une
+migration ajoute trois colonnes nullables à `core_ged_documents`.
+
 ## [0.9.42] - 2026-09-06
 
 ### Corrigé

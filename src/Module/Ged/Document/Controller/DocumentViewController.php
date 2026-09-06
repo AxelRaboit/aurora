@@ -33,6 +33,14 @@ class DocumentViewController extends AbstractController
     )]
     public function view(Document $document): RedirectResponse
     {
+        // Remotely hosted documents are sent on to the provider untouched.
+        // The cache-busting stamp is deliberately left off: the URL carries
+        // the provider's own signed parameters, and appending to them is
+        // both pointless (their CDN versions by path) and risky.
+        if ($document->isRemote()) {
+            return $this->redirect((string) $document->getSourceUrl(), HttpStatusEnum::Found->value);
+        }
+
         $url = $this->uploadUrlGenerator->publicUrl($document->getFilePath());
         if (null === $url) {
             throw new NotFoundHttpException();

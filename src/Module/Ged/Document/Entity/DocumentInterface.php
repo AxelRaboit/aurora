@@ -101,4 +101,19 @@ interface DocumentInterface extends TimestampableInterface
 
     /** @param array<string, string> $variants */
     public function setVariants(array $variants): static;
+
+    public function getSourceUrl(): ?string;
+
+    public function setSourceUrl(?string $sourceUrl): static;
+
+    /** True when the bytes live on a provider's CDN rather than in var/uploads. */
+    public function isRemote(): bool;
+
+    public function getAttributionName(): ?string;
+
+    public function setAttributionName(?string $attributionName): static;
+
+    public function getAttributionUrl(): ?string;
+
+    public function setAttributionUrl(?string $attributionUrl): static;
 }
