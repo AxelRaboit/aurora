@@ -5,6 +5,32 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.58] - 2026-09-07
+
+### Ajouté
+
+#### Un fond par zone
+Chaque zone d'une grille peut maintenant être posée sur quelque chose :
+**Carte** (encadrée, sur la surface du thème), **Teinté** (un fond sourd qui
+regroupe) ou **Accent** (la couleur du thème, pour ce sur quoi on veut qu'on
+clique). Rien par défaut — une zone reste ce qu'elle était.
+
+C'est ce qui manquait pour qu'une page cesse d'être un long rouleau : dix zones
+sur un même fond plat se suivent sans qu'aucune ne prenne le pas. Un fond, et
+une suite de zones se lit comme des sections.
+
+#### La pleine largeur pour toutes les zones
+L'option ne concernait que les images ; elle vaut désormais pour n'importe
+quelle zone, et devient surtout intéressante avec un fond : une bande qui
+traverse l'écran.
+
+Les mots, eux, restent centrés à la largeur de la page — un paragraphe à la
+largeur d'un écran ne se lit pas. Une image continue d'aller d'un bord à
+l'autre, puisqu'elle est le contenu et non son décor.
+
+L'interrupteur a quitté les réglages de l'image pour rejoindre le fond, sous la
+largeur : ces trois-là répondent à la même question.
+
 ## [0.9.57] - 2026-09-07
 
 ### Corrigé

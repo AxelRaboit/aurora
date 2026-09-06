@@ -79,6 +79,9 @@ export const CODE_LANGUAGES = [
 /** Mirrors GridNormalizer::TEXT_SIZES. */
 export const TEXT_SIZES = ["normal", "lead", "small"];
 
+/** Mirrors GridNormalizer::SURFACES - what a zone sits on. */
+export const SURFACES = ["none", "card", "soft", "accent"];
+
 /**
  * How many zones a stack may hold. Mirrors GridNormalizer::MAX_STACK_CHILDREN:
  * a stack splits one cell in two or three, and six zones sharing a row's height
@@ -351,6 +354,9 @@ function newZone(type) {
         formId: null,
         language: null,
         textSize: "normal",
+        // Nothing behind it and inside its column: a zone arrives as part of
+        // the page, and becomes a section only when someone says so.
+        surface: "none",
         fullBleed: false,
         // Empty on every zone, filled only by a stack - the same reason every
         // other key is always present: switching a type back and forth in the
@@ -442,6 +448,7 @@ export function usePostGrid(layout, content) {
         display: labelled(ITEM_DISPLAYS, "item_displays"),
         cardVariant: labelled(CARD_VARIANTS, "card_variants"),
         textSize: labelled(TEXT_SIZES, "text_sizes"),
+        surface: labelled(SURFACES, "surfaces"),
         // A language names itself; there is nothing to translate.
         language: CODE_LANGUAGES.map((value) => ({ value, label: value })),
         limit: Array.from({ length: MAX_LIST_LIMIT }, (_, i) => ({
@@ -1029,6 +1036,7 @@ export function usePostGrid(layout, content) {
                 formId: shared("formId"),
                 language: shared("language"),
                 textSize: shared("textSize"),
+                surface: shared("surface"),
                 fullBleed: shared("fullBleed"),
                 // The width control drives the large-screen span only. Below
                 // that a zone stays full width, which is what the stored

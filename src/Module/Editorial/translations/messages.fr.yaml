@@ -454,7 +454,14 @@ backend:
         lead: Chapô
         small: Mentions
       full_bleed: Pleine largeur
-      full_bleed_hint: "L'image sort de la colonne et traverse l'écran."
+      full_bleed_hint: "La zone sort de la colonne et traverse l'écran. Les mots restent centrés à la largeur de la page ; une image, elle, va d'un bord à l'autre."
+      surface: Fond
+      surface_hint: "Ce sur quoi la zone est posée. C'est ce qui fait lire une suite de zones comme des sections."
+      surfaces:
+        none: Aucun
+        card: Carte
+        soft: Teinté
+        accent: Accent
       code: Extrait
       code_placeholder: "function bonjour() { … }"
       code_language: Langage
