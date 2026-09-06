@@ -5,6 +5,26 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.54] - 2026-09-06
+
+### Corrigé
+
+#### Les champs de la zone Code étaient invisibles
+Choisir une zone **Code** dans une publication ouvrait un panneau sans langage
+ni extrait : les deux champs manquaient, sans message, sans rien dans l'écran
+pour dire pourquoi.
+
+En cause, une phrase du catalogue : `function bonjour() { … }`, le texte
+d'exemple du champ Extrait. Symfony y voit une phrase ; vue-i18n y voit une
+variable nommée `…`, refuse de compiler le message, et le composant qui
+l'affichait n'affiche plus rien du tout. Le même piège attendait le champ de
+configuration du thème, dont l'exemple est un objet JSON.
+
+Les accolades qui ne nomment rien sont désormais échappées à la génération du
+catalogue JavaScript, comme l'étaient déjà les `@` des adresses e-mail. Un
+auteur écrit la phrase — ou l'extrait — qui doit s'afficher, et n'a rien à
+savoir de tout ceci.
+
 ## [0.9.53] - 2026-09-06
 
 ### Ajouté
