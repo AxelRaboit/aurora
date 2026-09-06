@@ -1,0 +1,50 @@
+{# What a zone sits on, and whether it takes the whole screen to do it.
+
+   A macro rather than an include because it wraps rather than renders: the
+   caller hands over the zone and its already-built markup, and gets it back
+   inside whatever surface the zone asked for. Both callers need it - a leaf
+   zone in `_grid_zone.html.twig` and a stack in `_grid.html.twig` - and a
+   background that a stack could not have would leave the one arrangement a
+   call to action is made of, a title and a line and a button in one band, as
+   three zones with nothing holding them together.
+
+   Written out literally rather than assembled: Tailwind only emits classes it
+   can read in the source, and `bg-{{ surface }}` is one it never sees. #}
+
+{% macro wrap(zone, body) %}
+    {% set surfaces = {
+        none: '',
+        card: 'rounded-xl border border-line bg-surface p-6 sm:p-8',
+        soft: 'rounded-xl bg-surface-2 p-6 sm:p-8',
+        accent: 'rounded-xl border border-accent-500/30 bg-accent-500/10 p-6 sm:p-8',
+    } %}
+    {# Across the viewport the corners go: a band with rounded ends reads as a
+       very wide card that has overflowed, which is not what it is. #}
+    {% set bleedSurfaces = {
+        none: '',
+        card: 'border-y border-line bg-surface py-10 sm:py-14',
+        soft: 'bg-surface-2 py-10 sm:py-14',
+        accent: 'border-y border-accent-500/30 bg-accent-500/10 py-10 sm:py-14',
+    } %}
+    {% set surface = zone.surface|default('none') %}
+
+    {% if zone.fullBleed|default(false) %}
+        {# Viewport units and a negative margin rather than `100vw`, which
+           counts the scrollbar and hands the page a horizontal one.
+
+           A picture is the content and spans edge to edge; anything else is
+           words, and words at the width of a screen are unreadable - so
+           everything but a picture is held to the same box `<main>` uses. #}
+        <div class="w-screen max-w-none relative left-1/2 -translate-x-1/2 {{ bleedSurfaces[surface] }}">
+            {% if zone.type == 'media' %}
+                {{ body }}
+            {% else %}
+                <div class="mx-auto w-full max-w-7xl px-4">{{ body }}</div>
+            {% endif %}
+        </div>
+    {% elseif surface != 'none' %}
+        <div class="{{ surfaces[surface] }}">{{ body }}</div>
+    {% else %}
+        {{ body }}
+    {% endif %}
+{% endmacro %}

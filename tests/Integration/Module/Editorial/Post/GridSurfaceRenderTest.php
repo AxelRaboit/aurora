@@ -72,6 +72,40 @@ final class GridSurfaceRenderTest extends IntegrationTestCase
         self::assertStringNotContainsString('rounded-xl', $html);
     }
 
+    /**
+     * A call to action is a title, a line and a button in one band, which in
+     * this grid is a stack - so a stack that cannot have a background is a
+     * call to action that cannot be built.
+     */
+    public function testAStackSitsOnItsSurfaceToo(): void
+    {
+        $grid = $this->gridViewBuilder->build(
+            [
+                'enabled' => true,
+                'zones' => [[
+                    'id' => 's1',
+                    'type' => 'stack',
+                    'surface' => 'accent',
+                    'fullBleed' => true,
+                    'children' => [['id' => 'c1', 'type' => 'text']],
+                ]],
+            ],
+            ['zones' => ['c1' => ['blocks' => [['type' => 'paragraph', 'data' => ['text' => 'Parlons-en.']]]]]],
+            'fr',
+        );
+
+        self::assertNotNull($grid);
+
+        $html = $this->twig->render(
+            'Frontend/themes/default/editorial/post/_grid.html.twig',
+            ['grid' => $grid, 'locale' => 'fr'],
+        );
+
+        self::assertStringContainsString('w-screen', $html);
+        self::assertStringContainsString('bg-accent-500/10', $html);
+        self::assertStringContainsString('Parlons-en.', $html);
+    }
+
     /** @param array<string, mixed> $overrides */
     private function zone(array $overrides = []): array
     {

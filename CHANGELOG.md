@@ -5,6 +5,19 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.59] - 2026-09-07
+
+### Ajouté
+
+#### Une Pile peut avoir un fond, donc un bandeau d'appel
+Le fond arrivé avec la version précédente ne valait que pour une zone seule.
+Une **Pile** — un titre, une phrase et un bouton empilés — n'en avait pas, ce
+qui est précisément l'arrangement dont un appel à l'action est fait : sans
+fond, les trois restaient trois zones que rien ne tenait ensemble.
+
+Une Pile se pose maintenant sur une carte, un fond teinté ou l'accent, et peut
+traverser l'écran comme n'importe quelle autre zone.
+
 ## [0.9.58] - 2026-09-07
 
 ### Ajouté
