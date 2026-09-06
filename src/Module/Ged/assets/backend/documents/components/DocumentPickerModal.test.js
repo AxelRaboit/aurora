@@ -28,7 +28,8 @@ const MESSAGES = {
             documents: { picker_tab_library: "Médiathèque" },
             pexels: {
                 tab: "Pexels",
-                not_configured: "Renseignez PEXELS_API_KEY pour l'activer.",
+                not_configured:
+                    "Rendez-vous dans Configuration › Pexels pour l'activer.",
                 empty: "Aucune photo pour cette recherche.",
                 search_placeholder: "Rechercher une photo…",
             },
@@ -107,7 +108,7 @@ describe("DocumentPickerModal Pexels tab", () => {
         wrapper.vm.onPexelsSearch("desk");
         await flushPromises();
 
-        expect(wrapper.text()).toContain("PEXELS_API_KEY");
+        expect(wrapper.text()).toContain("Configuration › Pexels");
     });
 
     /**
@@ -135,7 +136,10 @@ describe("DocumentPickerModal Pexels tab", () => {
     });
 
     it("imports the chosen photo on confirm and emits the document it became", async () => {
-        const document = { id: 42, fileUrl: PHOTO.url, isRemote: true };
+        const document = {
+            id: 42,
+            fileUrl: "/uploads/ged/2026/09/pexels-photo.jpeg",
+        };
         request
             .mockResolvedValueOnce({
                 configured: true,

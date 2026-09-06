@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Module\Ged\Pexels\Service;
 
+use Aurora\Core\Storage\Service\ImageCropper;
+use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
 use Aurora\Module\Ged\Document\Dto\DocumentInputFactory;
 use Aurora\Module\Ged\Document\Dto\DocumentInputInterface;
 use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Manager\DocumentManagerInterface;
+use Aurora\Module\Ged\Document\Service\GedDocumentUploader;
 use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategory;
 use Aurora\Module\Ged\DocumentCategory\Repository\DocumentCategoryRepository;
 use Aurora\Module\Ged\DocumentCategory\Service\InlineUploadCategoryProvider;
@@ -17,18 +20,44 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionProperty;
+use RuntimeException;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
- * The import is where a URL chosen in a browser becomes a row every page on
- * the site will render. Everything worth testing here is a refusal.
+ * The import is where a URL chosen in a browser becomes a file on our disk
+ * and a row every page on the site will render. Most of what matters here is
+ * a refusal; the rest is that the picture really does land locally.
+ *
+ * The uploader is the real one, writing into a temporary directory, because
+ * doubling it would test the mock: whether the download becomes a stored file
+ * with dimensions is the question.
  */
 final class PexelsImporterTest extends TestCase
 {
+    /** A 1x1 PNG - the smallest thing GD will agree is an image. */
+    private const string PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
     /** @var array<string, mixed>|null */
     private ?array $captured = null;
 
+    private string $workDir;
+
+    protected function setUp(): void
+    {
+        $this->workDir = sys_get_temp_dir().'/aurora-pexels-'.uniqid();
+        (new Filesystem())->mkdir($this->workDir);
+    }
+
+    protected function tearDown(): void
+    {
+        (new Filesystem())->remove($this->workDir);
+    }
+
     /** @param array<string, mixed> $photo */
-    private function import(array $photo): DocumentInterface
+    private function import(array $photo, ?MockHttpClient $http = null): DocumentInterface
     {
         $category = new DocumentCategory();
         $category->setName('Inline');
@@ -51,19 +80,38 @@ final class PexelsImporterTest extends TestCase
         $manager->method('create')->willReturnCallback(function (DocumentInputInterface $input): DocumentInterface {
             $this->captured = [
                 'title' => $input->getTitle(),
+                'filePath' => $input->getFilePath(),
+                'mimeType' => $input->getMimeType(),
+                'width' => $input->getWidth(),
                 'sourceUrl' => $input->getSourceUrl(),
                 'attributionName' => $input->getAttributionName(),
                 'attributionUrl' => $input->getAttributionUrl(),
-                'mimeType' => $input->getMimeType(),
                 'alt' => $input->getAlt(),
             ];
 
             return new Document();
         });
 
-        $importer = new PexelsImporter($manager, new DocumentInputFactory(), $categoryProvider);
+        $importer = new PexelsImporter(
+            $manager,
+            new DocumentInputFactory(),
+            $categoryProvider,
+            new GedDocumentUploader(
+                new Filesystem(),
+                new AsciiSlugger(),
+                new PdfThumbnailGenerator($this->workDir),
+                new ImageCropper(new Filesystem()),
+                $this->workDir,
+            ),
+            $http ?? $this->respondingWith((string) base64_decode(self::PNG, strict: true)),
+        );
 
         return $importer->import($photo);
+    }
+
+    private function respondingWith(string $body, int $status = 200): MockHttpClient
+    {
+        return new MockHttpClient(new MockResponse($body, ['http_code' => $status]));
     }
 
     /**
@@ -86,14 +134,19 @@ final class PexelsImporterTest extends TestCase
 
     /**
      * The URL arrives from the browser, and a browser can be told to send
-     * anything. Without the host check, "import" would store an arbitrary
-     * address and every page would render it.
+     * anything. Without the host check, "import" would fetch whatever address
+     * it was handed - a request forgery with a document library attached.
      */
     public function testAnAddressOutsidePexelsIsRefused(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $this->import($this->photo(['url' => 'https://evil.example.com/tracker.gif']));
+        $this->import(
+            $this->photo(['url' => 'http://169.254.169.254/latest/meta-data/']),
+            new MockHttpClient(static function (): MockResponse {
+                self::fail('Nothing outside the allowed host may be fetched.');
+            }),
+        );
     }
 
     /** A lookalike host is the whole reason the check reads the host and not the string. */
@@ -112,15 +165,23 @@ final class PexelsImporterTest extends TestCase
         $this->import($this->photo(['authorName' => '  ']));
     }
 
-    public function testTheCreditTravelsWithTheDocument(): void
+    /**
+     * The point of the whole change: the bytes are ours afterwards. A stored
+     * path, real dimensions read from the file, and no reason left to ask
+     * anyone else for the picture.
+     */
+    public function testThePhotoIsDownloadedAndStored(): void
     {
         $this->import($this->photo());
 
-        self::assertSame('Jane Doe', $this->captured['attributionName']);
-        self::assertSame('https://www.pexels.com/@jane', $this->captured['attributionUrl']);
+        self::assertNotNull($this->captured['filePath']);
+        self::assertFileExists($this->workDir.'/'.$this->captured['filePath']);
+        self::assertSame('image/png', $this->captured['mimeType']);
+        self::assertSame(1, $this->captured['width']);
     }
 
-    public function testTheDocumentCarriesTheRemoteAddressAndNoFile(): void
+    /** Provenance outlives the download: it is what the credit is rendered from. */
+    public function testTheProvenanceIsKeptAlongsideTheFile(): void
     {
         $this->import($this->photo());
 
@@ -128,9 +189,9 @@ final class PexelsImporterTest extends TestCase
             'https://images.pexels.com/photos/2014422/pexels-photo-2014422.jpeg',
             $this->captured['sourceUrl'],
         );
+        self::assertSame('Jane Doe', $this->captured['attributionName']);
+        self::assertSame('https://www.pexels.com/@jane', $this->captured['attributionUrl']);
         self::assertSame('A tidy desk', $this->captured['title']);
-        // What MimeGroupEnum reads to decide this is an image at all.
-        self::assertSame('image/jpeg', $this->captured['mimeType']);
     }
 
     /** A photo Pexels left undescribed still needs a name in the library. */
@@ -139,5 +200,28 @@ final class PexelsImporterTest extends TestCase
         $this->import($this->photo(['description' => null]));
 
         self::assertSame('Pexels - Jane Doe', $this->captured['title']);
+    }
+
+    /**
+     * Told apart from a refused payload on purpose: the photo is fine, the
+     * fetch is not, and the answer for the editor is to try again rather than
+     * to pick another picture.
+     */
+    public function testAFailedFetchRaisesARuntimeErrorRatherThanFilingNothing(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        $this->import($this->photo(), $this->respondingWith('', 503));
+    }
+
+    /**
+     * The host is allowed, so the guard above says nothing - but what came
+     * back is not a picture, and a picture field is no place for it.
+     */
+    public function testAFetchThatIsNotAnImageIsRefused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->import($this->photo(), $this->respondingWith('<!doctype html><title>nope</title>'));
     }
 }

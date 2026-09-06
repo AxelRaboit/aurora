@@ -11,6 +11,7 @@ use Aurora\Module\Ged\Document\Serializer\DocumentSerializerInterface;
 use Aurora\Module\Ged\Pexels\Service\PexelsClient;
 use Aurora\Module\Ged\Pexels\Service\PexelsImporter;
 use InvalidArgumentException;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -75,6 +76,11 @@ final class PexelsController extends AbstractController
             $document = $this->importer->import($payload);
         } catch (InvalidArgumentException) {
             return $this->jsonFailure('backend.ged.pexels.errors.invalid_photo');
+        } catch (RuntimeException) {
+            // The photo is real but the fetch failed - a timeout, a CDN
+            // hiccup. Told apart from a refused payload because the answer is
+            // different: try again rather than pick another photo.
+            return $this->jsonFailure('backend.ged.pexels.errors.download_failed');
         }
 
         return $this->jsonSuccess(['document' => $this->serializer->serialize($document)]);

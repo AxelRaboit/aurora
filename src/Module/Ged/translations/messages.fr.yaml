@@ -53,9 +53,31 @@ backend:
       tab: Pexels
       search_placeholder: "Rechercher une photo : bureau, nature, portrait…"
       empty: Aucune photo pour cette recherche.
-      not_configured: "L'intégration Pexels n'est pas configurée. Renseignez PEXELS_API_KEY pour l'activer."
+      not_configured: "La banque de photos Pexels n'est pas activée. Rendez-vous dans Configuration › Pexels pour l'activer."
+      settings:
+        what_title: À quoi ça sert
+        what_body: "Pexels est une banque de photos gratuites. Une fois activée, un onglet « Pexels » apparaît dans le sélecteur d'images : vous cherchez une photo, vous la choisissez, elle est téléchargée dans votre médiathèque et vous appartient. Votre site ne dépend ensuite plus de Pexels pour l'afficher."
+        how_title: Obtenir votre clé
+        how_step_account: "Créez un compte gratuit sur pexels.com, ou connectez-vous au vôtre."
+        how_step_request: "Allez sur pexels.com/api/, cliquez sur « Get Started » et décrivez en une phrase à quoi vous allez vous en servir (par exemple : illustrer les pages de mon site). La clé est délivrée immédiatement."
+        how_step_paste: "Copiez la clé affichée et collez-la dans le champ ci-dessous, puis enregistrez."
+        how_link: Ouvrir la page des clés Pexels
+        terms_label: J'ai lu et j'accepte les conditions d'utilisation de Pexels
+        terms_hint: "Le compte Pexels est le vôtre, et c'est son titulaire qui répond de l'usage fait des photos. En particulier, sur un site qui vend un produit ou un service, évitez les photos montrant un visage reconnaissable ou une marque : elles peuvent laisser croire à une recommandation. Ne redistribuez pas non plus les fichiers eux-mêmes, par exemple dans un dossier remis à un tiers."
+        terms_link: Lire les conditions d'utilisation
+        license_link: Lire la licence Pexels
+        accepted_on: "Conditions acceptées le {date} par {user}."
+        key_label: Clé d'API Pexels
+        key_hint: Elle est enregistrée chiffrée et n'est jamais réaffichée.
+        key_stored: Une clé est enregistrée. Laissez le champ vide pour la conserver, ou saisissez-en une nouvelle pour la remplacer.
+        enabled_label: Activer la banque de photos Pexels
+        enabled_hint: L'onglet Pexels apparaîtra dans le sélecteur d'images.
+        enabled_blocked: Acceptez les conditions et renseignez une clé pour pouvoir activer.
       errors:
         invalid_photo: Cette photo ne peut pas être importée.
+        download_failed: La photo n'a pas pu être téléchargée. Réessayez dans un instant.
+        terms_required: Les conditions d'utilisation doivent être acceptées pour activer l'intégration.
+        key_required: Une clé d'API est nécessaire pour activer l'intégration.
     bootstrap:
       categories:
         inline_uploads: Médias éditoriaux

@@ -106,9 +106,6 @@ interface DocumentInterface extends TimestampableInterface
 
     public function setSourceUrl(?string $sourceUrl): static;
 
-    /** True when the bytes live on a provider's CDN rather than in var/uploads. */
-    public function isRemote(): bool;
-
     public function getAttributionName(): ?string;
 
     public function setAttributionName(?string $attributionName): static;
