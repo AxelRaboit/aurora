@@ -177,6 +177,10 @@ final readonly class GridViewBuilder
                 'form' => GridNormalizer::ZONE_FORM === $zone['type']
                     ? $this->formView($zone['formId'], $locale)
                     : null,
+                // Handed over untouched: Twig escapes it on the way out, and
+                // nothing between here and there is allowed to reformat a
+                // snippet whose whitespace is its meaning.
+                'code' => GridNormalizer::ZONE_CODE === $zone['type'] ? $held['code'] : null,
             ];
         };
 

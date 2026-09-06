@@ -12,7 +12,16 @@
     {% if zone.type == 'text' and zone.html %}
         {# Already sanitised by BlocksRenderer, which every block type
            goes through - the same path the plain block column uses. #}
-        <div class="prose max-w-none">{{ zone.html|raw }}</div>
+        {# Three settings of one column. `lead` enlarges the first paragraph
+           and lifts its colour, which is what a standfirst is; `small` is fine
+           print. Written out literally - Tailwind only emits classes it can
+           read in the source. #}
+        {% set textSizes = {
+            normal: '',
+            lead: 'prose-lg [&>p:first-of-type]:text-xl [&>p:first-of-type]:text-primary',
+            small: 'prose-sm text-muted',
+        } %}
+        <div class="prose max-w-none {{ textSizes[zone.textSize] }}">{{ zone.html|raw }}</div>
 
     {% elseif zone.type == 'media' and zone.media %}
         {# `fill` is the one shape that is not a ratio: it takes the height of
@@ -36,7 +45,15 @@
            On the figure and not on the image: the caption should sit under the
            picture it belongs to, at its width and on its side, not run the full
            column beneath a small photograph. #}
-        <figure class="m-0 not-prose{{ fills ? ' lg:flex lg:h-full lg:flex-col' : '' }}" style="{{ zone.scaleStyle|default('')|raw }}">
+        {# Full bleed pulls the figure out of the article column and across
+           the viewport. Done with viewport units and a negative margin rather
+           than `100vw`, which counts the scrollbar and hands the page a
+           horizontal one. Ignored inside a stack, where there is no column to
+           escape - the normaliser has already said so. #}
+        <figure
+            class="m-0 not-prose{{ fills ? ' lg:flex lg:h-full lg:flex-col' : '' }}{{ zone.fullBleed ? ' w-screen max-w-none relative left-1/2 -translate-x-1/2' : '' }}"
+            style="{{ zone.scaleStyle|default('')|raw }}"
+        >
             {# `ratioStyle` is empty unless the zone asks to be cropped.
                With a width of 100% and `height: auto`, an `aspect-ratio`
                settles the height on its own - no wrapper, no second
@@ -132,6 +149,19 @@
                 form: zone.form.data,
                 submitPath: zone.form.submitPath,
             }) }}></div>
+        </div>
+
+    {% elseif zone.type == 'code' and zone.code %}
+        {# Readable before any script runs, coloured once one does: the class
+           is what `codeHighlight.js` looks for, and a reader whose JavaScript
+           never arrives still gets the snippet, in a monospace box, intact.
+
+           `{{ }}` escapes - the snippet is shown, never interpreted. #}
+        <div class="not-prose relative overflow-hidden rounded-xl border border-line bg-surface">
+            {% if zone.language %}
+                <span class="absolute right-3 top-2 text-2xs uppercase tracking-wider text-muted">{{ zone.language }}</span>
+            {% endif %}
+            <pre class="m-0 overflow-x-auto p-4 text-sm leading-relaxed"><code{% if zone.language %} class="language-{{ zone.language }}"{% endif %}>{{ zone.code }}</code></pre>
         </div>
 
     {% elseif zone.type == 'video' %}

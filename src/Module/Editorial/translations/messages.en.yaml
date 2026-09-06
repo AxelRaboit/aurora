@@ -443,9 +443,23 @@ backend:
         items: List
         postList: Automatic list
         form: Form
+        code: Code
         stack: Stack
       zone_form: "Form"
       zone_form_hint: "The form is drawn in the page and posts where its own page posts."
+      text_size: Setting
+      text_size_hint: "A standfirst enlarges the first paragraph; fine print is smaller and quieter."
+      text_sizes:
+        normal: Normal
+        lead: Standfirst
+        small: Fine print
+      full_bleed: Full width
+      full_bleed_hint: "The picture leaves the column and spans the screen."
+      code: Snippet
+      code_placeholder: "function hello() { … }"
+      code_language: Language
+      code_language_hint: "Used for colouring. Left empty, the snippet is shown as typed."
+      code_language_none: None
       card_variant: Card density
       card_variants:
         full: Full

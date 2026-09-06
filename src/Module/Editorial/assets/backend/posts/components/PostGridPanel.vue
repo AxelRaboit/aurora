@@ -402,6 +402,7 @@ function resizeZone(index, columns) {
                                 :post-type-options="postTypeOptions"
                                 :term-options="termOptions"
                                 :form-options="formOptions"
+                                :in-stack="true"
                                 :ratio-options="ratioOptions"
                                 :scale-options="scaleOptions"
                                 :align-options="alignOptions"

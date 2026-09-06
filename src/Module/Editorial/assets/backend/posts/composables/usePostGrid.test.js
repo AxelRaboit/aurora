@@ -431,7 +431,7 @@ describe("usePostGrid", () => {
         ]);
     });
 
-    it("offers the three steps and the ten zone types", () => {
+    it("offers the three steps and the eleven zone types", () => {
         const { snapOptions, typeOptions } = make().api;
 
         expect(snapOptions.value.map((o) => o.value)).toEqual([4, 2, 1]);
@@ -445,6 +445,7 @@ describe("usePostGrid", () => {
             "items",
             "postList",
             "form",
+            "code",
             "stack",
         ]);
     });
@@ -461,6 +462,7 @@ describe("usePostGrid", () => {
             "items",
             "postList",
             "form",
+            "code",
         ]);
     });
 
@@ -1045,6 +1047,7 @@ describe("addZoneAt", () => {
             url: "",
             label: "",
             items: {},
+            code: "",
         });
     });
 });

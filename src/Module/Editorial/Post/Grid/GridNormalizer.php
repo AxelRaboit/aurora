@@ -123,6 +123,9 @@ final readonly class GridNormalizer
      */
     public const string ZONE_FORM = 'form';
 
+    /** A snippet, shown as written and coloured in the reader's browser. */
+    public const string ZONE_CODE = 'code';
+
     /** How loudly a button is drawn. */
     public const array BUTTON_VARIANTS = ['solid', 'outline', 'ghost'];
 
@@ -144,6 +147,20 @@ final readonly class GridNormalizer
 
     /** Enough for a row or two of cards; past that it is an archive page. */
     public const int MAX_LIST_LIMIT = 12;
+
+    /**
+     * The languages the highlighter is built with. An unknown one is not an
+     * error - the snippet is shown as plain escaped text - but keeping the
+     * list here lets the editor offer a dropdown instead of a free field
+     * nobody can guess the vocabulary of.
+     */
+    public const array CODE_LANGUAGES = [
+        'bash', 'css', 'html', 'javascript', 'json', 'markdown',
+        'php', 'python', 'sql', 'typescript', 'yaml',
+    ];
+
+    /** How a text zone is set: body copy, a standfirst, or fine print. */
+    public const array TEXT_SIZES = ['normal', 'lead', 'small'];
 
     /**
      * Enough for a process, a row of figures or a short FAQ, and few enough
@@ -263,6 +280,7 @@ final readonly class GridNormalizer
         self::ZONE_ITEMS,
         self::ZONE_POST_LIST,
         self::ZONE_FORM,
+        self::ZONE_CODE,
     ];
 
     /**
@@ -346,6 +364,10 @@ final readonly class GridNormalizer
                 // localised page has a localised address, which is why both
                 // halves of a button are translated.
                 'label' => $this->values->text($entry['label'] ?? null),
+                // Kept as typed - every space matters in a snippet, so this is
+                // the one text field that is not trimmed. It is escaped at
+                // render, never interpreted.
+                'code' => is_string($entry['code'] ?? null) ? $entry['code'] : '',
                 // The words of an item list, against the entries the layout
                 // declares - so an entry removed from the arrangement takes
                 // its words with it instead of leaving them behind unseen.
@@ -478,6 +500,18 @@ final readonly class GridNormalizer
                 // translations, so the page picks the right one rather than
                 // naming a different form per language.
                 'formId' => $this->values->id($entry['formId'] ?? null),
+                // Which highlighter to ask for. Empty means "do not guess":
+                // a snippet with no language named is shown as it was typed.
+                'language' => in_array($entry['language'] ?? null, self::CODE_LANGUAGES, true)
+                    ? (string) $entry['language']
+                    : null,
+                // How a text zone is set. Design, so shared - a standfirst is
+                // a standfirst in every language.
+                'textSize' => $this->values->oneOf($entry['textSize'] ?? null, self::TEXT_SIZES, self::TEXT_SIZES[0]),
+                // A picture that escapes its column and spans the viewport.
+                // Only meaningful at the top level: inside a stack there is
+                // no column to escape.
+                'fullBleed' => $allowStacks && (bool) ($entry['fullBleed'] ?? false),
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
                 'children' => self::ZONE_STACK === $type

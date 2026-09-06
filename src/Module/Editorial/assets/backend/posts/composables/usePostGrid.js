@@ -31,6 +31,7 @@ export const LEAF_ZONE_TYPES = [
     "items",
     "postList",
     "form",
+    "code",
 ];
 
 /** Mirrors GridNormalizer::ZONE_TYPES - a stack is top level only. */
@@ -59,6 +60,24 @@ export const CARD_VARIANTS = ["full", "compact", "horizontal"];
 
 /** Mirrors GridNormalizer::MAX_LIST_LIMIT. */
 export const MAX_LIST_LIMIT = 12;
+
+/** Mirrors GridNormalizer::CODE_LANGUAGES. */
+export const CODE_LANGUAGES = [
+    "bash",
+    "css",
+    "html",
+    "javascript",
+    "json",
+    "markdown",
+    "php",
+    "python",
+    "sql",
+    "typescript",
+    "yaml",
+];
+
+/** Mirrors GridNormalizer::TEXT_SIZES. */
+export const TEXT_SIZES = ["normal", "lead", "small"];
 
 /**
  * How many zones a stack may hold. Mirrors GridNormalizer::MAX_STACK_CHILDREN:
@@ -330,6 +349,9 @@ function newZone(type) {
         limit: 3,
         cardVariant: "full",
         formId: null,
+        language: null,
+        textSize: "normal",
+        fullBleed: false,
         // Empty on every zone, filled only by a stack - the same reason every
         // other key is always present: switching a type back and forth in the
         // editor must not lose what was picked.
@@ -359,7 +381,15 @@ function shareEvenly(children) {
 
 /** The four per-language fields, as a translation starts with them. */
 function newZoneContent() {
-    return { blocks: [], alt: "", caption: "", url: "", label: "", items: {} };
+    return {
+        blocks: [],
+        alt: "",
+        caption: "",
+        url: "",
+        label: "",
+        items: {},
+        code: "",
+    };
 }
 
 /** The four fields an entry of an item list holds, in whichever language. */
@@ -411,6 +441,9 @@ export function usePostGrid(layout, content) {
         separatorStyle: labelled(SEPARATOR_STYLES, "separator_styles"),
         display: labelled(ITEM_DISPLAYS, "item_displays"),
         cardVariant: labelled(CARD_VARIANTS, "card_variants"),
+        textSize: labelled(TEXT_SIZES, "text_sizes"),
+        // A language names itself; there is nothing to translate.
+        language: CODE_LANGUAGES.map((value) => ({ value, label: value })),
         limit: Array.from({ length: MAX_LIST_LIMIT }, (_, i) => ({
             value: i + 1,
             label: String(i + 1),
@@ -983,6 +1016,9 @@ export function usePostGrid(layout, content) {
                 limit: shared("limit"),
                 cardVariant: shared("cardVariant"),
                 formId: shared("formId"),
+                language: shared("language"),
+                textSize: shared("textSize"),
+                fullBleed: shared("fullBleed"),
                 // The width control drives the large-screen span only. Below
                 // that a zone stays full width, which is what the stored
                 // `base` says and what reads best on a phone.
@@ -1056,6 +1092,7 @@ export function usePostGrid(layout, content) {
                 caption: localised("caption"),
                 url: localised("url"),
                 label: localised("label"),
+                code: localised("code"),
             });
         }
 

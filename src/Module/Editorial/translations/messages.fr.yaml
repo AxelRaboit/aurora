@@ -443,9 +443,23 @@ backend:
         items: Liste
         postList: Liste automatique
         form: Formulaire
+        code: Code
         stack: Pile
       zone_form: "Formulaire"
       zone_form_hint: "Le formulaire s'affiche dans la page, et s'envoie au même endroit que sur sa propre page."
+      text_size: Mise en forme
+      text_size_hint: "Le chapô grossit le premier paragraphe ; les mentions sont plus petites et plus discrètes."
+      text_sizes:
+        normal: Normal
+        lead: Chapô
+        small: Mentions
+      full_bleed: Pleine largeur
+      full_bleed_hint: "L'image sort de la colonne et traverse l'écran."
+      code: Extrait
+      code_placeholder: "function bonjour() { … }"
+      code_language: Langage
+      code_language_hint: "Sert à la coloration. Laissé vide, l'extrait s'affiche tel quel."
+      code_language_none: Aucun
       card_variant: Densité de la carte
       card_variants:
         full: Complète
