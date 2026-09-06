@@ -15,7 +15,9 @@ reste servait au mot-symbole, qui n'a pas été repris. Le cadrage suit
 maintenant le dessin.
 
 Les colonnes de la rangée passent aussi de 240 px au minimum au lieu de 210,
-pour qu'une adresse e-mail complète tienne sur une ligne.
+pour qu'une adresse e-mail complète tienne sur une ligne, et le libellé de
+chaque lien s'écrit plus petit et moins gras : c'est une étiquette, pas un
+titre.
 
 ## [0.9.47] - 2026-09-06
 

@@ -169,8 +169,11 @@
     border-radius: 14px;
     background: var(--th-surface);
     color: var(--th-primary);
-    font-size: 0.875rem;
-    font-weight: 600;
+    /* Un libelle de reseau est une etiquette, pas un titre : plus petit et
+       moins gras que le corps de texte, pour que la rangee se lise d'un coup
+       d'oeil sans tirer l'oeil hors de la page. */
+    font-size: 0.8125rem;
+    font-weight: 500;
     text-decoration: none;
     transition:
         transform 0.2s ease,
