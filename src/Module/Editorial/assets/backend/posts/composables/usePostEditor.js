@@ -92,27 +92,44 @@ function emptyTranslation() {
     };
 }
 
+/**
+ * A map keyed by id, whatever the server actually sent.
+ *
+ * PHP writes an empty map as `[]`, and JSON has no way to say otherwise, so
+ * every one of these arrives as a list the first time - before anything has
+ * been written into it. An array accepts `items[id] = …` without complaining
+ * and `JSON.stringify` then drops it, which is exactly how a page's item texts
+ * were typed, shown in the editor, saved, and lost on the way to the server.
+ *
+ * `?? {}` alone does not catch it: `[]` is neither null nor undefined.
+ */
+function mapOf(value) {
+    return null === value || "object" !== typeof value || Array.isArray(value)
+        ? {}
+        : value;
+}
+
 function translationFrom(source) {
     const translation = { ...emptyTranslation(), ...(source ?? {}) };
 
     // A translation saved before the split, or one the server sent as an empty
     // array, would leave `items` undefined and every text field unbindable.
     translation.banner = {
-        items: translation.banner?.items ?? {},
+        items: mapOf(translation.banner?.items),
     };
 
     // Same guard as the banner above: a translation saved before the grid
     // existed, or one the server sent as an empty array, would leave `zones`
     // undefined and every field unbindable.
     translation.grid = {
-        zones: translation.grid?.zones ?? {},
+        zones: mapOf(translation.grid?.zones),
     };
 
     // And the gallery, for the third time and the same reason: every post that
     // predates it sends nothing here, and an undefined `items` makes every alt
     // and caption field unbindable.
     translation.gallery = {
-        items: translation.gallery?.items ?? {},
+        items: mapOf(translation.gallery?.items),
     };
 
     return translation;

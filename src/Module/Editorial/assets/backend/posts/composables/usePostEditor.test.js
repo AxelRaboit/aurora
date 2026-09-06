@@ -264,3 +264,43 @@ describe("usePostEditor related posts", () => {
         expect(relatedPostSearchOptions.value).toEqual([]);
     });
 });
+
+/**
+ * Every one of these maps is keyed by an id and starts out empty, and PHP has
+ * no way to write an empty map as anything but `[]`. Read back as a list, they
+ * accept what is written into them and lose it at `JSON.stringify` - so what
+ * the server sends is normalised on arrival rather than trusted.
+ */
+describe("usePostEditor keyed maps", () => {
+    const withTranslation = (translation) => ({
+        ...props,
+        post: { id: 1, translations: { fr: translation } },
+    });
+
+    it("reads an empty map sent as an array as an empty map", () => {
+        const { form } = usePostEditor(
+            withTranslation({
+                banner: { items: [] },
+                grid: { zones: [] },
+                gallery: { items: [] },
+            }),
+        );
+
+        const fr = form.value.translations.fr;
+
+        expect(fr.banner.items).toEqual({});
+        expect(fr.grid.zones).toEqual({});
+        expect(fr.gallery.items).toEqual({});
+        expect(Array.isArray(fr.grid.zones)).toBe(false);
+    });
+
+    it("keeps a map that actually holds something", () => {
+        const { form } = usePostEditor(
+            withTranslation({
+                grid: { zones: { abc: { blocks: [], code: "echo;" } } },
+            }),
+        );
+
+        expect(form.value.translations.fr.grid.zones.abc.code).toBe("echo;");
+    });
+});

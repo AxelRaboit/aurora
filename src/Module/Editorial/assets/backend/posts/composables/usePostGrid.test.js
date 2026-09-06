@@ -804,6 +804,33 @@ describe("usePostGrid", () => {
         expect(api.childrenOf(0)).toEqual([]);
         expect(api.childrenOf(99)).toEqual([]);
     });
+
+    /**
+     * The way an item list's words were lost: PHP writes an empty map as `[]`,
+     * an array takes `items[id] = …` without a word, and `JSON.stringify` -
+     * which is what actually leaves for the server - drops it. The words were
+     * on the screen the whole time, so nothing looked wrong until the page was
+     * read back.
+     */
+    it("keeps the words of an entry when the server sent items as an empty array", () => {
+        const layout = makeLayout();
+        const content = ref({ zones: {} });
+        const api = usePostGrid(layout, content);
+
+        api.addZone("items");
+
+        // What a reload hands back for a zone nothing has been written into.
+        const zoneId = layout.value.zones[0].id;
+        content.value.zones[zoneId].items = [];
+
+        api.addItem(0);
+        api.itemFields(0, 0).title.value = "Découverte";
+
+        const sent = JSON.parse(JSON.stringify(content.value));
+        const itemId = layout.value.zones[0].items[0].id;
+
+        expect(sent.zones[zoneId].items[itemId].title).toBe("Découverte");
+    });
 });
 
 describe("placeZones", () => {

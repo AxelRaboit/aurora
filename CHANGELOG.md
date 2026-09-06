@@ -5,6 +5,24 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.55] - 2026-09-06
+
+### Corrigé
+
+#### Les entrées d'une zone Liste perdaient leurs mots à l'enregistrement
+Titres, textes, questions, réponses, chiffres : tout se tapait normalement,
+s'affichait normalement, et n'était plus là au rechargement de la page. Aucun
+message, aucune erreur — les mots partaient simplement sans arriver.
+
+Une liste d'entrées vide voyage en JSON comme `[]` : PHP n'a aucun moyen
+d'écrire une table vide autrement. L'éditeur y rangeait ensuite les mots par
+identifiant, ce qu'un tableau JavaScript accepte sans broncher et que
+`JSON.stringify` jette au moment de partir. Ce que le serveur recevait était
+donc une liste vide, et il enregistrait fidèlement le vide.
+
+Les trois cartes de contenu par langue — bannière, grille, galerie — sont
+désormais relues à l'arrivée, et une liste vide y redevient une table vide.
+
 ## [0.9.54] - 2026-09-06
 
 ### Corrigé
