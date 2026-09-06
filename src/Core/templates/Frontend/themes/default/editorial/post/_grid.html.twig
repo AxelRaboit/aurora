@@ -27,10 +27,18 @@
    the first column lines up with the title above the grid rather than sitting
    a gutter to the right of it. #}
 
+{% import 'Frontend/themes/default/editorial/post/_grid_surface.html.twig' as surface %}
+
 <div class="aurora-grid aurora-grid-flush gap-y-8">
     {% for zone in grid.zones %}
         <div style="{{ zone.spanStyle|raw }}{{ zone.startStyle|default('')|raw }}">
             {% if zone.type == 'stack' %}
+                {# Captured and wrapped like a leaf zone, so a stack can sit on
+                   a surface too. That is what a call to action is made of - a
+                   title, a line and a button in one band - and without it the
+                   three would be three zones with nothing holding them
+                   together. #}
+                {% set stackBody %}
                 {# A column of zones sharing the height of the row. It gets that
                    height for free: grid items stretch to their row, so the stack
                    is already as tall as its tallest neighbour and only has to
@@ -58,6 +66,8 @@
                         </div>
                     {% endfor %}
                 </div>
+                {% endset %}
+                {{ surface.wrap(zone, stackBody) }}
             {% else %}
                 {{ include('Frontend/themes/default/editorial/post/_grid_zone.html.twig', {zone: zone, locale: locale}) }}
             {% endif %}

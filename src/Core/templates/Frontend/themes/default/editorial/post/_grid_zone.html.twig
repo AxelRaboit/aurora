@@ -9,6 +9,8 @@
    Takes `zone` and `locale`. Nothing about where the zone sits belongs here:
    the caller owns the box and its geometry. #}
 
+{% import 'Frontend/themes/default/editorial/post/_grid_surface.html.twig' as surface %}
+
 {# The zone itself, captured rather than printed: what it sits on is decided
    below, and a surface has to wrap it. A capture is safe markup in Twig, so
    nothing is escaped twice on the way out. #}
@@ -198,45 +200,4 @@
     {% endif %}
 {% endset %}
 
-{# What the zone sits on, and whether it takes the whole screen to do it.
-
-   Written out literally rather than assembled - Tailwind only emits classes it
-   can read in the source, and `bg-{{ surface }}` is one it never sees.
-
-   No `not-prose` on this wrapper, deliberately: the exclusion is written
-   `[class~=not-prose] *`, so it would reach inside a text zone and switch off
-   the `prose` that zone turns back on. Each body already carries its own. #}
-{% set surfaces = {
-    none: '',
-    card: 'rounded-xl border border-line bg-surface p-6 sm:p-8',
-    soft: 'rounded-xl bg-surface-2 p-6 sm:p-8',
-    accent: 'rounded-xl border border-accent-500/30 bg-accent-500/10 p-6 sm:p-8',
-} %}
-{# Across the viewport the corners go: a band with rounded ends reads as a very
-   wide card that has overflowed, which is not what it is. #}
-{% set bleedSurfaces = {
-    none: '',
-    card: 'border-y border-line bg-surface py-10 sm:py-14',
-    soft: 'bg-surface-2 py-10 sm:py-14',
-    accent: 'border-y border-accent-500/30 bg-accent-500/10 py-10 sm:py-14',
-} %}
-
-{% if zone.fullBleed|default(false) %}
-    {# Viewport units and a negative margin rather than `100vw`, which counts
-       the scrollbar and hands the page a horizontal one.
-
-       A picture is the content and spans edge to edge; anything else is words,
-       and words at the width of a screen are unreadable - so everything but a
-       picture is held to the same box `<main>` uses. #}
-    <div class="w-screen max-w-none relative left-1/2 -translate-x-1/2 {{ bleedSurfaces[zone.surface|default('none')] }}">
-        {% if zone.type == 'media' %}
-            {{ body }}
-        {% else %}
-            <div class="mx-auto w-full max-w-7xl px-4">{{ body }}</div>
-        {% endif %}
-    </div>
-{% elseif (zone.surface|default('none')) != 'none' %}
-    <div class="{{ surfaces[zone.surface] }}">{{ body }}</div>
-{% else %}
-    {{ body }}
-{% endif %}
+{{ surface.wrap(zone, body) }}
