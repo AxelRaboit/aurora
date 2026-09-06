@@ -441,7 +441,19 @@ backend:
         button: Button
         separator: Separator
         items: List
+        postList: Automatic list
         stack: Stack
+      card_variant: Card density
+      card_variants:
+        full: Full
+        compact: Compact
+        horizontal: Horizontal
+      list_post_type: Content type
+      list_post_type_hint: "Left empty, the list draws from the whole site."
+      list_term: Term
+      list_term_hint: "To keep only the publications filed under this term."
+      list_any: Any
+      list_limit: How many to show
       button_variant: Style
       button_variants:
         solid: Solid

@@ -85,6 +85,19 @@ const { activeTab, select: selectTab, isActive: isTabActive } = useTabState(TABS
 });
 
 const postTypeOptions = props.postTypes.map((type) => ({ value: type.id, label: type.label }));
+
+/**
+ * Every term of every taxonomy, in one flat list, prefixed by the taxonomy it
+ * belongs to. A list zone narrows by one term and does not care which
+ * taxonomy it came from; two taxonomies can both hold a "Photographie", and
+ * the prefix is what tells them apart in the dropdown.
+ */
+const termOptions = props.taxonomies.flatMap((taxonomy) =>
+    (taxonomy.terms ?? []).map((term) => ({
+        value: term.id,
+        label: `${taxonomy.name} › ${term.name}`,
+    })),
+);
 const statusSelectOptions = props.statusOptions.map((status) => ({
     value: status,
     label: t(`backend.posts.status.${status}`),
@@ -459,6 +472,8 @@ function termLabel(term) {
                     <div v-if="supportsBlocks" class="bg-surface border border-line rounded-xl p-5 space-y-3">
                         <h3 class="text-sm font-semibold text-primary">{{ t("backend.posts.grid.title") }}</h3>
                         <PostGridPanel
+                            :post-type-options="postTypeOptions"
+                            :term-options="termOptions"
                             :layout="form.gridLayout"
                             :content="current.grid"
                             :locale="locale"

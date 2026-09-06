@@ -441,7 +441,19 @@ backend:
         button: Bouton
         separator: Séparateur
         items: Liste
+        postList: Liste automatique
         stack: Pile
+      card_variant: Densité de la carte
+      card_variants:
+        full: Complète
+        compact: Compacte
+        horizontal: Horizontale
+      list_post_type: Type de contenu
+      list_post_type_hint: "Laissé vide, la liste prend dans tout le site."
+      list_term: Terme
+      list_term_hint: "Pour ne garder que les publications classées sous ce terme."
+      list_any: Tous
+      list_limit: Combien en afficher
       button_variant: Allure
       button_variants:
         solid: Plein

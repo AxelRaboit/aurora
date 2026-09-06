@@ -29,6 +29,7 @@ export const LEAF_ZONE_TYPES = [
     "button",
     "separator",
     "items",
+    "postList",
 ];
 
 /** Mirrors GridNormalizer::ZONE_TYPES - a stack is top level only. */
@@ -51,6 +52,12 @@ export const ITEM_COLUMNS = [2, 3, 4];
 
 /** Mirrors GridNormalizer::MAX_ITEMS. */
 export const MAX_ITEMS = 12;
+
+/** Mirrors GridNormalizer::CARD_VARIANTS - how densely a card is drawn. */
+export const CARD_VARIANTS = ["full", "compact", "horizontal"];
+
+/** Mirrors GridNormalizer::MAX_LIST_LIMIT. */
+export const MAX_LIST_LIMIT = 12;
 
 /**
  * How many zones a stack may hold. Mirrors GridNormalizer::MAX_STACK_CHILDREN:
@@ -315,6 +322,12 @@ function newZone(type) {
         display: "steps",
         columns: 3,
         items: [],
+        // A list with no filter is the whole site, newest first - the answer
+        // that needs no setting up, which is what a zone should do on arrival.
+        postTypeId: null,
+        termId: null,
+        limit: 3,
+        cardVariant: "full",
         // Empty on every zone, filled only by a stack - the same reason every
         // other key is always present: switching a type back and forth in the
         // editor must not lose what was picked.
@@ -395,6 +408,11 @@ export function usePostGrid(layout, content) {
         size: labelled(SIZES, "sizes"),
         separatorStyle: labelled(SEPARATOR_STYLES, "separator_styles"),
         display: labelled(ITEM_DISPLAYS, "item_displays"),
+        cardVariant: labelled(CARD_VARIANTS, "card_variants"),
+        limit: Array.from({ length: MAX_LIST_LIMIT }, (_, i) => ({
+            value: i + 1,
+            label: String(i + 1),
+        })),
         // The figures are the same in every language, so they are their own label.
         columns: ITEM_COLUMNS.map((value) => ({ value, label: String(value) })),
     }));
@@ -958,6 +976,10 @@ export function usePostGrid(layout, content) {
                 separatorStyle: shared("separatorStyle"),
                 display: shared("display"),
                 columns: shared("columns"),
+                postTypeId: shared("postTypeId"),
+                termId: shared("termId"),
+                limit: shared("limit"),
+                cardVariant: shared("cardVariant"),
                 // The width control drives the large-screen span only. Below
                 // that a zone stays full width, which is what the stored
                 // `base` says and what reads best on a phone.

@@ -64,7 +64,7 @@
         </figure>
 
     {% elseif zone.type == 'post' and zone.post %}
-        {{ include('Frontend/themes/default/editorial/_post_card.html.twig', {post: zone.post, locale: locale}) }}
+        {{ include('Frontend/themes/default/editorial/_post_card.html.twig', {post: zone.post, locale: locale, variant: zone.cardVariant}) }}
 
     {% elseif zone.type == 'button' and zone.button %}
         {# Written out literally rather than assembled: Tailwind only emits
@@ -97,6 +97,25 @@
 
     {% elseif zone.type == 'items' and zone.items.entries is not empty %}
         {{ include('Frontend/themes/default/editorial/post/_grid_items.html.twig', {items: zone.items}) }}
+
+    {% elseif zone.type == 'postList' and zone.postList.cards is not empty %}
+        {# Written out literally: Tailwind only emits classes it can read in
+           the source. A compact list stays one column - its whole point is a
+           dense column, and two of them side by side is the full card again. #}
+        {% set listColumns = {
+            2: 'sm:grid-cols-2',
+            3: 'sm:grid-cols-2 lg:grid-cols-3',
+            4: 'sm:grid-cols-2 lg:grid-cols-4',
+        } %}
+        <div class="not-prose grid grid-cols-1 gap-4 {{ zone.postList.variant == 'compact' ? '' : listColumns[zone.postList.columns] }}">
+            {% for card in zone.postList.cards %}
+                {{ include('Frontend/themes/default/editorial/_post_card.html.twig', {
+                    post: card,
+                    locale: locale,
+                    variant: zone.postList.variant,
+                }) }}
+            {% endfor %}
+        </div>
 
     {% elseif zone.type == 'video' %}
         {% if zone.video %}

@@ -19,28 +19,36 @@
    `not-prose` because the grid renders inside `<article class="prose">`, and
    Typography would otherwise give the card image `margin: 2em 0`. #}
 
+{# `variant` is optional: a caller that says nothing gets the full card,
+   which is what every caller wanted before densities existed.
+
+   - `full`       picture, eyebrow, title, summary, arrow
+   - `compact`    a line and an arrow, for a long list in a narrow column
+   - `horizontal` the picture beside the text rather than above it #}
+{% set variant = variant|default('full') %}
+
 {% set cardTerms = post.terms is defined ? post.terms : [] %}
 {% set eyebrow = cardTerms is not empty ? (cardTerms|first)|first : null %}
 
-<article class="group not-prose relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition duration-200 hover:-translate-y-1 hover:border-accent-500/60 hover:shadow-xl hover:shadow-black/30">
-    {% if post.thumbnailUrl %}
+<article class="group not-prose relative flex h-full overflow-hidden rounded-xl border border-line bg-surface transition duration-200 hover:-translate-y-1 hover:border-accent-500/60 hover:shadow-xl hover:shadow-black/30 {{ variant == 'horizontal' ? 'flex-row items-stretch' : 'flex-col' }}">
+    {% if post.thumbnailUrl and variant != 'compact' %}
         {# The fit arrives as a class, not a value: Tailwind only emits classes
            it can read in the source, and `object-{{ fit }}` is one it never
            sees. A fixed ratio rather than a fixed height, so a row of cards
            lines up whatever the pictures were. #}
-        <div class="relative overflow-hidden">
+        <div class="relative overflow-hidden {{ variant == 'horizontal' ? 'w-1/3 shrink-0' : '' }}">
             <img
                 src="{{ post.thumbnailUrl }}"
                 alt=""
                 loading="lazy"
-                class="aspect-[16/10] w-full {{ post.thumbnailFitClass }} transition-transform duration-500 group-hover:scale-105"
+                class="{{ variant == 'horizontal' ? 'h-full' : 'aspect-[16/10]' }} w-full {{ post.thumbnailFitClass }} transition-transform duration-500 group-hover:scale-105"
                 style="object-position: {{ post.thumbnailFocalPosition }};"
             >
         </div>
     {% endif %}
 
-    <div class="flex flex-1 flex-col gap-2 p-5">
-        {% if eyebrow %}
+    <div class="flex flex-1 flex-col gap-2 {{ variant == 'compact' ? 'p-4' : 'p-5' }}">
+        {% if eyebrow and variant != 'compact' %}
             {# The first term, above the title rather than as a chip below it.
                It says what kind of thing this is before the reader commits to
                the title, which is the job a category has on a card. #}
@@ -56,7 +64,7 @@
             >{{ post.title }}</a>
         </h2>
 
-        {% if post.description %}
+        {% if post.description and variant != 'compact' %}
             <p class="m-0 text-sm leading-relaxed text-secondary">{{ post.description }}</p>
         {% endif %}
 
@@ -66,7 +74,7 @@
            inserted on hover, so the card does not resize under the cursor. #}
         <span
             aria-hidden="true"
-            class="mt-auto pt-3 text-lg leading-none text-accent opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100"
+            class="text-lg leading-none text-accent opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100 {{ variant == 'compact' ? 'absolute right-4 top-1/2 -translate-y-1/2' : 'mt-auto pt-3' }}"
         >&rarr;</span>
     </div>
 </article>

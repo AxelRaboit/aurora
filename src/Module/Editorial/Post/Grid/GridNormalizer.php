@@ -102,6 +102,17 @@ final readonly class GridNormalizer
      */
     public const string ZONE_ITEMS = 'items';
 
+    /**
+     * Publications chosen by rule rather than one by one.
+     *
+     * The `post` zone names a single publication and never changes its mind;
+     * this one asks a question - the newest of this type, filed under this
+     * term - and answers it again on every render. It is the difference
+     * between a page that has to be edited when something is published and a
+     * page that does not.
+     */
+    public const string ZONE_POST_LIST = 'postList';
+
     /** How loudly a button is drawn. */
     public const array BUTTON_VARIANTS = ['solid', 'outline', 'ghost'];
 
@@ -113,6 +124,16 @@ final readonly class GridNormalizer
 
     /** The five costumes of an item list. */
     public const array ITEM_DISPLAYS = ['steps', 'stats', 'faq', 'quotes', 'logos'];
+
+    /**
+     * How densely a publication card is drawn. The same publication either
+     * way: a full card carries its picture and its summary, a compact one is
+     * a line and an arrow, a horizontal one sets the picture beside the text.
+     */
+    public const array CARD_VARIANTS = ['full', 'compact', 'horizontal'];
+
+    /** Enough for a row or two of cards; past that it is an archive page. */
+    public const int MAX_LIST_LIMIT = 12;
 
     /**
      * Enough for a process, a row of figures or a short FAQ, and few enough
@@ -230,6 +251,7 @@ final readonly class GridNormalizer
         self::ZONE_BUTTON,
         self::ZONE_SEPARATOR,
         self::ZONE_ITEMS,
+        self::ZONE_POST_LIST,
     ];
 
     /**
@@ -433,6 +455,14 @@ final readonly class GridNormalizer
                 // Their words live on the translation, like every other word
                 // on the page.
                 'items' => self::ZONE_ITEMS === $type ? $this->itemList($entry['items'] ?? null) : [],
+                // What a list zone asks for. Both filters are optional and
+                // combine; null on either side means "do not narrow by this".
+                'postTypeId' => $this->values->id($entry['postTypeId'] ?? null),
+                'termId' => $this->values->id($entry['termId'] ?? null),
+                'limit' => min(self::MAX_LIST_LIMIT, max(1, (int) ($entry['limit'] ?? 3))),
+                // Read by the single-publication zone too: the two draw the
+                // same card, so they offer the same densities.
+                'cardVariant' => $this->values->oneOf($entry['cardVariant'] ?? null, self::CARD_VARIANTS, self::CARD_VARIANTS[0]),
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
                 'children' => self::ZONE_STACK === $type

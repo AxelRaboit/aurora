@@ -53,9 +53,9 @@ final readonly class GridViewBuilder
      * @return array<string, mixed>|null null when the grid is off or empty, so
      *                                   the template falls back to plain blocks
      */
-    public function build(array $layout, array $content, string $locale): ?array
+    public function build(array $layout, array $content, string $locale, ?int $currentPostId = null): ?array
     {
-        $grid = $this->resolve($layout, $content, $locale);
+        $grid = $this->resolve($layout, $content, $locale, $currentPostId);
 
         if (true !== $grid['enabled'] || [] === $grid['zones']) {
             return null;
@@ -73,9 +73,9 @@ final readonly class GridViewBuilder
      *
      * @return array<string, mixed>
      */
-    public function buildForEditor(array $layout, array $content, string $locale): array
+    public function buildForEditor(array $layout, array $content, string $locale, ?int $currentPostId = null): array
     {
-        return $this->resolve($layout, $content, $locale);
+        return $this->resolve($layout, $content, $locale, $currentPostId);
     }
 
     /**
@@ -84,7 +84,7 @@ final readonly class GridViewBuilder
      *
      * @return array<string, mixed>
      */
-    private function resolve(array $rawLayout, array $rawContent, string $locale): array
+    private function resolve(array $rawLayout, array $rawContent, string $locale, ?int $currentPostId = null): array
     {
         $layout = $this->gridNormalizer->normalizeLayout($rawLayout);
         $content = $this->gridNormalizer->normalizeContent($rawContent, $layout);
@@ -92,7 +92,7 @@ final readonly class GridViewBuilder
         $documents = $this->documents($layout);
         $posts = $this->posts($layout);
 
-        $resolve = function (array $zone) use (&$resolve, $content, $documents, $posts, $locale): array {
+        $resolve = function (array $zone) use (&$resolve, $content, $documents, $posts, $locale, $currentPostId): array {
             $held = $content['zones'][$zone['id']];
 
             return [
@@ -163,6 +163,9 @@ final readonly class GridViewBuilder
                 'items' => GridNormalizer::ZONE_ITEMS === $zone['type']
                     ? $this->itemsView($zone, $held, $documents)
                     : null,
+                'postList' => GridNormalizer::ZONE_POST_LIST === $zone['type']
+                    ? $this->postListView($zone, $locale, $currentPostId)
+                    : null,
             ];
         };
 
@@ -187,6 +190,42 @@ final readonly class GridViewBuilder
         return [
             ...$layout,
             'zones' => $zones,
+        ];
+    }
+
+    /**
+     * A list zone, answered from the database on every render.
+     *
+     * One query per zone. A page holding three of them makes three, which is
+     * the price of a list that is never out of date - the alternative is an
+     * author remembering to edit a page every time they publish.
+     *
+     * @return array{columns: int, variant: string, cards: list<array<string, mixed>>}
+     */
+    private function postListView(array $zone, string $locale, ?int $currentPostId): array
+    {
+        $posts = $this->postRepository->findLatestPublished(
+            $locale,
+            (int) $zone['limit'],
+            $zone['postTypeId'],
+            $zone['termId'],
+            // A publication listing its neighbours should not offer itself
+            // among them.
+            $currentPostId,
+        );
+
+        $cards = [];
+        foreach ($posts as $post) {
+            $card = $this->postCard($post, $locale);
+            if (null !== $card) {
+                $cards[] = $card;
+            }
+        }
+
+        return [
+            'columns' => (int) $zone['columns'],
+            'variant' => (string) $zone['cardVariant'],
+            'cards' => $cards,
         ];
     }
 

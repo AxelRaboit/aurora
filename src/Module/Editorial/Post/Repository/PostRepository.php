@@ -161,6 +161,51 @@ class PostRepository extends ResolveTargetEntityRepository
      * The shape every public listing starts from. An INNER JOIN on the
      * translation is what drops posts untranslated in this locale.
      */
+    /**
+     * The newest published posts, for a list zone that keeps itself current.
+     *
+     * Both filters are optional and combine: a type alone, a term alone, both
+     * together, or neither for the whole site. Unpaginated on purpose - a
+     * zone shows a handful and the cap is the author's, not a page number.
+     *
+     * `$exclude` is the page doing the asking: a publication that lists its
+     * neighbours should not offer itself among them.
+     *
+     * @return list<PostInterface>
+     */
+    public function findLatestPublished(
+        string $locale,
+        int $limit,
+        ?int $postTypeId = null,
+        ?int $termId = null,
+        ?int $exclude = null,
+    ): array {
+        $query = $this->publishedQueryBuilder($locale)
+            ->addSelect('t')
+            ->orderBy('p.publishedAt', Order::Descending->value)
+            ->addOrderBy('p.id', Order::Descending->value)
+            ->setMaxResults(max(1, $limit));
+
+        if (null !== $postTypeId) {
+            $query->andWhere('p.postType = :postType')->setParameter('postType', $postTypeId);
+        }
+
+        if (null !== $termId) {
+            $query->innerJoin('p.terms', 'term')
+                ->andWhere('term.id = :termId')
+                ->setParameter('termId', $termId);
+        }
+
+        if (null !== $exclude) {
+            $query->andWhere('p.id != :exclude')->setParameter('exclude', $exclude);
+        }
+
+        /** @var list<PostInterface> $posts */
+        $posts = $query->getQuery()->getResult();
+
+        return $posts;
+    }
+
     private function publishedQueryBuilder(string $locale): QueryBuilder
     {
         return $this->createQueryBuilder('p')

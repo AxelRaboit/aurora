@@ -32,6 +32,10 @@ const props = defineProps({
     locale: { type: String, required: true },
     /** Publications a `post` zone may name. */
     postOptions: { type: Array, default: () => [] },
+    /** The types a list zone may narrow to. */
+    postTypeOptions: { type: Array, default: () => [] },
+    /** The terms it may narrow to, across every taxonomy. */
+    termOptions: { type: Array, default: () => [] },
     /** The shapes a media zone may be cropped to. */
     ratioOptions: { type: Array, default: () => [] },
     /** How much of its zone's width a picture may take. */
@@ -179,6 +183,49 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                 :label="t('backend.posts.grid.zone_post')"
                 :hint="t('backend.posts.grid.zone_post_hint')"
                 :options="publicationOptions"
+            />
+            <AppChoiceRow
+                v-model="bound.cardVariant.value"
+                :label="t('backend.posts.grid.card_variant')"
+                :options="choices.cardVariant ?? []"
+            />
+        </template>
+
+        <template v-else-if="zone.type === 'postList'">
+            <!-- Both filters are optional and combine. Left alone, the zone
+                 shows the newest publications of the whole site, which is the
+                 answer that needs no setting up. -->
+            <AppSelect
+                v-model="bound.postTypeId.value"
+                :label="t('backend.posts.grid.list_post_type')"
+                :hint="t('backend.posts.grid.list_post_type_hint')"
+                :options="postTypeOptions"
+                :placeholder="t('backend.posts.grid.list_any')"
+            />
+            <AppSelect
+                v-model="bound.termId.value"
+                :label="t('backend.posts.grid.list_term')"
+                :hint="t('backend.posts.grid.list_term_hint')"
+                :options="termOptions"
+                :placeholder="t('backend.posts.grid.list_any')"
+            />
+            <AppChoiceRow
+                v-model="bound.limit.value"
+                :label="t('backend.posts.grid.list_limit')"
+                :options="choices.limit ?? []"
+            />
+            <AppChoiceRow
+                v-model="bound.cardVariant.value"
+                :label="t('backend.posts.grid.card_variant')"
+                :options="choices.cardVariant ?? []"
+            />
+            <!-- A compact list is a dense column by design, so the count of
+                 columns is not a question it has. -->
+            <AppChoiceRow
+                v-if="bound.cardVariant.value !== 'compact'"
+                v-model="bound.columns.value"
+                :label="t('backend.posts.grid.item_columns')"
+                :options="choices.columns ?? []"
             />
         </template>
 
