@@ -3,7 +3,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { createTestI18n } from "@/tests/helpers/createTestI18n.js";
 import DocumentPickerModal from "./DocumentPickerModal.vue";
 
-// The library tab fetches directly; the Unsplash tab goes through useRequest.
+// The library tab fetches directly; the Pexels tab goes through useRequest.
 // Both are stubbed so the component is exercised without a network.
 const request = vi.fn();
 vi.mock("@/shared/composables/http/backend/useRequest.js", () => ({
@@ -11,9 +11,10 @@ vi.mock("@/shared/composables/http/backend/useRequest.js", () => ({
 }));
 
 const PHOTO = {
-    id: "abc123",
-    url: "https://images.unsplash.com/photo-1?w=1080",
-    thumbUrl: "https://images.unsplash.com/photo-1?w=200",
+    id: "2014422",
+    url: "https://images.pexels.com/photos/2014422/pexels-photo-2014422.jpeg",
+    thumbUrl:
+        "https://images.pexels.com/photos/2014422/pexels-photo-2014422.jpeg?w=280",
     authorName: "Jane Doe",
     description: "A tidy desk",
     color: "#0f172a",
@@ -25,10 +26,9 @@ const MESSAGES = {
     backend: {
         ged: {
             documents: { picker_tab_library: "Médiathèque" },
-            unsplash: {
-                tab: "Unsplash",
-                not_configured:
-                    "Renseignez UNSPLASH_ACCESS_KEY pour l'activer.",
+            pexels: {
+                tab: "Pexels",
+                not_configured: "Renseignez PEXELS_API_KEY pour l'activer.",
                 empty: "Aucune photo pour cette recherche.",
                 search_placeholder: "Rechercher une photo…",
             },
@@ -72,24 +72,24 @@ beforeEach(() => {
     });
 });
 
-describe("DocumentPickerModal Unsplash tab", () => {
+describe("DocumentPickerModal Pexels tab", () => {
     /**
-     * Unsplash returns photographs and nothing else, so a picker opened to
+     * Pexels returns photographs and nothing else, so a picker opened to
      * choose a contract has no use for the tab - and showing it would invite
      * an editor to file a landscape as a signed document.
      */
     it("is offered only when the field is asking for an image", () => {
-        expect(findTab(mountPicker(), "Unsplash")).toBeDefined();
+        expect(findTab(mountPicker(), "Pexels")).toBeDefined();
         expect(
-            findTab(mountPicker({ mimePrefix: null }), "Unsplash"),
+            findTab(mountPicker({ mimePrefix: null }), "Pexels"),
         ).toBeUndefined();
     });
 
     it("searches only once there is something to search for", async () => {
         const wrapper = mountPicker();
-        await findTab(wrapper, "Unsplash").trigger("click");
+        await findTab(wrapper, "Pexels").trigger("click");
 
-        wrapper.vm.onUnsplashSearch("   ");
+        wrapper.vm.onPexelsSearch("   ");
         await flushPromises();
 
         expect(request).not.toHaveBeenCalled();
@@ -103,11 +103,11 @@ describe("DocumentPickerModal Unsplash tab", () => {
         });
 
         const wrapper = mountPicker();
-        await findTab(wrapper, "Unsplash").trigger("click");
-        wrapper.vm.onUnsplashSearch("desk");
+        await findTab(wrapper, "Pexels").trigger("click");
+        wrapper.vm.onPexelsSearch("desk");
         await flushPromises();
 
-        expect(wrapper.text()).toContain("UNSPLASH_ACCESS_KEY");
+        expect(wrapper.text()).toContain("PEXELS_API_KEY");
     });
 
     /**
@@ -123,8 +123,8 @@ describe("DocumentPickerModal Unsplash tab", () => {
         });
 
         const wrapper = mountPicker();
-        await findTab(wrapper, "Unsplash").trigger("click");
-        wrapper.vm.onUnsplashSearch("desk");
+        await findTab(wrapper, "Pexels").trigger("click");
+        wrapper.vm.onPexelsSearch("desk");
         await flushPromises();
 
         wrapper.vm.pickPhoto(PHOTO);
@@ -145,15 +145,15 @@ describe("DocumentPickerModal Unsplash tab", () => {
             .mockResolvedValueOnce({ document });
 
         const wrapper = mountPicker();
-        await findTab(wrapper, "Unsplash").trigger("click");
-        wrapper.vm.onUnsplashSearch("desk");
+        await findTab(wrapper, "Pexels").trigger("click");
+        wrapper.vm.onPexelsSearch("desk");
         await flushPromises();
 
         wrapper.vm.pickPhoto(PHOTO);
         await wrapper.vm.confirm();
 
         expect(request).toHaveBeenLastCalledWith(
-            "/backend/ged/unsplash/import",
+            "/backend/ged/pexels/import",
             { photo: PHOTO },
             expect.anything(),
         );
@@ -174,8 +174,8 @@ describe("DocumentPickerModal Unsplash tab", () => {
             .mockResolvedValueOnce(null);
 
         const wrapper = mountPicker();
-        await findTab(wrapper, "Unsplash").trigger("click");
-        wrapper.vm.onUnsplashSearch("desk");
+        await findTab(wrapper, "Pexels").trigger("click");
+        wrapper.vm.onPexelsSearch("desk");
         await flushPromises();
 
         wrapper.vm.pickPhoto(PHOTO);

@@ -49,12 +49,11 @@ backend:
     ged_folders: Dossiers
     ged_folders_description: "Ranger les documents dans une arborescence de dossiers imbriqués."
   ged:
-    unsplash:
-      tab: Unsplash
+    pexels:
+      tab: Pexels
       search_placeholder: "Rechercher une photo : bureau, nature, portrait…"
       empty: Aucune photo pour cette recherche.
-      not_configured: "L'intégration Unsplash n'est pas configurée. Renseignez UNSPLASH_ACCESS_KEY pour l'activer."
-      credit: "Photo de {author} sur Unsplash"
+      not_configured: "L'intégration Pexels n'est pas configurée. Renseignez PEXELS_API_KEY pour l'activer."
       errors:
         invalid_photo: Cette photo ne peut pas être importée.
     bootstrap:

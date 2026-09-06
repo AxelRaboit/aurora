@@ -4,9 +4,9 @@
    all owe the same line, and a provider that changes what it requires should
    be answered in a single place.
 
-   `rel="nofollow noopener"` because the link is an obligation, not an
-   endorsement, and `utm` parameters are already carried by the URL - the
-   importer put them there, since that is what the API guidelines ask for. #}
+   Two links because the guidelines ask for two things: the photographer, by
+   name, and the provider itself. `rel="nofollow noopener"` because they are
+   an obligation rather than an endorsement. #}
 <p class="mt-1 text-xs text-muted">
     {% if credit.url %}
         <a href="{{ credit.url }}" target="_blank" rel="nofollow noopener" class="hover:underline">{{ credit.name }}</a>
@@ -14,5 +14,5 @@
         {{ credit.name }}
     {% endif %}
     <span aria-hidden="true"> · </span>
-    <a href="https://unsplash.com/?utm_source=aurora&amp;utm_medium=referral" target="_blank" rel="nofollow noopener" class="hover:underline">Unsplash</a>
+    <a href="https://www.pexels.com" target="_blank" rel="nofollow noopener" class="hover:underline">Pexels</a>
 </p>

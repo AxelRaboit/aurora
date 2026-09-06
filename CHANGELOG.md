@@ -5,6 +5,38 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Modifié
+
+#### Les photos viennent de Pexels et non plus d'Unsplash
+L'onglet du sélecteur d'images s'appelle maintenant « Pexels » et interroge
+leur API. Tout le reste se comporte pareil : on tape une recherche, on choisit
+une photo, elle arrive dans la médiathèque comme n'importe quel autre média,
+sans être téléchargée — `filePath` reste vide et `sourceUrl` porte l'adresse.
+
+Trois différences tiennent au fournisseur. La clé s'appelle `PEXELS_API_KEY`
+et se demande sur https://www.pexels.com/api/ ; le quota gratuit est de 200
+requêtes par heure et 20 000 par mois, là où Unsplash s'arrêtait à 50. Il n'y
+a plus d'appel de suivi à leur envoyer à chaque sélection : Pexels n'en
+demande pas. Le crédit affiché sous la photo porte désormais deux liens, le
+photographe et Pexels, ce que leurs recommandations réclament.
+
+Les vignettes servies par le CDN sont demandées en largeur seule. Les tailles
+toutes faites de Pexels arrivent recadrées dans une boîte fixe — leur « large »
+fait 940×650 quelle que soit la photo — donc c'est l'original qui est
+enregistré, et la hauteur et le ratio de pixels qui recadreraient sont retirés
+de l'adresse au moment du rendu.
+
+Rien à reprendre dans les contenus déjà publiés : la clé Unsplash n'ayant
+jamais été renseignée, aucun document distant n'existe en base.
+
+### Dans aurora-client
+
+Remplacer `UNSPLASH_ACCESS_KEY` par `PEXELS_API_KEY` dans `.env.local`, en
+local comme sur le serveur. Laissée vide, l'intégration reste inactive et le
+reste de la GED fonctionne comme avant. Aucune migration.
+
 ## [0.9.43] - 2026-09-06
 
 ### Ajouté

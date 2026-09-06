@@ -17,6 +17,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 final class DocumentUrlGeneratorRemoteTest extends TestCase
 {
+    private const string SOURCE = 'https://images.pexels.com/photos/2014422/pexels-photo-2014422.jpeg';
+
     private function generator(): DocumentUrlGenerator
     {
         // A stub, not a mock: the routing is scenery here, and only the local
@@ -29,7 +31,7 @@ final class DocumentUrlGeneratorRemoteTest extends TestCase
         return new DocumentUrlGenerator($urlGenerator);
     }
 
-    private function remoteDocument(string $url = 'https://images.unsplash.com/photo-1?ixid=abc&w=1080'): Document
+    private function remoteDocument(string $url = self::SOURCE): Document
     {
         $document = new Document();
         $document->setTitle('Stock photo');
@@ -39,12 +41,27 @@ final class DocumentUrlGeneratorRemoteTest extends TestCase
         return $document;
     }
 
-    public function testPublicUrlIsTheProvidersAddress(): void
+    /** @return array<string, string> */
+    private function queryOf(?string $url): array
     {
-        self::assertSame(
-            'https://images.unsplash.com/photo-1?ixid=abc&w=1080',
-            $this->generator()->publicUrl($this->remoteDocument()),
-        );
+        self::assertIsString($url);
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+        /* @var array<string, string> $query */
+        return $query;
+    }
+
+    /**
+     * The bare address is the photographer's full-size original, which can be
+     * twenty-five megapixels. Anything that draws the picture asks the CDN for
+     * a sane width instead; `getSourceUrl()` is where the original still lives.
+     */
+    public function testPublicUrlIsTheProvidersAddressAtAWorkableWidth(): void
+    {
+        $url = $this->generator()->publicUrl($this->remoteDocument());
+
+        self::assertStringStartsWith(self::SOURCE.'?', (string) $url);
+        self::assertSame('1920', $this->queryOf($url)['w']);
     }
 
     /**
@@ -53,10 +70,10 @@ final class DocumentUrlGeneratorRemoteTest extends TestCase
      */
     public function testAbsoluteUrlIsAlsoTheProvidersAddress(): void
     {
-        self::assertSame(
-            'https://images.unsplash.com/photo-1?ixid=abc&w=1080',
-            $this->generator()->publicUrlAbsolute($this->remoteDocument()),
-        );
+        $url = $this->generator()->publicUrlAbsolute($this->remoteDocument());
+
+        self::assertStringStartsWith('https://images.pexels.com/', (string) $url);
+        self::assertSame('1920', $this->queryOf($url)['w']);
     }
 
     /**
@@ -65,26 +82,38 @@ final class DocumentUrlGeneratorRemoteTest extends TestCase
      */
     public function testVariantsAreAskedOfTheCdnByWidth(): void
     {
-        $url = $this->generator()->variantUrl($this->remoteDocument(), 'medium');
+        $query = $this->queryOf($this->generator()->variantUrl($this->remoteDocument(), 'medium'));
 
-        self::assertIsString($url);
-        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
         self::assertSame('800', $query['w']);
-        self::assertSame('webp', $query['fm']);
-        self::assertSame('80', $query['q']);
+        self::assertSame('compress', $query['auto']);
+        self::assertSame('tinysrgb', $query['cs']);
     }
 
     /**
-     * Unsplash attributes a view through the `ixid` it signs its URLs with;
-     * rebuilding the address without it would break their tracking.
+     * Pexels' own renditions are cropped to a fixed box by a height and a
+     * pixel ratio on the URL. Left in place, asking for a narrower width
+     * would crop the picture rather than shrink it.
      */
-    public function testVariantsKeepTheProvidersOwnParameters(): void
+    public function testTheProvidersCroppingParametersAreDropped(): void
     {
-        $url = (string) $this->generator()->variantUrl($this->remoteDocument(), 'thumbnail');
+        $document = $this->remoteDocument(self::SOURCE.'?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940');
 
-        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
-        self::assertSame('abc', $query['ixid']);
+        $query = $this->queryOf($this->generator()->variantUrl($document, 'thumbnail'));
+
         self::assertSame('256', $query['w']);
+        self::assertArrayNotHasKey('h', $query);
+        self::assertArrayNotHasKey('dpr', $query);
+    }
+
+    /**
+     * A provider that signs or tags its addresses has a reason to, so only
+     * the parameters we are deliberately overriding are touched.
+     */
+    public function testAnyOtherParameterTheProviderPutThereIsKept(): void
+    {
+        $document = $this->remoteDocument(self::SOURCE.'?ixid=abc');
+
+        self::assertSame('abc', $this->queryOf($this->generator()->variantUrl($document, 'large'))['ixid']);
     }
 
     public function testAnUnknownVariantNameYieldsNullAsItDoesForLocalFiles(): void
