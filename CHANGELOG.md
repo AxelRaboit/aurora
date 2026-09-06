@@ -5,6 +5,17 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### Le numéro d'une étape touchait son titre
+Dans une liste **Étapes numérotées**, la pastille chiffrée s'arrêtait à un
+vingtième de rem du titre : les deux se lisaient comme une seule ligne, et la
+pastille n'était pas non plus centrée sur le filet vertical.
+
+Elle l'est maintenant, avec une vraie respiration entre le chiffre et les mots.
+
 ## [0.9.56] - 2026-09-06
 
 ### Corrigé
