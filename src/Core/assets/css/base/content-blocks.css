@@ -135,3 +135,127 @@
 .prose :is(h2, h3, h4) {
     margin-bottom: 0.5em;
 }
+
+/*
+ * Rangee de liens sociaux, ecrite depuis un bloc HTML de l'editeur.
+ *
+ * Le nettoyeur de contenu laisse passer `class` et `style` mais supprime
+ * `<style>` - ce qui condamnait ces cartes aux styles en ligne, donc a
+ * n'avoir aucun etat au survol. Tout ce qui suit existe pour que le bloc
+ * n'ait plus qu'a nommer ses classes : la couleur de chaque reseau, son
+ * icone et le comportement vivent ici.
+ *
+ * Les icones sont des masques plutot que des images : un masque prend la
+ * couleur du texte, donc la meme icone sert sur le fond sombre comme sur
+ * l'etat survole sans avoir deux fichiers.
+ */
+.aurora-social-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin: 1.5rem 0;
+}
+
+.aurora-social-link {
+    /* Repli sur l'accent : un reseau sans classe de marque reste lisible. */
+    --brand: var(--color-accent-500);
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--th-surface);
+    color: var(--th-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.aurora-social-link:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--brand) 55%, transparent);
+    background: color-mix(in srgb, var(--brand) 8%, var(--th-surface));
+}
+
+.aurora-social-link__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--brand) 15%, transparent);
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+/* Le carre porte la teinte, le masque a l'interieur porte le dessin. */
+.aurora-social-link__icon::before {
+    content: "";
+    margin: auto;
+    width: 18px;
+    height: 18px;
+    background: var(--brand);
+    transition: background-color 0.2s ease;
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+}
+
+.aurora-social-link:hover .aurora-social-link__icon {
+    background: var(--brand);
+}
+
+.aurora-social-link:hover .aurora-social-link__icon::before {
+    background: var(--th-surface-bg);
+}
+
+.aurora-social-link__label {
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+
+
+
+/* Une marque par reseau : sa couleur et son icone. */
+
+.aurora-social-link--linkedin {
+    --brand: #0a66c2;
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M16%208a6%206%200%200%201%206%206v7h-4v-7a2%202%200%200%200-2-2%202%202%200%200%200-2%202v7h-4v-7a6%206%200%200%201%206-6z'/%3E%3Crect%20width='4'%20height='12'%20x='2'%20y='9'/%3E%3Ccircle%20cx='4'%20cy='4'%20r='2'/%3E%3C/svg%3E");
+}
+
+.aurora-social-link--github {
+    --brand: #e6edf3;
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M15%2022v-4a4.8%204.8%200%200%200-1-3.5c3%200%206-2%206-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35%200-3.5%200%200-1%200-3%201.5-2.64-.5-5.36-.5-8%200C6%202%205%202%205%202c-.3%201.15-.3%202.35%200%203.5A5.403%205.403%200%200%200%204%209c0%203.5%203%205.5%206%205.5-.39.49-.68%201.05-.85%201.65-.17.6-.22%201.23-.15%201.85v4'/%3E%3Cpath%20d='M9%2018c-4.51%202-5-2-7-2'/%3E%3C/svg%3E");
+}
+
+.aurora-social-link--instagram {
+    --brand: #e1306c;
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20width='20'%20height='20'%20x='2'%20y='2'%20rx='5'%20ry='5'/%3E%3Cpath%20d='M16%2011.37A4%204%200%201%201%2012.63%208%204%204%200%200%201%2016%2011.37z'/%3E%3Cline%20x1='17.5'%20x2='17.51'%20y1='6.5'%20y2='6.5'/%3E%3C/svg%3E");
+}
+
+.aurora-social-link--facebook {
+    --brand: #1877f2;
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M18%202h-3a5%205%200%200%200-5%205v3H7v4h3v8h4v-8h3l1-4h-4V7a1%201%200%200%201%201-1h3z'/%3E%3C/svg%3E");
+}
+
+.aurora-social-link--mail {
+    --brand: var(--color-accent-500);
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m22%207-8.991%205.727a2%202%200%200%201-2.009%200L2%207'/%3E%3Crect%20x='2'%20y='4'%20width='20'%20height='16'%20rx='2'/%3E%3C/svg%3E");
+}
+
+.aurora-social-link--malt {
+    --brand: #fc5757;
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='black'%3E%3Cpath%20d='M3.499%2013.563l-.21.21.619.618c.304.304.79.598%201.244.144.339-.34.26-.695.073-.98-.06.004-1.726.008-1.726.008zm-.963-2.325.21-.21-.608-.607c-.304-.303-.765-.621-1.243-.143-.351.35-.273.692-.087.97Zm2.86.416c-.037.043-1.511%201.524-1.511%201.524h1.154c.43%200%20.981-.101.981-.777%200-.496-.296-.683-.624-.747zm-3.244-.031H.981c-.43%200-.981.135-.981.778%200%20.479.307.676.641.745.04-.046%201.511-1.523%201.511-1.523zm1.484%203.04-.618-.618-.608.607a2.613%202.613%200%200%201-.137.128c.07.333.266.639.745.639s.676-.307.745-.641c-.043-.037-.085-.073-.127-.115zM2.41%2010.15l.608.607.618-.618a2.25%202.25%200%200%201%20.128-.118c-.065-.327-.251-.623-.747-.623s-.682.297-.746.625c.046.04.092.08.14.127zm2.742.117c-.455-.454-.94-.16-1.244.144l-2.87%202.87c-.303.303-.621.765-.143%201.243.478.478.94.16%201.243-.143l2.87-2.87c.304-.304.598-.79.144-1.244Z'/%3E%3C/svg%3E");
+}
+
+.aurora-social-link--upwork {
+    --brand: #14a800;
+    --icon: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='black'%3E%3Cpath%20d='M18.561%2013.158c-1.102%200-2.135-.467-3.074-1.227l.228-1.076.008-.042c.207-1.143.849-3.06%202.839-3.06%201.492%200%202.703%201.212%202.703%202.703-.001%201.489-1.212%202.702-2.704%202.702zm0-8.14c-2.539%200-4.51%201.649-5.31%204.366-1.22-1.834-2.148-4.036-2.687-5.892H7.828v7.112c-.002%201.406-1.141%202.546-2.547%202.548-1.405-.002-2.543-1.143-2.545-2.548V3.492H0v7.112c0%202.914%202.37%205.303%205.281%205.303%202.913%200%205.283-2.389%205.283-5.303v-1.19c.529%201.107%201.182%202.229%201.974%203.221l-1.673%207.873h2.797l1.213-5.71c1.063.679%202.285%201.109%203.686%201.109%203%200%205.439-2.452%205.439-5.45%200-3-2.439-5.439-5.439-5.439z'/%3E%3C/svg%3E");
+}
