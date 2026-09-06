@@ -177,6 +177,8 @@ final class DumpJsTranslationsCommand extends Command
     /**
      * Recursively prepares messages for vue-i18n consumption:
      *  - Symfony `%var%` placeholders → `{var}`
+     *  - Braces that name nothing (`function bonjour() { … }`) escaped as `{'{'}`, so
+     *    vue-i18n's message compiler reads them as text rather than as a placeholder.
      *  - Bare `@` characters (e.g. in `you@example.com` placeholders) escaped as `{'@'}` so
      *    vue-i18n's linked-message parser doesn't treat them as `@:other.key` syntax.
      */
@@ -185,7 +187,7 @@ final class DumpJsTranslationsCommand extends Command
         if (is_string($value)) {
             $converted = preg_replace('/%([A-Za-z_]\w*)%/', '{$1}', $value) ?? $value;
 
-            return str_replace('@', "{'@'}", $converted);
+            return str_replace('@', "{'@'}", $this->escapeStrayBraces($converted));
         }
 
         if (is_array($value)) {
@@ -198,6 +200,31 @@ final class DumpJsTranslationsCommand extends Command
         }
 
         return $value;
+    }
+
+    /**
+     * Leaves `{name}` alone and quotes every other brace.
+     *
+     * vue-i18n compiles each message the first time it is rendered, and a
+     * brace opens a placeholder: `function bonjour() { … }` reaches its parser
+     * as a placeholder named `…`, which is not a name, so the compiler throws
+     * and the component rendering that message renders nothing at all. That is
+     * how the grid's code zone lost its two fields - the screen showed a zone
+     * with no snippet field and no error, and only the console said why.
+     *
+     * A YAML author should not have to know any of this. They write the
+     * sentence, or the snippet, that belongs on the screen; the escaping is
+     * this command's business, exactly as it already is for `@`.
+     */
+    private function escapeStrayBraces(string $value): string
+    {
+        return preg_replace_callback(
+            '/\{[A-Za-z0-9_]+\}|[{}]/',
+            static fn (array $match): string => 1 === mb_strlen($match[0])
+                ? sprintf("{'%s'}", $match[0])
+                : $match[0],
+            $value,
+        ) ?? $value;
     }
 
     private function countLeaves(array $tree): int
