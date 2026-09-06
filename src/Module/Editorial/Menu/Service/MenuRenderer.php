@@ -51,6 +51,7 @@ final class MenuRenderer
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly Security $security,
         private readonly SettingRepository $settingRepository,
+        private readonly MenuActiveTrail $activeTrail,
     ) {}
 
     /**
@@ -81,9 +82,13 @@ final class MenuRenderer
 
         $this->prefetchTargets($menu->getItems());
 
+        // Once for the whole tree: the address does not change while a
+        // page renders, and a menu is dozens of entries deep.
+        $currentPath = $this->activeTrail->currentPath();
+
         $tree = [];
         foreach ($roots as $item) {
-            $resolved = $this->resolveItem($item, $locale, $authenticated);
+            $resolved = $this->resolveItem($item, $locale, $authenticated, $currentPath);
             if (null !== $resolved) {
                 $tree[] = $resolved;
             }
@@ -96,7 +101,7 @@ final class MenuRenderer
     }
 
     /** @return array<string, mixed>|null */
-    private function resolveItem(MenuItemInterface $item, string $locale, bool $authenticated): ?array
+    private function resolveItem(MenuItemInterface $item, string $locale, bool $authenticated, ?string $currentPath): ?array
     {
         if (!$item->getVisibility()->isVisibleTo($authenticated)) {
             return null;
@@ -109,7 +114,7 @@ final class MenuRenderer
 
         $children = [];
         foreach ($item->getChildren() as $child) {
-            $resolved = $this->resolveItem($child, $locale, $authenticated);
+            $resolved = $this->resolveItem($child, $locale, $authenticated, $currentPath);
             if (null !== $resolved) {
                 $children[] = $resolved;
             }
@@ -129,6 +134,8 @@ final class MenuRenderer
             return null;
         }
 
+        $isCurrent = $this->activeTrail->isCurrent($currentPath, $url);
+
         return [
             '_position' => $item->getPosition(),
             'id' => $item->getId(),
@@ -138,7 +145,38 @@ final class MenuRenderer
             'openInNewTab' => $item->isOpenInNewTab(),
             'cssClass' => $item->getCssClass(),
             'children' => $children,
+            // Exactly one entry can be the page, and it is what `aria-current`
+            // names. Anything looser said "you are here" in three places at
+            // once, which is worth less than saying nothing.
+            'isCurrent' => $isCurrent,
+            // The branch the page belongs to - what the highlight follows, so
+            // "Projets" stays lit while the reader is inside a project. A
+            // parent inherits it from its children: a dropdown whose open page
+            // is one of its entries is itself part of the trail.
+            'isActive' => $isCurrent
+                || $this->isAncestor($item, $currentPath, $url)
+                || $this->hasActiveChild($children),
         ];
+    }
+
+    /**
+     * The home link is above every address on the site, so letting it answer
+     * as an ancestor would light it on every page and tell the reader
+     * nothing. It is current when it is the page, and otherwise quiet.
+     */
+    private function isAncestor(MenuItemInterface $item, ?string $currentPath, ?string $url): bool
+    {
+        if (MenuItemTargetTypeEnum::Home === $item->getTargetType()) {
+            return false;
+        }
+
+        return $this->activeTrail->isAncestorOf($currentPath, $url);
+    }
+
+    /** @param array<int, array<string, mixed>> $children */
+    private function hasActiveChild(array $children): bool
+    {
+        return array_any($children, fn ($child): bool => true === ($child['isActive'] ?? false));
     }
 
     /**

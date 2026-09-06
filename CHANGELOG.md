@@ -5,6 +5,36 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.49] - 2026-09-06
+
+### Ajouté
+
+#### L'entrée de menu de la page courante est mise en évidence
+Sur « À propos », l'entrée « À propos » du menu s'affiche désormais active :
+texte plein et soulignement à la couleur d'accent. Automatiquement, sans rien
+configurer, et pour tous les emplacements de menu — en-tête, pied de page,
+compte.
+
+Deux états sont calculés, parce qu'un menu répond à deux questions
+différentes. **La page courante** est l'entrée exacte, et elle seule porte
+`aria-current="page"` : cet attribut ne vaut que s'il désigne une destination
+unique. **La branche courante** est plus large et c'est elle qui pilote le
+style : une entrée qui pointe vers `/projets` reste allumée pendant qu'on lit
+`/projets/onyx`, sinon la navigation s'éteint dès qu'un lecteur entre dans une
+section. Un menu déroulant hérite de l'état de ses enfants.
+
+Trois pièges classiques sont évités et couverts par les tests : le lien
+d'accueil n'est pas l'ancêtre de tout le site, `/projets` ne revendique pas
+`/projets-secrets`, et une barre oblique finale ou un paramètre d'URL ne
+changent pas de page.
+
+### Dans aurora-client
+
+Rien à répercuter. Un thème client qui a sa propre copie de
+`partials/menu.html.twig` continue de fonctionner sans mise en évidence ; pour
+en profiter, lire `item.isActive` pour le style et `item.isCurrent` pour
+`aria-current`.
+
 ## [0.9.48] - 2026-09-06
 
 ### Corrigé
