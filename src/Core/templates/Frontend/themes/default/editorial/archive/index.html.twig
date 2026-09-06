@@ -3,6 +3,12 @@
 {% block seo_define %}{% do seo({title: postType.label}) %}{% endblock %}
 
 {% block body %}
-    <h1 class="text-2xl font-semibold text-primary mb-6">{{ postType.label }}</h1>
+    {# The title carried the same weight as a card's, on a page whose only job
+       is to announce what the list is. It gets the room it was owed, and a
+       rule under it so the grid starts against something rather than floating
+       under a line of text. #}
+    <header class="mb-8 border-b border-line pb-6">
+        <h1 class="m-0 text-3xl font-bold tracking-tight text-primary sm:text-4xl">{{ postType.label }}</h1>
+    </header>
     {{ include('Frontend/themes/default/editorial/_posts.html.twig') }}
 {% endblock %}

@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Aurora\Core\Frontend\Service;
 
+use DateTimeImmutable;
 use DateTimeInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class HttpCacheService
+final readonly class HttpCacheService
 {
+    public function __construct(
+        private AssetBuildStamp $assetBuildStamp,
+    ) {}
+
     /**
      * Checks if the client cache is still fresh.
      * Returns a 304 response if fresh, null otherwise.
@@ -17,12 +22,14 @@ final class HttpCacheService
      */
     public function checkNotModified(Request $request, ?DateTimeInterface $lastModified, int $maxAge = 300): ?Response
     {
-        if (!$lastModified instanceof DateTimeInterface) {
+        $validator = $this->validator($lastModified);
+
+        if (!$validator instanceof DateTimeInterface) {
             return null;
         }
 
         $response = new Response();
-        $response->setLastModified($lastModified);
+        $response->setLastModified($validator);
         $response->setPublic();
         $response->setMaxAge($maxAge);
 
@@ -38,8 +45,10 @@ final class HttpCacheService
      */
     public function setPublicCache(Response $response, ?DateTimeInterface $lastModified, int $maxAge = 300): void
     {
-        if ($lastModified instanceof DateTimeInterface) {
-            $response->setLastModified($lastModified);
+        $validator = $this->validator($lastModified);
+
+        if ($validator instanceof DateTimeInterface) {
+            $response->setLastModified($validator);
         }
 
         $response->setPublic();
@@ -54,5 +63,26 @@ final class HttpCacheService
     {
         $response->setPublic();
         $response->setSharedMaxAge($sharedMaxAge);
+    }
+
+    /**
+     * The date a cached copy is judged against.
+     *
+     * The later of two things, because a page depends on both: when its
+     * content last changed, and when the assets it links to were last built.
+     * Judging on the content alone is what let a deploy leave visitors with
+     * a valid-looking copy pointing at stylesheets that no longer exist -
+     * the page arrived unstyled and only a hard refresh fixed it, because
+     * only a hard refresh ignores a validator the server keeps confirming.
+     */
+    private function validator(?DateTimeInterface $lastModified): ?DateTimeInterface
+    {
+        if (!$lastModified instanceof DateTimeInterface) {
+            return null;
+        }
+
+        $builtAt = $this->assetBuildStamp->builtAt();
+
+        return $builtAt instanceof DateTimeImmutable && $builtAt > $lastModified ? $builtAt : $lastModified;
     }
 }
