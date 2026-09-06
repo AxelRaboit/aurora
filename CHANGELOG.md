@@ -5,6 +5,52 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.50] - 2026-09-06
+
+### Ajouté
+
+#### Trois nouveaux types de zone, dont un qui en vaut cinq
+La grille de contenu passe de cinq types à huit.
+
+**Bouton.** Un libellé, une adresse, et de quoi le dessiner : plein, contour
+ou discret, en trois tailles, aligné à gauche, au centre ou à droite. Les
+boutons n'existaient jusqu'ici que dans la bannière, donc au-dessus de
+l'article et nulle part ailleurs — une page qui disait ce qu'elle propose se
+terminait sans moyen d'agir.
+
+**Séparateur.** Un filet ou simplement de l'espace, en trois hauteurs. Ça
+paraît dérisoire, c'est ce qui permet de faire respirer une page sans
+bricoler.
+
+**Liste**, et c'est celle qui compte : une même zone dessinée de cinq façons.
+*Étapes numérotées* pour un processus, *chiffres clés*, *questions
+fréquentes* en accordéon, *témoignages* avec portrait et rôle, *logos* en
+bandeau. Cinq types de zone auraient été cinq normaliseurs, cinq panneaux et
+cinq gabarits à maintenir en phase ; une zone avec une présentation, c'est un
+seul de chaque, et le rédacteur choisit dans une liste courte au lieu de
+chercher dans un menu plus long.
+
+Les quatre champs d'une entrée sont les mêmes pour les cinq présentations,
+parce que ce sont les mêmes questions posées autrement : le titre d'une étape
+est la valeur d'un chiffre est une question est l'auteur d'une citation. Le
+panneau les renomme selon la présentation choisie, et **changer de
+présentation ne perd donc rien de ce qui est écrit**.
+
+L'accordéon utilise `<details>` plutôt qu'un script : il s'ouvre sans
+JavaScript, il est annoncé correctement, et la recherche du navigateur trouve
+le texte d'une réponse fermée.
+
+Comme partout ailleurs, la disposition est partagée par toutes les langues et
+les mots sont par langue : ajouter une entrée en français l'ajoute en anglais,
+vide. Une entrée retirée emporte ses mots plutôt que de les laisser traîner
+dans chaque traduction.
+
+### Dans aurora-client
+
+Rien à répercuter. Un thème client qui a sa propre copie de
+`_grid_zone.html.twig` ignorera les trois nouveaux types jusqu'à ce qu'il les
+gère ; les zones existantes ne bougent pas.
+
 ## [0.9.49] - 2026-09-06
 
 ### Ajouté

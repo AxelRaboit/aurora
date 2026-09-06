@@ -78,6 +78,51 @@ final readonly class GridNormalizer
      */
     public const string ZONE_STACK = 'stack';
 
+    /**
+     * An address to follow, drawn as a button.
+     *
+     * A page that says what it offers and gives no way to act on it is a dead
+     * end, and until now the only buttons in the product were the banner's -
+     * available above the article and nowhere else.
+     */
+    public const string ZONE_BUTTON = 'button';
+
+    /** Breathing room, or a rule across the column. */
+    public const string ZONE_SEPARATOR = 'separator';
+
+    /**
+     * A short list of small things, drawn one of five ways.
+     *
+     * Steps, figures, questions, quotes and logos are one shape wearing five
+     * costumes: a handful of entries, each with a couple of lines and
+     * sometimes a picture. Five zone types would have been five normalisers,
+     * five panels and five templates to keep in step; one type with a
+     * `display` is one of each, and an author picks from a list instead of
+     * hunting through a longer menu of zones.
+     */
+    public const string ZONE_ITEMS = 'items';
+
+    /** How loudly a button is drawn. */
+    public const array BUTTON_VARIANTS = ['solid', 'outline', 'ghost'];
+
+    /** Shared by the button and the separator: both are a matter of degree. */
+    public const array SIZES = ['sm', 'md', 'lg'];
+
+    /** A rule, or the same room with nothing drawn in it. */
+    public const array SEPARATOR_STYLES = ['line', 'space'];
+
+    /** The five costumes of an item list. */
+    public const array ITEM_DISPLAYS = ['steps', 'stats', 'faq', 'quotes', 'logos'];
+
+    /**
+     * Enough for a process, a row of figures or a short FAQ, and few enough
+     * that the list stays a list. Past this it is a page of its own.
+     */
+    public const int MAX_ITEMS = 12;
+
+    /** How many entries sit side by side, where the display lays them out in a row. */
+    public const array ITEM_COLUMNS = [2, 3, 4];
+
     public const int COLUMNS = ContentValueNormalizer::COLUMNS;
 
     /**
@@ -177,7 +222,15 @@ final readonly class GridNormalizer
      * should be the same. `GridContractMirrorTest` caught them disagreeing on
      * exactly this the first time it ran.
      */
-    public const array LEAF_ZONE_TYPES = [self::ZONE_TEXT, self::ZONE_MEDIA, self::ZONE_POST, self::ZONE_VIDEO];
+    public const array LEAF_ZONE_TYPES = [
+        self::ZONE_TEXT,
+        self::ZONE_MEDIA,
+        self::ZONE_POST,
+        self::ZONE_VIDEO,
+        self::ZONE_BUTTON,
+        self::ZONE_SEPARATOR,
+        self::ZONE_ITEMS,
+    ];
 
     /**
      * A stack is only allowed at the top level: depth stops at one.
@@ -256,6 +309,14 @@ final readonly class GridNormalizer
                 'alt' => $this->values->text($entry['alt'] ?? null),
                 'caption' => $this->values->text($entry['caption'] ?? null),
                 'url' => $this->values->url($entry['url'] ?? null),
+                // What a button says. `url` above is where it goes: a
+                // localised page has a localised address, which is why both
+                // halves of a button are translated.
+                'label' => $this->values->text($entry['label'] ?? null),
+                // The words of an item list, against the entries the layout
+                // declares - so an entry removed from the arrangement takes
+                // its words with it instead of leaving them behind unseen.
+                'items' => $this->itemTexts($entry['items'] ?? null, $zone),
             ];
         }
 
@@ -354,6 +415,24 @@ final readonly class GridNormalizer
                 // the same reason: it is the same picture in every language.
                 'mediaUrl' => $this->imageUrl($entry['mediaUrl'] ?? null),
                 'postId' => $this->values->id($entry['postId'] ?? null),
+                // How loudly a button is drawn, and how much room it or a
+                // separator takes. Design, so shared - a translated page does
+                // not restyle its own buttons.
+                'variant' => $this->values->oneOf($entry['variant'] ?? null, self::BUTTON_VARIANTS, self::BUTTON_VARIANTS[0]),
+                'size' => $this->values->oneOf($entry['size'] ?? null, self::SIZES, self::SIZES[1]),
+                'separatorStyle' => $this->values->oneOf($entry['separatorStyle'] ?? null, self::SEPARATOR_STYLES, self::SEPARATOR_STYLES[0]),
+                // Which of the five costumes an item list wears, and how many
+                // entries stand side by side where the costume lays them in a
+                // row. Both are design, both shared.
+                'display' => $this->values->oneOf($entry['display'] ?? null, self::ITEM_DISPLAYS, self::ITEM_DISPLAYS[0]),
+                'columns' => in_array((int) ($entry['columns'] ?? 0), self::ITEM_COLUMNS, true)
+                    ? (int) $entry['columns']
+                    : self::ITEM_COLUMNS[1],
+                // The entries themselves, but only what is shared: how many
+                // there are, in what order, and the picture each one carries.
+                // Their words live on the translation, like every other word
+                // on the page.
+                'items' => self::ZONE_ITEMS === $type ? $this->itemList($entry['items'] ?? null) : [],
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
                 'children' => self::ZONE_STACK === $type
@@ -363,6 +442,88 @@ final readonly class GridNormalizer
         }
 
         return $zones;
+    }
+
+    /**
+     * The translated half of an item list, keyed by entry id.
+     *
+     * Four fields for five displays, because they are the same four questions
+     * asked differently: a step's title is a figure's value is a question is a
+     * quote's author is a logo's name. The panel labels them for the display
+     * it is showing; storing five shapes would have made switching display
+     * throw the words away.
+     *
+     * @param array<string, mixed> $zone the already-normalised layout zone
+     *
+     * @return array<string, array<string, string|null>>
+     */
+    private function itemTexts(mixed $raw, array $zone): array
+    {
+        if (self::ZONE_ITEMS !== ($zone['type'] ?? null)) {
+            return [];
+        }
+
+        $stored = is_array($raw) ? $raw : [];
+        $texts = [];
+
+        foreach (is_array($zone['items'] ?? null) ? $zone['items'] : [] as $item) {
+            $id = is_string($item['id'] ?? null) ? $item['id'] : null;
+            if (null === $id) {
+                continue;
+            }
+
+            $entry = is_array($stored[$id] ?? null) ? $stored[$id] : [];
+
+            $texts[$id] = [
+                'title' => $this->values->text($entry['title'] ?? null),
+                'description' => $this->values->text($entry['description'] ?? null),
+                'caption' => $this->values->text($entry['caption'] ?? null),
+                'url' => $this->values->url($entry['url'] ?? null),
+            ];
+        }
+
+        return $texts;
+    }
+
+    /**
+     * The shared half of an item list: identity, order and picture.
+     *
+     * Ids are generated here when the client sends none, so a list built by
+     * something other than the editor still joins up with its words. Capped
+     * at {@see MAX_ITEMS} rather than trusted: the payload comes from a
+     * browser, and a list of ten thousand entries is a page nobody can render.
+     *
+     * @return list<array{id: string, mediaId: int|null}>
+     */
+    private function itemList(mixed $raw): array
+    {
+        $entries = is_array($raw) ? $raw : [];
+        $items = [];
+        $used = [];
+
+        foreach ($entries as $entry) {
+            if (count($items) >= self::MAX_ITEMS) {
+                break;
+            }
+
+            $entry = is_array($entry) ? $entry : [];
+            $id = is_string($entry['id'] ?? null) && '' !== $entry['id'] ? $entry['id'] : null;
+
+            // A duplicate id would make two entries share one set of words,
+            // and editing either would edit both.
+            if (null === $id || isset($used[$id])) {
+                $id = bin2hex(random_bytes(8));
+            }
+
+            $used[$id] = true;
+
+            $items[] = [
+                'id' => $id,
+                'mediaId' => $this->values->id($entry['mediaId'] ?? null),
+            ];
+        }
+
+        return $items;
     }
 
     /**

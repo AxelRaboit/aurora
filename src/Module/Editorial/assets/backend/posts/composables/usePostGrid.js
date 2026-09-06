@@ -21,10 +21,36 @@ const MAX_ZONES = 60;
 export const SNAPS = [4, 2, 1];
 
 /** What a zone may be inside a stack, where nesting stops. */
-export const LEAF_ZONE_TYPES = ["text", "media", "post", "video"];
+export const LEAF_ZONE_TYPES = [
+    "text",
+    "media",
+    "post",
+    "video",
+    "button",
+    "separator",
+    "items",
+];
 
 /** Mirrors GridNormalizer::ZONE_TYPES - a stack is top level only. */
 export const ZONE_TYPES = [...LEAF_ZONE_TYPES, "stack"];
+
+/** Mirrors GridNormalizer::BUTTON_VARIANTS. */
+export const BUTTON_VARIANTS = ["solid", "outline", "ghost"];
+
+/** Mirrors GridNormalizer::SIZES - shared by the button and the separator. */
+export const SIZES = ["sm", "md", "lg"];
+
+/** Mirrors GridNormalizer::SEPARATOR_STYLES. */
+export const SEPARATOR_STYLES = ["line", "space"];
+
+/** Mirrors GridNormalizer::ITEM_DISPLAYS - the five costumes of an item list. */
+export const ITEM_DISPLAYS = ["steps", "stats", "faq", "quotes", "logos"];
+
+/** Mirrors GridNormalizer::ITEM_COLUMNS. */
+export const ITEM_COLUMNS = [2, 3, 4];
+
+/** Mirrors GridNormalizer::MAX_ITEMS. */
+export const MAX_ITEMS = 12;
 
 /**
  * How many zones a stack may hold. Mirrors GridNormalizer::MAX_STACK_CHILDREN:
@@ -281,6 +307,14 @@ function newZone(type) {
         media: null,
         mediaUrl: "",
         postId: null,
+        // Present whatever the type, like every key here: switching a zone
+        // from a button to a list and back must not lose what was picked.
+        variant: "solid",
+        size: "md",
+        separatorStyle: "line",
+        display: "steps",
+        columns: 3,
+        items: [],
         // Empty on every zone, filled only by a stack - the same reason every
         // other key is always present: switching a type back and forth in the
         // editor must not lose what was picked.
@@ -310,7 +344,12 @@ function shareEvenly(children) {
 
 /** The four per-language fields, as a translation starts with them. */
 function newZoneContent() {
-    return { blocks: [], alt: "", caption: "", url: "" };
+    return { blocks: [], alt: "", caption: "", url: "", label: "", items: {} };
+}
+
+/** The four fields an entry of an item list holds, in whichever language. */
+function newItemText() {
+    return { title: "", description: "", caption: "", url: "" };
 }
 
 export function usePostGrid(layout, content) {
@@ -345,6 +384,27 @@ export function usePostGrid(layout, content) {
     // A zone inside a stack cannot become a stack: depth stops at one, and the
     // normaliser would drop it rather than nest it.
     const leafTypeOptions = computed(() => typeChoices(LEAF_ZONE_TYPES));
+
+    /**
+     * The choices the three new zone types offer, in one bag rather than five
+     * props: they arrived together, they are all lists of {value, label}, and
+     * the panel would otherwise carry eight option props side by side.
+     */
+    const zoneChoices = computed(() => ({
+        variant: labelled(BUTTON_VARIANTS, "button_variants"),
+        size: labelled(SIZES, "sizes"),
+        separatorStyle: labelled(SEPARATOR_STYLES, "separator_styles"),
+        display: labelled(ITEM_DISPLAYS, "item_displays"),
+        // The figures are the same in every language, so they are their own label.
+        columns: ITEM_COLUMNS.map((value) => ({ value, label: String(value) })),
+    }));
+
+    function labelled(values, group) {
+        return values.map((value) => ({
+            value,
+            label: t(`backend.posts.grid.${group}.${value}`),
+        }));
+    }
 
     function typeChoices(types) {
         return types.map((type) => ({
@@ -826,6 +886,33 @@ export function usePostGrid(layout, content) {
         swapZones(index, target);
     }
 
+    /**
+     * Two levels and no more, which is what lets a path be two numbers rather
+     * than a list to walk. The normaliser refuses a stack inside a stack, so
+     * there is no third.
+     */
+    function zoneAt(index, childIndex = null) {
+        return null === childIndex
+            ? layout.value.zones[index]
+            : layout.value.zones[index]?.children?.[childIndex];
+    }
+
+    /**
+     * What a zone holds, in whichever language is open. Created on demand: a
+     * zone added in one locale reaches the others with no entry of its own
+     * until someone types in them.
+     *
+     * `items` is filled in separately because a translation written before
+     * item lists existed has every other key and not that one - reading it as
+     * absent would throw on the first entry added.
+     */
+    function heldFor(zone) {
+        content.value.zones[zone.id] ??= newZoneContent();
+        content.value.zones[zone.id].items ??= {};
+
+        return content.value.zones[zone.id];
+    }
+
     // Built once per index and cached: the template calls zoneFields(index) on
     // every render, and handing back fresh computeds each time would throw
     // away their caching for nothing.
@@ -835,27 +922,11 @@ export function usePostGrid(layout, content) {
         const key = null === childIndex ? `${index}` : `${index}:${childIndex}`;
 
         if (!zoneFieldsCache.has(key)) {
-            // Two levels and no more, which is what lets a path be two numbers
-            // rather than a list to walk. The normaliser refuses a stack inside
-            // a stack, so there is no third.
-            const zone = () =>
-                null === childIndex
-                    ? layout.value.zones[index]
-                    : layout.value.zones[index]?.children?.[childIndex];
-
-            // What this zone holds, in whichever language is open. Created on
-            // demand: a zone added in one locale reaches the others with no
-            // entry of its own until someone types in them.
+            const zone = () => zoneAt(index, childIndex);
             const held = () => {
-                const id = zone()?.id;
+                const target = zone();
 
-                if (undefined === id) {
-                    return {};
-                }
-
-                content.value.zones[id] ??= newZoneContent();
-
-                return content.value.zones[id];
+                return undefined === target ? {} : heldFor(target);
             };
 
             const shared = (key) =>
@@ -882,6 +953,11 @@ export function usePostGrid(layout, content) {
                 scale: shared("scale"),
                 align: shared("align"),
                 mediaUrl: shared("mediaUrl"),
+                variant: shared("variant"),
+                size: shared("size"),
+                separatorStyle: shared("separatorStyle"),
+                display: shared("display"),
+                columns: shared("columns"),
                 // The width control drives the large-screen span only. Below
                 // that a zone stays full width, which is what the stored
                 // `base` says and what reads best on a phone.
@@ -954,6 +1030,7 @@ export function usePostGrid(layout, content) {
                 alt: localised("alt"),
                 caption: localised("caption"),
                 url: localised("url"),
+                label: localised("label"),
             });
         }
 
@@ -970,6 +1047,109 @@ export function usePostGrid(layout, content) {
         const columns = Math.round(Number(value) / step) * step;
 
         return Math.max(step, Math.min(COLUMNS, columns));
+    }
+
+    /**
+     * The entries of an item list, and the four ways to change them.
+     *
+     * Split the same way the zone is: the arrangement - how many, in what
+     * order, which picture - lives on the post, and the words live on the
+     * open translation. Adding an entry in French therefore adds it in
+     * English too, with nothing written in it yet, which is what a shared
+     * arrangement means.
+     */
+    function zoneItems(index, childIndex = null) {
+        return zoneAt(index, childIndex)?.items ?? [];
+    }
+
+    function canAddItem(index, childIndex = null) {
+        return zoneItems(index, childIndex).length < MAX_ITEMS;
+    }
+
+    function addItem(index, childIndex = null) {
+        if (!canAddItem(index, childIndex)) return;
+
+        const zone = zoneAt(index, childIndex);
+        const id = newZoneId();
+
+        zone.items.push({ id, mediaId: null, media: null });
+        // Only this language's entry, for the reason usePostBanner gives: the
+        // others gain theirs when the server normalises them against the
+        // arrangement, and an empty string is what an untranslated entry means.
+        heldFor(zone).items[id] = newItemText();
+    }
+
+    function removeItem(index, itemIndex, childIndex = null) {
+        const zone = zoneAt(index, childIndex);
+        const [removed] = zone.items.splice(itemIndex, 1);
+
+        if (removed) {
+            delete heldFor(zone).items[removed.id];
+        }
+    }
+
+    function moveItem(index, itemIndex, direction, childIndex = null) {
+        const items = zoneAt(index, childIndex)?.items ?? [];
+        const target = itemIndex + direction;
+
+        if (target < 0 || target >= items.length) return;
+
+        [items[itemIndex], items[target]] = [items[target], items[itemIndex]];
+    }
+
+    /**
+     * One entry's fields. Cached like a zone's and for the same reason: the
+     * template asks on every render, and a fresh set of computeds each time
+     * would throw away their caching for nothing.
+     */
+    const itemFieldsCache = new Map();
+
+    function itemFields(index, itemIndex, childIndex = null) {
+        const key = `${index}:${childIndex}:${itemIndex}`;
+
+        if (!itemFieldsCache.has(key)) {
+            const item = () => zoneAt(index, childIndex)?.items?.[itemIndex];
+
+            const words = () => {
+                const zone = zoneAt(index, childIndex);
+                const id = item()?.id;
+
+                if (!zone || undefined === id) return {};
+
+                const held = heldFor(zone);
+                held.items[id] ??= newItemText();
+
+                return held.items[id];
+            };
+
+            const localised = (name) =>
+                writable(
+                    () => words()[name] ?? "",
+                    (value) => {
+                        words()[name] = value;
+                    },
+                );
+
+            itemFieldsCache.set(key, {
+                title: localised("title"),
+                description: localised("description"),
+                caption: localised("caption"),
+                url: localised("url"),
+                // Shared, like the zone's own picture: the same face or the
+                // same logo in every language.
+                media: writable(
+                    () => item()?.media ?? null,
+                    (value) => {
+                        const entry = item();
+                        if (!entry) return;
+                        entry.media = value;
+                        entry.mediaId = value?.id ?? null;
+                    },
+                ),
+            });
+        }
+
+        return itemFieldsCache.get(key);
     }
 
     /** How wide a zone reads, as the fraction an author thinks in. */
@@ -1012,7 +1192,14 @@ export function usePostGrid(layout, content) {
         moveZoneTo,
         resizeZoneFromLeft,
         swapZones,
+        zoneChoices,
         zoneFields,
+        zoneItems,
+        canAddItem,
+        addItem,
+        removeItem,
+        moveItem,
+        itemFields,
         widthLabel,
     };
 }

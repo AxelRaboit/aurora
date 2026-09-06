@@ -145,7 +145,11 @@ final class GridNormalizerTest extends TestCase
         ])['zones'][0];
 
         self::assertSame(
-            ['id', 'type', 'span', 'offset', 'newRow', 'ratio', 'scale', 'align', 'mediaId', 'mediaUrl', 'postId', 'children'],
+            [
+                'id', 'type', 'span', 'offset', 'newRow', 'ratio', 'scale', 'align',
+                'mediaId', 'mediaUrl', 'postId', 'variant', 'size', 'separatorStyle',
+                'display', 'columns', 'items', 'children',
+            ],
             array_keys($zone),
             'switching a zone type in the editor must not lose what was picked',
         );
@@ -722,5 +726,96 @@ final class GridNormalizerTest extends TestCase
 
         self::assertSame('Espaces', $content['zones']['a1']['caption'], 'trimmed on the way in');
         self::assertSame($content, $this->normalizer->normalizeContent($content, $layout));
+    }
+
+    // ── Listes d'entrées ──────────────────────────────────────────────────
+
+    /** @return array<string, mixed> */
+    private function itemsZone(array $items): array
+    {
+        return $this->normalizer->normalizeLayout([
+            'zones' => [['id' => 'a1', 'type' => 'items', 'items' => $items]],
+        ])['zones'][0];
+    }
+
+    /** A list is a list; past a dozen entries it is a page of its own. */
+    public function testAnItemListIsCappedRatherThanTrusted(): void
+    {
+        $zone = $this->itemsZone(array_fill(0, 40, ['id' => null]));
+
+        self::assertCount(12, $zone['items']);
+    }
+
+    /**
+     * Two entries sharing an id would share one set of words, and editing
+     * either would edit both. The payload comes from a browser, so the id is
+     * regenerated rather than believed.
+     */
+    public function testDuplicateEntryIdsAreReplaced(): void
+    {
+        $zone = $this->itemsZone([['id' => 'same'], ['id' => 'same']]);
+
+        self::assertNotSame($zone['items'][0]['id'], $zone['items'][1]['id']);
+    }
+
+    /** Only a list zone keeps entries: switching a type must not carry them. */
+    public function testOnlyAListZoneHoldsEntries(): void
+    {
+        $zone = $this->normalizer->normalizeLayout([
+            'zones' => [['id' => 'a1', 'type' => 'text', 'items' => [['id' => 'x']]]],
+        ])['zones'][0];
+
+        self::assertSame([], $zone['items']);
+    }
+
+    /**
+     * The words are kept against the arrangement, so an entry removed from
+     * the list takes its words with it instead of lingering unseen in every
+     * translation.
+     */
+    public function testWordsWithoutAnEntryAreDropped(): void
+    {
+        $layout = $this->normalizer->normalizeLayout([
+            'zones' => [['id' => 'a1', 'type' => 'items', 'items' => [['id' => 'kept']]]],
+        ]);
+
+        $content = $this->normalizer->normalizeContent([
+            'zones' => [
+                'a1' => [
+                    'items' => [
+                        'kept' => ['title' => 'Découverte'],
+                        'gone' => ['title' => 'Une étape supprimée'],
+                    ],
+                ],
+            ],
+        ], $layout);
+
+        self::assertSame(['kept'], array_keys($content['zones']['a1']['items']));
+        self::assertSame('Découverte', $content['zones']['a1']['items']['kept']['title']);
+    }
+
+    /** An unknown display falls back rather than reaching the template unknown. */
+    public function testAnUnknownDisplayFallsBack(): void
+    {
+        $zone = $this->normalizer->normalizeLayout([
+            'zones' => [['id' => 'a1', 'type' => 'items', 'display' => 'carousel']],
+        ])['zones'][0];
+
+        self::assertSame('steps', $zone['display']);
+    }
+
+    /** Both halves of a button are translated, so both live on the content. */
+    public function testAButtonKeepsItsLabelAndAddress(): void
+    {
+        $layout = $this->normalizer->normalizeLayout([
+            'zones' => [['id' => 'a1', 'type' => 'button']],
+        ]);
+
+        $content = $this->normalizer->normalizeContent([
+            'zones' => ['a1' => ['label' => 'Voir les services', 'url' => 'https://example.test/services']],
+        ], $layout);
+
+        self::assertSame('Voir les services', $content['zones']['a1']['label']);
+        self::assertSame('https://example.test/services', $content['zones']['a1']['url']);
     }
 }

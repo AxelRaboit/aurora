@@ -66,6 +66,38 @@
     {% elseif zone.type == 'post' and zone.post %}
         {{ include('Frontend/themes/default/editorial/_post_card.html.twig', {post: zone.post, locale: locale}) }}
 
+    {% elseif zone.type == 'button' and zone.button %}
+        {# Written out literally rather than assembled: Tailwind only emits
+           classes it can read in the source, and `px-{{ size }}` is one it
+           never sees. #}
+        {% set buttonSizes = {
+            sm: 'px-4 py-2 text-sm',
+            md: 'px-6 py-3 text-base',
+            lg: 'px-8 py-4 text-lg',
+        } %}
+        {% set buttonVariants = {
+            solid: 'bg-accent text-white border border-transparent hover:opacity-90',
+            outline: 'border border-accent text-accent hover:bg-accent hover:text-white',
+            ghost: 'border border-transparent text-accent hover:bg-accent-500/10',
+        } %}
+        <div class="not-prose flex {{ zone.align == 'center' ? 'justify-center' : (zone.align == 'end' ? 'justify-end' : 'justify-start') }}">
+            <a
+                href="{{ zone.button.url }}"
+                class="inline-flex items-center gap-2 rounded-lg font-medium no-underline transition {{ buttonSizes[zone.size] }} {{ buttonVariants[zone.variant] }}"
+            >{{ zone.button.label }}</a>
+        </div>
+
+    {% elseif zone.type == 'separator' %}
+        {# A rule, or the same room with nothing drawn in it. Both are the
+           point: a page needs to breathe as often as it needs dividing. #}
+        {% set separatorSizes = {sm: 'py-2', md: 'py-6', lg: 'py-12'} %}
+        <div class="not-prose {{ separatorSizes[zone.size] }}" aria-hidden="true">
+            {% if zone.separatorStyle == 'line' %}<hr class="m-0 border-t border-line">{% endif %}
+        </div>
+
+    {% elseif zone.type == 'items' and zone.items.entries is not empty %}
+        {{ include('Frontend/themes/default/editorial/post/_grid_items.html.twig', {items: zone.items}) }}
+
     {% elseif zone.type == 'video' %}
         {% if zone.video %}
             {# The src is built from an extracted id against a whitelist

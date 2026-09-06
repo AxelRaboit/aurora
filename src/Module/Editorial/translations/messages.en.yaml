@@ -438,7 +438,64 @@ backend:
         media: Image
         post: Publication
         video: Video
+        button: Button
+        separator: Separator
+        items: List
         stack: Stack
+      button_variant: Style
+      button_variants:
+        solid: Solid
+        outline: Outline
+        ghost: Ghost
+      sizes:
+        sm: Small
+        md: Medium
+        lg: Large
+      size: Size
+      button_label: Button label
+      button_label_placeholder: "See the services"
+      button_url: Destination
+      separator_style: Separator
+      separator_style_hint: "A rule marks a break; a space only lets the page breathe."
+      separator_styles:
+        line: Rule
+        space: Space
+      item_display: Display
+      item_display_hint: "The same list, drawn differently. Switching display keeps what is written."
+      item_displays:
+        steps: Numbered steps
+        stats: Key figures
+        faq: Frequently asked questions
+        quotes: Testimonials
+        logos: Logos
+      item_columns: Columns
+      item_number: "Entry {number}"
+      item_add: Add an entry
+      item_remove: Remove this entry
+      item_move_up: Move up
+      item_move_down: Move down
+      item_image: Image
+      step_title: Step title
+      step_text: Description
+      stat_value: Figure
+      stat_label: What it measures
+      faq_question: Question
+      faq_answer: Answer
+      quote_text: Quote
+      quote_author: Who is speaking
+      quote_role: Their role
+      logo_name: Name
+      logo_url: Link
+      step_title_placeholder: "Discovery"
+      stat_value_placeholder: "+40"
+      faq_question_placeholder: "How long does it take?"
+      quote_author_placeholder: "Camille Martin"
+      logo_name_placeholder: "Client name"
+      step_text_placeholder: "What happens at this step, in one sentence."
+      stat_label_placeholder: "projects delivered"
+      faq_answer_placeholder: "Count three weeks between the first conversation and going live."
+      quote_text_placeholder: "What was said about your work."
+      quote_role_placeholder: "Founder, Studio Nord"
       scale: Image size
       scale_hint: "How much of the zone's width the picture takes. Proportions are kept, so an image at 50% is half as tall too. The zone itself does not move."
       scales:
