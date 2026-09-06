@@ -112,11 +112,11 @@ abstract class AbstractDocument implements DocumentInterface
     // var/uploads. `filePath` is null for these, and `sourceUrl` carries the
     // address the browser is sent to instead.
     //
-    // This exists because stock photo APIs require it: Unsplash's terms
-    // forbid re-hosting what their API returns, so a picture chosen from
-    // there cannot become a file of ours. Everything else about it is an
-    // ordinary document - it is filed, titled, tagged and referenced like
-    // any other, so a caller never has to ask which kind it is holding.
+    // This exists for the stock photo libraries: a picture picked from one
+    // stays on the provider's CDN, which keeps the credit attached to it and
+    // costs the server no disk. Everything else about it is an ordinary
+    // document - it is filed, titled, tagged and referenced like any other,
+    // so a caller never has to ask which kind it is holding.
     //
     // The two attribution columns are not decoration either: displaying the
     // photographer's name beside the picture is a condition of using the

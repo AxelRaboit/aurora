@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Aurora\Module\Ged\Unsplash\Controller\Backend;
+namespace Aurora\Module\Ged\Pexels\Controller\Backend;
 
 use Aurora\Core\Enum\HttpMethodEnum;
 use Aurora\Core\Http\JsonRequestTrait;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Module\Ged\Document\Serializer\DocumentSerializerInterface;
-use Aurora\Module\Ged\Unsplash\Service\UnsplashClient;
-use Aurora\Module\Ged\Unsplash\Service\UnsplashImporter;
+use Aurora\Module\Ged\Pexels\Service\PexelsClient;
+use Aurora\Module\Ged\Pexels\Service\PexelsImporter;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,22 +18,22 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * The picker's window onto Unsplash.
+ * The picker's window onto Pexels.
  *
- * Two endpoints, both proxies: searching so the access key stays server-side,
+ * Two endpoints, both proxies: searching so the API key stays server-side,
  * importing so the stored URL is checked before any page renders it. Neither
  * accepts anything the browser cannot already see.
  */
-#[Route('/backend/ged/unsplash', name: 'backend_ged_unsplash')]
+#[Route('/backend/ged/pexels', name: 'backend_ged_pexels')]
 #[IsGranted('ged.documents.view')]
-final class UnsplashController extends AbstractController
+final class PexelsController extends AbstractController
 {
     use JsonRequestTrait;
     use JsonResponseTrait;
 
     public function __construct(
-        private readonly UnsplashClient $client,
-        private readonly UnsplashImporter $importer,
+        private readonly PexelsClient $client,
+        private readonly PexelsImporter $importer,
         private readonly DocumentSerializerInterface $serializer,
     ) {}
 
@@ -74,7 +74,7 @@ final class UnsplashController extends AbstractController
         try {
             $document = $this->importer->import($payload);
         } catch (InvalidArgumentException) {
-            return $this->jsonFailure('backend.ged.unsplash.errors.invalid_photo');
+            return $this->jsonFailure('backend.ged.pexels.errors.invalid_photo');
         }
 
         return $this->jsonSuccess(['document' => $this->serializer->serialize($document)]);

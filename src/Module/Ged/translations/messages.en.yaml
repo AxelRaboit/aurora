@@ -49,12 +49,11 @@ backend:
     ged_folders: Folders
     ged_folders_description: "Keep documents in a tree of nested folders."
   ged:
-    unsplash:
-      tab: Unsplash
+    pexels:
+      tab: Pexels
       search_placeholder: "Search a photo: desk, nature, portrait…"
       empty: No photo for this search.
-      not_configured: "The Unsplash integration is not configured. Set UNSPLASH_ACCESS_KEY to enable it."
-      credit: "Photo by {author} on Unsplash"
+      not_configured: "The Pexels integration is not configured. Set PEXELS_API_KEY to enable it."
       errors:
         invalid_photo: This photo cannot be imported.
     bootstrap:

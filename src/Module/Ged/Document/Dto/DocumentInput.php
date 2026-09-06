@@ -38,7 +38,7 @@ class DocumentInput implements DocumentInputInterface
         public readonly ?float $focalY = null,
         // Set together or not at all: a remote document with no credit
         // cannot legally be displayed, and a credit with nothing to credit
-        // is noise. `UnsplashImporter` is what fills all three.
+        // is noise. `PexelsImporter` is what fills all three.
         public readonly ?string $sourceUrl = null,
         public readonly ?string $attributionName = null,
         public readonly ?string $attributionUrl = null,

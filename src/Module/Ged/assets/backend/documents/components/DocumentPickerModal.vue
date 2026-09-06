@@ -47,8 +47,8 @@ const props = defineProps({
     // Mirrors MediaPickerModal's `multiple` so callers like Gallery's
     // addPhotos flow can keep their existing array-shaped contract.
     multiple: { type: Boolean, default: false },
-    unsplashSearchPath: { type: String, default: "/backend/ged/unsplash/search" },
-    unsplashImportPath: { type: String, default: "/backend/ged/unsplash/import" },
+    pexelsSearchPath: { type: String, default: "/backend/ged/pexels/search" },
+    pexelsImportPath: { type: String, default: "/backend/ged/pexels/import" },
 });
 
 const emit = defineEmits(["close", "select"]);
@@ -66,19 +66,19 @@ const selected = ref(null);
 
 /**
  * Stock photos are offered only where they make sense: a picker opened to
- * choose a contract PDF has no business showing landscapes, and Unsplash
+ * choose a contract PDF has no business showing landscapes, and Pexels
  * returns nothing else.
  */
-const unsplashAvailable = computed(() => props.mimePrefix === "image/");
+const pexelsAvailable = computed(() => props.mimePrefix === "image/");
 
 const tab = ref("library");
-const unsplashItems = ref([]);
-const unsplashQuery = ref("");
-const unsplashPage = ref(1);
-const unsplashTotalPages = ref(1);
-const unsplashLoading = ref(false);
-const unsplashConfigured = ref(true);
-const unsplashSelected = ref(null);
+const pexelsItems = ref([]);
+const pexelsQuery = ref("");
+const pexelsPage = ref(1);
+const pexelsTotalPages = ref(1);
+const pexelsLoading = ref(false);
+const pexelsConfigured = ref(true);
+const pexelsSelected = ref(null);
 const importing = ref(false);
 
 const visibleItems = computed(() => {
@@ -113,76 +113,76 @@ async function load() {
 }
 
 /**
- * The Unsplash side of the picker.
+ * The Pexels side of the picker.
  *
  * `noGuard` because the shared loading guard drops a second call while one is
  * in flight, and paging through results is exactly that. Failures come back
  * as an empty list rather than an exception - `useRequest` has already told
  * the user, and an editor mid-page does not need a second alarm.
  */
-async function loadUnsplash() {
-    if ("" === unsplashQuery.value.trim()) {
-        unsplashItems.value = [];
-        unsplashTotalPages.value = 1;
+async function loadPexels() {
+    if ("" === pexelsQuery.value.trim()) {
+        pexelsItems.value = [];
+        pexelsTotalPages.value = 1;
 
         return;
     }
 
-    unsplashLoading.value = true;
+    pexelsLoading.value = true;
     try {
         const params = new URLSearchParams({
-            q: unsplashQuery.value,
-            page: String(unsplashPage.value),
+            q: pexelsQuery.value,
+            page: String(pexelsPage.value),
         });
-        const data = await request(`${props.unsplashSearchPath}?${params}`, null, {
+        const data = await request(`${props.pexelsSearchPath}?${params}`, null, {
             method: HttpMethod.Get,
             noGuard: true,
         });
 
-        unsplashConfigured.value = data?.configured !== false;
-        unsplashItems.value = data?.results ?? [];
-        unsplashTotalPages.value = data?.totalPages || 1;
+        pexelsConfigured.value = data?.configured !== false;
+        pexelsItems.value = data?.results ?? [];
+        pexelsTotalPages.value = data?.totalPages || 1;
     } finally {
-        unsplashLoading.value = false;
+        pexelsLoading.value = false;
     }
 }
 
-function onUnsplashSearch(value) {
-    unsplashQuery.value = value;
-    unsplashPage.value = 1;
-    loadUnsplash();
+function onPexelsSearch(value) {
+    pexelsQuery.value = value;
+    pexelsPage.value = 1;
+    loadPexels();
 }
 
-function goToUnsplashPage(p) {
-    unsplashPage.value = p;
-    loadUnsplash();
+function goToPexelsPage(p) {
+    pexelsPage.value = p;
+    loadPexels();
 }
 
 function pickPhoto(photo) {
     if (!props.multiple) {
-        unsplashSelected.value = photo;
+        pexelsSelected.value = photo;
 
         return;
     }
-    const list = Array.isArray(unsplashSelected.value) ? [...unsplashSelected.value] : [];
+    const list = Array.isArray(pexelsSelected.value) ? [...pexelsSelected.value] : [];
     const idx = list.findIndex((p) => p.id === photo.id);
     if (idx === -1) list.push(photo);
     else list.splice(idx, 1);
-    unsplashSelected.value = list;
+    pexelsSelected.value = list;
 }
 
 function isPhotoSelected(photo) {
     if (props.multiple) {
-        return Array.isArray(unsplashSelected.value) && unsplashSelected.value.some((p) => p.id === photo.id);
+        return Array.isArray(pexelsSelected.value) && pexelsSelected.value.some((p) => p.id === photo.id);
     }
 
-    return unsplashSelected.value?.id === photo.id;
+    return pexelsSelected.value?.id === photo.id;
 }
 
-const hasUnsplashSelection = computed(() =>
+const hasPexelsSelection = computed(() =>
     props.multiple
-        ? Array.isArray(unsplashSelected.value) && unsplashSelected.value.length > 0
-        : null !== unsplashSelected.value,
+        ? Array.isArray(pexelsSelected.value) && pexelsSelected.value.length > 0
+        : null !== pexelsSelected.value,
 );
 
 /**
@@ -193,16 +193,16 @@ const hasUnsplashSelection = computed(() =>
  * the media library with everything the editor considered.
  */
 async function importSelection() {
-    const photos = props.multiple ? unsplashSelected.value : [unsplashSelected.value];
+    const photos = props.multiple ? pexelsSelected.value : [pexelsSelected.value];
     const documents = [];
 
     importing.value = true;
     try {
         for (const photo of photos) {
-            // Sequential on purpose: each import is a write, and Unsplash's
-            // hourly quota is the installation's to spend carefully.
+            // Sequential on purpose: each import is a write, and the Pexels
+            // hourly quota is the whole installation's to spend carefully.
              
-            const data = await request(props.unsplashImportPath, { photo }, { noGuard: true });
+            const data = await request(props.pexelsImportPath, { photo }, { noGuard: true });
             if (!data?.document) return null;
             documents.push(data.document);
         }
@@ -221,10 +221,10 @@ watch(
             search.value = "";
             page.value = 1;
             tab.value = "library";
-            unsplashQuery.value = "";
-            unsplashItems.value = [];
-            unsplashPage.value = 1;
-            unsplashSelected.value = props.multiple ? [] : null;
+            pexelsQuery.value = "";
+            pexelsItems.value = [];
+            pexelsPage.value = 1;
+            pexelsSelected.value = props.multiple ? [] : null;
             load();
         }
     },
@@ -255,8 +255,8 @@ function pick(doc) {
 }
 
 async function confirm() {
-    if ("unsplash" === tab.value) {
-        if (!hasUnsplashSelection.value || importing.value) return;
+    if ("pexels" === tab.value) {
+        if (!hasPexelsSelection.value || importing.value) return;
         const result = await importSelection();
         // A failed import has already surfaced its own message; keeping the
         // modal open lets the editor retry instead of losing their search.
@@ -274,8 +274,8 @@ async function confirm() {
 }
 
 const confirmDisabled = computed(() => {
-    if ("unsplash" === tab.value) {
-        return !hasUnsplashSelection.value || importing.value;
+    if ("pexels" === tab.value) {
+        return !hasPexelsSelection.value || importing.value;
     }
 
     return props.multiple ? !(Array.isArray(selected.value) && selected.value.length > 0) : !selected.value;
@@ -299,30 +299,30 @@ function isSelected(doc) {
         v-on:close="emit('close')"
     >
         <div class="space-y-4">
-            <div v-if="unsplashAvailable" class="flex gap-1 border-b border-line">
+            <div v-if="pexelsAvailable" class="flex gap-1 border-b border-line">
                 <AppTab variant="underline" :active="tab === 'library'" v-on:click="tab = 'library'">
                     {{ t("backend.ged.documents.picker_tab_library") }}
                 </AppTab>
-                <AppTab variant="underline" :active="tab === 'unsplash'" v-on:click="tab = 'unsplash'">
-                    {{ t("backend.ged.unsplash.tab") }}
+                <AppTab variant="underline" :active="tab === 'pexels'" v-on:click="tab = 'pexels'">
+                    {{ t("backend.ged.pexels.tab") }}
                 </AppTab>
             </div>
 
-            <template v-if="tab === 'unsplash'">
+            <template v-if="tab === 'pexels'">
                 <AppSearchInput
-                    v-model="unsplashQuery"
-                    :placeholder="t('backend.ged.unsplash.search_placeholder')"
-                    v-on:search="onUnsplashSearch"
+                    v-model="pexelsQuery"
+                    :placeholder="t('backend.ged.pexels.search_placeholder')"
+                    v-on:search="onPexelsSearch"
                 />
 
-                <p v-if="!unsplashConfigured" class="text-xs text-muted">
-                    {{ t("backend.ged.unsplash.not_configured") }}
+                <p v-if="!pexelsConfigured" class="text-xs text-muted">
+                    {{ t("backend.ged.pexels.not_configured") }}
                 </p>
 
                 <div class="relative min-h-64">
-                    <ul v-if="unsplashItems.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    <ul v-if="pexelsItems.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                         <li
-                            v-for="photo in unsplashItems"
+                            v-for="photo in pexelsItems"
                             :key="photo.id"
                             :class="[
                                 'group relative overflow-hidden rounded-lg border cursor-pointer transition-colors',
@@ -353,17 +353,17 @@ function isSelected(doc) {
                         </li>
                     </ul>
                     <AppNoData
-                        v-else-if="!unsplashLoading && unsplashConfigured"
-                        :message="t('backend.ged.unsplash.empty')"
+                        v-else-if="!pexelsLoading && pexelsConfigured"
+                        :message="t('backend.ged.pexels.empty')"
                     />
-                    <AppLoader :active="unsplashLoading || importing" />
+                    <AppLoader :active="pexelsLoading || importing" />
                 </div>
 
                 <AppPagination
-                    v-if="unsplashTotalPages > 1"
-                    :page="unsplashPage"
-                    :total-pages="unsplashTotalPages"
-                    v-on:go-to-page="goToUnsplashPage"
+                    v-if="pexelsTotalPages > 1"
+                    :page="pexelsPage"
+                    :total-pages="pexelsTotalPages"
+                    v-on:go-to-page="goToPexelsPage"
                 />
             </template>
 

@@ -39,6 +39,18 @@ final readonly class DocumentUrlGenerator
         'large' => 1920,
     ];
 
+    /**
+     * What a remote document answers when nobody asked for a variant.
+     *
+     * A local document's `publicUrl` is its original file, and that is the
+     * right answer because we chose what we stored. The original behind a
+     * remote one is whatever the photographer uploaded - twenty-five
+     * megapixels is normal - so the plain address is a page-weight accident
+     * waiting to happen. `getSourceUrl()` still returns it untouched, for
+     * the one place that wants the full-size picture: the view controller.
+     */
+    private const string REMOTE_DEFAULT_VARIANT = 'large';
+
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
     ) {}
@@ -46,7 +58,7 @@ final readonly class DocumentUrlGenerator
     public function publicUrl(?DocumentInterface $document): ?string
     {
         if (true === $document?->isRemote()) {
-            return $document->getSourceUrl();
+            return $this->remoteDefaultUrl($document);
         }
 
         $filePath = $document?->getFilePath();
@@ -66,7 +78,7 @@ final readonly class DocumentUrlGenerator
         // A CDN address is already absolute, and is the only address these
         // have - there is no local route to fall back on.
         if (true === $document?->isRemote()) {
-            return $document->getSourceUrl();
+            return $this->remoteDefaultUrl($document);
         }
 
         $filePath = $document?->getFilePath();
@@ -137,17 +149,27 @@ final readonly class DocumentUrlGenerator
         return sprintf('%s%% %s%%', $x, $y);
     }
 
+    private function remoteDefaultUrl(DocumentInterface $document): string
+    {
+        return $this->remoteUrlAtWidth(
+            (string) $document->getSourceUrl(),
+            self::REMOTE_VARIANT_WIDTHS[self::REMOTE_DEFAULT_VARIANT],
+        );
+    }
+
     /**
      * Re-asks a provider's CDN for the same picture at a given width.
      *
-     * Unsplash serves through imgix, which reads `w`, `q` and `fm` from the
+     * Pexels serves through imgix, which reads its instructions from the
      * query string - so the resizing we do with GD for our own files is a
      * parameter here, and a page still gets a 256px thumbnail instead of a
      * 4000px original scaled down by the browser.
      *
-     * Existing parameters are kept rather than replaced: the signed `ixid`
-     * Unsplash puts on its URLs is how it attributes the view, and dropping
-     * it would break the tracking their terms ask for.
+     * A height or a pixel ratio would turn the resize into a crop, and the
+     * renditions Pexels names in its payload carry both; they are dropped so
+     * that asking for a width means only that. Anything else on the URL is
+     * left alone - a provider that signs or tags its addresses has a reason
+     * to, and rebuilding one without its own parameters breaks that.
      */
     private function remoteUrlAtWidth(string $sourceUrl, int $width): string
     {
@@ -157,9 +179,10 @@ final readonly class DocumentUrlGenerator
         }
 
         parse_str($parts['query'] ?? '', $query);
+        unset($query['h'], $query['dpr']);
         $query['w'] = (string) $width;
-        $query['q'] ??= '80';
-        $query['fm'] ??= 'webp';
+        $query['auto'] ??= 'compress';
+        $query['cs'] ??= 'tinysrgb';
 
         return sprintf(
             '%s://%s%s?%s',
