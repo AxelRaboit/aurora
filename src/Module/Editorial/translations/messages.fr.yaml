@@ -438,7 +438,64 @@ backend:
         media: Image
         post: Publication
         video: Vidéo
+        button: Bouton
+        separator: Séparateur
+        items: Liste
         stack: Pile
+      button_variant: Allure
+      button_variants:
+        solid: Plein
+        outline: Contour
+        ghost: Discret
+      sizes:
+        sm: Petit
+        md: Moyen
+        lg: Grand
+      size: Taille
+      button_label: Libellé du bouton
+      button_label_placeholder: "Voir les services"
+      button_url: Destination
+      separator_style: Séparateur
+      separator_style_hint: "Un filet marque une rupture ; un espace fait seulement respirer."
+      separator_styles:
+        line: Filet
+        space: Espace
+      item_display: Présentation
+      item_display_hint: "La même liste, dessinée autrement. Changer de présentation ne perd pas ce qui est écrit."
+      item_displays:
+        steps: Étapes numérotées
+        stats: Chiffres clés
+        faq: Questions fréquentes
+        quotes: Témoignages
+        logos: Logos
+      item_columns: Colonnes
+      item_number: "Entrée {number}"
+      item_add: Ajouter une entrée
+      item_remove: Retirer cette entrée
+      item_move_up: Monter
+      item_move_down: Descendre
+      item_image: Image
+      step_title: Titre de l'étape
+      step_text: Description
+      stat_value: Chiffre
+      stat_label: Ce qu'il mesure
+      faq_question: Question
+      faq_answer: Réponse
+      quote_text: Citation
+      quote_author: Qui parle
+      quote_role: Son rôle
+      logo_name: Nom
+      logo_url: Lien
+      step_title_placeholder: "Découverte"
+      stat_value_placeholder: "+40"
+      faq_question_placeholder: "Combien de temps faut-il ?"
+      quote_author_placeholder: "Camille Martin"
+      logo_name_placeholder: "Nom du client"
+      step_text_placeholder: "Ce qu'on fait à cette étape, en une phrase."
+      stat_label_placeholder: "projets livrés"
+      faq_answer_placeholder: "Comptez trois semaines entre le premier échange et la mise en ligne."
+      quote_text_placeholder: "Ce qu'on a dit de votre travail."
+      quote_role_placeholder: "Fondatrice, Studio Nord"
       scale: Taille de l'image
       scale_hint: "Part de la largeur de la zone occupée par l'image. Les proportions sont gardées, donc une image à 50 % est deux fois moins haute aussi. La zone, elle, ne bouge pas."
       scales:

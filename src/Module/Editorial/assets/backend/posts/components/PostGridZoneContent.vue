@@ -16,8 +16,12 @@ import { useI18n } from "vue-i18n";
 import AppBlockEditor from "@/shared/components/editor/AppBlockEditor.vue";
 import AppChoiceRow from "@/shared/components/form/select/AppChoiceRow.vue";
 import AppImagePickerField from "@/shared/components/form/file/AppImagePickerField.vue";
+import AppButton from "@/shared/components/action/AppButton.vue";
+import AppIconButton from "@/shared/components/action/AppIconButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
+import AppTextarea from "@/shared/components/form/input/AppTextarea.vue";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-vue-next";
 
 const props = defineProps({
     /** The zone itself - read for its type, never written to. */
@@ -34,7 +38,17 @@ const props = defineProps({
     scaleOptions: { type: Array, default: () => [] },
     /** Which side it sits on once it takes less than all of it. */
     alignOptions: { type: Array, default: () => [] },
+    /** The choices a button, a separator and an item list offer. */
+    choices: { type: Object, default: () => ({}) },
+    /** The entries of an item list - the shared half, in order. */
+    items: { type: Array, default: () => [] },
+    /** One entry's writable computeds, by position. */
+    itemFields: { type: Function, default: () => () => ({}) },
+    /** False once the list is at its cap. */
+    canAddItem: { type: Boolean, default: true },
 });
+
+const emit = defineEmits(["add-item", "remove-item", "move-item"]);
 
 const { t } = useI18n();
 
@@ -55,6 +69,30 @@ const bound = props.fields;
 const publicationOptions = computed(() =>
     props.postOptions.map((post) => ({ value: post.id, label: post.title ?? `#${post.id}` })),
 );
+
+/**
+ * What each of the four per-entry fields is called, for the costume being
+ * worn. The fields are the same four in the database - a step's title is a
+ * figure's value is a question - so only their names change here, and
+ * switching display keeps what was written.
+ *
+ * `null` hides a field: a figure has no third line, a logo has no body text.
+ */
+const ITEM_LABELS = {
+    steps: { title: "step_title", description: "step_text", caption: null, url: null },
+    stats: { title: "stat_value", description: "stat_label", caption: null, url: null },
+    faq: { title: "faq_question", description: "faq_answer", caption: null, url: null },
+    quotes: { title: "quote_author", description: "quote_text", caption: "quote_role", url: null },
+    logos: { title: "logo_name", description: null, caption: null, url: "logo_url" },
+};
+
+const itemLabels = computed(() => ITEM_LABELS[bound.display.value] ?? ITEM_LABELS.steps);
+
+/** Only the quotes and the logos hang a picture on an entry. */
+const itemHasMedia = computed(() => ["quotes", "logos"].includes(bound.display.value));
+
+/** Only the displays that lay their entries in a row have a count to choose. */
+const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display.value));
 </script>
 
 <template>
@@ -142,6 +180,157 @@ const publicationOptions = computed(() =>
                 :hint="t('backend.posts.grid.zone_post_hint')"
                 :options="publicationOptions"
             />
+        </template>
+
+        <template v-else-if="zone.type === 'button'">
+            <AppChoiceRow
+                v-model="bound.variant.value"
+                :label="t('backend.posts.grid.button_variant')"
+                :options="choices.variant ?? []"
+            />
+            <AppChoiceRow
+                v-model="bound.size.value"
+                :label="t('backend.posts.grid.size')"
+                :options="choices.size ?? []"
+            />
+            <AppChoiceRow
+                v-model="bound.align.value"
+                :label="t('backend.posts.grid.align')"
+                :options="alignOptions"
+            />
+            <div class="rounded-lg border border-dashed border-line p-3 space-y-4">
+                <p class="text-xs uppercase tracking-wide text-muted">
+                    {{ t("backend.posts.grid.translated_fields", { locale }) }}
+                </p>
+                <!-- Both halves are translated: a localised page has a
+                     localised address as much as a localised word on it. -->
+                <AppInput
+                    v-model="bound.label.value"
+                    :label="t('backend.posts.grid.button_label')"
+                    :placeholder="t('backend.posts.grid.button_label_placeholder')"
+                />
+                <AppInput
+                    v-model="bound.url.value"
+                    :label="t('backend.posts.grid.button_url')"
+                    placeholder="https://…"
+                />
+            </div>
+        </template>
+
+        <template v-else-if="zone.type === 'separator'">
+            <AppChoiceRow
+                v-model="bound.separatorStyle.value"
+                :label="t('backend.posts.grid.separator_style')"
+                :hint="t('backend.posts.grid.separator_style_hint')"
+                :options="choices.separatorStyle ?? []"
+            />
+            <AppChoiceRow
+                v-model="bound.size.value"
+                :label="t('backend.posts.grid.size')"
+                :options="choices.size ?? []"
+            />
+        </template>
+
+        <template v-else-if="zone.type === 'items'">
+            <AppChoiceRow
+                v-model="bound.display.value"
+                :label="t('backend.posts.grid.item_display')"
+                :hint="t('backend.posts.grid.item_display_hint')"
+                :options="choices.display ?? []"
+            />
+            <!-- Only where the costume lays its entries in a row: a list of
+                 steps and an accordion read down the page, and offering a
+                 column count there would offer a control that does nothing. -->
+            <AppChoiceRow
+                v-if="itemHasColumns"
+                v-model="bound.columns.value"
+                :label="t('backend.posts.grid.item_columns')"
+                :options="choices.columns ?? []"
+            />
+
+            <div class="space-y-3">
+                <div
+                    v-for="(item, itemIndex) in items"
+                    :key="item.id"
+                    class="rounded-lg border border-line p-3 space-y-3"
+                >
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs uppercase tracking-wide text-muted">
+                            {{ t("backend.posts.grid.item_number", { number: itemIndex + 1 }) }}
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <AppIconButton
+                                :icon="ChevronUp"
+                                size="sm"
+                                :title="t('backend.posts.grid.item_move_up')"
+                                :disabled="itemIndex === 0"
+                                v-on:click="emit('move-item', itemIndex, -1)"
+                            />
+                            <AppIconButton
+                                :icon="ChevronDown"
+                                size="sm"
+                                :title="t('backend.posts.grid.item_move_down')"
+                                :disabled="itemIndex === items.length - 1"
+                                v-on:click="emit('move-item', itemIndex, 1)"
+                            />
+                            <AppIconButton
+                                :icon="Trash2"
+                                size="sm"
+                                variant="danger"
+                                :title="t('backend.posts.grid.item_remove')"
+                                v-on:click="emit('remove-item', itemIndex)"
+                            />
+                        </div>
+                    </div>
+
+                    <AppImagePickerField
+                        v-if="itemHasMedia"
+                        v-model="itemFields(itemIndex).media.value"
+                        :label="t('backend.posts.grid.item_image')"
+                    />
+
+                    <div class="rounded-lg border border-dashed border-line p-3 space-y-3">
+                        <p class="text-xs uppercase tracking-wide text-muted">
+                            {{ t("backend.posts.grid.translated_fields", { locale }) }}
+                        </p>
+                        <AppInput
+                            v-if="itemLabels.title"
+                            v-model="itemFields(itemIndex).title.value"
+                            :label="t(`backend.posts.grid.${itemLabels.title}`)"
+                            :placeholder="t(`backend.posts.grid.${itemLabels.title}_placeholder`)"
+                        />
+                        <AppTextarea
+                            v-if="itemLabels.description"
+                            v-model="itemFields(itemIndex).description.value"
+                            :label="t(`backend.posts.grid.${itemLabels.description}`)"
+                            :placeholder="t(`backend.posts.grid.${itemLabels.description}_placeholder`)"
+                            :rows="2"
+                        />
+                        <AppInput
+                            v-if="itemLabels.caption"
+                            v-model="itemFields(itemIndex).caption.value"
+                            :label="t(`backend.posts.grid.${itemLabels.caption}`)"
+                            :placeholder="t(`backend.posts.grid.${itemLabels.caption}_placeholder`)"
+                        />
+                        <AppInput
+                            v-if="itemLabels.url"
+                            v-model="itemFields(itemIndex).url.value"
+                            :label="t(`backend.posts.grid.${itemLabels.url}`)"
+                            placeholder="https://…"
+                        />
+                    </div>
+                </div>
+
+                <AppButton
+                    variant="secondary"
+                    size="sm"
+                    :disabled="!canAddItem"
+                    v-on:click="emit('add-item')"
+                >
+                    <Plus class="w-3.5 h-3.5" :stroke-width="2" />
+                    {{ t("backend.posts.grid.item_add") }}
+                </AppButton>
+            </div>
         </template>
 
         <!-- Named rather than left as a catch-all `v-else`: a stack holds zones,

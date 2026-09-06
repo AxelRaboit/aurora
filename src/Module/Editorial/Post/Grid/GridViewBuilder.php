@@ -147,8 +147,22 @@ final readonly class GridViewBuilder
                     : null,
                 // Kept beside the embed so a zone whose address belongs to
                 // no known provider can still offer the link rather than
-                // silently showing nothing.
-                'url' => GridNormalizer::ZONE_VIDEO === $zone['type'] ? $held['url'] : null,
+                // silently showing nothing. A button reads the same two keys:
+                // it is an address with a word on it.
+                'url' => in_array($zone['type'], [GridNormalizer::ZONE_VIDEO, GridNormalizer::ZONE_BUTTON], true)
+                    ? $held['url']
+                    : null,
+                // A button with no words is a control nobody can read, and one
+                // with nowhere to go is worse than absent - so both or
+                // neither, decided here rather than by the template.
+                'button' => GridNormalizer::ZONE_BUTTON === $zone['type']
+                    && null !== $held['label'] && '' !== $held['label']
+                    && null !== $held['url'] && '' !== $held['url']
+                        ? ['label' => $held['label'], 'url' => $held['url']]
+                        : null,
+                'items' => GridNormalizer::ZONE_ITEMS === $zone['type']
+                    ? $this->itemsView($zone, $held, $documents)
+                    : null,
             ];
         };
 
@@ -177,6 +191,64 @@ final readonly class GridViewBuilder
     }
 
     /**
+     * An item list, joined back together: the arrangement says how many
+     * entries there are and which picture each carries, the translation says
+     * what they read.
+     *
+     * An entry whose words are all empty is dropped. A list is authored by
+     * adding rows and filling them in, so the blank one at the end is the one
+     * being written - it belongs in the editor, not on the page.
+     *
+     * @param array<string, mixed>          $zone
+     * @param array<string, mixed>          $held      this locale's content for the zone
+     * @param array<int, DocumentInterface> $documents
+     *
+     * @return array{display: string, columns: int, entries: list<array<string, mixed>>}
+     */
+    private function itemsView(array $zone, array $held, array $documents): array
+    {
+        $texts = is_array($held['items'] ?? null) ? $held['items'] : [];
+        $entries = [];
+
+        foreach (is_array($zone['items'] ?? null) ? $zone['items'] : [] as $item) {
+            $id = $item['id'] ?? null;
+            if (!is_string($id)) {
+                continue;
+            }
+
+            $words = is_array($texts[$id] ?? null) ? $texts[$id] : [];
+            $media = $this->mediaData($documents[$item['mediaId']] ?? null, '');
+
+            $title = (string) ($words['title'] ?? '');
+            $description = (string) ($words['description'] ?? '');
+            $caption = (string) ($words['caption'] ?? '');
+
+            if ('' === $title && '' === $description && '' === $caption && null === $media) {
+                continue;
+            }
+
+            $entries[] = [
+                'id' => $id,
+                'title' => $title,
+                'description' => $description,
+                'caption' => $caption,
+                'url' => $words['url'] ?? null,
+                'media' => $media,
+                // 1-based, for the display that numbers its steps. Worked out
+                // here rather than in the template, which would have to count
+                // the entries it skipped.
+                'position' => count($entries) + 1,
+            ];
+        }
+
+        return [
+            'display' => (string) $zone['display'],
+            'columns' => (int) $zone['columns'],
+            'entries' => $entries,
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $layout
      *
      * @return array<int, DocumentInterface>
@@ -189,6 +261,14 @@ final readonly class GridViewBuilder
         foreach (GridNormalizer::flatten($layout['zones']) as $zone) {
             if (GridNormalizer::ZONE_MEDIA === $zone['type'] && null !== $zone['mediaId']) {
                 $ids[] = $zone['mediaId'];
+            }
+
+            // An item list can hold a dozen portraits or logos. They join the
+            // same query as everything else rather than opening a second one.
+            foreach (is_array($zone['items'] ?? null) ? $zone['items'] : [] as $item) {
+                if (null !== ($item['mediaId'] ?? null)) {
+                    $ids[] = $item['mediaId'];
+                }
             }
         }
 

@@ -78,6 +78,13 @@ const {
     moveChild,
     childShare,
     zoneFields,
+    zoneChoices,
+    zoneItems,
+    canAddItem,
+    addItem,
+    removeItem,
+    moveItem,
+    itemFields,
     widthLabel,
     resizeZoneFromLeft: resizeZoneStart,
     swapZones,
@@ -389,6 +396,13 @@ function resizeZone(index, columns) {
                                 :ratio-options="ratioOptions"
                                 :scale-options="scaleOptions"
                                 :align-options="alignOptions"
+                                :choices="zoneChoices"
+                                :items="zoneItems(index, childIndex)"
+                                :item-fields="(i) => itemFields(index, i, childIndex)"
+                                :can-add-item="canAddItem(index, childIndex)"
+                                v-on:add-item="addItem(index, childIndex)"
+                                v-on:remove-item="(i) => removeItem(index, i, childIndex)"
+                                v-on:move-item="(i, d) => moveItem(index, i, d, childIndex)"
                             />
                         </div>
 
@@ -418,6 +432,13 @@ function resizeZone(index, columns) {
                     :ratio-options="ratioOptions"
                     :scale-options="scaleOptions"
                     :align-options="alignOptions"
+                    :choices="zoneChoices"
+                    :items="zoneItems(index)"
+                    :item-fields="(i) => itemFields(index, i)"
+                    :can-add-item="canAddItem(index)"
+                    v-on:add-item="addItem(index)"
+                    v-on:remove-item="(i) => removeItem(index, i)"
+                    v-on:move-item="(i, d) => moveItem(index, i, d)"
                 />
             </div>
 
