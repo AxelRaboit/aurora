@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.51] - 2026-09-06
+
+### Ajouté
+
+#### Une zone qui liste des publications toute seule
+La zone **Publication** nomme une publication et ne change jamais d'avis. La
+nouvelle zone **Liste automatique** pose une question — les plus récentes de
+ce type, classées sous ce terme, tant d'entre elles — et y répond à chaque
+affichage.
+
+C'est la différence entre une page qu'il faut rouvrir chaque fois qu'on publie
+et une page qui se tient à jour seule. Les deux filtres sont facultatifs et se
+combinent : un type seul, un terme seul, les deux, ou aucun pour tout le site.
+
+Une publication qui liste ses voisines ne se propose pas elle-même.
+
+#### Trois densités pour les cartes de publication
+**Complète** garde l'image, le surtitre et le résumé. **Compacte** ne garde
+que le titre et la flèche, pour une colonne dense. **Horizontale** pose
+l'image à côté du texte plutôt qu'au-dessus.
+
+Le réglage vaut pour la zone Publication comme pour la liste automatique :
+les deux dessinent la même carte, donc elles offrent les mêmes densités.
+
+### Dans aurora-client
+
+Rien à répercuter. `GridViewBuilder::build()` accepte un quatrième argument
+facultatif — la publication qui affiche la grille, pour qu'une liste ne
+s'inclue pas elle-même. Un appel existant continue de fonctionner sans le
+passer, et la liste se contentera alors de ne rien exclure.
+
 ## [0.9.50] - 2026-09-06
 
 ### Ajouté

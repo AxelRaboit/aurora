@@ -43,6 +43,10 @@ const props = defineProps({
     locale: { type: String, required: true },
     /** Publications this grid may link to, for the `post` zone type. */
     postOptions: { type: Array, default: () => [] },
+    /** The types a list zone may narrow to. */
+    postTypeOptions: { type: Array, default: () => [] },
+    /** The terms it may narrow to, across every taxonomy. */
+    termOptions: { type: Array, default: () => [] },
     previewPath: { type: String, required: true },
 });
 
@@ -393,6 +397,8 @@ function resizeZone(index, columns) {
                                 :fields="zoneFields(index, childIndex)"
                                 :locale="locale"
                                 :post-options="postOptions"
+                                :post-type-options="postTypeOptions"
+                                :term-options="termOptions"
                                 :ratio-options="ratioOptions"
                                 :scale-options="scaleOptions"
                                 :align-options="alignOptions"
@@ -429,6 +435,8 @@ function resizeZone(index, columns) {
                     :fields="zoneFields(index)"
                     :locale="locale"
                     :post-options="postOptions"
+                    :post-type-options="postTypeOptions"
+                    :term-options="termOptions"
                     :ratio-options="ratioOptions"
                     :scale-options="scaleOptions"
                     :align-options="alignOptions"

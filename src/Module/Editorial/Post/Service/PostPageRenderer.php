@@ -68,7 +68,7 @@ final readonly class PostPageRenderer
             'banner' => $this->bannerViewBuilder->build($post->getBannerLayout(), $translation->getBanner()),
             // Null when the post has no grid, which is what makes the template
             // fall back to the plain block column it has always rendered.
-            'grid' => $this->gridViewBuilder->build($post->getGridLayout(), $translation->getGrid(), $locale),
+            'grid' => $this->gridViewBuilder->build($post->getGridLayout(), $translation->getGrid(), $locale, $post->getId()),
             // Null when the gallery is off or has nothing to show, so the
             // template leaves the section out rather than printing an empty one.
             'gallery' => $this->galleryViewBuilder->build($post->getGalleryLayout(), $translation->getGallery()),
