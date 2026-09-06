@@ -921,9 +921,12 @@ frontend:
       cancel_reply: Annuler
       replying_to: 'En réponse à {name}'
       name: Votre nom
+      name_placeholder: Camille Durand
       email: Votre e-mail
+      email_placeholder: prenom.nom@exemple.fr
       email_hint: "Jamais affiché publiquement."
       content: Votre commentaire
+      content_placeholder: "Ce que vous en pensez, en quelques lignes."
       sent: Merci, votre commentaire est en ligne.
       pending: "Merci, votre commentaire sera visible après relecture."
       reactions:

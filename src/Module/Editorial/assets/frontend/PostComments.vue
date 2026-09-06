@@ -128,6 +128,7 @@ function reactionCount(comment, type) {
                         v-model="form.authorName"
                         type="text"
                         required
+                        :placeholder="t('frontend.editorial.comments.name_placeholder')"
                         class="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-primary"
                     >
                     <span v-if="errors.authorName" class="block text-xs text-rose-500">{{ errors.authorName }}</span>
@@ -139,6 +140,7 @@ function reactionCount(comment, type) {
                         v-model="form.authorEmail"
                         type="email"
                         required
+                        :placeholder="t('frontend.editorial.comments.email_placeholder')"
                         class="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-primary"
                     >
                     <span class="block text-xs text-muted">{{ t("frontend.editorial.comments.email_hint") }}</span>
@@ -152,6 +154,7 @@ function reactionCount(comment, type) {
                     v-model="form.content"
                     rows="4"
                     required
+                    :placeholder="t('frontend.editorial.comments.content_placeholder')"
                     class="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-primary"
                 />
                 <span v-if="errors.content" class="block text-xs text-rose-500">{{ errors.content }}</span>
