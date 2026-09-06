@@ -1,0 +1,72 @@
+{# One publication, as a card.
+
+   Two callers render the same object and used to carry two copies of this
+   markup: the archive listing and the `post` zone of a content grid. They had
+   drifted apart by a padding and a hover state, and every improvement had to
+   be made twice or made once and forgotten. One file, one card.
+
+   Expects `post` (a listing payload) and `locale`. `terms` is optional - the
+   grid zone's payload has none - so it is read defensively rather than
+   assumed, `strict_variables` being on.
+
+   `relative` on the article is what the title link's `::after` stretches
+   against: the click target is the whole card, while the link itself wraps
+   nothing but the title. Wrapping the entire <article> in an <a> would be
+   shorter and worse - a screen reader announces a link by its content, so its
+   name would become the image, the title and the summary run together in one
+   breath.
+
+   `not-prose` because the grid renders inside `<article class="prose">`, and
+   Typography would otherwise give the card image `margin: 2em 0`. #}
+
+{% set cardTerms = post.terms is defined ? post.terms : [] %}
+{% set eyebrow = cardTerms is not empty ? (cardTerms|first)|first : null %}
+
+<article class="group not-prose relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition duration-200 hover:-translate-y-1 hover:border-accent-500/60 hover:shadow-xl hover:shadow-black/30">
+    {% if post.thumbnailUrl %}
+        {# The fit arrives as a class, not a value: Tailwind only emits classes
+           it can read in the source, and `object-{{ fit }}` is one it never
+           sees. A fixed ratio rather than a fixed height, so a row of cards
+           lines up whatever the pictures were. #}
+        <div class="relative overflow-hidden">
+            <img
+                src="{{ post.thumbnailUrl }}"
+                alt=""
+                loading="lazy"
+                class="aspect-[16/10] w-full {{ post.thumbnailFitClass }} transition-transform duration-500 group-hover:scale-105"
+                style="object-position: {{ post.thumbnailFocalPosition }};"
+            >
+        </div>
+    {% endif %}
+
+    <div class="flex flex-1 flex-col gap-2 p-5">
+        {% if eyebrow %}
+            {# The first term, above the title rather than as a chip below it.
+               It says what kind of thing this is before the reader commits to
+               the title, which is the job a category has on a card. #}
+            <p class="m-0 text-xs font-semibold uppercase tracking-wider text-accent">{{ eyebrow }}</p>
+        {% endif %}
+
+        {# h2: on a listing these are the sections of the page, and in a grid
+           the page's h1 is its own title or its banner's. #}
+        <h2 class="m-0 text-lg font-semibold leading-snug text-primary">
+            <a
+                href="{{ path('editorial_post', {locale: locale, postTypeSlug: post.postTypeSlug, slug: post.slug}) }}"
+                class="no-underline transition-colors group-hover:text-accent after:absolute after:inset-0"
+            >{{ post.title }}</a>
+        </h2>
+
+        {% if post.description %}
+            <p class="m-0 text-sm leading-relaxed text-secondary">{{ post.description }}</p>
+        {% endif %}
+
+        {# The affordance the card was missing: nothing here said it could be
+           clicked. Hidden from assistive technology because the link above
+           already carries the destination, and reserved space rather than
+           inserted on hover, so the card does not resize under the cursor. #}
+        <span
+            aria-hidden="true"
+            class="mt-auto pt-3 text-lg leading-none text-accent opacity-0 transition duration-200 group-hover:translate-x-1 group-hover:opacity-100"
+        >&rarr;</span>
+    </div>
+</article>

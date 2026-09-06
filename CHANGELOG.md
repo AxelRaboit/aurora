@@ -5,6 +5,60 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.46] - 2026-09-06
+
+### Corrigé
+
+#### Une page pouvait rester sans style après un déploiement
+Certaines pages revenaient chez le visiteur en texte brut, sans aucune mise en
+forme, et seul un rechargement forcé les réparait. C'est arrivé sur la page
+« À propos » d'app.axelraboit.fr, à répétition.
+
+La cause : une page qui n'a pas changé répond « rien de neuf » au navigateur,
+qui réaffiche alors sa copie. Sauf qu'une page, ce n'est pas seulement son
+contenu — c'est aussi le nom des fichiers de style qu'elle réclame, et ces
+noms changent à chaque construction des assets. La copie conservée par le
+visiteur restait donc jugée valable tout en pointant vers des fichiers que le
+déploiement venait de supprimer.
+
+Une page est désormais considérée à jour seulement si ni son contenu ni les
+assets n'ont bougé depuis. Un déploiement rafraîchit tout le monde, une page
+inchangée continue d'économiser un rendu.
+
+### Modifié
+
+#### Les cartes de publication ont été retravaillées
+Le terme de la publication s'affiche au-dessus du titre plutôt qu'en pastille
+en bas, une flèche apparaît au survol — rien n'indiquait jusqu'ici qu'une
+carte était cliquable — et la carte se soulève avec un filet à la couleur
+d'accent, là où seule la bordure changeait de gris. L'image adopte un rapport
+fixe de 16/10 et s'agrandit légèrement au survol, ce qui aligne les cartes
+d'une même ligne quelles que soient les photos.
+
+Le listing et les zones « Publication » d'une grille dessinaient chacun leur
+copie de cette carte, et les deux avaient déjà divergé. Elles partagent
+maintenant `_post_card.html.twig`.
+
+#### Le texte d'une bannière posée sur une photo reste lisible
+Une ombre portée est appliquée au titre et à la description quand il y a une
+photo derrière, et seulement dans ce cas. Monter l'assombrissement assez haut
+pour la zone claire que le texte traverse aplatissait toute l'image.
+
+#### La barre de navigation suit le défilement
+Elle reste en haut, translucide et floutée là où le navigateur le permet.
+
+#### Le titre d'une page de listing a la place qui lui revient
+Il avait le poids d'un titre de carte sur une page dont c'est le seul propos,
+et la grille démarrait sous une simple ligne de texte. Il passe en grand, avec
+un filet en dessous.
+
+### Dans aurora-client
+
+Rien à répercuter. Un thème client qui surcharge `_posts.html.twig` ou
+`_grid_zone.html.twig` continue de fonctionner ; pour bénéficier de la
+nouvelle carte, inclure `_post_card.html.twig` plutôt que recopier son
+balisage.
+
 ## [0.9.45] - 2026-09-06
 
 ### Ajouté

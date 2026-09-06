@@ -49,6 +49,14 @@
    than guessing a value, so the two stay aligned if that ever changes. #}
 {% set isFull = banner.width starts with 'full' %}
 
+{# Text over a photograph is legible or it is not, and the darkening slider
+   is a blunt instrument: raising it enough for the one bright patch the text
+   crosses flattens the whole picture. A shadow costs the image nothing and
+   works wherever the text lands, so it is applied whenever there is a
+   photograph behind it - and only then, since over a flat colour it would
+   just look smudged. #}
+{% set overPhoto = banner.background.media ? ' [text-shadow:0_2px_14px_rgb(0_0_0/0.55)]' : '' %}
+
 {% set contentBox = {
     contained: 'p-8 sm:p-12',
     full_aligned: 'w-full max-w-7xl mx-auto px-4 py-8 sm:py-12',
@@ -121,12 +129,12 @@
                                    has to replace its heading too. #}
                                 {% set titleTag = loop.index0 == banner.headingIndex ? 'h1' : 'p' %}
                                 <{{ titleTag }}
-                                    class="{{ titleSizes[item.titleSize] }} font-bold leading-tight"
+                                    class="{{ titleSizes[item.titleSize] }} font-bold leading-tight{{ overPhoto }}"
                                     {% if item.titleColor %}style="color: {{ item.titleColor }};"{% endif %}
                                 >{{ item.title }}</{{ titleTag }}>
                             {% endif %}
                             {% if item.description %}
-                                <p class="text-base sm:text-lg max-w-prose"
+                                <p class="text-base sm:text-lg max-w-prose{{ overPhoto }}"
                                    {% if item.descriptionColor %}style="color: {{ item.descriptionColor }};"{% endif %}
                                 >{{ item.description }}</p>
                             {% endif %}

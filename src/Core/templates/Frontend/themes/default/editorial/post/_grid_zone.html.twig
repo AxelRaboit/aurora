@@ -64,44 +64,7 @@
         </figure>
 
     {% elseif zone.type == 'post' and zone.post %}
-        {# The card links with the same route the archive listing uses,
-           built from the linked post's own type and slug. #}
-        {# Built like the listing cards in `_posts.html.twig`, down to the
-           markup: same surface, same border deepening on hover, same title
-           going to the accent, and the same reason for the shape.
-
-           This used to be one `<a>` wrapped around the whole card, which is
-           shorter and reads worse: a link is announced by its content, so its
-           name was the thumbnail, the title and the summary run together in one
-           breath. The link now wraps nothing but the title and stretches an
-           `::after` over the card, so the click target is still the whole card
-           while the name is just "Composer avec les blocs". `relative` on the
-           article is what that overlay is measured against. #}
-        <article class="group not-prose relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-line-strong">
-            {% if zone.post.thumbnailUrl %}
-                <img
-                    src="{{ zone.post.thumbnailUrl }}"
-                    alt=""
-                    loading="lazy"
-                    class="aspect-video w-full {{ zone.post.thumbnailFitClass }}"
-                    style="object-position: {{ zone.post.thumbnailFocalPosition }};"
-                >
-            {% endif %}
-            <div class="flex flex-1 flex-col gap-2 p-4">
-                {# h2: the page's h1 is its own title or its banner's,
-                   and a linked publication is a section of this page,
-                   not a competing document. #}
-                <h2 class="m-0 text-lg font-semibold text-primary">
-                    <a
-                        href="{{ path('editorial_post', {locale: locale, postTypeSlug: zone.post.postTypeSlug, slug: zone.post.slug}) }}"
-                        class="no-underline transition-colors group-hover:text-accent after:absolute after:inset-0"
-                    >{{ zone.post.title }}</a>
-                </h2>
-                {% if zone.post.description %}
-                    <p class="m-0 text-sm text-secondary">{{ zone.post.description }}</p>
-                {% endif %}
-            </div>
-        </article>
+        {{ include('Frontend/themes/default/editorial/_post_card.html.twig', {post: zone.post, locale: locale}) }}
 
     {% elseif zone.type == 'video' %}
         {% if zone.video %}

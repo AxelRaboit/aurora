@@ -1,60 +1,16 @@
 {# Shared listing markup. Rendered server-side rather than mounted as a Vue
    app: a public listing has nothing interactive about it, and HTML that is
    already there is what a search engine - and a reader whose JavaScript did
-   not load - actually gets. #}
+   not load - actually gets.
+
+   The card itself lives in `_post_card.html.twig`, shared with the `post`
+   zone of a content grid. #}
 {% if posts is empty %}
     <p class="text-secondary">{{ 'frontend.editorial.no_posts'|trans }}</p>
 {% else %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {% for post in posts %}
-            {# `relative` so the title link's `::after` can stretch over the whole
-               card: the click target is the card, while the link itself still
-               wraps nothing but the title. Wrapping the entire <article> in an
-               <a> would have been shorter and worse - a screen reader announces
-               a link by its content, so the name would have become the image,
-               the title, the summary and every term run together, and the day a
-               term becomes a link of its own the markup turns invalid. #}
-            <article class="group relative bg-surface border border-line rounded-xl overflow-hidden flex flex-col transition-colors hover:border-line-strong">
-                {% if post.thumbnailUrl %}
-                    {# The fit arrives as a class, not a value: Tailwind only
-                       emits classes it can read in the source, and
-                       `object-{{ fit }}` is one it never sees. #}
-                    <img
-                        src="{{ post.thumbnailUrl }}"
-                        alt=""
-                        loading="lazy"
-                        class="w-full h-48 {{ post.thumbnailFitClass }}"
-                        style="object-position: {{ post.thumbnailFocalPosition }};"
-                    >
-                {% endif %}
-                <div class="p-5 flex-1 flex flex-col gap-2">
-                    <h2 class="text-lg font-semibold text-primary">
-                        {# `after:absolute after:inset-0` is the overlay. The default
-                           focus ring is deliberately left on the title text: it is
-                           what the keyboard actually lands on, and an overlay-sized
-                           ring would trace a box around content the link does not
-                           name. #}
-                        <a
-                            href="{{ path('editorial_post', {locale: locale, postTypeSlug: post.postTypeSlug, slug: post.slug}) }}"
-                            class="transition-colors group-hover:text-accent after:absolute after:inset-0"
-                        >
-                            {{ post.title }}
-                        </a>
-                    </h2>
-                    {% if post.description %}
-                        <p class="text-sm text-secondary">{{ post.description }}</p>
-                    {% endif %}
-                    {% if post.terms is not empty %}
-                        <div class="flex flex-wrap gap-1.5 mt-auto pt-2">
-                            {% for taxonomySlug, names in post.terms %}
-                                {% for name in names %}
-                                    <span class="px-2 py-0.5 text-xs rounded-md bg-surface-2 text-secondary">{{ name }}</span>
-                                {% endfor %}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            </article>
+            {{ include('Frontend/themes/default/editorial/_post_card.html.twig', {post: post, locale: locale}) }}
         {% endfor %}
     </div>
 

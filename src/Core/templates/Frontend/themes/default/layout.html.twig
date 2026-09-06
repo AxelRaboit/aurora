@@ -25,7 +25,12 @@
     {% set footerMenu = menu_items('footer', locale) %}
 
     {% block frontend_header %}
-    <header class="aurora-surface aurora-surface-header border-b border-line">
+    {# Sticky, and translucent where the browser supports it: on a long page
+       the navigation is the one thing a reader should never have to scroll
+       back for. `supports-[backdrop-filter]` is what keeps the fallback
+       honest - without the test, a browser that cannot blur would render the
+       header at 80% opacity over the moving content underneath. #}
+    <header class="aurora-surface aurora-surface-header sticky top-0 z-40 border-b border-line supports-[backdrop-filter]:bg-surface/80 supports-[backdrop-filter]:backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
             <a href="{{ default_front_home_path(locale) }}" class="flex items-center gap-2 text-lg font-semibold text-primary hover:opacity-80 transition-opacity">
                 {% set headerLogoUrl = themeContext.headerLogoUrl() %}
