@@ -53,9 +53,31 @@ backend:
       tab: Pexels
       search_placeholder: "Search a photo: desk, nature, portrait…"
       empty: No photo for this search.
-      not_configured: "The Pexels integration is not configured. Set PEXELS_API_KEY to enable it."
+      not_configured: "The Pexels photo library is not enabled. Go to Configuration › Pexels to turn it on."
+      settings:
+        what_title: What this is for
+        what_body: "Pexels is a free stock photo library. Once enabled, a \"Pexels\" tab appears in the image picker: you search for a photo, you pick it, it is downloaded into your media library and becomes yours. Your site no longer depends on Pexels to display it."
+        how_title: Getting your key
+        how_step_account: "Create a free account on pexels.com, or sign in to yours."
+        how_step_request: "Go to pexels.com/api/, click \"Get Started\" and describe in one sentence what you will use it for (for example: illustrating the pages of my website). The key is issued immediately."
+        how_step_paste: "Copy the key shown there, paste it in the field below, and save."
+        how_link: Open the Pexels API keys page
+        terms_label: I have read and accept the Pexels terms of service
+        terms_hint: "The Pexels account is yours, and its holder answers for how the photos are used. On a site that sells a product or a service in particular, avoid photos showing a recognisable face or a brand: they can suggest an endorsement. Do not redistribute the files themselves either, for instance in a folder handed to a third party."
+        terms_link: Read the terms of service
+        license_link: Read the Pexels licence
+        accepted_on: "Terms accepted on {date} by {user}."
+        key_label: Pexels API key
+        key_hint: It is stored encrypted and never shown again.
+        key_stored: A key is stored. Leave the field empty to keep it, or enter a new one to replace it.
+        enabled_label: Enable the Pexels photo library
+        enabled_hint: The Pexels tab will appear in the image picker.
+        enabled_blocked: Accept the terms and enter a key before enabling.
       errors:
         invalid_photo: This photo cannot be imported.
+        download_failed: The photo could not be downloaded. Try again in a moment.
+        terms_required: The terms of service must be accepted to enable the integration.
+        key_required: An API key is required to enable the integration.
     bootstrap:
       categories:
         inline_uploads: Editorial media

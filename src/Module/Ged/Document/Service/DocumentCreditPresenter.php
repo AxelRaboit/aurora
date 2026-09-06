@@ -26,18 +26,18 @@ final readonly class DocumentCreditPresenter
      */
     public function present(?DocumentInterface $document): ?array
     {
-        if (!$document instanceof DocumentInterface || !$document->isRemote()) {
-            return null;
-        }
-
-        $name = mb_trim((string) $document->getAttributionName());
+        // Keyed on the attribution itself rather than on where the file is
+        // stored. We host every picture now, including the stock ones, so
+        // "is this ours" no longer distinguishes anything - "does this name
+        // someone" does, and it is the question the credit answers.
+        $name = mb_trim((string) $document?->getAttributionName());
         if ('' === $name) {
             return null;
         }
 
         return [
             'name' => $name,
-            'url' => $document->getAttributionUrl(),
+            'url' => $document?->getAttributionUrl(),
         ];
     }
 }

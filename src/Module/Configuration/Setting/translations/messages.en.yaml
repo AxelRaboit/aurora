@@ -23,6 +23,8 @@ backend:
       sequences_description: Prefixes for auto-generated references. Developer-only tab.
       navigation: Navigation
       navigation_description: Customize sidemenu section and item names.
+      pexels: Pexels
+      pexels_description: 'Free stock photo library: enabling, API key and acceptance of the terms.'
       notes: Notes
       notes_description: "Markdown notes module settings: image upload size and quality."
       modules: Modules

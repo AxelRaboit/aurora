@@ -107,23 +107,19 @@ abstract class AbstractDocument implements DocumentInterface
     #[ORM\Column(type: Types::JSON, options: ['default' => '{}'])]
     protected array $variants = [];
 
-    // ── Remotely hosted documents ────────────────────────────────────────
-    // A document whose bytes live on someone else's CDN rather than in
-    // var/uploads. `filePath` is null for these, and `sourceUrl` carries the
-    // address the browser is sent to instead.
+    // ── Provenance ───────────────────────────────────────────────────────
+    // Where a document came from, when it did not come from someone's disk.
+    // Null for an upload, which is the ordinary case; set for a picture
+    // imported from a stock photo library.
     //
-    // This exists for the stock photo libraries: a picture picked from one
-    // stays on the provider's CDN, which keeps the credit attached to it and
-    // costs the server no disk. Everything else about it is an ordinary
-    // document - it is filed, titled, tagged and referenced like any other,
-    // so a caller never has to ask which kind it is holding.
-    //
-    // The two attribution columns are not decoration either: displaying the
-    // photographer's name beside the picture is a condition of using the
-    // API at all, so the credit travels with the document rather than
-    // being re-fetched at render time.
+    // The file itself is ours either way - it is downloaded at import and
+    // stored like any other. These three columns do not change how it is
+    // served; they answer two questions the file cannot. Whose photograph is
+    // this, which the credit under the picture is rendered from, and where
+    // did it come from, which is the only way to trace a library entry back
+    // a year later or to honour a takedown.
 
-    /** Absolute URL of the remote original. Null for documents we host ourselves. */
+    /** Address the picture was fetched from. Null for an upload. */
     #[ORM\Column(length: 1024, nullable: true)]
     protected ?string $sourceUrl = null;
 
@@ -415,18 +411,6 @@ abstract class AbstractDocument implements DocumentInterface
         $this->sourceUrl = $sourceUrl;
 
         return $this;
-    }
-
-    /**
-     * Whether the bytes live elsewhere.
-     *
-     * The question every file-touching path has to ask before it reaches for
-     * disk: cropping, variant generation and deletion all have nothing to
-     * work on here.
-     */
-    public function isRemote(): bool
-    {
-        return null !== $this->sourceUrl;
     }
 
     public function getAttributionName(): ?string

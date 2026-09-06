@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Module\Ged\Pexels\Service;
 
+use Aurora\Core\Encryption\Service\EncryptionServiceInterface;
+use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Ged\Pexels\Service\PexelsClient;
+use Aurora\Module\Ged\Pexels\Setting\PexelsSettingEnum;
+use Aurora\Module\Ged\Pexels\Setting\PexelsSettings;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -17,13 +21,51 @@ use Symfony\Component\HttpClient\Response\MockResponse;
  */
 final class PexelsClientTest extends TestCase
 {
-    public function testSearchIsSkippedWithoutAnApiKey(): void
+    /**
+     * A real {@see PexelsSettings} over an in-memory store: the class is
+     * final, and building it for real also proves the client asks the right
+     * question - enabled, accepted and keyed, not merely keyed.
+     */
+    private function settings(string $apiKey): PexelsSettings
+    {
+        $store = '' === $apiKey ? [] : [
+            PexelsSettingEnum::Enabled->value => '1',
+            PexelsSettingEnum::ApiKey->value => base64_encode($apiKey),
+            PexelsSettingEnum::TermsAcceptedAt->value => '2026-09-06T12:00:00+00:00',
+        ];
+
+        $repository = $this->createStub(SettingRepository::class);
+        $repository->method('get')->willReturnCallback(
+            static fn (string $key, ?string $default = null): ?string => $store[$key] ?? $default,
+        );
+        $repository->method('getBoolean')->willReturnCallback(
+            static fn (string $key, bool $default = false): bool => '1' === ($store[$key] ?? ($default ? '1' : '0')),
+        );
+
+        $encryption = new class implements EncryptionServiceInterface {
+            public function encrypt(string $plaintext): string
+            {
+                return base64_encode($plaintext);
+            }
+
+            public function decrypt(string $encoded): ?string
+            {
+                $decoded = base64_decode($encoded, strict: true);
+
+                return false === $decoded ? null : $decoded;
+            }
+        };
+
+        return new PexelsSettings($repository, $encryption);
+    }
+
+    public function testSearchIsSkippedWhileTheIntegrationIsOff(): void
     {
         $http = new MockHttpClient(static function (): MockResponse {
-            self::fail('No request should be made when the key is missing.');
+            self::fail('No request should be made while the integration is off.');
         });
 
-        $client = new PexelsClient($http, new NullLogger(), '');
+        $client = new PexelsClient($http, new NullLogger(), $this->settings(''));
 
         self::assertFalse($client->isConfigured());
         self::assertSame(['results' => [], 'totalPages' => 0], $client->search('desk'));
@@ -37,7 +79,7 @@ final class PexelsClientTest extends TestCase
 
         self::assertSame(
             ['results' => [], 'totalPages' => 0],
-            (new PexelsClient($http, new NullLogger(), 'key'))->search('   '),
+            (new PexelsClient($http, new NullLogger(), $this->settings('key')))->search('   '),
         );
     }
 
@@ -67,7 +109,7 @@ final class PexelsClientTest extends TestCase
             ]],
         ], JSON_THROW_ON_ERROR)));
 
-        $result = (new PexelsClient($http, new NullLogger(), 'key'))->search('desk');
+        $result = (new PexelsClient($http, new NullLogger(), $this->settings('key')))->search('desk');
 
         self::assertCount(1, $result['results']);
         self::assertSame([
@@ -97,7 +139,7 @@ final class PexelsClientTest extends TestCase
             'photos' => [],
         ], JSON_THROW_ON_ERROR)));
 
-        self::assertSame(3, (new PexelsClient($http, new NullLogger(), 'key'))->search('desk')['totalPages']);
+        self::assertSame(3, (new PexelsClient($http, new NullLogger(), $this->settings('key')))->search('desk')['totalPages']);
     }
 
     /**
@@ -110,7 +152,7 @@ final class PexelsClientTest extends TestCase
 
         self::assertSame(
             ['results' => [], 'totalPages' => 0],
-            (new PexelsClient($http, new NullLogger(), 'key'))->search('desk'),
+            (new PexelsClient($http, new NullLogger(), $this->settings('key')))->search('desk'),
         );
     }
 
@@ -124,7 +166,7 @@ final class PexelsClientTest extends TestCase
             return new MockResponse('{"photos":[],"total_results":0,"per_page":24}');
         });
 
-        (new PexelsClient($http, new NullLogger(), 's3cret'))->search('desk');
+        (new PexelsClient($http, new NullLogger(), $this->settings('s3cret')))->search('desk');
 
         self::assertContains('Authorization: s3cret', $seen);
     }

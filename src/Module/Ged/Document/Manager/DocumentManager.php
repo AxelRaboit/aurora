@@ -354,16 +354,13 @@ class DocumentManager implements DocumentManagerInterface
             $document->setThumbnailPath($input->getThumbnailPath());
         }
 
-        // Same rule for the remote address, and for the same reason: an edit
-        // that only renames a stock photo must not blank the URL it is
-        // served from, which would leave a document pointing at nothing.
+        // Same rule for the provenance, and for the same reason: an edit that
+        // only renames a stock photo must not erase who took it, which would
+        // leave the picture rendered without the credit it owes.
         if (null !== $input->getSourceUrl()) {
             $document->setSourceUrl($input->getSourceUrl());
             $document->setAttributionName($input->getAttributionName());
             $document->setAttributionUrl($input->getAttributionUrl());
-            $document->setMimeType($input->getMimeType());
-            $document->setWidth($input->getWidth());
-            $document->setHeight($input->getHeight());
         }
 
         $document->clearTags();

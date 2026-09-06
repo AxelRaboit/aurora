@@ -23,6 +23,8 @@ backend:
       sequences_description: Préfixes des références auto-générées. Onglet réservé aux développeurs.
       navigation: Navigation
       navigation_description: Personnalisez les noms des sections et des items du menu latéral.
+      pexels: Pexels
+      pexels_description: 'Banque de photos gratuites : activation, clé d''API et acceptation des conditions.'
       notes: Notes
       notes_description: 'Paramètres du module Notes Markdown : taille / qualité des images uploadées.'
       modules: Modules

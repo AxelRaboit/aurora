@@ -5,6 +5,59 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.45] - 2026-09-06
+
+### Ajouté
+
+#### Un écran de réglages pour la banque de photos Pexels
+Configuration › Pexels. L'intégration y est **désactivée par défaut** et ne
+peut être activée qu'après avoir coché une case d'acceptation des conditions
+d'utilisation, avec les liens vers ces conditions et vers la licence. La date
+de l'acceptation et l'adresse de la personne qui l'a donnée sont enregistrées
+en base et réaffichées dans l'onglet ; retirer l'acceptation coupe
+l'intégration dans la même opération.
+
+L'onglet explique aussi, en trois étapes, comment obtenir la clé : créer un
+compte Pexels, la demander sur leur page API, la coller ici. C'est écrit pour
+quelqu'un qui n'a jamais entendu parler de Pexels.
+
+La clé d'API est saisie là plutôt que dans `.env`, et stockée chiffrée avec le
+service de chiffrement d'Aurora. Elle n'est jamais renvoyée au navigateur :
+l'écran sait seulement qu'une clé existe. Laisser le champ vide conserve celle
+déjà enregistrée.
+
+Cette organisation existe parce qu'Aurora est livré à des clients : le compte
+Pexels est celui du client, et ce sont ses conditions qu'il doit accepter
+lui-même, sur son propre site, avec sa propre clé.
+
+### Modifié
+
+#### Les photos Pexels sont téléchargées, plus seulement pointées
+Une photo importée est désormais rapatriée dans la médiathèque comme
+n'importe quel fichier : elle est stockée, ses vignettes sont générées ici, et
+la page qui l'affiche ne fait plus aucune requête vers un tiers.
+
+La licence Pexels accorde le droit de télécharger et de conserver l'image, de
+façon irrévocable, à celui qui la télécharge. Un site construit ainsi détient
+donc ses propres droits sur ses propres images : il continue de fonctionner si
+la clé est révoquée ou si la photo est retirée de Pexels, et il n'envoie plus
+l'adresse IP de ses visiteurs à un service tiers. Unsplash, lui, interdisait le
+réhébergement, ce qui avait imposé le fonctionnement précédent.
+
+Conséquence : toute la machinerie qui servait un document distant disparaît.
+`DocumentInterface::isRemote()` est retiré, ainsi que la redirection vers le
+CDN et les variantes calculées en largeur. Les colonnes `source_url`,
+`attribution_name` et `attribution_url` restent : elles disent d'où vient la
+photo et de qui elle est, et c'est d'elles que le crédit est rendu. Le crédit
+s'appuie maintenant sur la présence d'une attribution, et non plus sur le fait
+que le fichier soit distant.
+
+### Dans aurora-client
+
+Retirer `PEXELS_API_KEY` de `.env.local` s'il y a été ajouté : la clé se
+renseigne maintenant dans Configuration › Pexels. Aucune migration. Les sites
+existants n'ont rien à reprendre : aucun document distant n'a jamais été créé.
+
 ## [0.9.44] - 2026-09-06
 
 ### Modifié

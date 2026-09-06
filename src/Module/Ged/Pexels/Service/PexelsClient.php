@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Pexels\Service;
 
+use Aurora\Module\Ged\Pexels\Setting\PexelsSettings;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
 
@@ -34,13 +34,20 @@ final readonly class PexelsClient
     public function __construct(
         private HttpClientInterface $httpClient,
         private LoggerInterface $logger,
-        #[Autowire(env: 'PEXELS_API_KEY')]
-        private string $apiKey,
+        private PexelsSettings $settings,
     ) {}
 
+    /**
+     * The key lives in the database rather than in the environment, because
+     * the account it belongs to is the client's. Asking them to hand it over
+     * so somebody else can paste it into a server file is the wrong shape:
+     * they enter it in their own back office, and nobody else needs to see
+     * it. {@see PexelsSettings} also answers whether they turned the
+     * integration on and accepted the terms, which is the same question.
+     */
     public function isConfigured(): bool
     {
-        return '' !== mb_trim($this->apiKey);
+        return $this->settings->isEnabled();
     }
 
     /**
@@ -57,7 +64,7 @@ final readonly class PexelsClient
         try {
             $response = $this->httpClient->request('GET', self::API_BASE.'/search', [
                 // Pexels wants the bare key, with no scheme in front of it.
-                'headers' => ['Authorization' => $this->apiKey],
+                'headers' => ['Authorization' => $this->settings->apiKey()],
                 'query' => [
                     'query' => $query,
                     'page' => max(1, $page),

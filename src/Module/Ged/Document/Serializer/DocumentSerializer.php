@@ -43,12 +43,11 @@ class DocumentSerializer implements DocumentSerializerInterface
             'filePath' => $document->getFilePath(),
             'fileName' => $document->getFileName(),
             'originalName' => $document->getOriginalName(),
-            // Remote documents have no path under /uploads - the generator
-            // hands back the provider's address instead, so every consumer
-            // of `fileUrl` keeps working without knowing the difference.
             'fileUrl' => $this->documentUrlGenerator->publicUrl($document),
+            // Where the picture came from, for a stock photo. Null for
+            // anything uploaded, and read-only: the GED screen shows the
+            // credit, it does not invent one.
             'sourceUrl' => $document->getSourceUrl(),
-            'isRemote' => $document->isRemote(),
             'attributionName' => $document->getAttributionName(),
             'attributionUrl' => $document->getAttributionUrl(),
             // Stable canonical URL that survives file renames/re-uploads -
@@ -87,21 +86,6 @@ class DocumentSerializer implements DocumentSerializerInterface
     /** @return array<string, string> */
     private function buildVariantUrls(DocumentInterface $document): array
     {
-        // A remote document's variants are widths asked of the provider, not
-        // rows in its `variants` column - that column is empty and iterating
-        // it would report no responsive sizes at all.
-        if ($document->isRemote()) {
-            $urls = [];
-            foreach (['thumbnail', 'medium', 'large'] as $variantName) {
-                $url = $this->documentUrlGenerator->variantUrl($document, $variantName);
-                if (null !== $url) {
-                    $urls[$variantName] = $url;
-                }
-            }
-
-            return $urls;
-        }
-
         $urls = [];
         foreach (array_keys($document->getVariants()) as $variantName) {
             $url = $this->documentUrlGenerator->variantUrl($document, $variantName);
@@ -115,10 +99,6 @@ class DocumentSerializer implements DocumentSerializerInterface
 
     private function resolveThumbnailUrl(DocumentInterface $document): ?string
     {
-        if ($document->isRemote()) {
-            return $this->documentUrlGenerator->variantUrl($document, 'thumbnail');
-        }
-
         if (null !== $document->getThumbnailPath()) {
             return $this->uploadUrlGenerator->publicUrl($document->getThumbnailPath());
         }
