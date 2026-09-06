@@ -5,7 +5,27 @@ import { usePostEditor } from "./usePostEditor.js";
 vi.mock("vue-i18n", () => ({ useI18n: () => ({ t: (key) => key }) }));
 vi.mock("vue-sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/shared/composables/http/backend/useRequest.js", () => ({
-    useRequest: () => ({ request: vi.fn() }),
+    useRequest: () => ({
+        request: vi.fn(async () => ({
+            success: true,
+            posts: [
+                {
+                    id: 1,
+                    title: "Ce billet même",
+                    status: "published",
+                    postTypeId: 1,
+                    postType: "Page",
+                },
+                {
+                    id: 5,
+                    title: "Stratégie de contenu",
+                    status: "published",
+                    postTypeId: 2,
+                    postType: "Service",
+                },
+            ],
+        })),
+    }),
 }));
 vi.mock("@/shared/composables/form/useServerErrors.js", () => ({
     useServerErrors: () => ({
@@ -146,5 +166,101 @@ describe("usePostEditor", () => {
 
         expect(Object.keys(form.value)).toContain("bannerLayout");
         expect(Object.keys(form.value)).toContain("gridLayout");
+    });
+});
+
+/**
+ * The Publication zone can only offer posts already in `relatedPostIds` - see
+ * `PostGridZoneContent.vue`'s `publicationOptions`. Without a way to add to
+ * that list, the zone's picker stayed empty forever: the field round-tripped
+ * on save, but nothing in the editor ever wrote to it.
+ */
+describe("usePostEditor related posts", () => {
+    it("starts with the titles the server already resolved", () => {
+        const { selectedRelatedPosts } = usePostEditor({
+            ...props,
+            post: {
+                id: 1,
+                relatedPostIds: [5],
+                relatedPosts: [{ id: 5, title: "Stratégie de contenu" }],
+                translations: {},
+            },
+        });
+
+        expect(selectedRelatedPosts.value).toEqual([
+            { id: 5, title: "Stratégie de contenu" },
+        ]);
+    });
+
+    it("adds a post found by search and clears the search", () => {
+        const {
+            form,
+            selectedRelatedPosts,
+            relatedPostSearch,
+            addRelatedPost,
+        } = usePostEditor(props);
+
+        relatedPostSearch.value = "stratégie";
+        addRelatedPost({ id: 5, title: "Stratégie de contenu" });
+
+        expect(form.value.relatedPostIds).toEqual([5]);
+        expect(selectedRelatedPosts.value).toEqual([
+            { id: 5, title: "Stratégie de contenu" },
+        ]);
+        expect(relatedPostSearch.value).toBe("");
+    });
+
+    it("does not add the same post twice", () => {
+        const { form, addRelatedPost } = usePostEditor(props);
+
+        addRelatedPost({ id: 5, title: "Stratégie de contenu" });
+        addRelatedPost({ id: 5, title: "Stratégie de contenu" });
+
+        expect(form.value.relatedPostIds).toEqual([5]);
+    });
+
+    it("removes a post without touching the others", () => {
+        const { form, removeRelatedPost } = usePostEditor({
+            ...props,
+            post: {
+                id: 1,
+                relatedPostIds: [5, 6],
+                relatedPosts: [],
+                translations: {},
+            },
+        });
+
+        removeRelatedPost(5);
+
+        expect(form.value.relatedPostIds).toEqual([6]);
+    });
+
+    it("searches the endpoint and excludes the post being edited from the results", async () => {
+        const { relatedPostSearch, relatedPostSearchOptions } = usePostEditor({
+            ...props,
+            post: { id: 1, translations: {} },
+        });
+
+        relatedPostSearch.value = "stratégie";
+        await nextTick();
+        await nextTick();
+
+        expect(
+            relatedPostSearchOptions.value.map((option) => option.id),
+        ).toEqual([5]);
+    });
+
+    it("clears the search results once the search box empties", async () => {
+        const { relatedPostSearch, relatedPostSearchOptions } =
+            usePostEditor(props);
+
+        relatedPostSearch.value = "stratégie";
+        await nextTick();
+        await nextTick();
+        relatedPostSearch.value = "";
+        await nextTick();
+        await nextTick();
+
+        expect(relatedPostSearchOptions.value).toEqual([]);
     });
 });

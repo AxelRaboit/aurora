@@ -2,6 +2,7 @@ import { computed, nextTick, provide, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
 import { buildPath } from "@/shared/utils/http/buildPath.js";
+import { HttpMethod } from "@/shared/utils/http/httpMethod.js";
 import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import { useServerErrors } from "@/shared/composables/form/useServerErrors.js";
 import { slugifyIfEmpty } from "@/shared/utils/format/slugify.js";
@@ -328,6 +329,74 @@ export function usePostEditor(props) {
             : [...form.value.termIds, termId];
     }
 
+    // Titles for the ids `form.relatedPostIds` holds. Seeded from what the
+    // server sent for posts already linked; a post picked from a fresh search
+    // adds its own title here too, so a chip never has to re-ask for one.
+    const relatedPostTitles = ref(
+        new Map(
+            (props.post?.relatedPosts ?? []).map((related) => [
+                related.id,
+                related.title,
+            ]),
+        ),
+    );
+
+    const selectedRelatedPosts = computed(() =>
+        form.value.relatedPostIds.map((id) => ({
+            id,
+            title: relatedPostTitles.value.get(id) ?? `#${id}`,
+        })),
+    );
+
+    const relatedPostSearch = ref("");
+    const relatedPostSearchOptions = ref([]);
+    const relatedPostSearchLoading = ref(false);
+
+    async function searchRelatedPosts() {
+        const query = relatedPostSearch.value.trim();
+
+        if ("" === query) {
+            relatedPostSearchOptions.value = [];
+
+            return;
+        }
+
+        relatedPostSearchLoading.value = true;
+        try {
+            // noGuard: typing in the search box fires one call per keystroke,
+            // and the shared loading guard would drop all but the first.
+            const data = await request(
+                `${props.searchPath}?q=${encodeURIComponent(query)}`,
+                null,
+                { method: HttpMethod.Get, noGuard: true },
+            );
+            // A post cannot relate to itself: it would never be a meaningful
+            // choice in a zone it defines.
+            relatedPostSearchOptions.value = (data?.posts ?? []).filter(
+                (candidate) => candidate.id !== postId.value,
+            );
+        } finally {
+            relatedPostSearchLoading.value = false;
+        }
+    }
+
+    watch(relatedPostSearch, () => void searchRelatedPosts());
+
+    function addRelatedPost(option) {
+        if (form.value.relatedPostIds.includes(option.id)) return;
+
+        relatedPostTitles.value.set(option.id, option.title);
+        form.value.relatedPostIds = [...form.value.relatedPostIds, option.id];
+        relatedPostSearch.value = "";
+        relatedPostSearchOptions.value = [];
+    }
+
+    function removeRelatedPost(id) {
+        form.value.relatedPostIds = form.value.relatedPostIds.filter(
+            (existing) => existing !== id,
+        );
+    }
+
     function setCustomField(name, value) {
         current.value.customFields = {
             ...current.value.customFields,
@@ -355,5 +424,11 @@ export function usePostEditor(props) {
         reloadFromServer,
         toggleTerm,
         setCustomField,
+        selectedRelatedPosts,
+        relatedPostSearch,
+        relatedPostSearchOptions,
+        relatedPostSearchLoading,
+        addRelatedPost,
+        removeRelatedPost,
     };
 }

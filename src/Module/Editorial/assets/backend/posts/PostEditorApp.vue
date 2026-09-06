@@ -22,7 +22,7 @@ import BannerColorField from "./components/BannerColorField.vue";
 import PostBannerPanel from "./components/PostBannerPanel.vue";
 import PostGridPanel from "./components/PostGridPanel.vue";
 import PostGalleryPanel from "./components/PostGalleryPanel.vue";
-import { Save, ArrowLeft, AlertTriangle, Check, Eye, RefreshCw } from "lucide-vue-next";
+import { Save, ArrowLeft, AlertTriangle, Check, Eye, RefreshCw, X } from "lucide-vue-next";
 
 const { t, d } = useI18n();
 
@@ -48,6 +48,8 @@ const {
     form, locale, current, errors, saving, conflict, postId,
     availableTaxonomies, supportsBlocks, supportsThumbnail, customFieldDefinitions,
     switchLocale, save, saveAnyway, reloadFromServer, toggleTerm, setCustomField,
+    selectedRelatedPosts, relatedPostSearch, relatedPostSearchOptions, relatedPostSearchLoading,
+    addRelatedPost, removeRelatedPost,
 } = usePostEditor(props);
 
 const { request } = useRequest();
@@ -97,11 +99,6 @@ const STATUS_COLORS = {
     archived: "zinc",
 };
 
-/**
- * What a `post` zone may link to. The editor already receives the related
- * publications it can reference, which is the same list - asking the server
- * for a second one would be a query for a list it already sent.
- */
 /**
  * How the thumbnail fills a card's frame. Written out rather than assembled:
  * Tailwind only emits classes it can read in the source.
@@ -627,6 +624,55 @@ function termLabel(term) {
                                 v-on:update:model-value="toggleTerm(term.id)"
                             />
                         </div>
+                    </div>
+
+                    <!-- Feeds the grid's "Publication" zone: it can only point
+                         to a post already linked here. Search is server-side
+                         rather than a preloaded list, because the endpoint
+                         only ever answers a query or a set of known ids - it
+                         has no "everything" mode to hand a picker up front. -->
+                    <div class="bg-surface border border-line rounded-xl p-5 space-y-3">
+                        <h3 class="text-sm font-semibold text-primary">{{ t("backend.posts.related_posts") }}</h3>
+                        <p class="text-xs text-muted">{{ t("backend.posts.related_posts_hint") }}</p>
+
+                        <div v-if="selectedRelatedPosts.length" class="flex flex-wrap gap-2">
+                            <AppBadge v-for="related in selectedRelatedPosts" :key="related.id" color="gray">
+                                {{ related.title }}
+                                <button
+                                    type="button"
+                                    class="ms-1.5 -me-0.5 align-middle hover:text-red-500"
+                                    v-on:click="removeRelatedPost(related.id)"
+                                >
+                                    <X class="w-3 h-3" :stroke-width="2" />
+                                </button>
+                            </AppBadge>
+                        </div>
+                        <p v-else class="text-xs text-muted">{{ t("backend.posts.related_posts_empty") }}</p>
+
+                        <AppInput
+                            v-model="relatedPostSearch"
+                            :label="t('shared.common.search')"
+                            :placeholder="t('shared.placeholders.search')"
+                        />
+                        <div
+                            v-if="relatedPostSearchOptions.length"
+                            class="rounded-lg border border-line divide-y divide-line overflow-hidden"
+                        >
+                            <button
+                                v-for="option in relatedPostSearchOptions"
+                                :key="option.id"
+                                type="button"
+                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm text-primary hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                                :disabled="form.relatedPostIds.includes(option.id)"
+                                v-on:click="addRelatedPost(option)"
+                            >
+                                <span>{{ option.title }}</span>
+                                <span class="text-2xs uppercase tracking-wide text-muted">{{ option.postType }}</span>
+                            </button>
+                        </div>
+                        <p v-else-if="relatedPostSearch.trim() && !relatedPostSearchLoading" class="text-xs text-muted">
+                            {{ t("shared.common.no_result") }}
+                        </p>
                     </div>
                 </div>
 
