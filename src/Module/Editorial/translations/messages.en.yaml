@@ -921,9 +921,12 @@ frontend:
       cancel_reply: Cancel
       replying_to: 'In reply to {name}'
       name: Your name
+      name_placeholder: Alex Morgan
       email: Your email
+      email_placeholder: first.last@example.com
       email_hint: 'Never shown publicly.'
       content: Your comment
+      content_placeholder: 'What you make of it, in a few lines.'
       sent: Thanks, your comment is live.
       pending: 'Thanks, your comment will appear once it has been reviewed.'
       reactions:

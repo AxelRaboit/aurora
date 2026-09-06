@@ -5,6 +5,24 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.60] - 2026-09-07
+
+### Corrigé
+
+#### Le formulaire de commentaires n'indiquait pas ce qu'on attendait
+Nom, e-mail et commentaire n'avaient qu'une étiquette. Une étiquette dit ce
+qu'est le champ ; un exemple dit à quoi ressemble une réponse — et sur un
+formulaire public, où personne ne s'entraîne, c'est la seconde qui manque le
+plus.
+
+Le test maison sur le sujet ne voyait que les champs bâtis avec les composants
+de l'application, et ce formulaire-là est écrit à la main : il était invisible
+pour lui. Il relit maintenant aussi les champs écrits directement, en laissant
+de côté ceux où un exemple n'a pas de sens — cases à cocher, sélecteurs de
+couleur, champs en lecture seule et le pot de miel anti-robots.
+
+C'était le seul écran concerné du dépôt : le reste passait déjà.
+
 ## [0.9.59] - 2026-09-07
 
 ### Ajouté

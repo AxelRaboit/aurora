@@ -115,4 +115,97 @@ final class InputPlaceholderTest extends TestCase
     {
         self::assertGreaterThan(30, count([...self::singleFileComponents()]));
     }
+
+    /**
+     * And the fields written by hand.
+     *
+     * The check above only ever saw the shared components, so a screen built
+     * from plain `<input>` was invisible to it - which is exactly what the
+     * public comment form was: three fields, three labels, not one example,
+     * and a test on the subject that had nothing to say about them.
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function vueFiles(): iterable
+    {
+        $root = dirname(__DIR__, 2).'/src';
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS));
+
+        /** @var SplFileInfo $file */
+        foreach ($files as $file) {
+            if (!$file->isFile() || 'vue' !== $file->getExtension()) {
+                continue;
+            }
+
+            $path = $file->getPathname();
+
+            // Only the files with something to check: a component whose every
+            // field is a checkbox would otherwise be a case that asserts
+            // nothing, which PHPUnit rightly calls risky.
+            if ([] === self::checkableFields((string) file_get_contents($path))) {
+                continue;
+            }
+
+            yield str_replace($root.'/', '', $path) => [$path];
+        }
+    }
+
+    /**
+     * The hand-written fields of one file that could carry an example.
+     *
+     * @return list<array{string, string}> the whole tag, and what it is
+     */
+    private static function checkableFields(string $contents): array
+    {
+        preg_match_all('/<(input|textarea)\b[^>]*>/s', $contents, $matches, PREG_SET_ORDER);
+
+        $fields = [];
+
+        foreach ($matches as $match) {
+            [$tag, $element] = $match;
+
+            $type = 'textarea' === $element ? 'textarea' : 'text';
+            if (1 === preg_match('/\btype="([^"]+)"/', $tag, $found)) {
+                $type = $found[1];
+            }
+
+            if (in_array($type, self::TYPELESS, true)
+                || str_contains($tag, 'readonly')
+                || str_contains($tag, 'aria-hidden="true"')
+            ) {
+                continue;
+            }
+
+            $fields[] = [$tag, $element];
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Types that hold no text hold no example either: a checkbox, a colour, a
+     * file. Nor does a field nobody types into - one that is read-only, or the
+     * honeypot, which is hidden from readers and from screen readers alike and
+     * whose whole point is that a human never sees it.
+     */
+    private const array TYPELESS = [
+        'hidden', 'checkbox', 'radio', 'color', 'file',
+        'range', 'submit', 'button', 'reset', 'image',
+    ];
+
+    #[DataProvider('vueFiles')]
+    public function testEveryHandWrittenFieldOffersAnExampleToo(string $path): void
+    {
+        foreach (self::checkableFields((string) file_get_contents($path)) as [$tag, $element]) {
+            self::assertStringContainsString(
+                'placeholder',
+                $tag,
+                sprintf(
+                    '%s: a hand-written <%s> with no placeholder. A label says what the field is; a placeholder says what a value looks like.',
+                    $path,
+                    $element,
+                ),
+            );
+        }
+    }
 }
