@@ -10,6 +10,51 @@
    which Tailwind never scans, so they are declared here explicitly. Adding a
    width to that method means adding it here too. */
 @source inline("max-w-3xl max-w-5xl max-w-none mx-auto");
+
+/*
+ * Utilitaires Tailwind rendus disponibles dans les contenus.
+ *
+ * Tailwind ne genere que les classes qu'il trouve en scannant les sources.
+ * Celles qu'un redacteur ecrit dans un bloc HTML vivent en base, que le
+ * scanner ne lit jamais : sans la liste ci-dessous, `class="grid gap-4"`
+ * dans un article ne correspond a aucun CSS. C'est la meme raison que pour
+ * les largeurs choisies en PHP juste au-dessus, a une autre echelle.
+ *
+ * La liste est volontairement close. Elle couvre la mise en page, les
+ * espacements, la typographie et les etats au survol ; pour les couleurs
+ * elle n'offre que les jetons du theme, de sorte qu'un contenu ne puisse
+ * pas sortir de la charte du site en ecrivant une couleur au hasard.
+ *
+ * Tout ce qui est ici part chez chaque visiteur, utilise ou non : une
+ * addition se pese.
+ */
+
+/* Affichage et flux */
+@source inline("{sm:,md:,lg:,}{block,inline-block,inline,flex,inline-flex,grid,inline-grid,hidden} {sm:,md:,lg:,}flex-{row,row-reverse,col,col-reverse,wrap,nowrap} flex-{1,auto,none,initial} shrink-0 grow items-{start,center,end,baseline,stretch} justify-{start,center,end,between,around,evenly} self-{auto,start,center,end,stretch} {sm:,md:,lg:,}order-{first,last,none,1,2,3}");
+
+/* Grille */
+@source inline("{sm:,md:,lg:,}grid-cols-{1,2,3,4,5,6,12} {sm:,md:,lg:,}col-span-{1,2,3,4,5,6,full} grid-rows-{1,2,3,4} row-span-{1,2,3,full} {sm:,md:,lg:,}gap-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} gap-x-{0,1,2,3,4,6,8} gap-y-{0,1,2,3,4,6,8}");
+
+/* Espacements */
+@source inline("{sm:,md:,lg:,}p-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}px-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}py-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}pt-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}pr-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}pb-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}pl-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}m-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}mx-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}my-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}mt-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}mr-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}mb-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} {sm:,md:,lg:,}ml-{0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,16,20,24} mx-auto my-auto ml-auto mr-auto mt-auto space-{x,y}-{0,1,2,3,4,6,8}");
+
+/* Dimensions */
+@source inline("{sm:,md:,lg:,}w-{full,auto,fit,screen,1/2,1/3,2/3,1/4,3/4} h-{full,auto,fit,screen,8,10,12,16,20,24,32,40,48,64} min-h-{0,full,screen,48,64} min-w-0 {sm:,md:,lg:,}max-w-{xs,sm,md,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl,full,none,prose} aspect-{square,video,auto}");
+
+/* Position et debordement */
+@source inline("relative absolute fixed sticky static inset-0 inset-x-0 inset-y-0 top-0 right-0 bottom-0 left-0 z-{0,10,20,30,40,50} overflow-{hidden,auto,visible} overflow-x-auto overflow-y-auto object-{cover,contain,fill,center,top,bottom}");
+
+/* Typographie */
+@source inline("{sm:,md:,lg:,}text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl,6xl} font-{light,normal,medium,semibold,bold,extrabold} {sm:,md:,lg:,}text-{left,center,right,justify} leading-{none,tight,snug,normal,relaxed,loose} tracking-{tighter,tight,normal,wide,wider,widest} {uppercase,lowercase,capitalize,normal-case} {italic,not-italic} {hover:,}{underline,no-underline,line-through} truncate line-clamp-{1,2,3,4,none} whitespace-{normal,nowrap,pre-line} break-words break-all text-balance text-pretty");
+
+/* Couleurs du theme - les seules offertes, pour que le contenu reste dans la charte */
+@source inline("{hover:,}text-{primary,secondary,muted,subtle,accent,accent-hover} {hover:,}text-accent-{50,100,200,300,400,500,600,700,800,900,950} {hover:,}bg-{surface,surface-2,surface-3,bg,accent} {hover:,}bg-accent-{50,100,200,300,400,500,600,700,800,900,950} {hover:,}border-{line,line-strong,accent} {hover:,}border-accent-{50,100,200,300,400,500,600,700,800,900,950} text-{white,black,transparent} bg-{white,black,transparent}");
+
+/* Bordures, arrondis, ombres */
+@source inline("{hover:,}border border-{0,2,4} border-{t,r,b,l} border-{solid,dashed,dotted} rounded rounded-{none,sm,md,lg,xl,2xl,3xl,full} rounded-{t,r,b,l}-{lg,xl,2xl} {hover:,}shadow shadow-{sm,md,lg,xl,2xl,none} ring-1 ring-2");
+
+/* Transitions et etats - ce qui donne vie a une carte au survol */
+@source inline("transition transition-{all,colors,transform,opacity,shadow} duration-{75,100,150,200,300,500,700} ease-{linear,in,out,in-out} {hover:,}opacity-{0,10,25,50,60,70,75,80,90,100} {hover:,}{scale-{95,100,105,110},-translate-y-{0.5,1,2},translate-y-0} cursor-pointer select-none");
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 

@@ -5,6 +5,45 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.47] - 2026-09-06
+
+### Ajouté
+
+#### Tailwind est utilisable depuis l'éditeur
+Écrire `class="grid md:grid-cols-3 gap-4"` dans un bloc HTML de l'éditeur ne
+produisait rien. Ce n'était pas le nettoyeur de contenu — il laisse passer
+`class` depuis toujours — mais Tailwind lui-même : il ne génère que les classes
+qu'il trouve en scannant les fichiers source, et celles qu'un rédacteur écrit
+vivent en base de données, que le scanner ne lit jamais.
+
+Une liste blanche déclarée dans `app.css` rend désormais disponibles les
+utilitaires courants : disposition, grille, espacements, dimensions,
+typographie, bordures, arrondis, ombres, transitions et états au survol, avec
+les préfixes responsive là où ils servent. Pour les couleurs, seuls les jetons
+du thème sont offerts — un contenu ne peut donc pas sortir de la charte du
+site en écrivant une couleur au hasard.
+
+Le coût est mesuré : **+60 Ko de CSS brut, soit +7,4 Ko compressés**, ce que
+tout visiteur télécharge désormais. La liste est volontairement close ; toute
+addition se pèse.
+
+#### Une rangée de liens sociaux qui a un état au survol
+`.aurora-social-grid` et `.aurora-social-link`, avec une classe par réseau
+portant sa couleur de marque et son icône : LinkedIn, GitHub, Malt, Upwork,
+Instagram, Facebook, e-mail. Au survol, la carte se soulève, sa bordure prend
+la couleur du réseau et la pastille d'icône s'allume.
+
+Ça existe parce que le nettoyeur supprime `<style>` : une rangée de liens
+écrite dans l'éditeur était condamnée aux styles en ligne, qui ne savent pas
+exprimer un survol. Les icônes sont des masques CSS plutôt que des images,
+donc la même icône sert sur le fond sombre comme sur l'état survolé.
+
+### Dans aurora-client
+
+Rien à répercuter. Les classes sont disponibles dès la mise à jour ; un thème
+client qui redéfinit ses propres jetons de couleur les voit s'appliquer sans
+rien changer.
+
 ## [0.9.46] - 2026-09-06
 
 ### Corrigé
