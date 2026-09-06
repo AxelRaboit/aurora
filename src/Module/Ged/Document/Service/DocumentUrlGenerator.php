@@ -25,12 +25,30 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 final readonly class DocumentUrlGenerator
 {
+    /**
+     * Pixel widths asked of a provider's CDN, one per variant name, so a
+     * remote document answers the same three sizes a local one does.
+     *
+     * They match ImageVariantGenerator::VARIANT_SIZES deliberately: a
+     * consumer picking "medium" gets an 800px-wide picture either way, and
+     * nothing downstream has to know which kind it received.
+     */
+    private const array REMOTE_VARIANT_WIDTHS = [
+        'thumbnail' => 256,
+        'medium' => 800,
+        'large' => 1920,
+    ];
+
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function publicUrl(?DocumentInterface $document): ?string
     {
+        if (true === $document?->isRemote()) {
+            return $document->getSourceUrl();
+        }
+
         $filePath = $document?->getFilePath();
         if (null === $filePath) {
             return null;
@@ -45,6 +63,12 @@ final readonly class DocumentUrlGenerator
      */
     public function publicUrlAbsolute(?DocumentInterface $document): ?string
     {
+        // A CDN address is already absolute, and is the only address these
+        // have - there is no local route to fall back on.
+        if (true === $document?->isRemote()) {
+            return $document->getSourceUrl();
+        }
+
         $filePath = $document?->getFilePath();
         if (null === $filePath) {
             return null;
@@ -61,6 +85,18 @@ final readonly class DocumentUrlGenerator
     {
         if (!$document instanceof DocumentInterface) {
             return null;
+        }
+
+        // Remote documents have no variants column to read: the provider
+        // resizes on demand, so the variant is a width appended to the URL
+        // rather than a file we generated. Unknown variant names fall
+        // through to null, exactly as they do for local documents.
+        if ($document->isRemote()) {
+            $width = self::REMOTE_VARIANT_WIDTHS[$variant] ?? null;
+
+            return null === $width
+                ? null
+                : $this->remoteUrlAtWidth((string) $document->getSourceUrl(), $width);
         }
 
         $path = $document->getVariants()[$variant] ?? null;
@@ -99,5 +135,38 @@ final readonly class DocumentUrlGenerator
         $y = null !== $focalY ? round($focalY * 100, 2) : 50;
 
         return sprintf('%s%% %s%%', $x, $y);
+    }
+
+    /**
+     * Re-asks a provider's CDN for the same picture at a given width.
+     *
+     * Unsplash serves through imgix, which reads `w`, `q` and `fm` from the
+     * query string - so the resizing we do with GD for our own files is a
+     * parameter here, and a page still gets a 256px thumbnail instead of a
+     * 4000px original scaled down by the browser.
+     *
+     * Existing parameters are kept rather than replaced: the signed `ixid`
+     * Unsplash puts on its URLs is how it attributes the view, and dropping
+     * it would break the tracking their terms ask for.
+     */
+    private function remoteUrlAtWidth(string $sourceUrl, int $width): string
+    {
+        $parts = parse_url($sourceUrl);
+        if (false === $parts || !isset($parts['host'], $parts['scheme'])) {
+            return $sourceUrl;
+        }
+
+        parse_str($parts['query'] ?? '', $query);
+        $query['w'] = (string) $width;
+        $query['q'] ??= '80';
+        $query['fm'] ??= 'webp';
+
+        return sprintf(
+            '%s://%s%s?%s',
+            $parts['scheme'],
+            $parts['host'],
+            $parts['path'] ?? '',
+            http_build_query($query),
+        );
     }
 }

@@ -49,6 +49,14 @@ backend:
     ged_folders: Folders
     ged_folders_description: "Keep documents in a tree of nested folders."
   ged:
+    unsplash:
+      tab: Unsplash
+      search_placeholder: "Search a photo: desk, nature, portrait…"
+      empty: No photo for this search.
+      not_configured: "The Unsplash integration is not configured. Set UNSPLASH_ACCESS_KEY to enable it."
+      credit: "Photo by {author} on Unsplash"
+      errors:
+        invalid_photo: This photo cannot be imported.
     bootstrap:
       categories:
         inline_uploads: Editorial media
@@ -74,6 +82,7 @@ backend:
       picker_title: Pick a document
       picker_empty: No document available
       picker_confirm: Select
+      picker_tab_library: Media library
       created: Document created successfully
       updated: Document updated
       deleted: Document deleted

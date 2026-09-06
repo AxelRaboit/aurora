@@ -13,6 +13,7 @@ use Aurora\Module\Editorial\Post\Service\BlocksRenderer;
 use Aurora\Module\Editorial\Post\Service\ThumbnailPresenter;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Repository\DocumentRepository;
+use Aurora\Module\Ged\Document\Service\DocumentCreditPresenter;
 use Aurora\Module\Ged\Document\Service\DocumentUrlGenerator;
 
 /**
@@ -38,6 +39,7 @@ final readonly class GridViewBuilder
         private ContentValueNormalizer $values,
         private DocumentRepository $documentRepository,
         private DocumentUrlGenerator $documentUrlGenerator,
+        private DocumentCreditPresenter $creditPresenter,
         private PostRepository $postRepository,
         private BlocksRenderer $blocksRenderer,
         private VideoEmbedResolver $videoEmbedResolver,
@@ -430,6 +432,9 @@ final readonly class GridViewBuilder
             // things in two places, and the document's alt describes the file.
             'alt' => '' !== $alt ? $alt : (string) $media->getAlt(),
             'focalPosition' => $this->documentUrlGenerator->focalPositionCss($media),
+            // Null for anything we host ourselves. Present, and displayed by
+            // the template, for a stock photo whose licence requires it.
+            'credit' => $this->creditPresenter->present($media),
         ];
     }
 }

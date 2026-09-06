@@ -55,6 +55,12 @@
                    above it is taking every pixel it can. #}
                 <figcaption class="mt-2 text-sm text-secondary{{ fills ? ' lg:shrink-0' : '' }}">{{ zone.caption }}</figcaption>
             {% endif %}
+            {% if zone.media.credit %}
+                {# Not decoration: a stock photo may only be shown with its
+                   photographer named, so this line travels with the picture
+                   wherever the zone is rendered. #}
+                {{ include('Frontend/themes/default/editorial/post/_media_credit.html.twig', {credit: zone.media.credit}, false) }}
+            {% endif %}
         </figure>
 
     {% elseif zone.type == 'post' and zone.post %}

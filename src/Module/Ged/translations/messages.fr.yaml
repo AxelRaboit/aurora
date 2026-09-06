@@ -49,6 +49,14 @@ backend:
     ged_folders: Dossiers
     ged_folders_description: "Ranger les documents dans une arborescence de dossiers imbriqués."
   ged:
+    unsplash:
+      tab: Unsplash
+      search_placeholder: "Rechercher une photo : bureau, nature, portrait…"
+      empty: Aucune photo pour cette recherche.
+      not_configured: "L'intégration Unsplash n'est pas configurée. Renseignez UNSPLASH_ACCESS_KEY pour l'activer."
+      credit: "Photo de {author} sur Unsplash"
+      errors:
+        invalid_photo: Cette photo ne peut pas être importée.
     bootstrap:
       categories:
         inline_uploads: Médias éditoriaux
@@ -74,6 +82,7 @@ backend:
       picker_title: Choisir un document
       picker_empty: Aucun document disponible
       picker_confirm: Sélectionner
+      picker_tab_library: Médiathèque
       created: Document créé avec succès
       updated: Document mis à jour
       deleted: Document supprimé

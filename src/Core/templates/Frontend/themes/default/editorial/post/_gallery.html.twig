@@ -61,6 +61,9 @@
                 {% if item.caption %}
                     <figcaption class="mt-2 text-sm text-secondary">{{ item.caption }}</figcaption>
                 {% endif %}
+                {% if item.credit %}
+                    {{ include('Frontend/themes/default/editorial/post/_media_credit.html.twig', {credit: item.credit}, false) }}
+                {% endif %}
             </figure>
         {% endfor %}
     </div>

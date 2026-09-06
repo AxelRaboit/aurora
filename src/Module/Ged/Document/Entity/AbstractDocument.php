@@ -107,6 +107,34 @@ abstract class AbstractDocument implements DocumentInterface
     #[ORM\Column(type: Types::JSON, options: ['default' => '{}'])]
     protected array $variants = [];
 
+    // ── Remotely hosted documents ────────────────────────────────────────
+    // A document whose bytes live on someone else's CDN rather than in
+    // var/uploads. `filePath` is null for these, and `sourceUrl` carries the
+    // address the browser is sent to instead.
+    //
+    // This exists because stock photo APIs require it: Unsplash's terms
+    // forbid re-hosting what their API returns, so a picture chosen from
+    // there cannot become a file of ours. Everything else about it is an
+    // ordinary document - it is filed, titled, tagged and referenced like
+    // any other, so a caller never has to ask which kind it is holding.
+    //
+    // The two attribution columns are not decoration either: displaying the
+    // photographer's name beside the picture is a condition of using the
+    // API at all, so the credit travels with the document rather than
+    // being re-fetched at render time.
+
+    /** Absolute URL of the remote original. Null for documents we host ourselves. */
+    #[ORM\Column(length: 1024, nullable: true)]
+    protected ?string $sourceUrl = null;
+
+    /** Photographer's name, as the provider gives it. */
+    #[ORM\Column(length: 255, nullable: true)]
+    protected ?string $attributionName = null;
+
+    /** Link back to the author's profile, credited beside the picture. */
+    #[ORM\Column(length: 1024, nullable: true)]
+    protected ?string $attributionUrl = null;
+
     /** @var Collection<int, DocumentTagInterface> */
     protected Collection $tags;
 
@@ -373,6 +401,54 @@ abstract class AbstractDocument implements DocumentInterface
     public function setVariants(array $variants): static
     {
         $this->variants = $variants;
+
+        return $this;
+    }
+
+    public function getSourceUrl(): ?string
+    {
+        return $this->sourceUrl;
+    }
+
+    public function setSourceUrl(?string $sourceUrl): static
+    {
+        $this->sourceUrl = $sourceUrl;
+
+        return $this;
+    }
+
+    /**
+     * Whether the bytes live elsewhere.
+     *
+     * The question every file-touching path has to ask before it reaches for
+     * disk: cropping, variant generation and deletion all have nothing to
+     * work on here.
+     */
+    public function isRemote(): bool
+    {
+        return null !== $this->sourceUrl;
+    }
+
+    public function getAttributionName(): ?string
+    {
+        return $this->attributionName;
+    }
+
+    public function setAttributionName(?string $attributionName): static
+    {
+        $this->attributionName = $attributionName;
+
+        return $this;
+    }
+
+    public function getAttributionUrl(): ?string
+    {
+        return $this->attributionUrl;
+    }
+
+    public function setAttributionUrl(?string $attributionUrl): static
+    {
+        $this->attributionUrl = $attributionUrl;
 
         return $this;
     }
