@@ -6,6 +6,7 @@ namespace Aurora\Module\Editorial\Post\View;
 
 use Aurora\Core\Locale\Service\LocaleContextInterface;
 use Aurora\Core\Validation\Dto\PaginationRequest;
+use Aurora\Module\Editorial\Form\Repository\FormRepository;
 use Aurora\Module\Editorial\Post\Entity\PostInterface;
 use Aurora\Module\Editorial\Post\Enum\PostStatusEnum;
 use Aurora\Module\Editorial\Post\Repository\PostRepository;
@@ -30,6 +31,7 @@ final readonly class PostsViewBuilder
         private PostTypeSerializerInterface $postTypeSerializer,
         private TaxonomySerializerInterface $taxonomySerializer,
         private LocaleContextInterface $localeContext,
+        private FormRepository $formRepository,
     ) {}
 
     /**
@@ -112,8 +114,51 @@ final readonly class PostsViewBuilder
         return [
             'post' => $post instanceof PostInterface ? $this->postSerializer->serializeFull($post) : null,
             'statusOptions' => PostStatusEnum::values(),
+            // Only the edit screen names forms: the list screen has no grid
+            // to pose one in.
+            'forms' => $this->formChoices(),
             ...$this->sharedContext(),
         ];
+    }
+
+    /**
+     * The forms a grid may pose, as a name and an id.
+     *
+     * Inactive ones are left out rather than offered and then refused at
+     * render: a form the site has not published has no page, and a zone
+     * should not be a way around that.
+     *
+     * The title comes from whichever translation has one - the dropdown only
+     * has to let an author tell two forms apart, and a form written in one
+     * language must still be nameable while editing another.
+     *
+     * @return list<array{id: int|null, title: string}>
+     */
+    private function formChoices(): array
+    {
+        $choices = [];
+
+        foreach ($this->formRepository->findAllForIndex() as $form) {
+            if (!$form->isActive()) {
+                continue;
+            }
+
+            $title = null;
+            foreach ($form->getTranslations() as $translation) {
+                $candidate = mb_trim($translation->getTitle());
+                if ('' !== $candidate) {
+                    $title = $candidate;
+                    break;
+                }
+            }
+
+            $choices[] = [
+                'id' => $form->getId(),
+                'title' => $title ?? sprintf('#%d', (int) $form->getId()),
+            ];
+        }
+
+        return $choices;
     }
 
     /**

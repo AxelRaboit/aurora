@@ -442,7 +442,10 @@ backend:
         separator: Séparateur
         items: Liste
         postList: Liste automatique
+        form: Formulaire
         stack: Pile
+      zone_form: "Formulaire"
+      zone_form_hint: "Le formulaire s'affiche dans la page, et s'envoie au même endroit que sur sa propre page."
       card_variant: Densité de la carte
       card_variants:
         full: Complète

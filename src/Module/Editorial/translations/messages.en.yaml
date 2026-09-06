@@ -442,7 +442,10 @@ backend:
         separator: Separator
         items: List
         postList: Automatic list
+        form: Form
         stack: Stack
+      zone_form: "Form"
+      zone_form_hint: "The form is drawn in the page and posts where its own page posts."
       card_variant: Card density
       card_variants:
         full: Full

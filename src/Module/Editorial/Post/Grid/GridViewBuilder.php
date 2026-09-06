@@ -7,6 +7,10 @@ namespace Aurora\Module\Editorial\Post\Grid;
 use Aurora\Core\Content\ContentValueNormalizer;
 use Aurora\Core\Content\VideoEmbedResolver;
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
+use Aurora\Module\Editorial\Form\Entity\FormInterface;
+use Aurora\Module\Editorial\Form\Entity\FormTranslationInterface;
+use Aurora\Module\Editorial\Form\Repository\FormRepository;
+use Aurora\Module\Editorial\Form\Serializer\FormSerializer;
 use Aurora\Module\Editorial\Post\Entity\PostInterface;
 use Aurora\Module\Editorial\Post\Repository\PostRepository;
 use Aurora\Module\Editorial\Post\Service\BlocksRenderer;
@@ -15,6 +19,7 @@ use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\Document\Service\DocumentCreditPresenter;
 use Aurora\Module\Ged\Document\Service\DocumentUrlGenerator;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Joins the two halves of a content grid into what a template can render.
@@ -44,6 +49,9 @@ final readonly class GridViewBuilder
         private BlocksRenderer $blocksRenderer,
         private VideoEmbedResolver $videoEmbedResolver,
         private ThumbnailPresenter $thumbnailPresenter,
+        private FormRepository $formRepository,
+        private FormSerializer $formSerializer,
+        private UrlGeneratorInterface $urlGenerator,
     ) {}
 
     /**
@@ -166,6 +174,9 @@ final readonly class GridViewBuilder
                 'postList' => GridNormalizer::ZONE_POST_LIST === $zone['type']
                     ? $this->postListView($zone, $locale, $currentPostId)
                     : null,
+                'form' => GridNormalizer::ZONE_FORM === $zone['type']
+                    ? $this->formView($zone['formId'], $locale)
+                    : null,
             ];
         };
 
@@ -190,6 +201,47 @@ final readonly class GridViewBuilder
         return [
             ...$layout,
             'zones' => $zones,
+        ];
+    }
+
+    /**
+     * A form, ready for the same Vue component its own page mounts.
+     *
+     * Null on every "no" - no form named, none found, switched off, or not
+     * translated here - so the template leaves the zone out rather than
+     * drawing an empty box. An inactive form is a draft the site has not
+     * published: the page it would have had 404s, and a zone should not be a
+     * way around that.
+     *
+     * @return array{title: string, description: string|null, data: array<string, mixed>, submitPath: string}|null
+     */
+    private function formView(?int $formId, string $locale): ?array
+    {
+        if (null === $formId) {
+            return null;
+        }
+
+        $form = $this->formRepository->find($formId);
+        if (!$form instanceof FormInterface || !$form->isActive()) {
+            return null;
+        }
+
+        $translation = $form->getTranslation($locale);
+        if (!$translation instanceof FormTranslationInterface) {
+            return null;
+        }
+
+        return [
+            'title' => $translation->getTitle(),
+            'description' => $translation->getDescription(),
+            'data' => $this->formSerializer->serializeForReader($form, $locale),
+            // The same route the form's own page posts to, so one endpoint
+            // answers wherever the form is drawn - and its rate limit and its
+            // validation come along unchanged.
+            'submitPath' => $this->urlGenerator->generate('editorial_form_submit', [
+                'locale' => $locale,
+                'slug' => $translation->getSlug(),
+            ]),
         ];
     }
 

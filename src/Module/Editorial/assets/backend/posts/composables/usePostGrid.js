@@ -30,6 +30,7 @@ export const LEAF_ZONE_TYPES = [
     "separator",
     "items",
     "postList",
+    "form",
 ];
 
 /** Mirrors GridNormalizer::ZONE_TYPES - a stack is top level only. */
@@ -328,6 +329,7 @@ function newZone(type) {
         termId: null,
         limit: 3,
         cardVariant: "full",
+        formId: null,
         // Empty on every zone, filled only by a stack - the same reason every
         // other key is always present: switching a type back and forth in the
         // editor must not lose what was picked.
@@ -980,6 +982,7 @@ export function usePostGrid(layout, content) {
                 termId: shared("termId"),
                 limit: shared("limit"),
                 cardVariant: shared("cardVariant"),
+                formId: shared("formId"),
                 // The width control drives the large-screen span only. Below
                 // that a zone stays full width, which is what the stored
                 // `base` says and what reads best on a phone.
