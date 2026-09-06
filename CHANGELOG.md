@@ -5,6 +5,25 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.56] - 2026-09-06
+
+### Corrigé
+
+#### Les entrées d'une zone Liste repartaient sans leur identité
+Suite du correctif précédent, et la vraie cause : l'éditeur ne recevait pas la
+liste d'entrées telle qu'elle est rangée, mais la vue qu'en fait la page —
+`{disposition, colonnes, entrées}`. Une clé, deux formes, un seul nom.
+
+Il renvoyait donc cette vue en guise d'arrangement. Le serveur y lisait trois
+entrées sans identifiant, leur en donnait trois nouveaux, et les mots — classés
+sous les anciens — tombaient à côté. D'où trois entrées toujours vides,
+quoi qu'on tape, et des identifiants qui changeaient à chaque enregistrement.
+
+L'éditeur reçoit maintenant les entrées telles qu'il devra les rendre :
+identité, ordre et image, les blanches comprises. La page, elle, garde sa vue
+prête à lire. Une zone convertie en liste se voit aussi donner de quoi
+accueillir sa première entrée.
+
 ## [0.9.55] - 2026-09-06
 
 ### Corrigé

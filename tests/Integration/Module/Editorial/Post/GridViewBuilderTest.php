@@ -535,6 +535,59 @@ final class GridViewBuilderTest extends IntegrationTestCase
     }
 
     /**
+     * The editor sends back the arrangement it was given, so what it is given
+     * has to be the arrangement - not the page's view of it.
+     *
+     * Handing it the view cost a page its item texts: the entries came back
+     * with no ids, the normaliser filed the words under fresh ones, and every
+     * title and every line typed into a list was dropped on the way in.
+     */
+    public function testTheEditorGetsItsEntriesAsAListItCanSendBack(): void
+    {
+        $layout = [
+            'enabled' => true,
+            'zones' => [[
+                'id' => 'z1',
+                'type' => 'items',
+                'display' => 'steps',
+                'items' => [['id' => 'i1'], ['id' => 'i2']],
+            ]],
+        ];
+        $content = ['zones' => ['z1' => ['items' => ['i1' => ['title' => 'Découverte']]]]];
+
+        $editor = $this->gridViewBuilder->buildForEditor($layout, $content, 'fr');
+
+        self::assertSame(
+            [['id' => 'i1', 'mediaId' => null, 'media' => null], ['id' => 'i2', 'mediaId' => null, 'media' => null]],
+            $editor['zones'][0]['items'],
+            'the editor needs the entries it will hand over again, ids and all',
+        );
+    }
+
+    /** And the page, unchanged: the words, ready to render. */
+    public function testThePageGetsItsEntriesReadyToRead(): void
+    {
+        $layout = [
+            'enabled' => true,
+            'zones' => [[
+                'id' => 'z1',
+                'type' => 'items',
+                'display' => 'steps',
+                'items' => [['id' => 'i1'], ['id' => 'i2']],
+            ]],
+        ];
+        $content = ['zones' => ['z1' => ['items' => ['i1' => ['title' => 'Découverte']]]]];
+
+        $grid = $this->gridViewBuilder->build($layout, $content, 'fr');
+
+        self::assertNotNull($grid);
+        self::assertSame('steps', $grid['zones'][0]['items']['display']);
+        // The blank one is left out of a page and kept for the editor.
+        self::assertCount(1, $grid['zones'][0]['items']['entries']);
+        self::assertSame('Découverte', $grid['zones'][0]['items']['entries'][0]['title']);
+    }
+
+    /**
      * Flushed rather than only persisted: the builder resolves ids through the
      * repository, so the row has to exist and to have an id.
      */

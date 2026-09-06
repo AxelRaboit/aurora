@@ -1132,7 +1132,12 @@ export function usePostGrid(layout, content) {
      * arrangement means.
      */
     function zoneItems(index, childIndex = null) {
-        return zoneAt(index, childIndex)?.items ?? [];
+        const items = zoneAt(index, childIndex)?.items;
+
+        // A zone that is not a list has no entries, and the server says so
+        // with `null` rather than with an empty list, every type carrying the
+        // one key its own type reads.
+        return Array.isArray(items) ? items : [];
     }
 
     function canAddItem(index, childIndex = null) {
@@ -1144,6 +1149,12 @@ export function usePostGrid(layout, content) {
 
         const zone = zoneAt(index, childIndex);
         const id = newZoneId();
+
+        // A zone turned into a list arrived as something else, and something
+        // else has no entries to push onto.
+        if (!Array.isArray(zone.items)) {
+            zone.items = [];
+        }
 
         zone.items.push({ id, mediaId: null, media: null });
         // Only this language's entry, for the reason usePostBanner gives: the

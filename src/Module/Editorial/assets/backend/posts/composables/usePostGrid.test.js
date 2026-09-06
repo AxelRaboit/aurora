@@ -831,6 +831,30 @@ describe("usePostGrid", () => {
 
         expect(sent.zones[zoneId].items[itemId].title).toBe("Découverte");
     });
+
+    /**
+     * Every zone carries the one key its own type reads, and the server sends
+     * `null` for the others - so a zone becomes a list before it has anything
+     * to hold its entries.
+     */
+    it("gives a zone somewhere to keep its entries when it becomes a list", () => {
+        const layout = makeLayout({
+            zones: [
+                {
+                    id: "z1",
+                    type: "text",
+                    span: { base: 48, lg: 48 },
+                    items: null,
+                },
+            ],
+        });
+        const api = usePostGrid(layout, ref({ zones: {} }));
+
+        api.zoneFields(0).type.value = "items";
+        api.addItem(0);
+
+        expect(api.zoneItems(0)).toHaveLength(1);
+    });
 });
 
 describe("placeZones", () => {
