@@ -1,0 +1,25 @@
+backend:
+  settings:
+    tabs:
+      captcha: Antirrobots
+      captcha_description: "Verificación del formulario de comentarios: servicio, claves y activación."
+  parameters:
+    captcha:
+      title: Verificación antirrobots
+      intro: "Una comprobación adicional en el formulario de comentarios, además de la trampa para robots, el filtro de enlaces, el límite de envíos y la moderación que ya existen."
+      privacy: "El servicio elegido recibe la dirección IP del visitante. Es un dato personal: la cuenta debe ser la del sitio, y la política de privacidad debe decirlo."
+      enabled: Activar la verificación
+      provider: Servicio
+      site_key: Clave pública
+      site_key_placeholder: '0x4AAAAAAA…'
+      site_key_hint: "Se imprime en la página, es normal: el widget la necesita."
+      secret_key: Clave secreta
+      secret_key_placeholder: '0x4AAAAAAA…'
+      secret_key_hint: "Cifrada en la base de datos. Si se deja vacía, se conserva la clave guardada."
+      secret_set: Hay una clave secreta guardada.
+      secret_unset: No hay ninguna clave secreta guardada.
+      providers:
+        turnstile: "Cloudflare Turnstile (recomendado: sin acertijos ni cookies publicitarias)"
+        recaptcha: "Google reCAPTCHA v3 (invisible, puntúa de 0 a 1)"
+      errors:
+        keys_required: "Ambas claves son necesarias para activar la verificación."

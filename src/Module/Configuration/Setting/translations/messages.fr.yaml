@@ -25,6 +25,8 @@ backend:
       navigation_description: Personnalisez les noms des sections et des items du menu latéral.
       pexels: Pexels
       pexels_description: 'Banque de photos gratuites : activation, clé d''API et acceptation des conditions.'
+      captcha: Anti-robots
+      captcha_description: "Vérification du formulaire de commentaires : service, clés et activation."
       notes: Notes
       notes_description: 'Paramètres du module Notes Markdown : taille / qualité des images uploadées.'
       modules: Modules
@@ -67,6 +69,25 @@ backend:
     or_id: "ou saisir l'ID :"
     sequence_search: Rechercher une séquence…
   parameters:
+    captcha:
+      title: Vérification anti-robots
+      intro: "Une vérification supplémentaire sur le formulaire de commentaires, en plus du piège à robots, du filtre à liens, de la limite d'envois et de la modération qui existent déjà."
+      privacy: "Le service choisi reçoit l'adresse IP du visiteur. C'est une donnée personnelle : le compte doit être celui du site, et la politique de confidentialité doit le dire."
+      enabled: Activer la vérification
+      provider: Service
+      site_key: Clé publique
+      site_key_placeholder: '0x4AAAAAAA…'
+      site_key_hint: "Affichée dans la page, c'est normal : le widget en a besoin."
+      secret_key: Clé secrète
+      secret_key_placeholder: '0x4AAAAAAA…'
+      secret_key_hint: "Chiffrée en base. Laissée vide, la clé enregistrée est conservée."
+      secret_set: Une clé secrète est enregistrée.
+      secret_unset: Aucune clé secrète enregistrée.
+      providers:
+        turnstile: "Cloudflare Turnstile (recommandé : sans énigme ni cookie publicitaire)"
+        recaptcha: "Google reCAPTCHA v3 (invisible, note de 0 à 1)"
+      errors:
+        keys_required: "Les deux clés sont requises pour activer la vérification."
     site_name:
       label: Nom du site
       description: Nom affiché sur le site public et dans les emails

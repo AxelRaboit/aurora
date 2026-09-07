@@ -9,6 +9,22 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ### Ajouté
 
+#### Une vérification anti-robots sur le formulaire de commentaires
+Un onglet **Anti-robots** dans les réglages, éteint par défaut, au choix
+Cloudflare Turnstile (recommandé : pas d'énigme, pas de cookie publicitaire) ou
+Google reCAPTCHA v3. Les clés sont celles du site, entrées dans son propre
+back-office, et la clé secrète est chiffrée en base comme celle de Pexels.
+
+Elle s'ajoute à ce qui existait déjà et ne le remplace pas : le piège à robots,
+le filtre à liens, la limite de cinq envois par heure et la modération avant
+parution. C'est pour cela qu'un service injoignable laisse passer le
+commentaire, en le journalisant : une panne chez Cloudflare ne doit pas fermer
+le formulaire d'un client que quatre autres protections gardent encore.
+
+Le service reçoit l'adresse IP du visiteur. L'onglet le dit, parce que c'est au
+propriétaire du site de décider et de l'écrire dans sa politique de
+confidentialité.
+
 #### Une entrée de menu peut déclarer la rubrique qu'elle coiffe
 Le surlignage de la navigation suit l'adresse : une entrée qui pointe vers
 `/fr/projets` reste allumée sur `/fr/projets/onyx`, parce qu'une adresse est

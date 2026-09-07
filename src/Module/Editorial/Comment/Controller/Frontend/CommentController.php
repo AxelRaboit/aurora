@@ -9,6 +9,7 @@ use Aurora\Core\Enum\HttpStatusEnum;
 use Aurora\Core\Frontend\Service\Context;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Core\Validation\Service\PayloadValidator;
+use Aurora\Module\Editorial\Comment\Captcha\CaptchaVerifier;
 use Aurora\Module\Editorial\Comment\Dto\CommentInputFactoryInterface;
 use Aurora\Module\Editorial\Comment\Entity\CommentInterface;
 use Aurora\Module\Editorial\Comment\Enum\ReactionTypeEnum;
@@ -33,8 +34,9 @@ use Symfony\Component\Routing\Attribute\Route;
  * first or it never gets here at all.
  *
  * These are the only routes in Editorial that an unauthenticated stranger can
- * write through, which is why the flood check and the honeypot exist, and why
- * a rejection never explains which of the two it was.
+ * write through, which is why the flood check, the honeypot and the optional
+ * anti-robot challenge exist, and why a rejection never explains which of them
+ * it was.
  */
 class CommentController extends AbstractController
 {
@@ -53,6 +55,7 @@ class CommentController extends AbstractController
         private readonly CommentInputFactoryInterface $inputFactory,
         private readonly PayloadValidator $payloadValidator,
         private readonly Context $context,
+        private readonly CaptchaVerifier $captcha,
     ) {}
 
     #[Route(
@@ -90,7 +93,20 @@ class CommentController extends AbstractController
             return $this->jsonFailure('frontend.editorial.comments.errors.closed', HttpStatusEnum::Conflict->value);
         }
 
-        $input = $this->inputFactory->fromArray($this->payload($request));
+        $payload = $this->payload($request);
+
+        // Before validation, and before anything is written: a robot that
+        // cannot answer the challenge should not have its message read, let
+        // alone stored. The message is the same one a flood gets, because
+        // naming which check refused is telling a spammer what to change.
+        if (!$this->captcha->verify(
+            is_string($payload['captchaToken'] ?? null) ? $payload['captchaToken'] : null,
+            $request->getClientIp(),
+        )) {
+            return $this->jsonFailure('frontend.editorial.comments.errors.too_many', HttpStatusEnum::TooManyRequests->value);
+        }
+
+        $input = $this->inputFactory->fromArray($payload);
 
         $errors = $this->payloadValidator->errors($input);
         if ([] !== $errors) {
