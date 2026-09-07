@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Fixtures\Ged;
 
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
+use Aurora\Core\Storage\Service\ImageVariantGenerator;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
 use Aurora\Fixtures\Core\AppFixtures;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
@@ -39,6 +40,7 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
         #[Autowire(param: 'app.upload_dir')]
         private readonly string $uploadDir,
         private readonly PdfThumbnailGenerator $pdfThumbnailGenerator,
+        private readonly ImageVariantGenerator $variants,
         private readonly SettingsService $settingsManager,
         private readonly Filesystem $fs = new Filesystem(),
     ) {}
@@ -155,7 +157,11 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
                 ->setSize((int) filesize($dest))
                 ->setFilePath('ged/'.$month.'/'.$def['name'])
                 ->setStatus(DocumentStatusEnum::Published)
-                ->setVariants([]);
+                // The sizes an upload through the interface would have made.
+                // Left empty, every demo page served the full-size original
+                // to a phone - and the one claim the library makes about
+                // itself was the one thing the demo did not do.
+                ->setVariants($this->variants->generate('ged/'.$month.'/'.$def['name'], $def['mime']));
 
             if ($def['w'] > 0) {
                 $document->setWidth($def['w'])->setHeight($def['h']);
@@ -352,6 +358,17 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
             ['title' => 'Fiche de Poste - Développeur Full Stack',     'cat' => 3, 'folder' => 5, 'tags' => [4],        'status' => DocumentStatusEnum::Published, 'desc' => 'Description du poste, compétences requises et processus de recrutement.', 'file' => $samplePdf],
             ['title' => 'Politique de Télétravail - Aurora Tech',      'cat' => 3, 'folder' => 5, 'tags' => [4],        'status' => DocumentStatusEnum::Published, 'desc' => 'Règles et procédures applicables au travail à distance.', 'file' => $samplePdf],
             ['title' => 'Certification ISO 27001 - Audit 2024',        'cat' => 5, 'folder' => 2, 'tags' => [5, 0],    'status' => DocumentStatusEnum::Published, 'desc' => 'Rapport d\'audit de conformité ISO 27001 réalisé en novembre 2024.', 'file' => $samplePdf],
+
+            // Images, because a library of nothing but PDFs shows one row and
+            // one icon, repeated. Half of what the screen does - the tiles,
+            // the preview when a document is opened, the sizes generated on
+            // upload - is invisible until something in it is a picture.
+            ['title' => 'Visuel de campagne - Automne 2025',           'cat' => 2, 'folder' => 4, 'tags' => [],         'status' => DocumentStatusEnum::Published, 'desc' => 'Visuel principal de la campagne d\'automne, décliné en trois formats.', 'file' => 'images/campagne-automne.jpg',   'w' => 1600, 'h' => 900],
+            ['title' => 'Photo d\'équipe - Séminaire 2025',            'cat' => 2, 'folder' => 4, 'tags' => [],         'status' => DocumentStatusEnum::Published, 'desc' => 'Photo de groupe prise au séminaire annuel, utilisable sur le site et en presse.', 'file' => 'images/equipe-seminaire.jpg',   'w' => 1400, 'h' => 933],
+            ['title' => 'Logo Aurora - Fond sombre',                   'cat' => 2, 'folder' => 4, 'tags' => [],         'status' => DocumentStatusEnum::Published, 'desc' => 'Logo sur fond sombre, à réserver aux bandeaux et aux couvertures.', 'file' => 'images/logo-fond-sombre.png',   'w' => 1200, 'h' => 1200],
+            ['title' => 'Bureau - Illustration article',               'cat' => 1, 'folder' => 0, 'tags' => [],         'status' => DocumentStatusEnum::Draft,     'desc' => 'Illustration en cours de sélection pour l\'article sur l\'installation.', 'file' => 'images/bureau-illustration.webp', 'w' => 1600, 'h' => 1067],
+            ['title' => 'Plan des locaux - Étage 2',                   'cat' => 3, 'folder' => 5, 'tags' => [4],        'status' => DocumentStatusEnum::Published, 'desc' => 'Plan d\'évacuation du deuxième étage, affiché près des ascenseurs.', 'file' => 'images/plan-etage-2.png',       'w' => 1240, 'h' => 1754],
+            ['title' => 'Capture - Tableau de bord client',            'cat' => 1, 'folder' => 0, 'tags' => [0],        'status' => DocumentStatusEnum::Published, 'desc' => 'Capture d\'écran du tableau de bord, jointe à la documentation de prise en main.', 'file' => 'images/capture-tableau-de-bord.png', 'w' => 1600, 'h' => 1000],
         ];
 
         $testFilesRoot = dirname(__DIR__, 4).'/test_files';
@@ -390,13 +407,28 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
 
             if (null !== $def['file']) {
                 $src = $testFilesRoot.'/'.$def['file'];
-                if (file_exists($src)) {
-                    $ext = mb_strtolower(pathinfo($def['file'], PATHINFO_EXTENSION));
-                    $fileName = sprintf('demo-doc-%02d.%s', $idx, $ext);
-                    $destFile = $gedDir.'/'.$fileName;
-                    $this->fs->copy($src, $destFile, true);
+                $ext = mb_strtolower(pathinfo($def['file'], PATHINFO_EXTENSION));
+                $mimeType = $mimeByExt[$ext] ?? 'application/octet-stream';
+                $fileName = sprintf('demo-doc-%02d.%s', $idx, $ext);
+                $destFile = $gedDir.'/'.$fileName;
 
-                    $mimeType = $mimeByExt[$ext] ?? 'application/octet-stream';
+                if (file_exists($src)) {
+                    $this->fs->copy($src, $destFile, true);
+                } elseif (isset($def['w'])) {
+                    // Same stand-in as the media above, for the same reason:
+                    // `test_files/` is not shipped with the repository, and a
+                    // picture that cannot be drawn leaves the library with a
+                    // row and no tile. A PDF has no such fallback, so it keeps
+                    // its file-less row.
+                    $this->drawPlaceholder($destFile, [
+                        'name' => $fileName,
+                        'mime' => $mimeType,
+                        'w' => $def['w'],
+                        'h' => $def['h'],
+                    ]);
+                }
+
+                if (file_exists($destFile)) {
                     $d->setFilePath('ged/'.$gedMonth.'/'.$fileName)
                       ->setFileName($fileName)
                       ->setOriginalName($def['title'].'.'.$ext)
@@ -415,6 +447,17 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
                             $d->setThumbnailPath($thumbnailPath);
                         }
                     }
+
+                    // What an upload through the interface would have written:
+                    // the dimensions the screen prints, and the sizes it
+                    // serves. Without them a demo picture is a file on disk
+                    // that the library cannot say anything about.
+                    $dimensions = @getimagesize($destFile);
+                    if (false !== $dimensions) {
+                        $d->setWidth($dimensions[0])->setHeight($dimensions[1]);
+                    }
+
+                    $d->setVariants($this->variants->generate('ged/'.$gedMonth.'/'.$fileName, $mimeType));
                 }
             }
 
