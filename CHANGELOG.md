@@ -5,6 +5,65 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.67] - 2026-09-07
+
+### Modifié
+
+#### Une liste automatique peut aller jusqu'à 24 publications
+Le plafond était de douze. C'est assez pour une rangée de cartes au milieu
+d'une page, et trop peu pour la forme où cette zone est la meilleure : une page
+sommaire dont les cartes sont les rubriques du site. Au-delà de douze, les
+suivantes disparaissaient sans que rien ne le dise.
+
+Le nombre proposé dans l'éditeur et celui que le serveur conserve sont
+désormais tenus par un test : ils étaient écrits deux fois, avec un commentaire
+pour seul lien, et une divergence n'aurait fait échouer personne — le champ
+aurait proposé douze choix pour un serveur qui en accepte vingt-quatre, ou
+l'inverse, en rognant un nombre choisi au moment d'enregistrer.
+
+### Corrigé
+
+#### Les données de démonstration se dédoublaient à chaque `make demo`
+Les étiquettes et les dossiers de la médiathèque étaient recréés à chaque
+chargement, et rattachés aux mêmes documents : après cinq passages, un contrat
+portait cinq fois « Confidentiel » et cinq fois « Signé ». Les documents, eux,
+étaient retrouvés par leur chemin — qui contient le mois — donc un chargement
+en septembre sur une base semée en août les insérait tous une seconde fois.
+
+Les trois sont maintenant retrouvés par ce qui les identifie vraiment, et les
+étiquettes d'un document sont réécrites plutôt qu'ajoutées : la démonstration
+dit ce que le fixture décrit, quel que soit le nombre de passages.
+
+#### `make demo` échouait sur une machine sans le dossier `test_files`
+Ce dossier vit à côté du dépôt et n'est pas livré avec lui. Les images
+manquantes étaient sautées, ce qui décalait les références publiées, et les
+fixtures éditoriales mouraient trois fixtures plus loin sur
+`ged_demo_media_0 does not exist` — une erreur qui nomme une image et pas le
+dossier absent qui l'a causée.
+
+Une image sans source est désormais dessinée : un aplat teinté par son propre
+nom, visiblement un substitut et pas une photographie. `make demo` fonctionne
+donc sur un clone neuf.
+
+### Démonstration
+
+#### Le site de démonstration ressemble enfin à un site
+Sa page d'accueil est une page composée — bannière pleine largeur, fondu vers
+le bas, puis le contenu en zones — et non plus la liste automatique de ses deux
+articles, qui est l'écran de repli d'un site n'ayant pas choisi sa page
+d'accueil.
+
+Trois palettes complètes s'ajoutent à l'écran des thèmes, pour que basculer
+d'un thème à l'autre montre quelque chose : une liste d'un seul élément ne se
+compare à rien. Elles restent inactives, et la première n'est activée que si le
+site est encore sur le thème d'installation sans couleurs.
+
+S'ajoutent aussi un formulaire de devis avec ses huit types de champ et ses
+demandes reçues, des commentaires dans les trois états de modération, des notes
+Markdown reliées entre elles, et quatre champs personnalisés sur le type
+Article — chacun de ces écrans se présentait vide, ce qui montre où vit une
+fonctionnalité sans rien montrer de ce qu'elle fait.
+
 ## [0.9.66] - 2026-09-07
 
 ### Corrigé

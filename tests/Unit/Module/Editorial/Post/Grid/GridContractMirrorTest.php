@@ -95,6 +95,21 @@ final class GridContractMirrorTest extends TestCase
     }
 
     /**
+     * The list cap decides how long the editor's dropdown is, and separately
+     * how much the server keeps. Drift here is the quiet kind: the field
+     * offers twelve, the author picks twelve, and a raised server cap changes
+     * nothing anybody can reach - or the reverse, and a chosen number is
+     * silently trimmed on save.
+     */
+    public function testTheListCapIsTheSameOnBothSides(): void
+    {
+        self::assertSame(
+            GridNormalizer::MAX_LIST_LIMIT,
+            $this->jsNumber('MAX_LIST_LIMIT'),
+        );
+    }
+
+    /**
      * The named width fractions have no PHP counterpart - they are an editing
      * convenience, not a stored value - but every one of them must be a whole
      * number of columns the normaliser will keep, or a button lies.

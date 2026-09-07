@@ -7,11 +7,14 @@ namespace Aurora\Fixtures\Editorial;
 use Aurora\Core\Sequence\SequencePrefixEnum;
 use Aurora\Fixtures\Core\CoreDemoFixtures;
 use Aurora\Fixtures\Ged\GedDemoFixtures;
+use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
+use Aurora\Module\Configuration\Setting\Service\SettingsService;
 use Aurora\Module\Editorial\Menu\Entity\MenuInterface;
 use Aurora\Module\Editorial\Menu\Entity\MenuItem;
 use Aurora\Module\Editorial\Menu\Enum\MenuItemTargetTypeEnum;
 use Aurora\Module\Editorial\Menu\Repository\MenuItemRepository;
 use Aurora\Module\Editorial\Menu\Repository\MenuRepository;
+use Aurora\Module\Editorial\Post\Banner\BannerNormalizer;
 use Aurora\Module\Editorial\Post\Entity\Post;
 use Aurora\Module\Editorial\Post\Entity\PostInterface;
 use Aurora\Module\Editorial\Post\Entity\PostTranslationInterface;
@@ -21,6 +24,7 @@ use Aurora\Module\Editorial\Post\Gallery\GalleryNormalizer;
 use Aurora\Module\Editorial\Post\Grid\GridNormalizer;
 use Aurora\Module\Editorial\Post\Service\EditorBlocks;
 use Aurora\Module\Editorial\Post\Service\PostTextExtractor;
+use Aurora\Module\Editorial\PostType\Entity\PostTypeField;
 use Aurora\Module\Editorial\PostType\Entity\PostTypeInterface;
 use Aurora\Module\Editorial\PostType\Repository\PostTypeRepository;
 use Aurora\Module\Editorial\Taxonomy\Entity\TaxonomyInterface;
@@ -61,6 +65,8 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         private readonly PostTextExtractor $textExtractor,
         private readonly GridNormalizer $gridNormalizer,
         private readonly GalleryNormalizer $galleryNormalizer,
+        private readonly BannerNormalizer $bannerNormalizer,
+        private readonly SettingsService $settingsManager,
     ) {}
 
     public static function getGroups(): array
@@ -86,6 +92,8 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
             throw new RuntimeException('Run `aurora:install` before loading the demo fixtures - the built-in post types are missing.');
         }
 
+        $this->createCustomFields($manager, $article);
+
         $terms = $this->createTerms($manager);
         $posts = $this->createPosts($manager, $article, $page, $terms);
 
@@ -100,6 +108,60 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         $this->fillPrimaryMenu($manager, $posts);
 
         $manager->flush();
+
+        // The demo used to open on the list of its own two articles, which is
+        // the fallback for a site that has not chosen a front page - so the
+        // first screen anybody saw was the one screen nobody composes. The
+        // welcome page is the composed one, banner included; naming it here is
+        // what the parameter is for.
+        $welcomeId = $posts['welcome']->getId();
+        if (null !== $welcomeId) {
+            $this->settingsManager->set(
+                ApplicationParameterEnum::HomepagePostId->value,
+                (string) $welcomeId,
+            );
+        }
+
+        $manager->flush();
+    }
+
+    /**
+     * Fields of its own on the Article type.
+     *
+     * The screen that lists a type's custom fields said "no custom field" on a
+     * freshly loaded demo, which shows where the feature lives and nothing of
+     * what it does. These four are the shapes that differ: a number, a link, a
+     * closed list and a flag - and the first is marked translatable, since
+     * whether a field follows the language is the choice that screen exists to
+     * offer.
+     */
+    private function createCustomFields(EntityManagerInterface $em, PostTypeInterface $article): void
+    {
+        $defs = [
+            ['reading_time', 'Temps de lecture (min)', 'number', false, false, []],
+            ['source_url', 'Source', 'url', false, false, []],
+            ['level', 'Niveau', 'select', false, true, ['Débutant', 'Intermédiaire', 'Avancé']],
+            ['featured', 'Mettre en avant', 'checkbox', false, false, []],
+        ];
+
+        $repository = $em->getRepository(PostTypeField::class);
+
+        foreach ($defs as $position => [$name, $label, $type, $required, $translatable, $options]) {
+            // Reused by (type, machine name): the pair is what identifies a
+            // field, and `make demo` runs twice.
+            $field = $repository->findOneBy(['postType' => $article, 'name' => $name]) ?? new PostTypeField();
+
+            $field->setPostType($article)
+                ->setName($name)
+                ->setLabel($label)
+                ->setType($type)
+                ->setRequired($required)
+                ->setTranslatable($translatable)
+                ->setOptions($options)
+                ->setPosition($position);
+
+            $em->persist($field);
+        }
     }
 
     /**
@@ -387,6 +449,37 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
             'zones' => $zones,
         ]));
 
+        // A header, because the demo home page had none and a site whose first
+        // screen is a list of two cards shows the editor and hides everything
+        // the banner can do. Full width, a gradient in the accent of the
+        // shipped palette, and the foot dissolved into the page - the three
+        // choices somebody would actually make, rather than a grey box proving
+        // the field exists.
+        $welcome->setBannerLayout($this->bannerNormalizer->normalizeLayout([
+            'enabled' => true,
+            'height' => 'lg',
+            'width' => 'full_aligned',
+            'verticalAlign' => 'center',
+            'fadeOut' => true,
+            'background' => [
+                'type' => 'gradient',
+                'gradientFrom' => '#059669',
+                'gradientTo' => '#0b1120',
+                'gradientAngle' => 60,
+            ],
+            'items' => [
+                [
+                    'id' => 'banner-text',
+                    'type' => 'text',
+                    'span' => ['base' => 48, 'md' => null, 'lg' => 30],
+                    'titleColor' => '#ffffff',
+                    'descriptionColor' => '#e5e7eb',
+                    'align' => 'start',
+                    'titleSize' => 'lg',
+                ],
+            ],
+        ]));
+
         $content = [
             'fr' => [
                 'intro' => [EditorBlocks::header('Une page composée par zones'),
@@ -409,8 +502,23 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
             'en' => ['alt' => 'A demo landscape', 'caption' => 'A picture and its caption - both translated, the picture itself is not.'],
         ];
 
+        $bannerTexts = [
+            'fr' => [
+                'title' => 'Bienvenue sur Aurora',
+                'description' => "Un en-tête composé dans l'éditeur : hauteur, largeur, dégradé, fondu et boutons.",
+            ],
+            'en' => [
+                'title' => 'Welcome to Aurora',
+                'description' => 'A header composed in the editor: height, width, gradient, fade and buttons.',
+            ],
+        ];
+
         foreach (['fr', 'en'] as $locale) {
             $translation = $welcome->translate($locale);
+
+            $translation->setBanner($this->bannerNormalizer->normalizeTexts([
+                'items' => ['banner-text' => $bannerTexts[$locale]],
+            ], $welcome->getBannerLayout()));
 
             $translation->setGrid($this->gridNormalizer->normalizeContent([
                 'zones' => [

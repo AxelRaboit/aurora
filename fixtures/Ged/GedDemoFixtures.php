@@ -96,19 +96,56 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
         $media = [];
         foreach ($defs as $def) {
             $src = $sourceDir.'/'.$def['src'];
+            $dest = $destDir.'/'.$def['name'];
+
+            // `test_files/` sits beside the repository and is not shipped with
+            // it, so on a fresh clone none of these exist. Skipping them was
+            // the wrong answer twice over: the media list closed up, the
+            // references it publishes shifted by one, and the editorial
+            // fixtures then died on "ged_demo_media_0 does not exist" - an
+            // error naming a picture, three fixtures away from the missing
+            // folder that caused it.
+            //
+            // So a picture that has no source is drawn instead. It is plainly
+            // a placeholder rather than a photograph pretending to be one, and
+            // `make demo` works on any machine.
             if (!file_exists($src)) {
+                $this->drawPlaceholder($dest, $def);
+            } else {
+                $this->fs->copy($src, $dest, true);
+            }
+
+            // Anything that cannot be drawn - the video - keeps its row and
+            // loses its file, which the library already knows how to show: a
+            // document with nothing attached is exactly what the upload flow
+            // is tested against.
+            if (!file_exists($dest)) {
+                $document = $em->getRepository(Document::class)
+                    ->findOneBy(['title' => $def['original']])
+                    ?? new Document();
+
+                $document->setTitle($def['original'])
+                    ->setOriginalName($def['original'])
+                    ->setStatus(DocumentStatusEnum::Published)
+                    ->setVariants([]);
+
+                $em->persist($document);
+                $media[] = $document;
+
                 continue;
             }
 
-            $dest = $destDir.'/'.$def['name'];
-            $this->fs->copy($src, $dest, true);
-
-            // Reused when the path is already taken. Without this a second
+            // Reused when the title is already taken. Without this a second
             // `make demo` inserted the whole set again - forty rows for
             // eighteen files, every publication still pointing at the first
             // copy, and a fresh set of orphans on disk each run.
+            //
+            // Keyed on the title rather than the path, because the path
+            // carries the month it was written in: run the fixtures in
+            // September against a library seeded in August and every lookup
+            // missed, which is the same duplication by another route.
             $document = $em->getRepository(Document::class)
-                ->findOneBy(['filePath' => 'ged/'.$month.'/'.$def['name']])
+                ->findOneBy(['title' => $def['original']])
                 ?? new Document();
 
             $document->setTitle($def['original'])
@@ -131,6 +168,81 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
         return $media;
     }
 
+    /**
+     * Draws the stand-in for a demo picture whose source file is absent.
+     *
+     * A flat rectangle would make every tile of the library identical, and a
+     * library where the thumbnails cannot be told apart teaches nothing about
+     * the library. So each one gets a vertical wash seeded by its own name:
+     * stable between runs, different between files, and obviously not a
+     * photograph.
+     *
+     * Only the image formats GD writes. A missing video or PDF is left to the
+     * caller, which keeps the row and drops the file.
+     *
+     * @param array{name: string, mime: string, w: int, h: int} $def
+     */
+    private function drawPlaceholder(string $dest, array $def): void
+    {
+        $writers = [
+            'image/jpeg' => static fn ($image, string $path): bool => imagejpeg($image, $path, 82),
+            'image/png' => imagepng(...),
+            'image/webp' => static fn ($image, string $path): bool => imagewebp($image, $path, 82),
+        ];
+
+        $write = $writers[$def['mime']] ?? null;
+        if (null === $write || !function_exists('imagecreatetruecolor')) {
+            return;
+        }
+
+        $width = $def['w'] > 0 ? $def['w'] : 1200;
+        $height = $def['h'] > 0 ? $def['h'] : 800;
+
+        $image = imagecreatetruecolor($width, $height);
+
+        // The name decides the hue, so "portrait-team.jpg" is the same colour
+        // every time it is regenerated and never the colour of its neighbour.
+        $hue = crc32($def['name']) % 360;
+
+        for ($y = 0; $y < $height; ++$y) {
+            [$r, $g, $b] = $this->hueToRgb($hue, 0.45, 0.30 + 0.35 * ($y / max(1, $height - 1)));
+            $line = imagecolorallocate($image, $r, $g, $b);
+            imageline($image, 0, $y, $width, $y, $line);
+        }
+
+        $label = imagecolorallocate($image, 255, 255, 255);
+        imagestring($image, 5, 24, $height - 40, $def['name'], $label);
+
+        $write($image, $dest);
+        imagedestroy($image);
+    }
+
+    /**
+     * HSL to RGB, the small part of it these placeholders need.
+     *
+     * @return array{int, int, int}
+     */
+    private function hueToRgb(int $hue, float $saturation, float $lightness): array
+    {
+        $c = (1 - abs(2 * $lightness - 1)) * $saturation;
+        $x = $c * (1 - abs(fmod($hue / 60, 2) - 1));
+        $m = $lightness - $c / 2;
+
+        $channels = match (intdiv($hue, 60)) {
+            0 => [$c, $x, 0.0],
+            1 => [$x, $c, 0.0],
+            2 => [0.0, $c, $x],
+            3 => [0.0, $x, $c],
+            4 => [$x, 0.0, $c],
+            default => [$c, 0.0, $x],
+        };
+
+        return array_map(
+            static fn (float $channel): int => (int) round(255 * ($channel + $m)),
+            $channels,
+        );
+    }
+
     private function createGed(EntityManagerInterface $em, array $media): void
     {
         // ── Tags ──────────────────────────────────────────────────────────────
@@ -143,8 +255,15 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
             ['name' => 'ISO 27001',     'color' => '#8b5cf6'],
         ];
         $tags = [];
+        $tagRepository = $em->getRepository(DocumentTag::class);
         foreach ($tagDefs as $def) {
-            $tag = new DocumentTag();
+            // Reused when the name is already taken, like the documents just
+            // above. Without this a second `make demo` created a second set of
+            // six tags and linked the documents to those too, so every row in
+            // the library grew another pair of badges - five runs, five
+            // "Confidentiel" on the same contract, and nothing in the
+            // interface to explain why.
+            $tag = $tagRepository->findOneBy(['name' => $def['name']]) ?? new DocumentTag();
             $tag->setName($def['name'])->setColor($def['color']);
             $em->persist($tag);
             $tags[] = $tag;
@@ -163,8 +282,12 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
             ['name' => 'Finance',        'parent' => 2,    'position' => 1],
         ];
         $folders = [];
+        $folderRepository = $em->getRepository(DocumentFolder::class);
         foreach ($folderDefs as $def) {
-            $folder = new DocumentFolder();
+            // Same reason as the tags: the tree was rebuilt whole at each run,
+            // and the library ended up with three "Clients" folders holding
+            // nothing.
+            $folder = $folderRepository->findOneBy(['name' => $def['name']]) ?? new DocumentFolder();
             $folder->setName($def['name'])->setPosition($def['position']);
             if (null !== $def['parent']) {
                 $folder->setParent($folders[$def['parent']]);
@@ -257,6 +380,10 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
               ->setStatus($def['status'])
               ->setCategory($categories[$def['cat']])
               ->setFolder($folders[$def['folder']]);
+            // Emptied first, so the set of badges is the one written here and
+            // not the sum of every run: a document reused by title keeps the
+            // links it already had, and the definition is the authority.
+            $d->clearTags();
             foreach ($def['tags'] as $tagIndex) {
                 $d->addTag($tags[$tagIndex]);
             }

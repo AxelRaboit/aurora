@@ -68,7 +68,7 @@ export const MAX_ITEMS = 12;
 export const CARD_VARIANTS = ["full", "compact", "horizontal"];
 
 /** Mirrors GridNormalizer::MAX_LIST_LIMIT. */
-export const MAX_LIST_LIMIT = 12;
+export const MAX_LIST_LIMIT = 24;
 
 /** Mirrors GridNormalizer::CODE_LANGUAGES. */
 export const CODE_LANGUAGES = [
