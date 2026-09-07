@@ -878,6 +878,9 @@ backend:
     css_class: CSS class
     visibility: Visibility
     parent: Sub-item of
+    section: Section this entry heads
+    no_section: None
+    section_hint: "The entry stays lit on publications of that type, even when their addresses do not sit under its own."
     no_parent: Top level
     move_up: Move up
     move_down: Move down

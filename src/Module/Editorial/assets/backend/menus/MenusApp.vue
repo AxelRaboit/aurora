@@ -25,6 +25,7 @@ const props = defineProps({
     locales: { type: Array, default: () => [] },
     targetTypes: { type: Array, default: () => [] },
     visibilities: { type: Array, default: () => [] },
+    postTypes: { type: Array, default: () => [] },
     targetsPath: { type: String, required: true },
     updatePathTemplate: { type: String, required: true },
     itemCreatePathTemplate: { type: String, required: true },
@@ -42,7 +43,7 @@ const {
 
 const {
     rows, labelOf, showItem, editingItem, form, itemErrors, itemLoading,
-    parentOptions, targetTypeMeta, targetTypeOptions, visibilityOptions,
+    parentOptions, targetTypeMeta, targetTypeOptions, visibilityOptions, sectionOptions,
     targetOptions, targetSearch, targetLoading,
     openItemCreate, openItemEdit, submitItem,
     pendingItemDelete, itemDeleteLoading, deleteItem, move,
@@ -223,6 +224,15 @@ function isUnresolved(item) {
                     :label="t('backend.menus.custom_url')"
                     :placeholder="t('backend.menus.custom_url_placeholder')"
                     :error="itemErrors.customUrl"
+                />
+
+                <AppSelect
+                    v-model="form.sectionPostTypeId"
+                    :label="t('backend.menus.section')"
+                    :placeholder="t('backend.menus.no_section')"
+                    :options="sectionOptions"
+                    :hint="t('backend.menus.section_hint')"
+                    :error="itemErrors.sectionPostTypeId"
                 />
 
                 <AppSelect

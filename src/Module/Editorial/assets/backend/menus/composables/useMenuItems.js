@@ -12,6 +12,7 @@ function emptyItem(locales) {
         targetType: "custom_url",
         targetId: null,
         customUrl: "",
+        sectionPostTypeId: null,
         openInNewTab: false,
         cssClass: "",
         visibility: "always",
@@ -27,6 +28,7 @@ function itemForm(item, locales) {
         targetType: item.targetType,
         targetId: item.targetId ?? null,
         customUrl: item.customUrl ?? "",
+        sectionPostTypeId: item.sectionPostTypeId ?? null,
         openInNewTab: item.openInNewTab ?? false,
         cssClass: item.cssClass ?? "",
         visibility: item.visibility,
@@ -96,6 +98,17 @@ export function useMenuItems(props, selected, upsert) {
         props.visibilities.map((visibility) => ({
             value: visibility.value,
             label: t(visibility.labelKey),
+        })),
+    );
+
+    /**
+     * The content type an entry heads, so the highlight follows it there.
+     * Labels come from the server: a type is named by its label, not by a key.
+     */
+    const sectionOptions = computed(() =>
+        props.postTypes.map((postType) => ({
+            value: postType.value,
+            label: postType.label,
         })),
     );
 
@@ -287,6 +300,7 @@ export function useMenuItems(props, selected, upsert) {
         targetTypeMeta,
         targetTypeOptions,
         visibilityOptions,
+        sectionOptions,
         targetOptions,
         targetSearch,
         targetLoading,

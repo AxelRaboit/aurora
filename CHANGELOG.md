@@ -5,6 +5,24 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Ajouté
+
+#### Une entrée de menu peut déclarer la rubrique qu'elle coiffe
+Le surlignage de la navigation suit l'adresse : une entrée qui pointe vers
+`/fr/projets` reste allumée sur `/fr/projets/onyx`, parce qu'une adresse est
+sous l'autre. Cela couvre une rubrique dont les publications vivent sous
+l'entrée, et rien d'autre.
+
+Une page sommaire est le cas qu'il manquait. `/fr/page/aurora` présente des
+publications rangées à `/fr/aurora/…`, et les deux adresses n'ont aucun début
+commun : suivre une carte depuis le sommaire éteignait donc la navigation, sur
+une page qui est pourtant à l'intérieur de cette rubrique.
+
+Un champ **Rubrique menée par cette entrée** le dit là où les adresses ne le
+peuvent pas. Vide, le comportement est celui d'avant.
+
 ## [0.9.69] - 2026-09-07
 
 ### Ajouté

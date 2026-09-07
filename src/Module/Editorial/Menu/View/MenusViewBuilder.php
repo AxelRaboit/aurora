@@ -9,6 +9,7 @@ use Aurora\Module\Editorial\Menu\Enum\MenuItemTargetTypeEnum;
 use Aurora\Module\Editorial\Menu\Enum\MenuItemVisibilityEnum;
 use Aurora\Module\Editorial\Menu\Repository\MenuRepository;
 use Aurora\Module\Editorial\Menu\Serializer\MenuSerializerInterface;
+use Aurora\Module\Editorial\PostType\Repository\PostTypeRepository;
 
 /**
  * Builds the Twig payload consumed by the admin menus screen.
@@ -19,6 +20,7 @@ final readonly class MenusViewBuilder
         private MenuRepository $menuRepository,
         private MenuSerializerInterface $menuSerializer,
         private LocaleContextInterface $localeContext,
+        private PostTypeRepository $postTypeRepository,
     ) {}
 
     /** @return array<string, mixed> */
@@ -44,6 +46,10 @@ final readonly class MenusViewBuilder
             'locales' => $this->localeContext->getActiveLocales(),
             'targetTypes' => $this->targetTypes(),
             'visibilities' => $this->visibilities(),
+            // For the "heads this section" field. Every type, not only the
+            // ones with an archive: a hub page introducing a type without one
+            // is the case the field exists for.
+            'postTypes' => $this->postTypes(),
         ];
     }
 
@@ -59,6 +65,24 @@ final readonly class MenusViewBuilder
             ],
             MenuItemTargetTypeEnum::cases(),
         );
+    }
+
+    /** @return list<array{value: int, label: string}> */
+    private function postTypes(): array
+    {
+        $types = [];
+
+        foreach ($this->postTypeRepository->findAll() as $postType) {
+            $id = $postType->getId();
+
+            if (null === $id) {
+                continue;
+            }
+
+            $types[] = ['value' => $id, 'label' => $postType->getLabel()];
+        }
+
+        return $types;
     }
 
     /** @return list<array{value: string, labelKey: string}> */

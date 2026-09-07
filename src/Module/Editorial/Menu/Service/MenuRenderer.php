@@ -85,10 +85,11 @@ final class MenuRenderer
         // Once for the whole tree: the address does not change while a
         // page renders, and a menu is dozens of entries deep.
         $currentPath = $this->activeTrail->currentPath();
+        $currentSection = $this->activeTrail->currentPostTypeSlug();
 
         $tree = [];
         foreach ($roots as $item) {
-            $resolved = $this->resolveItem($item, $locale, $authenticated, $currentPath);
+            $resolved = $this->resolveItem($item, $locale, $authenticated, $currentPath, $currentSection);
             if (null !== $resolved) {
                 $tree[] = $resolved;
             }
@@ -101,7 +102,7 @@ final class MenuRenderer
     }
 
     /** @return array<string, mixed>|null */
-    private function resolveItem(MenuItemInterface $item, string $locale, bool $authenticated, ?string $currentPath): ?array
+    private function resolveItem(MenuItemInterface $item, string $locale, bool $authenticated, ?string $currentPath, ?string $currentSection = null): ?array
     {
         if (!$item->getVisibility()->isVisibleTo($authenticated)) {
             return null;
@@ -114,7 +115,7 @@ final class MenuRenderer
 
         $children = [];
         foreach ($item->getChildren() as $child) {
-            $resolved = $this->resolveItem($child, $locale, $authenticated, $currentPath);
+            $resolved = $this->resolveItem($child, $locale, $authenticated, $currentPath, $currentSection);
             if (null !== $resolved) {
                 $children[] = $resolved;
             }
@@ -155,6 +156,7 @@ final class MenuRenderer
             // is one of its entries is itself part of the trail.
             'isActive' => $isCurrent
                 || $this->isAncestor($item, $currentPath, $url)
+                || $this->headsCurrentSection($item, $currentSection)
                 || $this->hasActiveChild($children),
         ];
     }
@@ -171,6 +173,24 @@ final class MenuRenderer
         }
 
         return $this->activeTrail->isAncestorOf($currentPath, $url);
+    }
+
+    /**
+     * The page being looked at belongs to the type this entry heads.
+     *
+     * The one relation the addresses cannot express: a hub page and the
+     * publications it introduces can live in different branches of the site,
+     * and an entry pointing at the hub went dark on every one of them.
+     */
+    private function headsCurrentSection(MenuItemInterface $item, ?string $currentSection): bool
+    {
+        $typeId = $item->getSectionPostTypeId();
+
+        if (null === $typeId || null === $currentSection) {
+            return false;
+        }
+
+        return $this->postType($typeId)?->getSlug() === $currentSection;
     }
 
     /** @param array<int, array<string, mixed>> $children */
