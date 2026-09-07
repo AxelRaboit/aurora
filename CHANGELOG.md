@@ -5,6 +5,38 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.65] - 2026-09-07
+
+### Ajouté
+
+#### Un fondu au bas de l'en-tête
+Une case **Fondu vers le bas** : le pied de la bannière se dissout dans la
+page au lieu de s'arrêter net. Le dégradé va vers la couleur de fond du thème,
+pas vers un noir supposé, et vaut aussi pour une bannière sans image — une
+bande de couleur cesse d'être un bloc et devient le haut de la page.
+
+Éteint par défaut : le bord franc est ce qu'ont toutes les bannières déjà
+publiées.
+
+### Corrigé
+
+#### Le favicon portait l'initiale d'un autre produit
+La route qui le dessine écrivait un « V » en dur, resté du premier nom du
+produit — chaque site livré depuis portait donc une lettre étrangère dans son
+onglet. Il prend maintenant l'initiale du nom du site, ce qui est la bonne
+réponse pour un produit remis à des clients : personne n'a à y penser.
+
+Au passage, le favicon **téléversé** dans l'écran Habillage était lu par un
+seul gabarit — la galerie photo — et ignoré partout ailleurs. La route le sert
+désormais quand il existe, et ne dessine la lettre qu'à défaut.
+
+#### L'onglet Pexels n'accusait pas réception
+Enregistrer n'affichait rien. Rien ne change visiblement sur cet écran quand
+un enregistrement réussit — la clé revient sous la forme « une clé est
+enregistrée », jamais elle-même — donc appuyer sur le bouton ressemblait à
+n'appuyer sur rien. Il le dit maintenant, avec le même mot que les autres
+écrans de réglages.
+
 ## [0.9.64] - 2026-09-07
 
 ### Corrigé

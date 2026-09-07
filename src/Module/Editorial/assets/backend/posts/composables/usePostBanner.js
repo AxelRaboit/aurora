@@ -232,6 +232,14 @@ export function usePostBanner(layout, texts) {
                 background().overlay = value;
             },
         ),
+        // On the banner rather than on its background: it fades the whole
+        // header into the page, picture or no picture.
+        fadeOut: writable(
+            () => banner.value.fadeOut ?? false,
+            (value) => {
+                banner.value.fadeOut = Boolean(value);
+            },
+        ),
         backgroundMedia: writable(
             () => pickerModel(background(), "media", "mediaId"),
             (value) => applyPicked(background(), value, "media", "mediaId"),

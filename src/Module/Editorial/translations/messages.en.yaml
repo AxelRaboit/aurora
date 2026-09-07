@@ -273,6 +273,8 @@ backend:
       button_text_color: Button text colour
       appearance: Appearance
       logo_hint: Shown top left, over the background.
+      fade_out: Fade into the page
+      fade_out_hint: "The foot of the header dissolves into the page instead of ending on an edge."
       fill: Background type
       fills:
         none: None

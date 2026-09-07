@@ -362,6 +362,15 @@ const { html: previewHtml, loading: previewLoading } = useServerPreview(
                     <AppRange v-model="fields.overlay.value" :min="0" :max="100" :step="5" />
                 </div>
 
+                <!-- Not inside the `hasBackgroundImage` branch above: a
+                     banner filled with a flat colour has just as much of an
+                     edge to dissolve. -->
+                <AppToggle
+                    v-model="fields.fadeOut.value"
+                    :label="t('backend.posts.banner.fade_out')"
+                    :hint="t('backend.posts.banner.fade_out_hint')"
+                />
+
                 <AppImagePickerField
                     v-model="fields.logoMedia.value"
                     :label="t('backend.posts.banner.logo')"
