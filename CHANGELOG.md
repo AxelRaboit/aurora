@@ -5,6 +5,33 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### La clé Pexels était effacée à chaque déploiement
+`aurora:application-parameter` tourne à chaque mise en production et supprime
+les lignes de réglage qu'aucun fournisseur de paramètres ne réclame — c'est
+ainsi qu'un réglage retiré du code cesse de traîner en base.
+
+Or l'onglet Pexels écrit quatre lignes qui lui sont propres, et se tient
+volontairement à l'écart de cette interface pour que la clé API ne soit jamais
+dessinée par l'écran générique des réglages. Aucune énumération de paramètres
+ne les nommait donc, et la synchronisation les supprimait toutes les quatre à
+chaque release. La clé partait avec : l'intégration était configurée, elle
+fonctionnait, et le déploiement suivant la vidait sans rien dire.
+
+Les deux questions sont désormais posées séparément. Un fournisseur de
+paramètres dit « dessine ce champ et garde cette ligne » ; un propriétaire de
+réglages dit seulement « cette ligne est à moi, n'y touche pas ». La commande
+ne crée rien et n'affiche rien depuis ces clés — elle cesse simplement de les
+prendre pour des débris.
+
+### Dans aurora-client
+Rien à répercuter, mais **la clé Pexels est à ressaisir** une fois : celles qui
+ont déjà été effacées ne peuvent pas être récupérées. Configuration → Pexels,
+et elle survivra aux déploiements suivants.
+
 ## [0.9.62] - 2026-09-07
 
 ### Ajouté
