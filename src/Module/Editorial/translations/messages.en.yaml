@@ -163,7 +163,13 @@ backend:
     label: Label
     icon: Icon
     has_archive: Has an archive page
-    has_archive_hint: 'Publishes a listing page for this type on the public site.'
+    has_archive_hint: "Publishes a listing page for this type on the public site."
+    archive_title: Listing page title
+    archive_title_hint: "The label names one publication; the page listing them all is called something else. Left empty, it takes the label."
+    archive_title_placeholder: "Services"
+    archive_post: Borrowed header
+    archive_post_hint: "The listing page takes this publication's banner, with its settings and its words in every language. That publication keeps an address of its own: tick 'Do not index' on it."
+    archive_post_placeholder: "Pick a publication"
     supports: Capabilities
     supports_blocks: Block content
     supports_thumbnail: Featured image

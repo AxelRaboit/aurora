@@ -9,6 +9,7 @@ import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppTextarea from "@/shared/components/form/input/AppTextarea.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppCheckbox from "@/shared/components/form/toggle/AppCheckbox.vue";
+import AppMultiselect from "@/shared/components/form/select/AppMultiselect.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppBadge from "@/shared/components/feedback/AppBadge.vue";
@@ -22,6 +23,8 @@ const props = defineProps({
     postTypes: { type: Array, default: () => [] },
     supportOptions: { type: Array, default: () => [] },
     fieldTypes: { type: Array, default: () => [] },
+    /** Publications a listing page may borrow its header from. */
+    postOptions: { type: Array, default: () => [] },
     createPath: { type: String, required: true },
     updatePathTemplate: { type: String, required: true },
     deletePathTemplate: { type: String, required: true },
@@ -208,6 +211,25 @@ const fieldTypeOptions = props.fieldTypes.map((type) => ({
                 :placeholder="t('backend.post_types.icon_placeholder')"
             />
             <AppCheckbox v-model="createForm.hasArchive" :label="t('backend.post_types.has_archive')" :hint="t('backend.post_types.has_archive_hint')" />
+            <!-- Both belong to the listing page, so both appear with it: a
+                 type with no archive has no page to name and no header to
+                 give it. -->
+            <template v-if="createForm.hasArchive">
+                <AppInput
+                    v-model="createForm.archiveTitle"
+                    :label="t('backend.post_types.archive_title')"
+                    :hint="t('backend.post_types.archive_title_hint')"
+                    :placeholder="t('backend.post_types.archive_title_placeholder')"
+                />
+                <AppMultiselect
+                    v-model="createForm.archivePostId"
+                    :label="t('backend.post_types.archive_post')"
+                    :hint="t('backend.post_types.archive_post_hint')"
+                    :placeholder="t('backend.post_types.archive_post_placeholder')"
+                    :options="postOptions"
+                    allow-empty
+                />
+            </template>
             <div class="space-y-2">
                 <label class="block text-xs text-secondary uppercase tracking-wide">{{ t("backend.post_types.supports") }}</label>
                 <AppCheckbox
@@ -265,6 +287,25 @@ const fieldTypeOptions = props.fieldTypes.map((type) => ({
                 :placeholder="t('backend.post_types.icon_placeholder')"
             />
             <AppCheckbox v-model="editForm.hasArchive" :label="t('backend.post_types.has_archive')" :hint="t('backend.post_types.has_archive_hint')" />
+            <!-- Both belong to the listing page, so both appear with it: a
+                 type with no archive has no page to name and no header to
+                 give it. -->
+            <template v-if="editForm.hasArchive">
+                <AppInput
+                    v-model="editForm.archiveTitle"
+                    :label="t('backend.post_types.archive_title')"
+                    :hint="t('backend.post_types.archive_title_hint')"
+                    :placeholder="t('backend.post_types.archive_title_placeholder')"
+                />
+                <AppMultiselect
+                    v-model="editForm.archivePostId"
+                    :label="t('backend.post_types.archive_post')"
+                    :hint="t('backend.post_types.archive_post_hint')"
+                    :placeholder="t('backend.post_types.archive_post_placeholder')"
+                    :options="postOptions"
+                    allow-empty
+                />
+            </template>
             <div class="space-y-2">
                 <label class="block text-xs text-secondary uppercase tracking-wide">{{ t("backend.post_types.supports") }}</label>
                 <AppCheckbox

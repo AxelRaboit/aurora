@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Editorial\PostType\View;
 
+use Aurora\Core\Locale\Service\LocaleContext;
+use Aurora\Module\Editorial\Post\Repository\PostRepository;
 use Aurora\Module\Editorial\PostType\Entity\AbstractPostType;
 use Aurora\Module\Editorial\PostType\Entity\AbstractPostTypeField;
 use Aurora\Module\Editorial\PostType\Repository\PostTypeRepository;
@@ -17,11 +19,39 @@ final readonly class PostTypesViewBuilder
     public function __construct(
         private PostTypeRepository $postTypeRepository,
         private PostTypeSerializerInterface $postTypeSerializer,
+        private PostRepository $postRepository,
+        private LocaleContext $localeContext,
     ) {}
 
     /**
      * @return array<string, mixed>
      */
+    /**
+     * @return list<array{value: int, label: string}>
+     */
+    private function postOptions(): array
+    {
+        $options = [];
+
+        foreach ($this->postRepository->findAllPublishedForPicker() as $post) {
+            $id = $post->getId();
+
+            if (null === $id) {
+                continue;
+            }
+
+            $options[] = [
+                'value' => $id,
+                // The title in the site's own language, since that is the one
+                // a back office reads in; an untranslated publication is named
+                // by its id rather than by a blank line.
+                'label' => $post->getTranslation($this->localeContext->getDefaultLocale())?->getTitle() ?? sprintf('#%d', $id),
+            ];
+        }
+
+        return $options;
+    }
+
     /**
      * The post type a bare `/post-types` should send the reader to, or null
      * when there is nothing to send them to.
@@ -53,6 +83,11 @@ final readonly class PostTypesViewBuilder
             // form from carrying a second copy that can drift.
             'supportOptions' => AbstractPostType::SUPPORTS,
             'fieldTypes' => AbstractPostTypeField::TYPES,
+            // The publications a listing page may borrow a header from. The
+            // whole list rather than a search endpoint: this screen is opened
+            // rarely and the picker it feeds searches its own options, so a
+            // second round trip would buy nothing.
+            'postOptions' => $this->postOptions(),
         ];
     }
 }

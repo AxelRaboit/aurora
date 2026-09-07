@@ -164,6 +164,12 @@ backend:
     icon: Icône
     has_archive: Possède une page d'archive
     has_archive_hint: "Publie une page de liste pour ce type sur le site public."
+    archive_title: Titre de la page de liste
+    archive_title_hint: "Le libellé nomme une publication ; la page qui les liste toutes s'appelle autrement. Laissé vide, elle prend le libellé."
+    archive_title_placeholder: "Services"
+    archive_post: En-tête emprunté
+    archive_post_hint: "La page de liste reprend la bannière de cette publication, avec ses réglages et ses textes dans chaque langue. Elle garde aussi son adresse à elle : pensez à cocher « Ne pas indexer » sur cette publication."
+    archive_post_placeholder: "Choisir une publication"
     supports: Capacités
     supports_blocks: Contenu en blocs
     supports_thumbnail: Image à la une

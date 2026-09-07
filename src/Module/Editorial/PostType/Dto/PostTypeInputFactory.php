@@ -20,7 +20,17 @@ class PostTypeInputFactory implements PostTypeInputFactoryInterface
             icon: Str::trimOrNull((string) ($data['icon'] ?? '')),
             hasArchive: (bool) ($data['hasArchive'] ?? false),
             supports: $this->stringList($data['supports'] ?? null),
+            archiveTitle: Str::trimOrNull((string) ($data['archiveTitle'] ?? '')),
+            archivePostId: $this->id($data['archivePostId'] ?? null),
         );
+    }
+
+    /** A positive id, or nothing: zero and "" both mean "no publication". */
+    private function id(mixed $raw): ?int
+    {
+        $id = (int) (is_scalar($raw) ? $raw : 0);
+
+        return $id > 0 ? $id : null;
     }
 
     /** @return list<string> */

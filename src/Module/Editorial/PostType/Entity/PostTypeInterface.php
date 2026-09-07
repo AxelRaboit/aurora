@@ -33,6 +33,17 @@ interface PostTypeInterface
 
     public function setHasArchive(bool $hasArchive): static;
 
+    public function getArchiveTitle(): ?string;
+
+    public function setArchiveTitle(?string $archiveTitle): static;
+
+    /** The title of the listing page, or the label when none was written. */
+    public function getArchiveHeading(): string;
+
+    public function getArchivePostId(): ?int;
+
+    public function setArchivePostId(?int $archivePostId): static;
+
     public function isBuiltIn(): bool;
 
     public function setIsBuiltIn(bool $isBuiltIn): static;

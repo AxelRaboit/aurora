@@ -326,6 +326,31 @@ class PostRepository extends ResolveTargetEntityRepository
     }
 
     /**
+     * Published publications, for a picker that has to name one.
+     *
+     * Published only, and deliberately: an unpublished publication is a draft,
+     * the archive refuses to borrow a draft's header at render, and offering
+     * one here would be offering a choice that silently does nothing.
+     *
+     * @return list<PostInterface>
+     */
+    public function findAllPublishedForPicker(): array
+    {
+        /** @var list<PostInterface> $posts */
+        $posts = $this->createQueryBuilder('p')
+            ->leftJoin('p.translations', 't')
+            ->addSelect('t')
+            ->where('p.status = :status')
+            ->andWhere('p.deletedAt IS NULL')
+            ->setParameter('status', PostStatusEnum::Published)
+            ->orderBy('p.publishedAt', Order::Descending->value)
+            ->getQuery()
+            ->getResult();
+
+        return $posts;
+    }
+
+    /**
      * How many live posts sit in each status, for the dashboard.
      *
      * One grouped query rather than one COUNT per status, and rows are only

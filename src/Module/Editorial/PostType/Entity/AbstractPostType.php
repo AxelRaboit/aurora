@@ -46,6 +46,46 @@ abstract class AbstractPostType implements PostTypeInterface
     protected bool $hasArchive = false;
 
     /**
+     * What the listing page calls itself.
+     *
+     * The label names one thing - a publication *is* a Service - and the page
+     * that lists them all is called Services. Reusing the label there printed
+     * the singular as a page title, which is the kind of small wrongness a
+     * reader notices before anything else on the page.
+     *
+     * Nullable and falling back to the label: every type that exists predates
+     * this, and "Service" is a better heading than a blank one.
+     */
+    #[ORM\Column(length: 150, nullable: true)]
+    protected ?string $archiveTitle = null;
+
+    /**
+     * The publication whose header this listing page borrows.
+     *
+     * Not a picture of its own, deliberately. A banner here would be a second
+     * banner: same name as the real one, none of its settings - no height, no
+     * darkening, no alignment, no buttons, and no words per language - and set
+     * on the screen that describes the *structure* of the site rather than in
+     * the editor where every other visual decision is made. Every one of those
+     * settings already exists on a publication, so the listing page points at
+     * one and gets all of it.
+     *
+     * The publication keeps an address of its own, so two URLs show the same
+     * header; `noindex` on that one settles it, and it is already a field in
+     * its Search engines tab.
+     *
+     * An id rather than a relation, which is the one thing here that looks
+     * wrong and is not: `core_posts` already points at `core_post_types`, and
+     * pointing back would close a circular foreign key that the fixtures
+     * purger cannot untangle - it truncates in dependency order, and a cycle
+     * has none. So this is the arrangement the homepage already uses: a
+     * publication named by its id, resolved on the way out and refused when
+     * it has gone, is unpublished, or says nothing in the language being read.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?int $archivePostId = null;
+
+    /**
      * Set on the types the bootstrap creates (page, article). Built-in
      * types cannot be deleted and keep their slug, since routes and
      * content already point at them.
@@ -132,6 +172,38 @@ abstract class AbstractPostType implements PostTypeInterface
     public function hasArchive(): bool
     {
         return $this->hasArchive;
+    }
+
+    public function getArchiveTitle(): ?string
+    {
+        return $this->archiveTitle;
+    }
+
+    public function setArchiveTitle(?string $archiveTitle): static
+    {
+        $this->archiveTitle = $archiveTitle;
+
+        return $this;
+    }
+
+    /** The title of the listing page, or the label when none was written. */
+    public function getArchiveHeading(): string
+    {
+        return null !== $this->archiveTitle && '' !== $this->archiveTitle
+            ? $this->archiveTitle
+            : $this->label;
+    }
+
+    public function getArchivePostId(): ?int
+    {
+        return $this->archivePostId;
+    }
+
+    public function setArchivePostId(?int $archivePostId): static
+    {
+        $this->archivePostId = $archivePostId;
+
+        return $this;
     }
 
     public function setHasArchive(bool $hasArchive): static

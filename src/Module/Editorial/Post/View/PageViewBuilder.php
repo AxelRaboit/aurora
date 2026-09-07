@@ -6,7 +6,10 @@ namespace Aurora\Module\Editorial\Post\View;
 
 use Aurora\Core\Frontend\Service\Context;
 use Aurora\Module\Configuration\Theme\Service\ThemeContext;
+use Aurora\Module\Editorial\Post\Banner\BannerViewBuilder;
 use Aurora\Module\Editorial\Post\Entity\PostInterface;
+use Aurora\Module\Editorial\Post\Entity\PostTranslationInterface;
+use Aurora\Module\Editorial\Post\Repository\PostRepository;
 use Aurora\Module\Editorial\Post\Serializer\PostSerializerInterface;
 use Aurora\Module\Editorial\PostType\Entity\PostTypeInterface;
 use Aurora\Module\Editorial\Seo\Service\AlternatesBuilder;
@@ -24,6 +27,8 @@ final readonly class PageViewBuilder
         private AlternatesBuilder $alternatesBuilder,
         private Context $context,
         private ThemeContext $themeContext,
+        private BannerViewBuilder $bannerViewBuilder,
+        private PostRepository $postRepository,
     ) {}
 
     /**
@@ -55,9 +60,55 @@ final readonly class PageViewBuilder
             'postType' => [
                 'slug' => $postType->getSlug(),
                 'label' => $postType->getLabel(),
+                // What the page calls itself: the label names one publication,
+                // and a page listing them all is not called by the singular.
+                'heading' => $postType->getArchiveHeading(),
+                // The header this page borrows, built by the same builder the
+                // publication's own page uses - so the listing page gets the
+                // whole banner, its settings and its words in this language,
+                // rather than a poorer copy of one.
+                'banner' => $this->archiveBanner($postType, $locale),
             ],
             'alternates' => $this->alternatesBuilder->forRoute('editorial_archive', ['postTypeSlug' => $postType->getSlug()]),
         ];
+    }
+
+    /**
+     * The header a listing page borrows from a publication.
+     *
+     * Null on every "no" - none designated, deleted since, unpublished, not
+     * translated here, or its banner switched off - so the template falls back
+     * to the plain title header it has always had rather than drawing an empty
+     * frame. An unpublished publication is a draft: a listing page is not a
+     * way to show one.
+     *
+     * The same resolution the homepage gets, and for the same reason: the
+     * publication is named by an id, so every one of those answers has to be
+     * asked here rather than assumed from the fact that a number was stored.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function archiveBanner(PostTypeInterface $postType, string $locale): ?array
+    {
+        $postId = $postType->getArchivePostId();
+
+        if (null === $postId) {
+            return null;
+        }
+
+        $post = $this->postRepository->find($postId);
+
+        if (!$post instanceof PostInterface || !$post->isPublished() || $post->isTrashed()) {
+            return null;
+        }
+
+        $translation = $post->getTranslation($locale);
+
+        if (!$translation instanceof PostTranslationInterface) {
+            return null;
+        }
+
+        return $this->bannerViewBuilder->build($post->getBannerLayout(), $translation->getBanner());
     }
 
     /**

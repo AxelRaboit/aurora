@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Module\Editorial\PostType\Manager;
 
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
+use Aurora\Module\Editorial\Post\Repository\PostRepository;
 use Aurora\Module\Editorial\PostType\Dto\PostTypeFieldInputInterface;
 use Aurora\Module\Editorial\PostType\Dto\PostTypeInputInterface;
 use Aurora\Module\Editorial\PostType\Entity\PostType;
@@ -26,6 +27,7 @@ class PostTypeManager implements PostTypeManagerInterface
         protected readonly PostTypeRepository $postTypeRepository,
         protected readonly TranslatorInterface $translator,
         protected readonly AuditLogger $auditLogger,
+        protected readonly PostRepository $postRepository,
     ) {}
 
     public function create(PostTypeInputInterface $input): PostTypeInterface
@@ -153,6 +155,17 @@ class PostTypeManager implements PostTypeManagerInterface
         $postType->setIcon($input->getIcon());
         $postType->setHasArchive($input->hasArchive());
         $postType->setSupports($input->getSupports());
+        $postType->setArchiveTitle($input->getArchiveTitle());
+        // Checked rather than trusted: an id from a browser is a claim about a
+        // row, and storing one that names nothing would be storing a header
+        // that can never be drawn. What happens to it later - deleted,
+        // unpublished, untranslated - is answered again at render.
+        $archivePostId = $input->getArchivePostId();
+        $postType->setArchivePostId(
+            null !== $archivePostId && null !== $this->postRepository->find($archivePostId)
+                ? $archivePostId
+                : null,
+        );
     }
 
     protected function applyFieldInput(PostTypeFieldInterface $field, PostTypeFieldInputInterface $input): void
