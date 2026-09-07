@@ -5,6 +5,21 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.68] - 2026-09-07
+
+### Démonstration
+
+#### La médiathèque de démonstration ne contenait que des PDF
+Six images s'ajoutent aux documents : un visuel de campagne, une photo
+d'équipe, un logo, une illustration, un plan et une capture. La moitié de ce
+que fait cet écran ne se voyait pas sans elles : les tuiles, l'aperçu quand on
+ouvre un document, les dimensions affichées, et les tailles générées à l'envoi.
+
+Les documents de démonstration portent maintenant ces tailles, comme le ferait
+un envoi par l'interface. Elles étaient vides, donc chaque page de démo servait
+l'original en pleine taille à un téléphone : la seule chose que la médiathèque
+promet était la seule que la démonstration ne faisait pas.
+
 ## [0.9.67] - 2026-09-07
 
 ### Modifié
@@ -17,7 +32,7 @@ suivantes disparaissaient sans que rien ne le dise.
 
 Le nombre proposé dans l'éditeur et celui que le serveur conserve sont
 désormais tenus par un test : ils étaient écrits deux fois, avec un commentaire
-pour seul lien, et une divergence n'aurait fait échouer personne — le champ
+pour seul lien, et une divergence n'aurait fait échouer personne : le champ
 aurait proposé douze choix pour un serveur qui en accepte vingt-quatre, ou
 l'inverse, en rognant un nombre choisi au moment d'enregistrer.
 
@@ -27,7 +42,7 @@ l'inverse, en rognant un nombre choisi au moment d'enregistrer.
 Les étiquettes et les dossiers de la médiathèque étaient recréés à chaque
 chargement, et rattachés aux mêmes documents : après cinq passages, un contrat
 portait cinq fois « Confidentiel » et cinq fois « Signé ». Les documents, eux,
-étaient retrouvés par leur chemin — qui contient le mois — donc un chargement
+étaient retrouvés par leur chemin (qui contient le mois), donc un chargement
 en septembre sur une base semée en août les insérait tous une seconde fois.
 
 Les trois sont maintenant retrouvés par ce qui les identifie vraiment, et les
@@ -38,7 +53,7 @@ dit ce que le fixture décrit, quel que soit le nombre de passages.
 Ce dossier vit à côté du dépôt et n'est pas livré avec lui. Les images
 manquantes étaient sautées, ce qui décalait les références publiées, et les
 fixtures éditoriales mouraient trois fixtures plus loin sur
-`ged_demo_media_0 does not exist` — une erreur qui nomme une image et pas le
+`ged_demo_media_0 does not exist`, une erreur qui nomme une image et pas le
 dossier absent qui l'a causée.
 
 Une image sans source est désormais dessinée : un aplat teinté par son propre
@@ -48,8 +63,8 @@ donc sur un clone neuf.
 ### Démonstration
 
 #### Le site de démonstration ressemble enfin à un site
-Sa page d'accueil est une page composée — bannière pleine largeur, fondu vers
-le bas, puis le contenu en zones — et non plus la liste automatique de ses deux
+Sa page d'accueil est une page composée (bannière pleine largeur, fondu vers
+le bas, puis le contenu en zones), et non plus la liste automatique de ses deux
 articles, qui est l'écran de repli d'un site n'ayant pas choisi sa page
 d'accueil.
 
@@ -61,7 +76,7 @@ site est encore sur le thème d'installation sans couleurs.
 S'ajoutent aussi un formulaire de devis avec ses huit types de champ et ses
 demandes reçues, des commentaires dans les trois états de modération, des notes
 Markdown reliées entre elles, et quatre champs personnalisés sur le type
-Article — chacun de ces écrans se présentait vide, ce qui montre où vit une
+Article. Chacun de ces écrans se présentait vide, ce qui montre où vit une
 fonctionnalité sans rien montrer de ce qu'elle fait.
 
 ## [0.9.66] - 2026-09-07
