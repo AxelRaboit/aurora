@@ -5,6 +5,27 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.64] - 2026-09-07
+
+### Corrigé
+
+#### Le déploiement lançait ses commandes avec l'ancien conteneur
+`make deploy-prod` installait le nouveau code, puis lançait les migrations et
+les commandes de synchronisation, et ne reconstruisait le cache qu'après. Ces
+commandes tournaient donc contre un conteneur compilé à la release précédente :
+il suffit qu'un service ait gagné un argument de constructeur pour que la
+première d'entre elles échoue, avant qu'une seule migration ne soit jouée.
+
+C'est arrivé aujourd'hui, sur le correctif de la clé Pexels. Le cache est
+maintenant vidé juste après l'installation des dépendances, et à nouveau après
+la construction des assets — deux fois, volontairement, et le Makefile le dit
+pour que personne ne prenne le premier pour un doublon.
+
+### Dans aurora-client
+Le gabarit du Makefile client porte la correction ; un projet existant doit la
+répercuter dans son propre `Makefile`, cible `deploy-prod` : un `make cc-prod`
+juste avant `doctrine:migrations:migrate`.
+
 ## [0.9.63] - 2026-09-07
 
 ### Corrigé

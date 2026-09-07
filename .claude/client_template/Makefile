@@ -546,6 +546,11 @@ deploy-check: ## Post-deploy health check - boot, migrations, worker, queue, HTT
 	else skip "no DEFAULT_URI or no curl - skipping the HTTP check"; fi; \
 	if [ "$$failed" -eq 0 ]; then echo "✅ All green."; else echo "❌ At least one check failed (see above)."; exit 1; fi
 
+# The cache is rebuilt twice on purpose. The first clear is what lets the
+# console commands below run against the code that was just installed: a
+# compiled container still holding the previous constructor signatures fails
+# with an ArgumentCountError before a single migration has run. The second one
+# warms it again once the assets have been built.
 deploy-prod: ## Deploy to production (requires a git tag on HEAD)
 	@APP_VERSION=$$(git describe --exact-match --tags HEAD 2>/dev/null); \
 	if [ -z "$$APP_VERSION" ]; then \
@@ -560,6 +565,7 @@ deploy-prod: ## Deploy to production (requires a git tag on HEAD)
 	$(COMPOSER) install --no-dev --optimize-autoloader; \
 	$(COMPOSER) install --working-dir=$(AURORA) --no-dev --no-scripts --no-interaction; \
 	$(PNPM) --dir=$(AURORA) install --frozen-lockfile; \
+	make cc-prod; \
 	$(CONSOLE) doctrine:migrations:migrate --no-interaction; \
 	$(CONSOLE) aurora:application-parameter; \
 	$(CONSOLE) aurora:install; \
