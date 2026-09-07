@@ -31,6 +31,8 @@ class ApplicationParameterCommand extends Command
         private readonly EntityManagerInterface $entityManager,
         #[AutowireIterator('aurora.application_parameter_provider')]
         private readonly iterable $providers,
+        #[AutowireIterator('aurora.owned_setting_provider')]
+        private readonly iterable $owners,
     ) {
         parent::__construct();
     }
@@ -60,7 +62,16 @@ class ApplicationParameterCommand extends Command
 
         $created = $this->createMissing($enumCases, $existing, $symfonyStyle, $dryRun);
         $synced = $this->syncMetadata($enumCases, $existing, $symfonyStyle, $dryRun);
-        $deleted = $this->deleteObsolete($enumKeys, $existing, $symfonyStyle, $dryRun);
+        // Nothing is created or drawn from the owned keys: they are only
+        // spared. A tab that writes its own rows would otherwise lose them at
+        // the next release - which is exactly what happened to the Pexels
+        // API key.
+        $deleted = $this->deleteObsolete(
+            [...$enumKeys, ...$this->collectOwnedKeys()],
+            $existing,
+            $symfonyStyle,
+            $dryRun,
+        );
 
         if (!$dryRun) {
             $this->entityManager->flush();
@@ -163,6 +174,24 @@ class ApplicationParameterCommand extends Command
         }
 
         return array_values($cases);
+    }
+
+    /**
+     * The keys a screen of its own is responsible for.
+     *
+     * @return list<string>
+     */
+    private function collectOwnedKeys(): array
+    {
+        $keys = [];
+
+        foreach ($this->owners as $owner) {
+            foreach ($owner->getOwnedSettingKeys() as $key) {
+                $keys[] = $key;
+            }
+        }
+
+        return $keys;
     }
 
     /**

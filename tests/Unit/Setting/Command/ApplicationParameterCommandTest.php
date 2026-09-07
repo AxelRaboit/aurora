@@ -11,6 +11,7 @@ use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnumInterface;
 use Aurora\Module\Configuration\Setting\Provider\ApplicationParameterProviderInterface;
 use Aurora\Module\Configuration\Setting\Provider\CoreApplicationParameterProvider;
 use Aurora\Module\Configuration\Setting\Provider\CoreModuleParameterProvider;
+use Aurora\Module\Configuration\Setting\Provider\OwnedSettingProviderInterface;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
@@ -20,11 +21,20 @@ use Symfony\Component\Console\Tester\CommandTester;
 #[AllowMockObjectsWithoutExpectations]
 final class ApplicationParameterCommandTest extends TestCase
 {
-    /** @param iterable<ApplicationParameterProviderInterface>|null $providers */
-    private function makeTester(SettingRepository $repository, EntityManagerInterface $em, ?iterable $providers = null): CommandTester
-    {
+    /**
+     * @param iterable<ApplicationParameterProviderInterface>|null $providers
+     * @param iterable<OwnedSettingProviderInterface>              $owners    keys a screen of
+     *                                                                        its own writes, which
+     *                                                                        the sync must spare
+     */
+    private function makeTester(
+        SettingRepository $repository,
+        EntityManagerInterface $em,
+        ?iterable $providers = null,
+        iterable $owners = [],
+    ): CommandTester {
         $providers ??= [new CoreApplicationParameterProvider(), new CoreModuleParameterProvider()];
-        $command = new ApplicationParameterCommand($repository, $em, $providers);
+        $command = new ApplicationParameterCommand($repository, $em, $providers, $owners);
 
         return new CommandTester($command);
     }
@@ -34,6 +44,32 @@ final class ApplicationParameterCommandTest extends TestCase
         $setting = new Setting($key, 'value', $description, $type, $group);
 
         return $setting;
+    }
+
+    /**
+     * The unit half of the same guarantee the integration test makes: a row
+     * whose key an owner claims is not debris, even though no parameter enum
+     * names it. This is where the Pexels API key was being deleted.
+     */
+    public function testSparesAKeyAnOwnerClaims(): void
+    {
+        $owned = $this->makeSettingStub('backend_ged_pexels_api_key');
+        $repository = $this->createMock(SettingRepository::class);
+        $repository->method('findAll')->willReturn([$owned]);
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->expects(self::never())->method('remove');
+
+        $owner = new class implements OwnedSettingProviderInterface {
+            public function getOwnedSettingKeys(): iterable
+            {
+                yield 'backend_ged_pexels_api_key';
+            }
+        };
+
+        $tester = $this->makeTester($repository, $em, [], [$owner]);
+
+        self::assertSame(0, $tester->execute([]));
     }
 
     public function testCreatesAbsentParameters(): void
