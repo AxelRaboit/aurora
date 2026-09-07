@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Ajouté
+
+#### Une page de liste porte enfin son propre nom
+Le libellé d'un type nomme une publication — une publication *est* un Service —
+et la page qui les liste toutes s'appelle Services. Elle affichait le libellé,
+donc elle s'annonçait au singulier.
+
+Un champ **Titre de la page de liste** sur le type de contenu, à côté de
+« Possède une page d'archive » : c'est la même nature d'information, un fait
+sur le type. Laissé vide, il reprend le libellé — aucune page existante ne
+change.
+
+#### Une page de liste peut emprunter l'en-tête d'une publication
+Plutôt qu'une image posée sur le type de contenu. Une image seule ici aurait
+été une deuxième bannière : le même nom que la vraie, aucun de ses réglages —
+ni hauteur, ni assombrissement, ni alignement, ni boutons, ni textes par langue
+— et réglée sur l'écran qui décrit la structure du site au lieu de l'éditeur où
+se prennent toutes les autres décisions visuelles.
+
+La page désigne donc une publication et reprend sa bannière entière, avec ses
+réglages et ses mots dans chaque langue. Elle est refusée quand elle ne peut
+pas être affichée : rien de désigné, publication supprimée, en brouillon, ou
+muette dans la langue lue — et la page garde alors l'en-tête sobre qu'elle a
+toujours eu.
+
+À savoir : cette publication garde une adresse à elle, donc deux URL montrent
+le même en-tête. « Ne pas indexer », dans son onglet Moteurs de recherche,
+règle la question.
+
 ## [0.9.61] - 2026-09-07
 
 ### Ajouté

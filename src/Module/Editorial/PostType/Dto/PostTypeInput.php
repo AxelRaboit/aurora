@@ -27,6 +27,9 @@ class PostTypeInput implements PostTypeInputInterface
         public readonly ?string $icon = null,
         public readonly bool $hasArchive = false,
         public readonly array $supports = [],
+        #[Assert\Length(max: 150)]
+        public readonly ?string $archiveTitle = null,
+        public readonly ?int $archivePostId = null,
     ) {}
 
     public function getSlug(): string
@@ -57,5 +60,15 @@ class PostTypeInput implements PostTypeInputInterface
     public function getSupports(): array
     {
         return $this->supports;
+    }
+
+    public function getArchiveTitle(): ?string
+    {
+        return $this->archiveTitle;
+    }
+
+    public function getArchivePostId(): ?int
+    {
+        return $this->archivePostId;
     }
 }

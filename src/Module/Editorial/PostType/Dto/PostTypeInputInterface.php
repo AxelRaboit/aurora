@@ -18,4 +18,8 @@ interface PostTypeInputInterface
 
     /** @return list<string> */
     public function getSupports(): array;
+
+    public function getArchiveTitle(): ?string;
+
+    public function getArchivePostId(): ?int;
 }

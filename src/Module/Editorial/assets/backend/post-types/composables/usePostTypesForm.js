@@ -14,6 +14,11 @@ function emptyForm(supportOptions) {
         icon: "",
         hasArchive: false,
         supports: [...supportOptions],
+        // What the listing page calls itself, and the publication whose
+        // header it borrows. Empty means "use the label" and "no header",
+        // which is what every type did before these existed.
+        archiveTitle: "",
+        archivePostId: null,
     };
 }
 
@@ -126,6 +131,8 @@ export function usePostTypesForm(props) {
             icon: postType.icon ?? "",
             hasArchive: postType.hasArchive,
             supports: [...(postType.supports ?? [])],
+            archiveTitle: postType.archiveTitle ?? "",
+            archivePostId: postType.archivePostId ?? null,
         };
         clearEdit();
         showEdit.value = true;

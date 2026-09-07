@@ -1,14 +1,37 @@
 {% extends 'Frontend/themes/default/layout.html.twig' %}
 
-{% block seo_define %}{% do seo({title: postType.label}) %}{% endblock %}
+{% block seo_define %}{% do seo({title: postType.heading}) %}{% endblock %}
+
+{# The header of a publication this type designates, rendered by the same
+   partial its own page uses - so a listing page gets the whole banner, its
+   height, its darkening, its buttons and its words in this language, rather
+   than a second poorer banner invented for archives.
+
+   Full width renders above <main>, which is where the layout leaves room for
+   anything spanning the viewport; inside <main> it would be capped and
+   padded. Exactly the arrangement the publication page uses. #}
+{% block frontend_banner %}
+    {% if postType.banner and postType.banner.width starts with 'full' %}
+        {{ include('Frontend/themes/default/editorial/post/_banner.html.twig', {banner: postType.banner}) }}
+    {% endif %}
+{% endblock %}
 
 {% block body %}
-    {# The title carried the same weight as a card's, on a page whose only job
-       is to announce what the list is. It gets the room it was owed, and a
-       rule under it so the grid starts against something rather than floating
-       under a line of text. #}
-    <header class="mb-8 border-b border-line pb-6">
-        <h1 class="m-0 text-3xl font-bold tracking-tight text-primary sm:text-4xl">{{ postType.label }}</h1>
-    </header>
+    {% if postType.banner %}
+        {% if not (postType.banner.width starts with 'full') %}
+            {{ include('Frontend/themes/default/editorial/post/_banner.html.twig', {banner: postType.banner}) }}
+        {% endif %}
+    {% else %}
+        {# No borrowed header: the page keeps the one it has always had - the
+           title with room around it and a rule under it, so the grid starts
+           against something rather than floating under a line of text.
+
+           Only in this branch, because a banner already carries the page's
+           <h1>, and saying the name twice would be an error rather than an
+           emphasis. #}
+        <header class="mb-8 border-b border-line pb-6">
+            <h1 class="m-0 text-3xl font-bold tracking-tight text-primary sm:text-4xl">{{ postType.heading }}</h1>
+        </header>
+    {% endif %}
     {{ include('Frontend/themes/default/editorial/_posts.html.twig') }}
 {% endblock %}
