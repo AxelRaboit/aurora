@@ -444,6 +444,7 @@ backend:
         postList: Automatic list
         form: Form
         code: Code
+        toc: Contents
         stack: Stack
       zone_form: "Form"
       zone_form_hint: "The form is drawn in the page and posts where its own page posts."
@@ -927,6 +928,7 @@ frontend:
       choose: Choose this plan
       copy: Copy
       copied: Copied
+      on_this_page: On this page
     forms:
       submit: Send
       next: Next

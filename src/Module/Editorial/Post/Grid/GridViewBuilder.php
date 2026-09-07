@@ -191,6 +191,10 @@ final readonly class GridViewBuilder
                 // nothing between here and there is allowed to reformat a
                 // snippet whose whitespace is its meaning.
                 'code' => GridNormalizer::ZONE_CODE === $zone['type'] ? $held['code'] : null,
+                // Filled after the walk, once every text zone has been
+                // rendered: a summary of a page cannot be written while the
+                // page is still being read.
+                'toc' => GridNormalizer::ZONE_TOC === $zone['type'] ? [] : null,
             ];
         };
 
@@ -212,6 +216,8 @@ final readonly class GridViewBuilder
             );
         }
 
+        $zones = $this->summarise($zones);
+
         // A plain loop rather than `array_map`: an arrow function captures by
         // value, so the list it filled would be the one it threw away.
         $lightbox = [];
@@ -227,6 +233,82 @@ final readonly class GridViewBuilder
             // which is what the template checks before mounting anything.
             'lightbox' => $lightbox,
         ];
+    }
+
+    /**
+     * Lists the page's headings for whichever zones asked for a summary.
+     *
+     * Two passes over the same zones, and they have to be in this order: the
+     * anchors are written into the text zones first, because a summary is a
+     * list of links and a link needs something to land on. Nothing happens at
+     * all when no zone asked - a page keeps exactly the markup it had.
+     *
+     * Ids are numbered rather than slugged from the words. Two sections called
+     * "Tarifs" on one page would be two anchors with one name, and a reader
+     * following the second would land on the first; a number cannot collide,
+     * and nobody reads these.
+     *
+     * Only `<h2>` and `<h3>`: the page's title is its `<h1>`, and past the
+     * third level a summary is longer than what it summarises. The pattern
+     * matches the headings this renderer writes - bare, no attributes - so a
+     * heading inside a raw HTML block keeps whatever its author gave it.
+     *
+     * @param list<array<string, mixed>> $zones
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function summarise(array $zones): array
+    {
+        $wanted = false;
+        foreach ($zones as $zone) {
+            if (GridNormalizer::ZONE_TOC === $zone['type']) {
+                $wanted = true;
+
+                break;
+            }
+        }
+
+        if (!$wanted) {
+            return $zones;
+        }
+
+        $headings = [];
+        $number = 0;
+
+        foreach ($zones as $index => $zone) {
+            if (GridNormalizer::ZONE_TEXT !== $zone['type']) {
+                continue;
+            }
+
+            if (!is_string($zone['html'] ?? null)) {
+                continue;
+            }
+
+            $zones[$index]['html'] = preg_replace_callback(
+                '#<h([23])>(.*?)</h\1>#s',
+                static function (array $match) use (&$headings, &$number): string {
+                    $id = sprintf('section-%d', ++$number);
+                    $headings[] = [
+                        'id' => $id,
+                        'level' => (int) $match[1],
+                        // The words without their markup: a heading may carry a
+                        // link or a marker, and neither belongs in a summary.
+                        'text' => mb_trim(html_entity_decode(strip_tags($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+                    ];
+
+                    return sprintf('<h%s id="%s">%s</h%s>', $match[1], $id, $match[2], $match[1]);
+                },
+                $zone['html'],
+            ) ?? $zone['html'];
+        }
+
+        foreach ($zones as $index => $zone) {
+            if (GridNormalizer::ZONE_TOC === $zone['type']) {
+                $zones[$index]['toc'] = $headings;
+            }
+        }
+
+        return $zones;
     }
 
     /**

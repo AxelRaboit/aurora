@@ -126,6 +126,16 @@ final readonly class GridNormalizer
     /** A snippet, shown as written and coloured in the reader's browser. */
     public const string ZONE_CODE = 'code';
 
+    /**
+     * The page's own headings, listed and linked.
+     *
+     * The one zone with nothing to write in it: it reads the text zones of the
+     * grid it sits in and lists what it finds. A long page needs a way in that
+     * nobody has to maintain - a hand-written summary is out of date the first
+     * time a section is renamed, and this one cannot be.
+     */
+    public const string ZONE_TOC = 'toc';
+
     /** How loudly a button is drawn. */
     public const array BUTTON_VARIANTS = ['solid', 'outline', 'ghost'];
 
@@ -303,6 +313,7 @@ final readonly class GridNormalizer
         self::ZONE_POST_LIST,
         self::ZONE_FORM,
         self::ZONE_CODE,
+        self::ZONE_TOC,
     ];
 
     /**

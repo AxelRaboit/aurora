@@ -33,6 +33,20 @@ Le bouton de copie est rendu masqué et révélé par son script une fois qu'il 
 trouvé un presse-papiers : un bouton qui ne peut pas faire son travail ne
 s'affiche pas.
 
+#### Un sommaire automatique
+Une zone **Sommaire** : la seule qui n'a rien à remplir. Elle lit les zones
+Texte de la page et liste leurs titres, avec un lien vers chacun. Les ancres
+sont posées au passage sur les titres eux-mêmes — un sommaire écrit à la main
+est faux dès la première section renommée, celui-ci ne peut pas l'être.
+
+Les ancres sont numérotées plutôt que déduites des mots : deux sections
+« Tarifs » sur une page feraient deux ancres du même nom, et le second lien
+mènerait à la première. Une page qui ne demande pas de sommaire garde
+exactement le balisage qu'elle avait.
+
+Posé dans une colonne plus étroite que la page, le sommaire suit la lecture ;
+sur toute la largeur, il reste où il est.
+
 #### Les images d'une grille s'agrandissent au clic
 La visionneuse de la galerie sert désormais aussi aux zones Image d'une page,
 avec sa propre file : une page peut avoir les deux, chacune avec son ordre. Le

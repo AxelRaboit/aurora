@@ -32,6 +32,7 @@ export const LEAF_ZONE_TYPES = [
     "postList",
     "form",
     "code",
+    "toc",
 ];
 
 /** Mirrors GridNormalizer::ZONE_TYPES - a stack is top level only. */

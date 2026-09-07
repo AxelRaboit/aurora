@@ -444,6 +444,7 @@ backend:
         postList: Liste automatique
         form: Formulaire
         code: Code
+        toc: Sommaire
         stack: Pile
       zone_form: "Formulaire"
       zone_form_hint: "Le formulaire s'affiche dans la page, et s'envoie au même endroit que sur sa propre page."
@@ -927,6 +928,7 @@ frontend:
       choose: Choisir cette offre
       copy: Copier
       copied: Copié
+      on_this_page: Sur cette page
     forms:
       submit: Envoyer
       next: Suivant

@@ -218,6 +218,34 @@
             </div>
         </div>
 
+    {% elseif zone.type == 'toc' and zone.toc is not empty %}
+        {# A `<nav>` with a name, which is what makes it skippable: a reader
+           moving by landmark meets "Sur cette page" and can step over it.
+
+           Sticky only when the zone is narrower than the page: a summary in a
+           column beside the text should follow the reading, and one across the
+           full width has nothing to follow. Above `lg` only - below it the
+           zone is full width like every other, and a bar that sticks on a
+           phone is a bar that eats the screen. #}
+        <nav
+            class="not-prose rounded-xl border border-line bg-surface p-5{{ zone.span.lg is defined and zone.span.lg < 48 ? ' lg:sticky lg:top-24' : '' }}"
+            aria-labelledby="{{ zone.id }}-toc"
+        >
+            <p id="{{ zone.id }}-toc" class="m-0 mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+                {{ 'frontend.editorial.grid.on_this_page'|trans }}
+            </p>
+            <ol class="m-0 list-none space-y-2 p-0 text-sm">
+                {% for heading in zone.toc %}
+                    <li class="{{ heading.level == 3 ? 'pl-4' : '' }}">
+                        <a
+                            href="#{{ heading.id }}"
+                            class="text-secondary no-underline transition-colors hover:text-accent"
+                        >{{ heading.text }}</a>
+                    </li>
+                {% endfor %}
+            </ol>
+        </nav>
+
     {% elseif zone.type == 'video' %}
         {% if zone.video %}
             {# The src is built from an extracted id against a whitelist
