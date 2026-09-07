@@ -79,6 +79,10 @@ install-prod: ## Install for production
 	make build
 	make cc-prod
 
+# The cache is rebuilt twice on purpose - see the client template's Makefile:
+# a console command run against a container compiled from the previous release
+# fails on any constructor that has gained an argument, before a single
+# migration has run.
 deploy-prod: ## Deploy to production (requires a git tag on HEAD)
 	@APP_VERSION=$$(git describe --exact-match --tags HEAD 2>/dev/null); \
 	if [ -z "$$APP_VERSION" ]; then \
@@ -89,6 +93,7 @@ deploy-prod: ## Deploy to production (requires a git tag on HEAD)
 	echo "$$APP_VERSION" > VERSION; \
 	$(COMPOSER) install --no-dev --optimize-autoloader; \
 	$(PNPM) --dir=$(AURORA) install --frozen-lockfile; \
+	APP_ENV=prod APP_DEBUG=0 $(CONSOLE) cache:clear --env=prod; \
 	$(CONSOLE) doctrine:migrations:migrate --no-interaction; \
 	$(CONSOLE) aurora:application-parameter; \
 	$(CONSOLE) aurora:menus:sync; \
