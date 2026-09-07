@@ -273,6 +273,8 @@ backend:
       button_text_color: Couleur du texte du bouton
       appearance: Apparence
       logo_hint: Affiché en haut à gauche, par-dessus le fond.
+      fade_out: Fondu vers le bas
+      fade_out_hint: "Le bas de l'en-tête se dissout dans la page au lieu de s'arrêter net."
       fill: Type de fond
       fills:
         none: Aucun

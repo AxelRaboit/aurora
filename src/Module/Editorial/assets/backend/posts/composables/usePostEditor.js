@@ -20,6 +20,8 @@ export function emptyBannerLayout() {
         verticalAlign: "center",
         logoMediaId: null,
         logo: null,
+        // Whether the foot of the banner dissolves into the page.
+        fadeOut: false,
         background: {
             type: "none",
             color: null,

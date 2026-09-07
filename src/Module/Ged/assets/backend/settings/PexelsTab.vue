@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { toast } from "vue-sonner";
 import { ExternalLink, Save } from "lucide-vue-next";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
@@ -88,7 +89,16 @@ async function save() {
         // touching the field keeps the key that is already stored.
         if ("" !== apiKey.value.trim()) payload.apiKey = apiKey.value.trim();
 
-        apply(await request(SETTINGS_PATH, payload, { noGuard: true }));
+        const state = await request(SETTINGS_PATH, payload, { noGuard: true });
+
+        // Nothing on this screen changes visibly when a save works - the key
+        // comes back as "a key is stored", not as itself - so without a word
+        // said, pressing the button looks like pressing nothing. `useRequest`
+        // already reports a failure; this is the other half.
+        if (state) {
+            apply(state);
+            toast.success(t("backend.settings.saved"));
+        }
     } finally {
         saving.value = false;
     }

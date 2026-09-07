@@ -92,6 +92,22 @@
         {% endif %}
     {% endif %}
 
+    {% if banner.fadeOut|default(false) %}
+        {# The foot of the banner dissolving into the page rather than ending
+           on an edge. Drawn after the picture and its darkening so it sits
+           over both, and still behind the words - `-z-10` like them, and later
+           in the document, which is what decides between equals.
+
+           `to-bg` is the page's own background token, so the fade lands on
+           whatever colour the theme is wearing rather than on an assumed
+           black. On a banner with no picture it is just as useful: a coloured
+           band stops being a block and becomes the top of the page. #}
+        <div
+            class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-b from-transparent to-bg sm:h-32"
+            aria-hidden="true"
+        ></div>
+    {% endif %}
+
     {% if banner.logo %}
         <img src="{{ banner.logo.url }}" alt="{{ banner.logo.alt }}" class="absolute top-6 left-6 z-10 h-10 w-auto">
     {% endif %}

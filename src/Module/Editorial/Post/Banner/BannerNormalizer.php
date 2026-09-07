@@ -137,6 +137,10 @@ final readonly class BannerNormalizer
             // to the top, centred, or dropped to the bottom.
             'verticalAlign' => $this->values->oneOf($data['verticalAlign'] ?? null, self::VERTICAL_ALIGNMENTS, 'center'),
             'logoMediaId' => $this->values->id($data['logoMediaId'] ?? null),
+            // Whether the foot of the banner dissolves into the page instead
+            // of ending on a line. Off by default: a hard edge is what every
+            // banner already published has, and a fade is a choice.
+            'fadeOut' => (bool) ($data['fadeOut'] ?? false),
             'background' => $this->background(is_array($data['background'] ?? null) ? $data['background'] : []),
             'items' => $this->layoutItems($data),
         ];
