@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { usePostComments } from "./composables/usePostComments.js";
 
@@ -13,6 +14,8 @@ const props = defineProps({
     listPath: { type: String, required: true },
     submitPath: { type: String, required: true },
     reactPathTemplate: { type: String, required: true },
+    /** What the site has configured, or `{enabled: false}` when it has none. */
+    captcha: { type: Object, default: () => ({ enabled: false }) },
 });
 
 const { t, d } = useI18n();
@@ -20,8 +23,18 @@ const { t, d } = useI18n();
 const {
     comments, total, reactionTypes, loaded,
     form, errors, sending, notice, replyingTo,
-    submit, replyTo, react,
+    submit, replyTo, react, captcha,
 } = usePostComments(props);
+
+// The widget is drawn once the element exists: the provider's script writes
+// into a real node, and a ref is the only handle a component has on one.
+const captchaBox = useTemplateRef("captchaBox");
+
+onMounted(() => {
+    if (captcha.enabled) {
+        captcha.mount(captchaBox.value);
+    }
+});
 
 function formatDate(value) {
     return d(new Date(value), "short");
@@ -170,6 +183,11 @@ function reactionCount(comment, type) {
                 aria-hidden="true"
                 class="hidden"
             >
+
+            <!-- Turnstile draws a box here; reCAPTCHA v3 draws nothing and
+                 asks for a token when the form is sent, so the container
+                 stays empty and takes no room. -->
+            <div v-if="captcha.enabled" ref="captchaBox" class="min-h-0" />
 
             <button
                 type="submit"

@@ -1,3 +1,8 @@
+backend:
+  menus:
+    section: Sección que encabeza esta entrada
+    no_section: Ninguna
+    section_hint: "La entrada sigue resaltada en las publicaciones de ese tipo, aunque sus direcciones no estén bajo la suya."
 frontend:
   gallery:
     enlarge: "Ampliar la imagen"

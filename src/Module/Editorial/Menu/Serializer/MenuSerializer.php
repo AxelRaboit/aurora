@@ -59,6 +59,7 @@ class MenuSerializer implements MenuSerializerInterface
             'targetType' => $item->getTargetType()->value,
             'targetId' => $item->getTargetId(),
             'customUrl' => $item->getCustomUrl(),
+            'sectionPostTypeId' => $item->getSectionPostTypeId(),
             'openInNewTab' => $item->isOpenInNewTab(),
             'cssClass' => $item->getCssClass(),
             'visibility' => $item->getVisibility()->value,

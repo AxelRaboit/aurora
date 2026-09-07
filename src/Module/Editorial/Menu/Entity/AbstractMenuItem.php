@@ -37,6 +37,27 @@ abstract class AbstractMenuItem implements MenuItemInterface
     #[ORM\Column(length: 1000, nullable: true)]
     protected ?string $customUrl = null;
 
+    /**
+     * The content type this entry heads, when it heads one.
+     *
+     * The highlight follows the address: an entry pointing at /fr/projets
+     * stays lit on /fr/projets/onyx because one path is under the other. That
+     * covers a section whose pages live under it, and nothing else - a hub
+     * page at /fr/page/aurora introducing publications at /fr/aurora/... has
+     * no path in common with them, so the navigation went dark the moment a
+     * reader followed one of its own cards.
+     *
+     * Naming the type here says what the addresses cannot: this entry is the
+     * way in to that type, wherever its publications happen to live.
+     *
+     * A plain id rather than an association, like the post type's own archive
+     * publication: the two tables already point at each other by id in the
+     * other direction, and a second real foreign key gives the fixtures
+     * purger a cycle it cannot untangle.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?int $sectionPostTypeId = null;
+
     #[ORM\Column]
     protected bool $openInNewTab = false;
 
@@ -126,6 +147,18 @@ abstract class AbstractMenuItem implements MenuItemInterface
     public function setCustomUrl(?string $customUrl): static
     {
         $this->customUrl = $customUrl;
+
+        return $this;
+    }
+
+    public function getSectionPostTypeId(): ?int
+    {
+        return $this->sectionPostTypeId;
+    }
+
+    public function setSectionPostTypeId(?int $sectionPostTypeId): static
+    {
+        $this->sectionPostTypeId = $sectionPostTypeId;
 
         return $this;
     }

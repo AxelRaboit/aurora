@@ -878,6 +878,9 @@ backend:
     css_class: Classe CSS
     visibility: Visibilité
     parent: Sous-entrée de
+    section: Rubrique menée par cette entrée
+    no_section: Aucune
+    section_hint: "L'entrée reste allumée sur les publications de ce type, même si leurs adresses ne sont pas sous la sienne."
     no_parent: Premier niveau
     move_up: Monter
     move_down: Descendre

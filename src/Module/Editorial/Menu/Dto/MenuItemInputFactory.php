@@ -21,6 +21,7 @@ class MenuItemInputFactory implements MenuItemInputFactoryInterface
     {
         $targetId = (int) ($data['targetId'] ?? 0);
         $parentId = (int) ($data['parentId'] ?? 0);
+        $sectionPostTypeId = (int) ($data['sectionPostTypeId'] ?? 0);
 
         return new MenuItemInput(
             translations: $this->translations($data['translations'] ?? null),
@@ -31,6 +32,7 @@ class MenuItemInputFactory implements MenuItemInputFactoryInterface
             cssClass: Str::trimOrNull((string) ($data['cssClass'] ?? '')),
             visibility: $this->visibility($data['visibility'] ?? null),
             parentId: $parentId > 0 ? $parentId : null,
+            sectionPostTypeId: $sectionPostTypeId > 0 ? $sectionPostTypeId : null,
         );
     }
 

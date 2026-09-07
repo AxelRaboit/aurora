@@ -21,6 +21,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Comparison is on the path alone. A query string is a filter or a campaign
  * tag, not a different page, and a trailing slash is the same address
  * written twice.
+ *
+ * There is a third question the path cannot answer: a hub page at
+ * /fr/page/aurora introduces publications at /fr/aurora/…, and neither is
+ * under the other. {@see currentPostTypeSlug} is what an entry naming its
+ * section compares itself against.
  */
 final readonly class MenuActiveTrail
 {
@@ -37,6 +42,31 @@ final readonly class MenuActiveTrail
         $request = $this->requestStack->getCurrentRequest();
 
         return $request instanceof Request ? $this->normalize($request->getPathInfo()) : null;
+    }
+
+    /**
+     * The content type of the page being looked at, by slug.
+     *
+     * Read from the route rather than from the controller: both the
+     * publication route and the listing route carry `postTypeSlug`, and a
+     * menu rendered inside a Twig layout has no other way of knowing which
+     * section it is standing in without every page being made to say so.
+     *
+     * Null everywhere else - the home page, a term page, an error page - and
+     * an entry that heads a section is simply not lit there.
+     */
+    public function currentPostTypeSlug(): ?string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+
+        if (!$request instanceof Request) {
+            return null;
+        }
+
+        $parameters = $request->attributes->get('_route_params');
+        $slug = is_array($parameters) ? ($parameters['postTypeSlug'] ?? null) : null;
+
+        return is_string($slug) && '' !== $slug ? $slug : null;
     }
 
     /** The entry is the page being looked at. */

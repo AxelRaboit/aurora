@@ -138,6 +138,10 @@ class MenuManager implements MenuManagerInterface
         $item->setTargetType($input->getTargetType());
         $item->setTargetId($this->resolveTargetId($input));
         $item->setCustomUrl($input->getTargetType()->requiresCustomUrl() ? $input->getCustomUrl() : null);
+        // Independent of the target: an entry heading a section may point at a
+        // hub page, at the type's own listing, or anywhere else. Tying it to
+        // the target type would rule out the case it exists for.
+        $item->setSectionPostTypeId($input->getSectionPostTypeId());
         $item->setOpenInNewTab($input->isOpenInNewTab());
         $item->setCssClass($input->getCssClass());
         $item->setVisibility($input->getVisibility());

@@ -1,6 +1,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRequest } from "@/shared/composables/http/frontend/useRequest.js";
+import { useCommentCaptcha } from "./useCommentCaptcha.js";
 import { buildPath } from "@/shared/utils/http/buildPath.js";
 import { HttpMethod } from "@/shared/utils/http/httpMethod.js";
 
@@ -19,6 +20,7 @@ function emptyForm() {
 export function usePostComments(props) {
     const { t } = useI18n();
     const { request } = useRequest();
+    const captcha = useCommentCaptcha(props.captcha);
 
     const comments = ref([]);
     const total = ref(0);
@@ -58,7 +60,13 @@ export function usePostComments(props) {
         notice.value = null;
 
         try {
-            const data = await request(props.submitPath, form.value);
+            // Fetched per submission rather than held: a reCAPTCHA score is
+            // about this send, and a Turnstile token is spent once.
+            const captchaToken = await captcha.currentToken();
+            const data = await request(props.submitPath, {
+                ...form.value,
+                captchaToken,
+            });
             if (!data) return;
 
             if (!data.success) {
@@ -74,10 +82,16 @@ export function usePostComments(props) {
                 if (data.error)
                     notice.value = { type: "error", text: t(data.error) };
 
+                // Refused or not, the token is used up: leaving the spent one
+                // in place makes the next attempt fail for a reason the reader
+                // cannot see.
+                captcha.reset();
+
                 return;
             }
 
             applyThread(data.thread);
+            captcha.reset();
             form.value = emptyForm();
             notice.value = {
                 type: "success",
@@ -140,5 +154,6 @@ export function usePostComments(props) {
         submit,
         replyTo,
         react,
+        captcha,
     };
 }

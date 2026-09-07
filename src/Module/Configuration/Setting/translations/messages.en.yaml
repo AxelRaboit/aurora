@@ -25,6 +25,8 @@ backend:
       navigation_description: Customize sidemenu section and item names.
       pexels: Pexels
       pexels_description: 'Free stock photo library: enabling, API key and acceptance of the terms.'
+      captcha: Anti-robot
+      captcha_description: "Checking the comment form: service, keys and activation."
       notes: Notes
       notes_description: "Markdown notes module settings: image upload size and quality."
       modules: Modules
@@ -67,6 +69,25 @@ backend:
     or_id: 'or enter ID:'
     sequence_search: Search a sequence…
   parameters:
+    captcha:
+      title: Anti-robot check
+      intro: "One more check on the comment form, on top of the honeypot, the link filter, the flood limit and the moderation already there."
+      privacy: "The chosen service receives the visitor's IP address. That is personal data: the account should be the site's own, and the privacy notice should say so."
+      enabled: Turn the check on
+      provider: Service
+      site_key: Site key
+      site_key_placeholder: '0x4AAAAAAA…'
+      site_key_hint: "Printed in the page, by design: the widget needs it."
+      secret_key: Secret key
+      secret_key_placeholder: '0x4AAAAAAA…'
+      secret_key_hint: "Encrypted at rest. Left empty, the stored key is kept."
+      secret_set: A secret key is stored.
+      secret_unset: No secret key stored.
+      providers:
+        turnstile: "Cloudflare Turnstile (recommended: no puzzle, no advertising cookie)"
+        recaptcha: "Google reCAPTCHA v3 (invisible, scores from 0 to 1)"
+      errors:
+        keys_required: "Both keys are required to turn the check on."
     site_name:
       label: Site name
       description: Name displayed on the public site and in emails

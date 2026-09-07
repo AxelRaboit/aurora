@@ -18,6 +18,9 @@ interface MenuItemInputInterface
 
     public function getCustomUrl(): ?string;
 
+    /** The content type this entry heads, or null when it heads none. */
+    public function getSectionPostTypeId(): ?int;
+
     public function isOpenInNewTab(): bool;
 
     public function getCssClass(): ?string;

@@ -32,6 +32,7 @@ class MenuItemInput implements MenuItemInputInterface
         public readonly ?string $cssClass = null,
         public readonly MenuItemVisibilityEnum $visibility = MenuItemVisibilityEnum::Always,
         public readonly ?int $parentId = null,
+        public readonly ?int $sectionPostTypeId = null,
     ) {}
 
     /**
@@ -54,6 +55,11 @@ class MenuItemInput implements MenuItemInputInterface
                 ->atPath('customUrl')
                 ->addViolation();
         }
+    }
+
+    public function getSectionPostTypeId(): ?int
+    {
+        return $this->sectionPostTypeId;
     }
 
     public function getTranslations(): array

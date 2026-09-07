@@ -28,6 +28,11 @@ interface MenuItemInterface
 
     public function setCustomUrl(?string $customUrl): static;
 
+    /** The content type this entry heads, so the highlight follows it. */
+    public function getSectionPostTypeId(): ?int;
+
+    public function setSectionPostTypeId(?int $sectionPostTypeId): static;
+
     public function isOpenInNewTab(): bool;
 
     public function setOpenInNewTab(bool $openInNewTab): static;

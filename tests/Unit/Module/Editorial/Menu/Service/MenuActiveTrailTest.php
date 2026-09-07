@@ -15,12 +15,19 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 final class MenuActiveTrailTest extends TestCase
 {
-    private function trail(?string $uri = '/fr/page/a-propos'): MenuActiveTrail
+    /** @param array<string, string> $routeParams what the router matched */
+    private function trail(?string $uri = '/fr/page/a-propos', array $routeParams = []): MenuActiveTrail
     {
         $stack = new RequestStack();
 
         if (null !== $uri) {
-            $stack->push(Request::create('https://example.test'.$uri));
+            $request = Request::create('https://example.test'.$uri);
+
+            if ([] !== $routeParams) {
+                $request->attributes->set('_route_params', $routeParams);
+            }
+
+            $stack->push($request);
         }
 
         return new MenuActiveTrail($stack);
@@ -109,6 +116,31 @@ final class MenuActiveTrailTest extends TestCase
         self::assertNull($trail->currentPath());
         self::assertFalse($trail->isCurrent(null, '/fr/services'));
         self::assertFalse($trail->isAncestorOf(null, '/fr/services'));
+    }
+
+    /**
+     * The case the paths cannot answer: a hub page at /fr/page/aurora and the
+     * publications it introduces at /fr/aurora/…, which share no prefix. The
+     * entry that heads the section reads the section instead.
+     */
+    public function testTheSectionOfThePageIsReadFromTheRoute(): void
+    {
+        $trail = $this->trail('/fr/aurora/en-tete-de-page', [
+            'locale' => 'fr',
+            'postTypeSlug' => 'aurora',
+            'slug' => 'en-tete-de-page',
+        ]);
+
+        self::assertSame('aurora', $trail->currentPostTypeSlug());
+        // And the paths still disagree, which is why the section is needed.
+        self::assertFalse($trail->isAncestorOf($trail->currentPath(), '/fr/page/aurora'));
+    }
+
+    /** A page that belongs to no type says so rather than guessing one. */
+    public function testAPageOutsideATypeHasNoSection(): void
+    {
+        self::assertNull($this->trail('/fr')->currentPostTypeSlug());
+        self::assertNull($this->trail(null)->currentPostTypeSlug());
     }
 
     /** The root is above everything, so it is never anyone's ancestor here. */
