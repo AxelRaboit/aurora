@@ -77,6 +77,26 @@ final class ArchiveHeaderTest extends IntegrationTestCase
         self::assertStringContainsString('Nos services', json_encode($banner, JSON_THROW_ON_ERROR));
     }
 
+    /**
+     * The summary travels with the header, and for the same reason: a listing
+     * page carrying someone else's banner and the site's default description
+     * describes itself by accident.
+     */
+    public function testItBorrowsTheSummaryTooSoTheSearchResultIsAboutThisPage(): void
+    {
+        $postType = $this->postType();
+        $postType->setArchivePostId($this->headerPostId('published'));
+        $this->entityManager->flush();
+
+        self::assertSame('Ce que je propose, en détail.', $this->view($postType)['postType']['description']);
+    }
+
+    /** Nothing designated: the page keeps the site's own description. */
+    public function testItHasNoSummaryToBorrowWhenNothingIsDesignated(): void
+    {
+        self::assertNull($this->view($this->postType())['postType']['description']);
+    }
+
     /** A draft is not something a listing page may publish on its behalf. */
     public function testItRefusesToBorrowFromADraft(): void
     {
@@ -130,6 +150,7 @@ final class ArchiveHeaderTest extends IntegrationTestCase
             'translations' => [
                 'fr' => [
                     'title' => 'Nos services',
+                    'description' => 'Ce que je propose, en détail.',
                     'slug' => 'nos-services-'.bin2hex(random_bytes(4)),
                     'banner' => ['items' => ['a1' => ['title' => 'Nos services']]],
                 ],

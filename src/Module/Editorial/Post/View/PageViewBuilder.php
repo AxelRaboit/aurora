@@ -68,9 +68,28 @@ final readonly class PageViewBuilder
                 // whole banner, its settings and its words in this language,
                 // rather than a poorer copy of one.
                 'banner' => $this->archiveBanner($postType, $locale),
+                // And its summary, which is what search engines read. Borrowed
+                // from the same publication for the same reason: a listing
+                // page that carries someone else's header and the site's
+                // default description is a page describing itself by accident.
+                'description' => $this->archiveDescription($postType, $locale),
             ],
             'alternates' => $this->alternatesBuilder->forRoute('editorial_archive', ['postTypeSlug' => $postType->getSlug()]),
         ];
+    }
+
+    /**
+     * The summary that publication carries, in this language.
+     *
+     * Null when there is nothing to borrow, which leaves the page on the
+     * site's own description - the answer it has always had.
+     */
+    private function archiveDescription(PostTypeInterface $postType, string $locale): ?string
+    {
+        $translation = $this->archivePostTranslation($postType, $locale);
+        $description = $translation?->getDescription();
+
+        return null !== $description && '' !== $description ? $description : null;
     }
 
     /**
@@ -90,6 +109,28 @@ final readonly class PageViewBuilder
      */
     private function archiveBanner(PostTypeInterface $postType, string $locale): ?array
     {
+        $translation = $this->archivePostTranslation($postType, $locale);
+
+        if (!$translation instanceof PostTranslationInterface) {
+            return null;
+        }
+
+        return $this->bannerViewBuilder->build(
+            $translation->getPost()->getBannerLayout(),
+            $translation->getBanner(),
+        );
+    }
+
+    /**
+     * The designated publication's translation, or nothing.
+     *
+     * Every refusal lives here, once: none designated, deleted since,
+     * unpublished, or silent in the language being read. Both the header and
+     * the summary ask the same question, and asking it twice in two places is
+     * how they would come to disagree.
+     */
+    private function archivePostTranslation(PostTypeInterface $postType, string $locale): ?PostTranslationInterface
+    {
         $postId = $postType->getArchivePostId();
 
         if (null === $postId) {
@@ -104,11 +145,7 @@ final readonly class PageViewBuilder
 
         $translation = $post->getTranslation($locale);
 
-        if (!$translation instanceof PostTranslationInterface) {
-            return null;
-        }
-
-        return $this->bannerViewBuilder->build($post->getBannerLayout(), $translation->getBanner());
+        return $translation instanceof PostTranslationInterface ? $translation : null;
     }
 
     /**
