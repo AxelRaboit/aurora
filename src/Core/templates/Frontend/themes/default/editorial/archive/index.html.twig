@@ -1,6 +1,15 @@
 {% extends 'Frontend/themes/default/layout.html.twig' %}
 
-{% block seo_define %}{% do seo({title: postType.heading}) %}{% endblock %}
+{# The summary comes from the publication this page borrows its header from,
+   when there is one. Without it a listing page falls back to the site's own
+   description - the same sentence on every archive, which is a page
+   describing itself by accident. #}
+{% block seo_define %}
+    {% do seo({
+        title: postType.heading,
+        description: postType.description|default(null),
+    }) %}
+{% endblock %}
 
 {# The header of a publication this type designates, rendered by the same
    partial its own page uses - so a listing page gets the whole banner, its

@@ -5,6 +5,22 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### Une page de liste décrivait le site plutôt qu'elle-même
+Elle empruntait l'en-tête d'une publication mais pas son résumé, et repartait
+donc avec la description par défaut du site : la même phrase sur chaque page
+d'archive, dans les moteurs de recherche comme dans un partage.
+
+Elle emprunte maintenant les deux à la même publication, dans la langue lue.
+Sans rien de désigné, elle garde la description du site, ce qu'elle a toujours
+eu. Les refus — rien de désigné, publication supprimée, en brouillon, muette
+dans cette langue — sont désormais écrits une seule fois : le titre et le
+résumé posaient la même question, et la poser deux fois est la façon dont deux
+réponses finissent par diverger.
+
 ## [0.9.65] - 2026-09-07
 
 ### Ajouté
