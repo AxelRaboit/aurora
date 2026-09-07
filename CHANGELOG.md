@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.69] - 2026-09-07
+
+### Ajouté
+
+#### L'espagnol, troisième langue du produit
+`es` rejoint `fr` et `en` : la langue est créée à l'installation, apparaît dans
+le sélecteur du site public avec son drapeau et son nom, et chaque publication
+gagne un onglet de plus.
+
+Rien d'autre n'a eu besoin de changer pour l'accueillir, ce qui était le pari
+de départ : le produit travaille sur une liste de langues, pas sur une paire.
+Un seul test disait le contraire, et c'est le bon endroit pour qu'une
+troisième langue se remarque.
+
+Les textes vus par un visiteur sont traduits : le socle partagé, les
+formulaires, les commentaires, les galeries, les pages de connexion et
+d'inscription, et tous les e-mails. L'administration suit progressivement ;
+d'ici là, une clé sans traduction espagnole s'affiche en français plutôt que de
+laisser un trou, côté serveur comme côté interface.
+
+### Démonstration
+
+#### Le site de démonstration parle les trois langues
+Les publications, les termes, les galeries, la bannière et les entrées de menu
+ont leur version espagnole.
+
+Au passage, le corps des publications de démonstration était écrit en français
+quelle que soit la langue : une page anglaise portait donc un titre anglais
+au-dessus d'un paragraphe français, ce qui est précisément l'erreur qu'une
+démonstration multilingue est censée montrer qu'on évite.
+
 ## [0.9.68] - 2026-09-07
 
 ### Démonstration

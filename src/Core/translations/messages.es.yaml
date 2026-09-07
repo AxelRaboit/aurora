@@ -1,0 +1,258 @@
+shared:
+  placeholders:
+    name: Un nombre corto
+    title: Un título corto
+    slug: titulo-de-la-pagina
+    description: Una frase para situar.
+    email: nombre.apellido@ejemplo.es
+    password: 8 caracteres como mínimo
+    url: https://ejemplo.es/pagina
+    search: Buscar…
+    one_per_line: Un valor por línea
+    value: Introducir un valor
+  drop_zone:
+    cta: Arrastre un archivo aquí, o haga clic para explorar
+    drop: Suelte para subir
+    uploading: Subiendo…
+  media:
+    choose: Elegir una imagen
+    change: Cambiar
+    remove: Quitar
+    focal_pick: Haga clic en la imagen para elegir el punto de recorte
+    focal_inherited: Punto heredado del documento
+    focal_reset: Volver al punto del documento
+    upload: Explorar
+    uploading: Importación en curso
+    upload_failed: La importación ha fallado.
+  locale_switcher: Selección de idioma
+  errors:
+    page_not_found:
+      title: Página no encontrada
+      message: La página que busca no existe o ha sido movida.
+      back: Volver al inicio
+    server_error:
+      title: Se ha producido un error
+      message: El servidor ha encontrado un problema inesperado. Nuestro equipo ha sido avisado. Vuelva a intentarlo dentro de unos instantes.
+      back: Volver al inicio
+    maintenance:
+      title: Sitio en mantenimiento
+      message: El sitio está cerrado temporalmente por mantenimiento. Vuelva dentro de unos instantes.
+  actions:
+    plain_title: Acciones
+    title: "Acciones: {name}"
+    open: "Acciones para {name}"
+  chart:
+    share: "{count} de {total} ({percent} %)"
+  common:
+    search: Buscar
+    selected: seleccionados
+    pagination: 'Página {page} de {totalPages}'
+    'yes': Sí
+    'no': 'No'
+    built_with: '© {year} {siteName}'
+    save: Guardar
+    cancel: Cancelar
+    delete: Eliminar
+    edit: Editar
+    rename: Renombrar
+    create: Crear
+    add: Añadir
+    loading: Cargando…
+    saving: Guardando…
+    confirm: Confirmar
+    error: Se ha producido un error.
+    saved: Guardado.
+    deleted: Eliminado.
+    refresh: Actualizar
+    previous: Anterior
+    autosave:
+      pending: Cambios sin guardar
+      saving: Guardando…
+      saved: Guardado
+      error: Error al guardar
+      last_saved: 'Guardado {time}'
+    actions: Acciones
+    status: Estado
+    or: o
+    name: Nombre
+    description: Descripción
+    view: Ver
+    close: Cerrar
+    back: Volver
+    expand: Desplegar
+    collapse: Plegar
+    select_placeholder: Seleccionar…
+    no_options: Ningún elemento disponible
+    add_tag_hint: Añadir una etiqueta…
+    no_result: Ningún resultado
+    select_to_pick: Pulse Intro para seleccionar
+    select_selected: Seleccionado
+    download: Descargar
+    qr_code: Código QR
+    download_qr: Descargar el código QR
+    copied: Copiado.
+    copy: Copiar
+    dates: Fechas
+    created: Creado el
+    updated: Modificado el
+    reset: Restablecer
+    select_to_remove: Pulse Intro para quitar
+    remove: Quitar
+    all: Todos
+    load_more: Cargar más
+    send: Enviar
+    next: Siguiente
+  pagination:
+    previous: Anterior
+    next: Siguiente
+    results: '{from} a {to} de {total} resultados'
+  comment:
+    title: Comentarios
+    form_title: Dejar un comentario
+    name: Nombre
+    email: Correo electrónico
+    content: Comentario
+    submit: Enviar
+    success: Su comentario ha sido enviado y está pendiente de moderación.
+    empty: Todavía no hay comentarios.
+    reply: Responder
+    react: Reaccionar
+  form:
+    submit: Enviar
+    submitting: Enviando…
+    next: Siguiente
+    prev: Volver
+    success: '¡Gracias, su mensaje se ha enviado correctamente!'
+    error: Se ha producido un error. Vuelva a intentarlo.
+    field_required: Este campo es obligatorio.
+    select_placeholder: Elegir…
+  locales:
+    fr: Français
+    en: English
+    es: Español
+    de: Deutsch
+  image_cropper:
+    title: Recortar la imagen
+    apply: Aplicar el recorte
+    cropped: Imagen recortada
+
+backend:
+  nav:
+    sections:
+      general: General
+      platform: Plataforma
+      media: Mediateca
+      configuration: Configuración
+      dev: Administración
+      account: Cuenta
+    go_back: Página anterior
+    go_forward: Página siguiente
+    hard_reload: Recargar vaciando las cachés
+    expand_menu: Mostrar el menú
+    collapse_menu: Ocultar el menú
+    administration: Acceso de desarrollador
+    administration_description: "Herramientas técnicas: auditoría, solicitudes de acceso, permisos, módulos y puntos de montaje."
+    dashboard: Panel de control
+    dashboard_description: "Visión general de la actividad reciente y de los indicadores clave del sitio."
+    media: Medios
+    media_description: "Biblioteca centralizada de imágenes, vídeos y archivos reutilizables."
+    profile: Mi perfil
+    settings: Ajustes
+    settings_description: "Ajustes globales de la aplicación y preferencias por defecto."
+    themes: Temas
+    themes_description: "Vestir el sitio: colores, logotipo y favicon."
+    users: Usuarios
+    users_description: "Gestionar las cuentas, sus roles y el detalle de sus privilegios."
+    resize_hint: Arrastre para redimensionar, doble clic para restablecer
+    filter_nav: Filtrar el menú…
+    breadcrumb: Ruta de navegación
+    show_descriptions: Mostrar las descripciones
+    filter_nav_empty: Ningún elemento encontrado
+    view_site: Ver el sitio
+    counts:
+      terms: '{0}Ningún término|{1}Un término|]1,Inf[%count% términos'
+      fields: '{0}Ningún campo|{1}Un campo|]1,Inf[%count% campos'
+      posts: '{0}Ninguna publicación|{1}Una publicación|]1,Inf[%count% publicaciones'
+    back_to_modules: Todos los módulos
+    back_to_module: "Volver a {module}"
+    logout: Cerrar sesión
+    light_mode: Modo claro
+    dark_mode: Modo oscuro
+  editor:
+    placeholder: Empiece a redactar…
+    tool_names:
+      text: Texto
+      heading: Título
+      list: Lista
+      ordered_list: Lista ordenada
+      unordered_list: Lista sin ordenar
+      checklist: Lista de casillas
+      quote: Cita
+      code: Código
+      delimiter: Separador
+      raw: HTML sin formato
+      table: Tabla
+      image: Imagen
+      embed: Integración
+      marker: Marcador
+      inline_code: Código en línea
+      underline: Subrayado
+      strikethrough: Tachado
+      text_color: Color del texto
+      text_background: Color de fondo
+      font_size: Tamaño del texto
+      clear_formatting: Borrar el formato
+      callout: Destacado
+      media_text: Imagen + Texto
+      two_column: 2 columnas
+    ui:
+      block_tunes:
+        toggler:
+          Click to tune: Configurar
+          or drag to move: o arrastre para mover
+      inline_toolbar:
+        converter:
+          Convert to: Convertir en
+      toolbar:
+        toolbox:
+          Add: Añadir
+      popover:
+        Filter: Filtrar
+        Nothing found: Ningún resultado
+        nothing_found_extended: Ningún resultado. Pruebe con otro término.
+    block_tunes:
+      delete:
+        Delete: Eliminar
+        Click to delete: Haga clic para eliminar
+      move_up:
+        Move up: Mover hacia arriba
+      move_down:
+        Move down: Mover hacia abajo
+    image:
+      caption_placeholder: Pie de foto…
+    raw:
+      placeholder: "HTML sin formato. Los scripts, los gestores de eventos y los marcos hacia un host no autorizado se retiran al mostrarlo."
+    quote:
+      placeholder: Cita…
+      caption_placeholder: Autor…
+    media_text:
+      flip_left: ⇄ Imagen a la izquierda
+      flip_right: ⇄ Imagen a la derecha
+      caption_placeholder: Pie de foto…
+      text_placeholder: Su texto…
+      url_placeholder: URL de la imagen…
+      change_url: Cambiar la URL
+      confirm: Validar
+      browse: Explorar
+      actions: Acciones
+      or: o
+    media_picker:
+      title: Elegir un medio
+      search: Buscar por nombre o alt…
+      all_folders: Todas las carpetas
+      empty: Ningún medio encontrado
+      loading: Cargando…
+      select: Seleccionar
+    callout:
+      title_placeholder: Título…
+      message_placeholder: Mensaje…

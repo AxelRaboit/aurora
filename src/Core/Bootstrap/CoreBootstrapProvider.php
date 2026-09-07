@@ -105,6 +105,7 @@ final readonly class CoreBootstrapProvider implements BootstrapProviderInterface
         return match ($case) {
             LocaleEnum::French => 'Français',
             LocaleEnum::English => 'English',
+            LocaleEnum::Spanish => 'Español',
         };
     }
 }
