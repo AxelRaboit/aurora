@@ -14,7 +14,11 @@ Elle empruntait l'en-tête d'une publication mais pas son résumé, et repartait
 donc avec la description par défaut du site : la même phrase sur chaque page
 d'archive, dans les moteurs de recherche comme dans un partage.
 
-Elle emprunte maintenant les deux à la même publication, dans la langue lue.
+Elle emprunte maintenant les deux à la même publication, dans la langue lue,
+et l'affiche aussi sous son titre quand la bannière est éteinte : sans cela, la
+page aurait porté une phrase qu'elle ne montrait qu'aux moteurs, et aurait été
+la seule du site dont le titre ne peut pas être suivi d'une ligne disant ce
+qu'elle liste.
 Sans rien de désigné, elle garde la description du site, ce qu'elle a toujours
 eu. Les refus — rien de désigné, publication supprimée, en brouillon, muette
 dans cette langue — sont désormais écrits une seule fois : le titre et le

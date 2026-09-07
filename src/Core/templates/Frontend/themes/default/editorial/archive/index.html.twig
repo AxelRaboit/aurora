@@ -40,6 +40,14 @@
            emphasis. #}
         <header class="mb-8 border-b border-line pb-6">
             <h1 class="m-0 text-3xl font-bold tracking-tight text-primary sm:text-4xl">{{ postType.heading }}</h1>
+            {# The borrowed summary, when the publication carries one and its
+               banner is switched off. Without this the page would hold a
+               sentence it only ever showed to a search engine, and a listing
+               page would be the one page of the site whose title could not be
+               followed by a line saying what it lists. #}
+            {% if postType.description %}
+                <p class="mt-3 mb-0 text-lg text-secondary">{{ postType.description }}</p>
+            {% endif %}
         </header>
     {% endif %}
     {{ include('Frontend/themes/default/editorial/_posts.html.twig') }}
