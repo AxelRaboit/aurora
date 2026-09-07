@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Aurora\Fixtures\Editorial;
 
+use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Sequence\SequencePrefixEnum;
 use Aurora\Fixtures\Core\CoreDemoFixtures;
 use Aurora\Fixtures\Ged\GedDemoFixtures;
@@ -181,11 +182,13 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
             $terms['guides'] = $this->term($em, $category, [
                 'fr' => ['Guides', 'guides'],
                 'en' => ['Guides', 'guides'],
+                'es' => ['Guías', 'guias'],
             ], SequencePrefixEnum::TaxonomyTerm->value.'-DEMO-1');
 
             $terms['starters'] = $this->term($em, $category, [
                 'fr' => ['Premiers pas', 'premiers-pas'],
                 'en' => ['Getting started', 'getting-started'],
+                'es' => ['Primeros pasos', 'primeros-pasos'],
             ], SequencePrefixEnum::TaxonomyTerm->value.'-DEMO-2', $terms['guides']);
         }
 
@@ -193,11 +196,13 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
             $terms['editorial'] = $this->term($em, $tag, [
                 'fr' => ['Éditorial', 'editorial'],
                 'en' => ['Editorial', 'editorial'],
+                'es' => ['Editorial', 'editorial-es'],
             ], SequencePrefixEnum::TaxonomyTerm->value.'-DEMO-3');
 
             $terms['release'] = $this->term($em, $tag, [
                 'fr' => ['Nouveautés', 'nouveautes'],
                 'en' => ['Releases', 'releases'],
+                'es' => ['Novedades', 'novedades'],
             ], SequencePrefixEnum::TaxonomyTerm->value.'-DEMO-4');
         }
 
@@ -263,6 +268,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'terms' => [],
                 'fr' => ['Bienvenue', 'bienvenue', 'La page d\'accueil de ce site de démonstration.'],
                 'en' => ['Welcome', 'welcome', 'The landing page of this demo site.'],
+                'es' => ['Bienvenida', 'bienvenida', 'La página de inicio de este sitio de demostración.'],
             ],
             'first-steps' => [
                 'type' => $article,
@@ -272,6 +278,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'terms' => ['starters', 'editorial'],
                 'fr' => ['Écrire son premier article', 'ecrire-premier-article', 'Du brouillon à la mise en ligne, en cinq minutes.'],
                 'en' => ['Writing your first post', 'writing-your-first-post', 'From draft to published, in five minutes.'],
+                'es' => ['Escribir su primer artículo', 'escribir-primer-articulo', 'Del borrador a la publicación, en cinco minutos.'],
             ],
             'blocks' => [
                 'type' => $article,
@@ -281,6 +288,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'terms' => ['guides'],
                 'fr' => ['Composer avec les blocs', 'composer-avec-les-blocs', 'Titres, listes, encadrés : ce que l\'éditeur sait faire.'],
                 'en' => ['Composing with blocks', 'composing-with-blocks', 'Headings, lists, callouts: what the editor can do.'],
+                'es' => ['Componer con bloques', 'componer-con-bloques', 'Títulos, listas, destacados: lo que sabe hacer el editor.'],
             ],
             'roadmap' => [
                 'type' => $article,
@@ -290,6 +298,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'terms' => ['release'],
                 'fr' => ['Ce qui arrive ensuite', 'ce-qui-arrive-ensuite', 'Un brouillon, visible seulement en administration.'],
                 'en' => ['What comes next', 'what-comes-next', 'A draft, visible in the backend only.'],
+                'es' => ['Lo que viene después', 'lo-que-viene-despues', 'Un borrador, visible solo en la administración.'],
             ],
             'announcement' => [
                 'type' => $article,
@@ -300,6 +309,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'terms' => ['release'],
                 'fr' => ['Annonce à venir', 'annonce-a-venir', 'Programmée : elle se publiera toute seule.'],
                 'en' => ['Upcoming announcement', 'upcoming-announcement', 'Scheduled: it will publish itself.'],
+                'es' => ['Anuncio previsto', 'anuncio-previsto', 'Programado: se publicará solo.'],
             ],
         ];
 
@@ -357,7 +367,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 ]],
             ]));
 
-            foreach (['fr', 'en'] as $locale) {
+            foreach (LocaleEnum::values() as $locale) {
                 [$title, $slug, $description] = $def[$locale];
 
                 $translation = $post->translate($locale)
@@ -366,7 +376,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                     ->setDescription($description);
 
                 $translation->setGrid($this->gridNormalizer->normalizeContent([
-                    'zones' => ['body' => ['blocks' => $this->blocks($title, $description)]],
+                    'zones' => ['body' => ['blocks' => $this->blocks($title, $description, $locale)]],
                 ], $post->getGridLayout()));
 
                 $this->indexForSearch($translation);
@@ -495,11 +505,19 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                     EditorBlocks::paragraph('A portrait picture on the left; on the right a stack, which takes the height of the row and splits it between this text and the picture under it. No height is set anywhere.')],
                 'outro' => [EditorBlocks::paragraph('A full-width zone to close. Change any of this from the backend, under Content.')],
             ],
+            'es' => [
+                'intro' => [EditorBlocks::header('Una página compuesta por zonas'),
+                    EditorBlocks::paragraph('Cada bloque de abajo es una zona colocada sobre una cuadrícula de 48 columnas. Su anchura se ajusta por separado, y lo que las llena se traduce: la disposición, en cambio, se escribe una sola vez.')],
+                'beside' => [EditorBlocks::header('Una zona alta, dos zonas al lado', 3),
+                    EditorBlocks::paragraph('A la izquierda una imagen en vertical; a la derecha una pila, que toma la altura de la fila y la reparte entre este texto y la imagen de abajo. No hay ninguna altura fijada en ninguna parte.')],
+                'outro' => [EditorBlocks::paragraph('Una zona a todo lo ancho para cerrar. Modifique todo esto desde la administración, pestaña Contenido.')],
+            ],
         ];
 
         $captions = [
             'fr' => ['alt' => 'Un paysage de démonstration', 'caption' => 'Une image, avec sa légende - les deux se traduisent, l\'image non.'],
             'en' => ['alt' => 'A demo landscape', 'caption' => 'A picture and its caption - both translated, the picture itself is not.'],
+            'es' => ['alt' => 'Un paisaje de demostración', 'caption' => 'Una imagen, con su pie de foto: los dos se traducen, la imagen no.'],
         ];
 
         $bannerTexts = [
@@ -511,9 +529,25 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'title' => 'Welcome to Aurora',
                 'description' => 'A header composed in the editor: height, width, gradient, fade and buttons.',
             ],
+            'es' => [
+                'title' => 'Bienvenido a Aurora',
+                'description' => 'Un encabezado compuesto en el editor: altura, anchura, degradado, difuminado y botones.',
+            ],
         ];
 
-        foreach (['fr', 'en'] as $locale) {
+        $stackedCaptions = [
+            'fr' => ['alt' => 'Un bureau de démonstration', 'caption' => 'La seconde moitié de la pile.'],
+            'en' => ['alt' => 'A demo desk', 'caption' => 'The second half of the stack.'],
+            'es' => ['alt' => 'Un escritorio de demostración', 'caption' => 'La segunda mitad de la pila.'],
+        ];
+
+        $filmCaptions = [
+            'fr' => 'Une vidéo, par langue.',
+            'en' => 'A video, per language.',
+            'es' => 'Un vídeo, por idioma.',
+        ];
+
+        foreach (LocaleEnum::values() as $locale) {
             $translation = $welcome->translate($locale);
 
             $translation->setBanner($this->bannerNormalizer->normalizeTexts([
@@ -525,15 +559,13 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                     'intro' => ['blocks' => $content[$locale]['intro']],
                     'picture' => $captions[$locale],
                     'beside' => ['blocks' => $content[$locale]['beside']],
-                    'under' => 'fr' === $locale
-                        ? ['alt' => 'Un bureau de démonstration', 'caption' => 'La seconde moitié de la pile.']
-                        : ['alt' => 'A demo desk', 'caption' => 'The second half of the stack.'],
+                    'under' => $stackedCaptions[$locale],
                     // Big Buck Bunny - Blender's open movie, which is here
                     // because a demo address that refuses to embed looks like
                     // a broken feature rather than a placeholder.
                     'film' => [
                         'url' => 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
-                        'caption' => 'fr' === $locale ? 'Une vidéo, par langue.' : 'A video, per language.',
+                        'caption' => $filmCaptions[$locale],
                     ],
                     'outro' => ['blocks' => $content[$locale]['outro']],
                 ],
@@ -600,6 +632,12 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                         ['A portrait', 'A tall picture stays tall.'],
                         ['A workstation', 'This reads down a column, not across a row.'],
                     ],
+                    'es' => [
+                        ['Un banner', 'Cada imagen conserva sus proporciones.'],
+                        ['Un paisaje', 'Las columnas se llenan de forma independiente.'],
+                        ['Un retrato', 'Una imagen alta sigue siendo alta.'],
+                        ['Un puesto de trabajo', 'La lectura va columna por columna, no de fila en fila.'],
+                    ],
                 ],
             ],
             // The same four, cropped square in four columns: uniform tiles, read
@@ -620,6 +658,12 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                         ['A landscape', ''],
                         ['A portrait', 'Cropped square like the rest.'],
                         ['A workstation', ''],
+                    ],
+                    'es' => [
+                        ['Un banner', ''],
+                        ['Un paisaje', ''],
+                        ['Un retrato', 'Recortada en cuadrado como las demás.'],
+                        ['Un puesto de trabajo', ''],
                     ],
                 ],
             ],
@@ -645,7 +689,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
             ]);
             $post->setGalleryLayout($layout);
 
-            foreach (['fr', 'en'] as $locale) {
+            foreach (LocaleEnum::values() as $locale) {
                 $words = [];
                 foreach ($definition['words'][$locale] as $index => [$alt, $caption]) {
                     $words[sprintf('shot-%d', $index + 1)] = ['alt' => $alt, 'caption' => $caption];
@@ -700,9 +744,21 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 ],
                 'shot' => ['alt' => 'A workstation', 'caption' => 'A photo at a third of the width.'],
             ],
+            'es' => [
+                'lede' => [
+                    EditorBlocks::header('Del borrador a la publicación'),
+                    EditorBlocks::paragraph('Un artículo se compone igual que una página: zonas, una anchura para cada una, y contenido de distinta naturaleza en cada una de ellas.'),
+                ],
+                'explain' => [
+                    EditorBlocks::header('Una imagen a un tercio, el texto a dos tercios', 3),
+                    EditorBlocks::paragraph('16 columnas de 48 para la foto, 32 para este párrafo. La página de inicio usa lo contrario: nada obliga a repartir una fila de una sola manera.'),
+                    EditorBlocks::list(['Añada una zona', 'Ajuste su anchura con el cursor', 'Rellénela']),
+                ],
+                'shot' => ['alt' => 'Un puesto de trabajo', 'caption' => 'Una foto a un tercio de la anchura.'],
+            ],
         ];
 
-        foreach (['fr', 'en'] as $locale) {
+        foreach (LocaleEnum::values() as $locale) {
             $translation = $article->translate($locale);
 
             $translation->setGrid($this->gridNormalizer->normalizeContent([
@@ -724,13 +780,25 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
      *
      * @return array<int, array<string, mixed>>
      */
-    private function blocks(string $title, string $description): array
+    private function blocks(string $title, string $description, string $locale): array
     {
+        // Written per language. It used to be French whatever the locale, so
+        // an English demo page carried an English title over a French
+        // paragraph - which is precisely the mistake the multilingual demo
+        // exists to show you avoiding.
+        $copy = [
+            'fr' => ['Ce contenu est une démonstration. Remplacez-le par le vôtre depuis l\'administration.', ['Un premier point', 'Un deuxième point']],
+            'en' => ['This content is a demonstration. Replace it with your own from the backend.', ['A first point', 'A second point']],
+            'es' => ['Este contenido es una demostración. Sustitúyalo por el suyo desde la administración.', ['Un primer punto', 'Un segundo punto']],
+        ];
+
+        [$paragraph, $points] = $copy[$locale] ?? $copy['fr'];
+
         return [
             EditorBlocks::paragraph($description),
             EditorBlocks::header($title),
-            EditorBlocks::paragraph('Ce contenu est une démonstration. Remplacez-le par le vôtre depuis l\'administration.'),
-            EditorBlocks::list(['Un premier point', 'Un deuxième point']),
+            EditorBlocks::paragraph($paragraph),
+            EditorBlocks::list($points),
         ];
     }
 
@@ -759,8 +827,8 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         }
 
         $entries = [
-            ['post' => 'welcome', 'fr' => 'Bienvenue', 'en' => 'Welcome'],
-            ['post' => 'first-steps', 'fr' => 'Premiers pas', 'en' => 'Getting started'],
+            ['post' => 'welcome', 'fr' => 'Bienvenue', 'en' => 'Welcome', 'es' => 'Bienvenida'],
+            ['post' => 'first-steps', 'fr' => 'Premiers pas', 'en' => 'Getting started', 'es' => 'Primeros pasos'],
         ];
 
         // The seeded "Home" entry sits at position 0; these follow it.
@@ -787,8 +855,9 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 ->setTargetId($post->getId())
                 ->setPosition($position++);
 
-            $item->translate('fr')->setLabel($entry['fr']);
-            $item->translate('en')->setLabel($entry['en']);
+            foreach (LocaleEnum::values() as $locale) {
+                $item->translate($locale)->setLabel($entry[$locale] ?? $entry['fr']);
+            }
 
             $menu->addItem($item);
             $em->persist($item);

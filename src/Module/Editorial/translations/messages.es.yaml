@@ -1,0 +1,81 @@
+frontend:
+  gallery:
+    enlarge: "Ampliar la imagen"
+    open: "Ampliar la imagen %position% de %total%"
+    close: Cerrar
+    previous: Imagen anterior
+    next: Imagen siguiente
+  editorial:
+    grid:
+      recommended: Recomendado
+      choose: Elegir esta oferta
+      copy: Copiar
+      copied: Copiado
+      on_this_page: En esta página
+    forms:
+      submit: Enviar
+      next: Siguiente
+      previous: Anterior
+      step: 'Paso {number}'
+      sent: Gracias, su mensaje se ha enviado correctamente.
+      errors:
+        required: Este campo es obligatorio.
+        email_invalid: Esta dirección de correo no es válida.
+        number_invalid: Este valor debe ser un número.
+        date_invalid: Esta fecha no se puede leer.
+        choice_invalid: Esta opción no figura entre las propuestas.
+        too_many: "Demasiados envíos recientes. Vuelva a intentarlo dentro de un momento."
+    comments:
+      title: Comentarios
+      empty: Todavía no hay comentarios. Empiece la conversación.
+      closed: Los comentarios están cerrados en esta publicación.
+      submit: Publicar
+      reply: Responder
+      cancel_reply: Cancelar
+      replying_to: 'En respuesta a {name}'
+      name: Su nombre
+      name_placeholder: Camila Durán
+      email: Su correo electrónico
+      email_placeholder: nombre.apellido@ejemplo.es
+      email_hint: "Nunca se muestra públicamente."
+      content: Su comentario
+      content_placeholder: "Lo que le parece, en unas líneas."
+      sent: Gracias, su comentario ya está en línea.
+      pending: "Gracias, su comentario será visible una vez revisado."
+      reactions:
+        like: Me gusta
+        love: Me encanta
+        haha: Ja, ja
+        wow: Vaya
+        sad: Triste
+        angry: Enfadado
+      errors:
+        name_required: Hace falta un nombre.
+        name_too_long: Este nombre es demasiado largo.
+        email_invalid: Esta dirección de correo no es válida.
+        content_required: Un comentario no puede estar vacío.
+        content_too_long: "Este comentario supera los 2000 caracteres."
+        closed: Los comentarios están cerrados en esta publicación.
+        too_many: "Demasiados comentarios enviados recientemente. Vuelva a intentarlo dentro de un momento."
+    no_posts: Todavía no hay nada publicado.
+    latest_posts: Publicaciones
+    pagination: Páginas
+editorial:
+  mail:
+    comment:
+      subject_pending: Nuevo comentario por revisar
+      subject_approved: Nuevo comentario en su publicación
+      pending_heading: Un comentario espera su revisión
+      pending_intro: "{name} acaba de dejar un comentario. No será visible hasta que se apruebe."
+      approved_heading: Nuevo comentario
+      approved_intro: "Hola {author}, acaba de publicarse un comentario en una de sus publicaciones."
+      author: Autor
+      from: De
+      cta_moderate: Abrir la moderación
+    form:
+      subject_admin: 'Nuevo envío: {form}'
+      subject_confirmation: 'Su mensaje: {form}'
+      admin_heading: Nuevo envío
+      admin_intro: "El formulario «{form}» acaba de rellenarse."
+      confirmation_heading: Mensaje recibido
+      confirmation_intro: "Gracias, hemos recibido su mensaje enviado a través de «{form}»."
