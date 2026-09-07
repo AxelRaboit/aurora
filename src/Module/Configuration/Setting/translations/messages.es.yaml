@@ -4,6 +4,9 @@ backend:
       captcha: Antirrobots
       captcha_description: "Verificación del formulario de comentarios: servicio, claves y activación."
   parameters:
+    media_credit_visible:
+      label: Mostrar el crédito de las fotos
+      description: "Muestra el nombre del fotógrafo y el enlace al banco de imágenes bajo las fotos que lo llevan. Las condiciones de uso de la API de Pexels piden este crédito: desactivarlo es una decisión suya sobre su propia cuenta."
     captcha:
       title: Verificación antirrobots
       intro: "Una comprobación adicional en el formulario de comentarios, además de la trampa para robots, el filtro de enlaces, el límite de envíos y la moderación que ya existen."

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Module\Ged\Document\Service;
 
+use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
+use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Module\Ged\Document\Service\DocumentCreditPresenter;
 use PHPUnit\Framework\TestCase;
@@ -17,6 +19,20 @@ use PHPUnit\Framework\TestCase;
  */
 final class DocumentCreditPresenterTest extends TestCase
 {
+    /** @param array<string, string> $settings */
+    private function presenter(array $settings = []): DocumentCreditPresenter
+    {
+        $repository = $this->createStub(SettingRepository::class);
+        $repository->method('getBoolean')->willReturnCallback(
+            static fn (string $key, bool $default = false): bool => match (true) {
+                array_key_exists($key, $settings) => '1' === $settings[$key],
+                default => $default,
+            },
+        );
+
+        return new DocumentCreditPresenter($repository);
+    }
+
     private function document(?string $name, ?string $url = null): Document
     {
         $document = new Document();
@@ -31,12 +47,12 @@ final class DocumentCreditPresenterTest extends TestCase
     /** The ordinary case: a file somebody uploaded owes nobody anything. */
     public function testAnUploadHasNoCredit(): void
     {
-        self::assertNull((new DocumentCreditPresenter())->present($this->document(null)));
+        self::assertNull($this->presenter()->present($this->document(null)));
     }
 
     public function testNothingToCreditIsNotACredit(): void
     {
-        self::assertNull((new DocumentCreditPresenter())->present($this->document('   ')));
+        self::assertNull($this->presenter()->present($this->document('   ')));
     }
 
     /**
@@ -47,7 +63,7 @@ final class DocumentCreditPresenterTest extends TestCase
      */
     public function testADownloadedStockPhotoStillCarriesItsCredit(): void
     {
-        $credit = (new DocumentCreditPresenter())
+        $credit = $this->presenter()
             ->present($this->document('Jane Doe', 'https://www.pexels.com/@jane'));
 
         self::assertSame(['name' => 'Jane Doe', 'url' => 'https://www.pexels.com/@jane'], $credit);
@@ -58,12 +74,30 @@ final class DocumentCreditPresenterTest extends TestCase
     {
         self::assertSame(
             ['name' => 'Jane Doe', 'url' => null],
-            (new DocumentCreditPresenter())->present($this->document('Jane Doe')),
+            $this->presenter()->present($this->document('Jane Doe')),
         );
     }
 
     public function testNoDocumentIsNoCredit(): void
     {
-        self::assertNull((new DocumentCreditPresenter())->present(null));
+        self::assertNull($this->presenter()->present(null));
+    }
+
+    /**
+     * A site may hide the line. The switch is read here rather than in the
+     * four templates that render it, so it cannot be honoured on the banner
+     * and forgotten on the gallery.
+     */
+    public function testASiteThatHidesCreditsGetsNone(): void
+    {
+        $presenter = $this->presenter([ApplicationParameterEnum::MediaCreditVisible->value => '0']);
+
+        self::assertNull($presenter->present($this->document('Jane Doe', 'https://www.pexels.com/@jane')));
+    }
+
+    /** Absent from the settings table, the line still shows: that is the default. */
+    public function testTheCreditShowsWhenNothingWasDecided(): void
+    {
+        self::assertNotNull($this->presenter()->present($this->document('Jane Doe')));
     }
 }

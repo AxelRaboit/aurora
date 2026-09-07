@@ -5,6 +5,26 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.71] - 2026-09-07
+
+### Ajouté
+
+#### Le crédit des photos peut être masqué
+Une photo importée depuis une banque d'images porte le nom de son
+photographe, sous la figure ou dans le coin de la bannière. Une case
+**Afficher le crédit des photos**, dans l'onglet Médias, permet de ne plus
+l'afficher.
+
+Le réglage est lu à un seul endroit, celui qui décide si un document a un
+crédit, plutôt que dans les quatre gabarits qui le dessinent : l'honorer sur
+la bannière et l'oublier sur la galerie est exactement la façon dont une page
+finit à moitié créditée.
+
+Allumé par défaut, parce que c'est ce que demandent les conditions d'usage de
+l'API Pexels pour la clé qui a servi à télécharger la photo. L'éteindre est
+une décision du propriétaire du site sur son propre compte, et la description
+du réglage le dit.
+
 ## [0.9.70] - 2026-09-07
 
 ### Ajouté

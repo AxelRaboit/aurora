@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Document\Service;
 
+use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
+use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 
 /**
@@ -18,14 +20,28 @@ use Aurora\Module\Ged\Document\Entity\DocumentInterface;
  * Kept out of DocumentUrlGenerator on purpose. That class answers "where is
  * this picture"; this one answers "whose is it", and a template that shows a
  * caption needs the second without the first.
+ *
+ * A site may switch the line off, and the switch lives here rather than in the
+ * four templates that render it: hiding it in one place and forgetting the
+ * other three is how a page ends up half-credited. On by default, because that
+ * is what the Pexels API guidelines ask of the key the pictures came through -
+ * turning it off is a decision the site owner takes about their own account.
  */
 final readonly class DocumentCreditPresenter
 {
+    public function __construct(
+        private SettingRepository $settingRepository,
+    ) {}
+
     /**
      * @return array{name: string, url: string|null}|null
      */
     public function present(?DocumentInterface $document): ?array
     {
+        if (!$this->settingRepository->getBoolean(ApplicationParameterEnum::MediaCreditVisible->value, true)) {
+            return null;
+        }
+
         // Keyed on the attribution itself rather than on where the file is
         // stored. We host every picture now, including the stock ones, so
         // "is this ours" no longer distinguishes anything - "does this name
