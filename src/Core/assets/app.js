@@ -12,6 +12,7 @@ import vendorModules from "virtual:aurora-vendor-modules";
 import "./shared/utils/loader.js";
 import "./shared/utils/detailsDropdown.js";
 import "./shared/utils/codeHighlight.js";
+import "./shared/utils/codeCopy.js";
 import "./css/app.css";
 
 // Module boot hooks: a module may ship `*.register.js` files (e.g. a settings

@@ -5,6 +5,54 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.61] - 2026-09-07
+
+### Ajouté
+
+#### Deux nouvelles mises en forme pour une zone Liste
+**Chronologie** : la même colonne que les étapes numérotées, mais c'est une
+date qui se tient dans la marge plutôt qu'un numéro — ce qu'une histoire
+demande.
+
+**Cartes d'offres** : nom, prix, ce qui est compris (une ligne par élément,
+chacune devient une puce) et un bouton. Une carte peut être marquée
+**recommandée** : elle est dessinée plus fort, sans grandir — une carte qui
+dépasse ses voisines casse la ligne à laquelle elle appartient.
+
+Les deux réutilisent les quatre champs des autres costumes, donc changer de
+mise en forme ne perd toujours rien de ce qui est écrit.
+
+#### Numéros de ligne et bouton « copier » sur une zone Code
+Les numéros sont une colonne à côté de l'extrait, jamais quelque chose inséré
+dedans : le colorateur reste maître de ce qu'il y a dans le bloc, et une
+chaîne de caractères qui court sur deux lignes ne peut pas être cassée. Ils ne
+partent pas à la copie. Éteints par défaut — un exemple de trois lignes n'a pas
+besoin de coordonnées.
+
+Le bouton de copie est rendu masqué et révélé par son script une fois qu'il a
+trouvé un presse-papiers : un bouton qui ne peut pas faire son travail ne
+s'affiche pas.
+
+#### Un sommaire automatique
+Une zone **Sommaire** : la seule qui n'a rien à remplir. Elle lit les zones
+Texte de la page et liste leurs titres, avec un lien vers chacun. Les ancres
+sont posées au passage sur les titres eux-mêmes — un sommaire écrit à la main
+est faux dès la première section renommée, celui-ci ne peut pas l'être.
+
+Les ancres sont numérotées plutôt que déduites des mots : deux sections
+« Tarifs » sur une page feraient deux ancres du même nom, et le second lien
+mènerait à la première. Une page qui ne demande pas de sommaire garde
+exactement le balisage qu'elle avait.
+
+Posé dans une colonne plus étroite que la page, le sommaire suit la lecture ;
+sur toute la largeur, il reste où il est.
+
+#### Les images d'une grille s'agrandissent au clic
+La visionneuse de la galerie sert désormais aussi aux zones Image d'une page,
+avec sa propre file : une page peut avoir les deux, chacune avec son ordre. Le
+clic ouvre, les flèches parcourent, Échap ferme. Sans JavaScript, l'image est
+déjà entière sur la page — la visionneuse est le supplément, pas le contenu.
+
 ## [0.9.60] - 2026-09-07
 
 ### Corrigé

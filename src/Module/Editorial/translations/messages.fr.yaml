@@ -444,6 +444,7 @@ backend:
         postList: Liste automatique
         form: Formulaire
         code: Code
+        toc: Sommaire
         stack: Pile
       zone_form: "Formulaire"
       zone_form_hint: "Le formulaire s'affiche dans la page, et s'envoie au même endroit que sur sa propre page."
@@ -467,6 +468,8 @@ backend:
       code_language: Langage
       code_language_hint: "Sert à la coloration. Laissé vide, l'extrait s'affiche tel quel."
       code_language_none: Aucun
+      code_line_numbers: Numéros de ligne
+      code_line_numbers_hint: "Une colonne de numéros à gauche de l'extrait. Ils ne partent pas à la copie."
       card_variant: Densité de la carte
       card_variants:
         full: Complète
@@ -504,6 +507,8 @@ backend:
         faq: Questions fréquentes
         quotes: Témoignages
         logos: Logos
+        timeline: Chronologie
+        offers: Cartes d'offres
       item_columns: Colonnes
       item_number: "Entrée {number}"
       item_add: Ajouter une entrée
@@ -527,11 +532,29 @@ backend:
       faq_question_placeholder: "Combien de temps faut-il ?"
       quote_author_placeholder: "Camille Martin"
       logo_name_placeholder: "Nom du client"
+      logo_url_placeholder: "https://exemple.fr"
       step_text_placeholder: "Ce qu'on fait à cette étape, en une phrase."
       stat_label_placeholder: "projets livrés"
       faq_answer_placeholder: "Comptez trois semaines entre le premier échange et la mise en ligne."
       quote_text_placeholder: "Ce qu'on a dit de votre travail."
       quote_role_placeholder: "Fondatrice, Studio Nord"
+      timeline_date: Date
+      timeline_title: Ce qui s'est passé
+      timeline_text: Détail
+      timeline_date_placeholder: "2024"
+      timeline_title_placeholder: "Lancement du studio"
+      timeline_text_placeholder: "Ce que ça a changé, en une phrase."
+      offer_name: Nom de l'offre
+      offer_price: Prix
+      offer_lines: Ce qui est compris
+      offer_lines_hint: "Une ligne par élément : chacune devient une puce de la carte."
+      offer_url: Lien du bouton
+      offer_featured: Recommandée
+      offer_featured_hint: "La carte mise en avant. Une seule, sinon plus aucune ne ressort."
+      offer_name_placeholder: "Site vitrine"
+      offer_price_placeholder: "à partir de 1 500 €"
+      offer_lines_placeholder: "Cinq pages\nUn formulaire de contact\nMise en ligne comprise"
+      offer_url_placeholder: "https://exemple.fr/contact"
       scale: Taille de l'image
       scale_hint: "Part de la largeur de la zone occupée par l'image. Les proportions sont gardées, donc une image à 50 % est deux fois moins haute aussi. La zone, elle, ne bouge pas."
       scales:
@@ -894,11 +917,18 @@ backend:
     label_placeholder: "Accueil"
 frontend:
   gallery:
+    enlarge: "Agrandir l'image"
     open: "Agrandir l'image %position% sur %total%"
     close: Fermer
     previous: Image précédente
     next: Image suivante
   editorial:
+    grid:
+      recommended: Recommandé
+      choose: Choisir cette offre
+      copy: Copier
+      copied: Copié
+      on_this_page: Sur cette page
     forms:
       submit: Envoyer
       next: Suivant

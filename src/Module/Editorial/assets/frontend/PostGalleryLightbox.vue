@@ -23,6 +23,15 @@ import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
 const props = defineProps({
     /** The same resolved items the tiles were drawn from, in the same order. */
     items: { type: Array, default: () => [] },
+    /**
+     * Which attribute marks a trigger.
+     *
+     * A page can hold two sets of enlargeable pictures - its gallery and the
+     * media zones of its grid - and each has its own order, so each needs its
+     * own overlay. One attribute for both would have every click open both
+     * overlays, on two different pictures.
+     */
+    trigger: { type: String, default: "data-gallery-open" },
 });
 
 const { t } = useI18n();
@@ -59,13 +68,13 @@ function step(by) {
 }
 
 function onDocumentClick(event) {
-    const trigger = event.target.closest?.("[data-gallery-open]");
+    const trigger = event.target.closest?.(`[${props.trigger}]`);
     if (!trigger) {
         return;
     }
 
     event.preventDefault();
-    show(Number(trigger.dataset.galleryOpen));
+    show(Number(trigger.getAttribute(props.trigger)));
 }
 
 function onKeydown(event) {

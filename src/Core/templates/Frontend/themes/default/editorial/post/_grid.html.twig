@@ -74,3 +74,14 @@
         </div>
     {% endfor %}
 </div>
+
+{# The overlay, mounted once for the whole grid and only when there is a
+   picture to enlarge. Its own attribute, not the gallery's: a page can have
+   both, each with its own order, and one attribute for the two would open both
+   overlays on two different pictures. #}
+{% if grid.lightbox|default([]) is not empty %}
+    <div {{ vue_component('editorial/frontend/PostGalleryLightbox', {
+        items: grid.lightbox,
+        trigger: 'data-grid-image-open',
+    }) }}></div>
+{% endif %}

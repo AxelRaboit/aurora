@@ -191,6 +191,10 @@ final readonly class GridViewBuilder
                 // nothing between here and there is allowed to reformat a
                 // snippet whose whitespace is its meaning.
                 'code' => GridNormalizer::ZONE_CODE === $zone['type'] ? $held['code'] : null,
+                // Filled after the walk, once every text zone has been
+                // rendered: a summary of a page cannot be written while the
+                // page is still being read.
+                'toc' => GridNormalizer::ZONE_TOC === $zone['type'] ? [] : null,
             ];
         };
 
@@ -212,10 +216,143 @@ final readonly class GridViewBuilder
             );
         }
 
+        $zones = $this->summarise($zones);
+
+        // A plain loop rather than `array_map`: an arrow function captures by
+        // value, so the list it filled would be the one it threw away.
+        $lightbox = [];
+        foreach ($zones as $index => $zone) {
+            $zones[$index] = $this->numberForLightbox($zone, $lightbox);
+        }
+
         return [
             ...$layout,
             'zones' => $zones,
+            // The pictures of this grid, in the order a reader meets them, for
+            // the one overlay the page mounts. Empty on a page with no picture,
+            // which is what the template checks before mounting anything.
+            'lightbox' => $lightbox,
         ];
+    }
+
+    /**
+     * Lists the page's headings for whichever zones asked for a summary.
+     *
+     * Two passes over the same zones, and they have to be in this order: the
+     * anchors are written into the text zones first, because a summary is a
+     * list of links and a link needs something to land on. Nothing happens at
+     * all when no zone asked - a page keeps exactly the markup it had.
+     *
+     * Ids are numbered rather than slugged from the words. Two sections called
+     * "Tarifs" on one page would be two anchors with one name, and a reader
+     * following the second would land on the first; a number cannot collide,
+     * and nobody reads these.
+     *
+     * Only `<h2>` and `<h3>`: the page's title is its `<h1>`, and past the
+     * third level a summary is longer than what it summarises. The pattern
+     * matches the headings this renderer writes - bare, no attributes - so a
+     * heading inside a raw HTML block keeps whatever its author gave it.
+     *
+     * @param list<array<string, mixed>> $zones
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function summarise(array $zones): array
+    {
+        $wanted = false;
+        foreach ($zones as $zone) {
+            if (GridNormalizer::ZONE_TOC === $zone['type']) {
+                $wanted = true;
+
+                break;
+            }
+        }
+
+        if (!$wanted) {
+            return $zones;
+        }
+
+        $headings = [];
+        $number = 0;
+
+        foreach ($zones as $index => $zone) {
+            if (GridNormalizer::ZONE_TEXT !== $zone['type']) {
+                continue;
+            }
+
+            if (!is_string($zone['html'] ?? null)) {
+                continue;
+            }
+
+            $zones[$index]['html'] = preg_replace_callback(
+                '#<h([23])>(.*?)</h\1>#s',
+                static function (array $match) use (&$headings, &$number): string {
+                    $id = sprintf('section-%d', ++$number);
+                    $headings[] = [
+                        'id' => $id,
+                        'level' => (int) $match[1],
+                        // The words without their markup: a heading may carry a
+                        // link or a marker, and neither belongs in a summary.
+                        'text' => mb_trim(html_entity_decode(strip_tags($match[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+                    ];
+
+                    return sprintf('<h%s id="%s">%s</h%s>', $match[1], $id, $match[2], $match[1]);
+                },
+                $zone['html'],
+            ) ?? $zone['html'];
+        }
+
+        foreach ($zones as $index => $zone) {
+            if (GridNormalizer::ZONE_TOC === $zone['type']) {
+                $zones[$index]['toc'] = $headings;
+            }
+        }
+
+        return $zones;
+    }
+
+    /**
+     * Gives every picture of the grid its place in the overlay's order.
+     *
+     * The zone keeps only the number, and the pictures travel separately: the
+     * overlay is mounted once for the whole grid, and stepping from one to the
+     * next means the pictures have to be a list somewhere rather than one
+     * payload per zone.
+     *
+     * A stack's children are pictures too, and are read in the order they are
+     * drawn - which is the order the overlay steps through them.
+     *
+     * @param array<string, mixed>       $zone
+     * @param list<array<string, mixed>> $lightbox
+     *
+     * @return array<string, mixed>
+     */
+    private function numberForLightbox(array $zone, array &$lightbox): array
+    {
+        if (is_array($zone['children'] ?? null) && [] !== $zone['children']) {
+            foreach ($zone['children'] as $index => $child) {
+                $zone['children'][$index] = $this->numberForLightbox($child, $lightbox);
+            }
+        }
+
+        $media = $zone['media'] ?? null;
+
+        if (GridNormalizer::ZONE_MEDIA !== $zone['type'] || !is_array($media)) {
+            $zone['lightboxIndex'] = null;
+
+            return $zone;
+        }
+
+        $zone['lightboxIndex'] = count($lightbox);
+        $lightbox[] = [
+            'url' => $media['url'],
+            'alt' => $media['alt'] ?? '',
+            // The caption belongs to the zone, not to the document: the same
+            // picture says something else in another page.
+            'caption' => $zone['caption'] ?? '',
+        ];
+
+        return $zone;
     }
 
     /**
@@ -339,6 +476,11 @@ final readonly class GridViewBuilder
                 'caption' => $caption,
                 'url' => $words['url'] ?? null,
                 'media' => $media,
+                // Only the offers costume draws it, but it travels with every
+                // entry: reading it in the template is one `default`, and
+                // deciding here which costumes may carry it would put the
+                // costume's business in the wrong file.
+                'featured' => (bool) ($item['featured'] ?? false),
                 // 1-based, for the display that numbers its steps. Worked out
                 // here rather than in the template, which would have to count
                 // the entries it skipped.

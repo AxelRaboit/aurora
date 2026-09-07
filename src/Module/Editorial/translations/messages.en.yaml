@@ -444,6 +444,7 @@ backend:
         postList: Automatic list
         form: Form
         code: Code
+        toc: Contents
         stack: Stack
       zone_form: "Form"
       zone_form_hint: "The form is drawn in the page and posts where its own page posts."
@@ -467,6 +468,8 @@ backend:
       code_language: Language
       code_language_hint: "Used for colouring. Left empty, the snippet is shown as typed."
       code_language_none: None
+      code_line_numbers: Line numbers
+      code_line_numbers_hint: "A column of numbers down the left of the snippet. They are left out of a copy."
       card_variant: Card density
       card_variants:
         full: Full
@@ -504,6 +507,8 @@ backend:
         faq: Frequently asked questions
         quotes: Testimonials
         logos: Logos
+        timeline: Timeline
+        offers: Plan cards
       item_columns: Columns
       item_number: "Entry {number}"
       item_add: Add an entry
@@ -527,11 +532,29 @@ backend:
       faq_question_placeholder: "How long does it take?"
       quote_author_placeholder: "Camille Martin"
       logo_name_placeholder: "Client name"
+      logo_url_placeholder: "https://example.com"
       step_text_placeholder: "What happens at this step, in one sentence."
       stat_label_placeholder: "projects delivered"
       faq_answer_placeholder: "Count three weeks between the first conversation and going live."
       quote_text_placeholder: "What was said about your work."
       quote_role_placeholder: "Founder, Studio Nord"
+      timeline_date: Date
+      timeline_title: What happened
+      timeline_text: Detail
+      timeline_date_placeholder: "2024"
+      timeline_title_placeholder: "The studio opens"
+      timeline_text_placeholder: "What it changed, in one sentence."
+      offer_name: Plan name
+      offer_price: Price
+      offer_lines: What is included
+      offer_lines_hint: "One line per item: each becomes a bullet on the card."
+      offer_url: Button link
+      offer_featured: Recommended
+      offer_featured_hint: "The card drawn louder than the others. Only one, or none of them stands out."
+      offer_name_placeholder: "Brochure site"
+      offer_price_placeholder: "from £1,500"
+      offer_lines_placeholder: "Five pages\nA contact form\nGoing live included"
+      offer_url_placeholder: "https://example.com/contact"
       scale: Image size
       scale_hint: "How much of the zone's width the picture takes. Proportions are kept, so an image at 50% is half as tall too. The zone itself does not move."
       scales:
@@ -894,11 +917,18 @@ backend:
     label_placeholder: "Home"
 frontend:
   gallery:
+    enlarge: "Enlarge the picture"
     open: "Enlarge picture %position% of %total%"
     close: Close
     previous: Previous picture
     next: Next picture
   editorial:
+    grid:
+      recommended: Recommended
+      choose: Choose this plan
+      copy: Copy
+      copied: Copied
+      on_this_page: On this page
     forms:
       submit: Send
       next: Next

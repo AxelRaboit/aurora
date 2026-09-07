@@ -126,6 +126,16 @@ final readonly class GridNormalizer
     /** A snippet, shown as written and coloured in the reader's browser. */
     public const string ZONE_CODE = 'code';
 
+    /**
+     * The page's own headings, listed and linked.
+     *
+     * The one zone with nothing to write in it: it reads the text zones of the
+     * grid it sits in and lists what it finds. A long page needs a way in that
+     * nobody has to maintain - a hand-written summary is out of date the first
+     * time a section is renamed, and this one cannot be.
+     */
+    public const string ZONE_TOC = 'toc';
+
     /** How loudly a button is drawn. */
     public const array BUTTON_VARIANTS = ['solid', 'outline', 'ghost'];
 
@@ -135,8 +145,16 @@ final readonly class GridNormalizer
     /** A rule, or the same room with nothing drawn in it. */
     public const array SEPARATOR_STYLES = ['line', 'space'];
 
-    /** The five costumes of an item list. */
-    public const array ITEM_DISPLAYS = ['steps', 'stats', 'faq', 'quotes', 'logos'];
+    /**
+     * The costumes of an item list.
+     *
+     * One zone rather than seven, because they are the same four fields asked
+     * differently - a step's title is a figure's value is a question is an
+     * offer's name - and switching costume keeps what was written. New ones go
+     * at the end: the first is the default, and moving it would restyle every
+     * list already published.
+     */
+    public const array ITEM_DISPLAYS = ['steps', 'stats', 'faq', 'quotes', 'logos', 'timeline', 'offers'];
 
     /**
      * How densely a publication card is drawn. The same publication either
@@ -295,6 +313,7 @@ final readonly class GridNormalizer
         self::ZONE_POST_LIST,
         self::ZONE_FORM,
         self::ZONE_CODE,
+        self::ZONE_TOC,
     ];
 
     /**
@@ -490,7 +509,7 @@ final readonly class GridNormalizer
                 'variant' => $this->values->oneOf($entry['variant'] ?? null, self::BUTTON_VARIANTS, self::BUTTON_VARIANTS[0]),
                 'size' => $this->values->oneOf($entry['size'] ?? null, self::SIZES, self::SIZES[1]),
                 'separatorStyle' => $this->values->oneOf($entry['separatorStyle'] ?? null, self::SEPARATOR_STYLES, self::SEPARATOR_STYLES[0]),
-                // Which of the five costumes an item list wears, and how many
+                // Which costume an item list wears, and how many
                 // entries stand side by side where the costume lays them in a
                 // row. Both are design, both shared.
                 'display' => $this->values->oneOf($entry['display'] ?? null, self::ITEM_DISPLAYS, self::ITEM_DISPLAYS[0]),
@@ -522,6 +541,10 @@ final readonly class GridNormalizer
                 // How a text zone is set. Design, so shared - a standfirst is
                 // a standfirst in every language.
                 'textSize' => $this->values->oneOf($entry['textSize'] ?? null, self::TEXT_SIZES, self::TEXT_SIZES[0]),
+                // Numbered lines down the side of a snippet. Off by default:
+                // a three-line example needs no coordinates, and a page that
+                // numbers everything makes the numbers mean nothing.
+                'lineNumbers' => (bool) ($entry['lineNumbers'] ?? false),
                 // What the zone sits on. Every type can have one: a card of
                 // figures, a tinted FAQ, a call to action on accent.
                 'surface' => $this->values->oneOf($entry['surface'] ?? null, self::SURFACES, self::SURFACES[0]),
@@ -590,7 +613,7 @@ final readonly class GridNormalizer
      * at {@see MAX_ITEMS} rather than trusted: the payload comes from a
      * browser, and a list of ten thousand entries is a page nobody can render.
      *
-     * @return list<array{id: string, mediaId: int|null}>
+     * @return list<array{id: string, mediaId: int|null, featured: bool}>
      */
     private function itemList(mixed $raw): array
     {
@@ -617,6 +640,10 @@ final readonly class GridNormalizer
             $items[] = [
                 'id' => $id,
                 'mediaId' => $this->values->id($entry['mediaId'] ?? null),
+                // The one entry of an offer list drawn louder than the others.
+                // Shared like the picture: which plan is recommended is the
+                // same recommendation in every language.
+                'featured' => (bool) ($entry['featured'] ?? false),
             ];
         }
 

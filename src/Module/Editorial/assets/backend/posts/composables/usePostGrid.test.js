@@ -431,7 +431,7 @@ describe("usePostGrid", () => {
         ]);
     });
 
-    it("offers the three steps and the eleven zone types", () => {
+    it("offers the three steps and the twelve zone types", () => {
         const { snapOptions, typeOptions } = make().api;
 
         expect(snapOptions.value.map((o) => o.value)).toEqual([4, 2, 1]);
@@ -446,6 +446,7 @@ describe("usePostGrid", () => {
             "postList",
             "form",
             "code",
+            "toc",
             "stack",
         ]);
     });
@@ -463,6 +464,7 @@ describe("usePostGrid", () => {
             "postList",
             "form",
             "code",
+            "toc",
         ]);
     });
 
@@ -830,6 +832,28 @@ describe("usePostGrid", () => {
         const itemId = layout.value.zones[0].items[0].id;
 
         expect(sent.zones[zoneId].items[itemId].title).toBe("Découverte");
+    });
+
+    /**
+     * Which plan is recommended is design, not writing: it belongs on the post
+     * beside the entry's picture, so the same card stands out in every
+     * language.
+     */
+    it("keeps the recommended entry on the arrangement, not on the words", () => {
+        const { layout, content, api } = make();
+
+        api.addZone("items");
+        api.zoneFields(0).display.value = "offers";
+        api.addItem(0);
+        api.itemFields(0, 0).featured.value = true;
+
+        const zoneId = layout.value.zones[0].id;
+        const itemId = layout.value.zones[0].items[0].id;
+
+        expect(layout.value.zones[0].items[0].featured).toBe(true);
+        expect(content.value.zones[zoneId].items[itemId]).not.toHaveProperty(
+            "featured",
+        );
     });
 
     /**

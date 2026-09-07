@@ -93,6 +93,11 @@ const ITEM_LABELS = {
     faq: { title: "faq_question", description: "faq_answer", caption: null, url: null },
     quotes: { title: "quote_author", description: "quote_text", caption: "quote_role", url: null },
     logos: { title: "logo_name", description: null, caption: null, url: "logo_url" },
+    // The date is the caption, which is the field a quote uses for a role: the
+    // small line beside the title. Reusing it rather than adding a fifth is
+    // what lets an author switch costume without losing what they wrote.
+    timeline: { title: "timeline_title", description: "timeline_text", caption: "timeline_date", url: null },
+    offers: { title: "offer_name", description: "offer_lines", caption: "offer_price", url: "offer_url" },
 };
 
 const itemLabels = computed(() => ITEM_LABELS[bound.display.value] ?? ITEM_LABELS.steps);
@@ -101,7 +106,24 @@ const itemLabels = computed(() => ITEM_LABELS[bound.display.value] ?? ITEM_LABEL
 const itemHasMedia = computed(() => ["quotes", "logos"].includes(bound.display.value));
 
 /** Only the displays that lay their entries in a row have a count to choose. */
-const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display.value));
+const itemHasColumns = computed(() =>
+    ["stats", "quotes", "offers"].includes(bound.display.value),
+);
+
+/**
+ * Only an offer list singles one entry out. The flag is stored on every entry
+ * whatever the costume - like the picture - so switching to offers and back
+ * does not lose which one was recommended.
+ */
+const itemHasFeatured = computed(() => "offers" === bound.display.value);
+
+/**
+ * The one field that needs a word of explanation: what an author types on
+ * several lines becomes several bullets, and nothing on the screen says so.
+ */
+const descriptionHint = computed(() =>
+    "offers" === bound.display.value ? t("backend.posts.grid.offer_lines_hint") : undefined,
+);
 </script>
 
 <template>
@@ -209,6 +231,11 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                 :hint="t('backend.posts.grid.code_language_hint')"
                 :options="choices.language ?? []"
                 :placeholder="t('backend.posts.grid.code_language_none')"
+            />
+            <AppToggle
+                v-model="bound.lineNumbers.value"
+                :label="t('backend.posts.grid.code_line_numbers')"
+                :hint="t('backend.posts.grid.code_line_numbers_hint')"
             />
             <div class="rounded-lg border border-dashed border-line p-3 space-y-2">
                 <p class="text-xs uppercase tracking-wide text-muted">
@@ -399,7 +426,8 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                             v-model="itemFields(itemIndex).description.value"
                             :label="t(`backend.posts.grid.${itemLabels.description}`)"
                             :placeholder="t(`backend.posts.grid.${itemLabels.description}_placeholder`)"
-                            :rows="2"
+                            :hint="descriptionHint"
+                            :rows="itemLabels.description === 'offer_lines' ? 4 : 2"
                         />
                         <AppInput
                             v-if="itemLabels.caption"
@@ -411,9 +439,19 @@ const itemHasColumns = computed(() => ["stats", "quotes"].includes(bound.display
                             v-if="itemLabels.url"
                             v-model="itemFields(itemIndex).url.value"
                             :label="t(`backend.posts.grid.${itemLabels.url}`)"
-                            placeholder="https://…"
+                            :placeholder="t(`backend.posts.grid.${itemLabels.url}_placeholder`)"
                         />
                     </div>
+
+                    <!-- Outside the translated block, deliberately: which plan
+                         is recommended is the same recommendation in every
+                         language, like the picture above. -->
+                    <AppToggle
+                        v-if="itemHasFeatured"
+                        v-model="itemFields(itemIndex).featured.value"
+                        :label="t('backend.posts.grid.offer_featured')"
+                        :hint="t('backend.posts.grid.offer_featured_hint')"
+                    />
                 </div>
 
                 <AppButton
