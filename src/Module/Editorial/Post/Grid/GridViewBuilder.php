@@ -212,10 +212,65 @@ final readonly class GridViewBuilder
             );
         }
 
+        // A plain loop rather than `array_map`: an arrow function captures by
+        // value, so the list it filled would be the one it threw away.
+        $lightbox = [];
+        foreach ($zones as $index => $zone) {
+            $zones[$index] = $this->numberForLightbox($zone, $lightbox);
+        }
+
         return [
             ...$layout,
             'zones' => $zones,
+            // The pictures of this grid, in the order a reader meets them, for
+            // the one overlay the page mounts. Empty on a page with no picture,
+            // which is what the template checks before mounting anything.
+            'lightbox' => $lightbox,
         ];
+    }
+
+    /**
+     * Gives every picture of the grid its place in the overlay's order.
+     *
+     * The zone keeps only the number, and the pictures travel separately: the
+     * overlay is mounted once for the whole grid, and stepping from one to the
+     * next means the pictures have to be a list somewhere rather than one
+     * payload per zone.
+     *
+     * A stack's children are pictures too, and are read in the order they are
+     * drawn - which is the order the overlay steps through them.
+     *
+     * @param array<string, mixed>       $zone
+     * @param list<array<string, mixed>> $lightbox
+     *
+     * @return array<string, mixed>
+     */
+    private function numberForLightbox(array $zone, array &$lightbox): array
+    {
+        if (is_array($zone['children'] ?? null) && [] !== $zone['children']) {
+            foreach ($zone['children'] as $index => $child) {
+                $zone['children'][$index] = $this->numberForLightbox($child, $lightbox);
+            }
+        }
+
+        $media = $zone['media'] ?? null;
+
+        if (GridNormalizer::ZONE_MEDIA !== $zone['type'] || !is_array($media)) {
+            $zone['lightboxIndex'] = null;
+
+            return $zone;
+        }
+
+        $zone['lightboxIndex'] = count($lightbox);
+        $lightbox[] = [
+            'url' => $media['url'],
+            'alt' => $media['alt'] ?? '',
+            // The caption belongs to the zone, not to the document: the same
+            // picture says something else in another page.
+            'caption' => $zone['caption'] ?? '',
+        ];
+
+        return $zone;
     }
 
     /**
@@ -339,6 +394,11 @@ final readonly class GridViewBuilder
                 'caption' => $caption,
                 'url' => $words['url'] ?? null,
                 'media' => $media,
+                // Only the offers costume draws it, but it travels with every
+                // entry: reading it in the template is one `default`, and
+                // deciding here which costumes may carry it would put the
+                // costume's business in the wrong file.
+                'featured' => (bool) ($item['featured'] ?? false),
                 // 1-based, for the display that numbers its steps. Worked out
                 // here rather than in the template, which would have to count
                 // the entries it skipped.

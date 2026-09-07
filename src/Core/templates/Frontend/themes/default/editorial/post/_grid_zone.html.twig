@@ -65,13 +65,31 @@
                element.
                `object-cover` and the focal position, both already here,
                are what make the crop land where the picture matters. #}
-            <img
-                src="{{ zone.media.url }}"
-                alt="{{ zone.media.alt }}"
-                loading="lazy"
-                class="w-full h-auto rounded-lg object-cover{{ fills ? ' lg:min-h-0 lg:flex-1' : '' }}"
-                style="object-position: {{ zone.media.focalPosition }};{{ zone.ratioStyle }}"
-            >
+            {# A button around the picture, not a link: it opens an overlay on
+               this page rather than going anywhere. The picture inside is the
+               content and not a thumbnail of it, so without the overlay's
+               script this is a button that does nothing to a picture that is
+               already all there - which is the right way round. #}
+            {% set enlargeable = zone.lightboxIndex is defined and zone.lightboxIndex is not null %}
+            {% set picture %}
+                <img
+                    src="{{ zone.media.url }}"
+                    alt="{{ zone.media.alt }}"
+                    loading="lazy"
+                    class="w-full h-auto rounded-lg object-cover{{ fills ? ' lg:min-h-0 lg:flex-1' : '' }}"
+                    style="object-position: {{ zone.media.focalPosition }};{{ zone.ratioStyle }}"
+                >
+            {% endset %}
+            {% if enlargeable %}
+                <button
+                    type="button"
+                    data-grid-image-open="{{ zone.lightboxIndex }}"
+                    class="block w-full cursor-zoom-in appearance-none border-0 bg-transparent p-0 text-left{{ fills ? ' lg:min-h-0 lg:flex-1' : '' }}"
+                    aria-label="{{ 'frontend.gallery.enlarge'|trans }}"
+                >{{ picture }}</button>
+            {% else %}
+                {{ picture }}
+            {% endif %}
             {% if zone.caption %}
                 {# `shrink-0` so the caption keeps its line when the picture
                    above it is taking every pixel it can. #}
@@ -162,11 +180,42 @@
            never arrives still gets the snippet, in a monospace box, intact.
 
            `{{ }}` escapes - the snippet is shown, never interpreted. #}
-        <div class="not-prose relative overflow-hidden rounded-xl border border-line bg-surface">
-            {% if zone.language %}
-                <span class="absolute right-3 top-2 text-2xs uppercase tracking-wider text-muted">{{ zone.language }}</span>
-            {% endif %}
-            <pre class="m-0 overflow-x-auto p-4 text-sm leading-relaxed"><code{% if zone.language %} class="language-{{ zone.language }}"{% endif %}>{{ zone.code }}</code></pre>
+        <div class="not-prose relative overflow-hidden rounded-xl border border-line bg-surface" data-code-zone>
+            <div class="absolute right-3 top-2 flex items-center gap-3">
+                {% if zone.language %}
+                    <span class="text-2xs uppercase tracking-wider text-muted">{{ zone.language }}</span>
+                {% endif %}
+                {# Hidden until `codeCopy.js` finds a clipboard to write to:
+                   a button that cannot do its job should not be offered. #}
+                <button
+                    type="button"
+                    hidden
+                    data-code-copy="{{ 'frontend.editorial.grid.copy'|trans }}"
+                    data-code-copied="{{ 'frontend.editorial.grid.copied'|trans }}"
+                    class="rounded-md border border-line bg-surface-2 px-2 py-0.5 text-2xs text-secondary transition-colors hover:text-primary"
+                >{{ 'frontend.editorial.grid.copy'|trans }}</button>
+            </div>
+
+            {# The numbers are a column beside the snippet rather than anything
+               inserted into it: the highlighter owns what is inside <code>,
+               and a gutter of its own cannot break a string that runs over two
+               lines. It lines up because a <pre> scrolls rather than wraps, so
+               one line of code is one line on screen - and both columns are
+               set in the same size and leading, which is what keeps them in
+               step.
+
+               `select-none` and `aria-hidden` so copying the snippet, by hand
+               or with the button, copies code and not coordinates. #}
+            {% set numbered = zone.lineNumbers|default(false) %}
+            <div class="flex{{ numbered ? ' overflow-x-auto' : '' }}">
+                {% if numbered %}
+                    <div
+                        class="shrink-0 select-none whitespace-pre border-r border-line py-4 pl-4 pr-3 text-right font-mono text-sm leading-relaxed text-muted"
+                        aria-hidden="true"
+                    >{% for line in 1..(zone.code|split('\n')|length) %}{{ line }}{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}</div>
+                {% endif %}
+                <pre class="m-0 flex-1 overflow-x-auto p-4 text-sm leading-relaxed"><code{% if zone.language %} class="language-{{ zone.language }}"{% endif %}>{{ zone.code }}</code></pre>
+            </div>
         </div>
 
     {% elseif zone.type == 'video' %}

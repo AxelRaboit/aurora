@@ -833,6 +833,28 @@ describe("usePostGrid", () => {
     });
 
     /**
+     * Which plan is recommended is design, not writing: it belongs on the post
+     * beside the entry's picture, so the same card stands out in every
+     * language.
+     */
+    it("keeps the recommended entry on the arrangement, not on the words", () => {
+        const { layout, content, api } = make();
+
+        api.addZone("items");
+        api.zoneFields(0).display.value = "offers";
+        api.addItem(0);
+        api.itemFields(0, 0).featured.value = true;
+
+        const zoneId = layout.value.zones[0].id;
+        const itemId = layout.value.zones[0].items[0].id;
+
+        expect(layout.value.zones[0].items[0].featured).toBe(true);
+        expect(content.value.zones[zoneId].items[itemId]).not.toHaveProperty(
+            "featured",
+        );
+    });
+
+    /**
      * Every zone carries the one key its own type reads, and the server sends
      * `null` for the others - so a zone becomes a list before it has anything
      * to hold its entries.

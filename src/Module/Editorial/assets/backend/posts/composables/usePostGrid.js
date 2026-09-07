@@ -47,7 +47,15 @@ export const SIZES = ["sm", "md", "lg"];
 export const SEPARATOR_STYLES = ["line", "space"];
 
 /** Mirrors GridNormalizer::ITEM_DISPLAYS - the five costumes of an item list. */
-export const ITEM_DISPLAYS = ["steps", "stats", "faq", "quotes", "logos"];
+export const ITEM_DISPLAYS = [
+    "steps",
+    "stats",
+    "faq",
+    "quotes",
+    "logos",
+    "timeline",
+    "offers",
+];
 
 /** Mirrors GridNormalizer::ITEM_COLUMNS. */
 export const ITEM_COLUMNS = [2, 3, 4];
@@ -354,6 +362,7 @@ function newZone(type) {
         formId: null,
         language: null,
         textSize: "normal",
+        lineNumbers: false,
         // Nothing behind it and inside its column: a zone arrives as part of
         // the page, and becomes a section only when someone says so.
         surface: "none",
@@ -1036,6 +1045,7 @@ export function usePostGrid(layout, content) {
                 formId: shared("formId"),
                 language: shared("language"),
                 textSize: shared("textSize"),
+                lineNumbers: shared("lineNumbers"),
                 surface: shared("surface"),
                 fullBleed: shared("fullBleed"),
                 // The width control drives the large-screen span only. Below
@@ -1164,7 +1174,7 @@ export function usePostGrid(layout, content) {
             zone.items = [];
         }
 
-        zone.items.push({ id, mediaId: null, media: null });
+        zone.items.push({ id, mediaId: null, media: null, featured: false });
         // Only this language's entry, for the reason usePostBanner gives: the
         // others gain theirs when the server normalises them against the
         // arrangement, and an empty string is what an untranslated entry means.
@@ -1227,6 +1237,16 @@ export function usePostGrid(layout, content) {
                 description: localised("description"),
                 caption: localised("caption"),
                 url: localised("url"),
+                // Shared, like the zone's own picture: which plan is
+                // recommended is the same recommendation in every language.
+                featured: writable(
+                    () => item()?.featured ?? false,
+                    (value) => {
+                        const entry = item();
+                        if (!entry) return;
+                        entry.featured = Boolean(value);
+                    },
+                ),
                 // Shared, like the zone's own picture: the same face or the
                 // same logo in every language.
                 media: writable(

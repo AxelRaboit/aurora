@@ -1,4 +1,4 @@
-{# A short list of small things, in one of five costumes.
+{# A short list of small things, in one of its costumes.
 
    `items` comes from GridViewBuilder and carries `display`, `columns` and
    `entries`; the caller has already checked there is at least one entry, so
@@ -67,6 +67,73 @@
                     </summary>
                     {% if entry.description %}<p class="mt-3 mb-0 text-secondary">{{ entry.description }}</p>{% endif %}
                 </details>
+            {% endfor %}
+        </div>
+
+    {% elseif items.display == 'timeline' %}
+        {# The same rule down the left as the steps above, and deliberately so:
+           both are one sequence read in order. What changes is what stands in
+           the margin - a number there says "third of five", a date says
+           "2024", and a history wants the second. #}
+        <ol class="m-0 list-none space-y-8 border-l border-line p-0 pl-10">
+            {% for entry in items.entries %}
+                <li class="relative">
+                    {# A dot rather than a badge: the date is already the
+                       marker, and two markers for one entry is one too many. #}
+                    <span
+                        class="absolute -left-[2.85rem] mt-2 block h-3 w-3 rounded-full border-2 border-accent bg-surface"
+                        aria-hidden="true"
+                    ></span>
+                    {% if entry.caption %}
+                        <p class="m-0 text-sm font-semibold uppercase tracking-wider text-accent">{{ entry.caption }}</p>
+                    {% endif %}
+                    {% if entry.title %}<h3 class="m-0 mt-1 text-lg font-semibold text-primary">{{ entry.title }}</h3>{% endif %}
+                    {% if entry.description %}<p class="mt-1 mb-0 text-secondary">{{ entry.description }}</p>{% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+
+    {% elseif items.display == 'offers' %}
+        {# What each card has to answer, in the order it is asked: what is this,
+           what does it cost, what do I get, how do I start.
+
+           `items-stretch` and `h-full` so the cards of a row share a height -
+           three prices at three different heights read as three unrelated
+           boxes. The recommended one is lifted rather than made bigger: a card
+           that outgrows its neighbours breaks the row it belongs to. #}
+        <div class="grid grid-cols-1 items-stretch gap-6 {{ columns[items.columns] }}">
+            {% for entry in items.entries %}
+                <div class="relative flex h-full flex-col rounded-xl border p-6 {{ entry.featured ? 'border-accent bg-accent-500/5 shadow-lg shadow-black/20' : 'border-line bg-surface' }}">
+                    {% if entry.featured %}
+                        <span class="absolute -top-3 left-6 rounded-full bg-accent px-3 py-0.5 text-xs font-semibold text-white">
+                            {{ 'frontend.editorial.grid.recommended'|trans }}
+                        </span>
+                    {% endif %}
+                    {% if entry.title %}<h3 class="m-0 text-lg font-semibold text-primary">{{ entry.title }}</h3>{% endif %}
+                    {% if entry.caption %}<p class="m-0 mt-2 text-3xl font-bold text-accent">{{ entry.caption }}</p>{% endif %}
+                    {% if entry.description %}
+                        {# One line per line, which is how the field is filled
+                           in: a list of what is included reads as a list, and
+                           asking an author for markup here would be asking for
+                           a second editor inside a text box. #}
+                        <ul class="m-0 mt-4 flex-1 list-none space-y-2 p-0 text-sm text-secondary">
+                            {% for line in entry.description|split('\n') %}
+                                {% if line|trim %}
+                                    <li class="flex gap-2">
+                                        <span class="text-accent" aria-hidden="true">&check;</span>
+                                        <span>{{ line|trim }}</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if entry.url %}
+                        <a
+                            href="{{ entry.url }}"
+                            class="mt-6 inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium no-underline transition {{ entry.featured ? 'bg-accent text-white hover:opacity-90' : 'border border-accent text-accent hover:bg-accent hover:text-white' }}"
+                        >{{ 'frontend.editorial.grid.choose'|trans }}</a>
+                    {% endif %}
+                </div>
             {% endfor %}
         </div>
 
