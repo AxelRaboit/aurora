@@ -163,8 +163,16 @@ final readonly class GridNormalizer
      */
     public const array CARD_VARIANTS = ['full', 'compact', 'horizontal'];
 
-    /** Enough for a row or two of cards; past that it is an archive page. */
-    public const int MAX_LIST_LIMIT = 12;
+    /**
+     * How many publications one automatic list may draw.
+     *
+     * A cap, not a recommendation: without one a zone could ask for the whole
+     * site and the page would be an archive by accident. Twelve was too tight
+     * for the one shape this zone is best at - a hub page whose cards are the
+     * site's own sections - where the list is the page rather than a strip on
+     * it, and the eight that did not fit disappeared with nothing said.
+     */
+    public const int MAX_LIST_LIMIT = 24;
 
     /**
      * The languages the highlighter is built with. An unknown one is not an
