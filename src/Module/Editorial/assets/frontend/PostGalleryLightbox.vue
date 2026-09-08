@@ -150,7 +150,12 @@ onBeforeUnmount(() => {
                     <!-- `object-contain`, unlike the tile: here the whole
                          picture is the point, and cropping it would defeat
                          opening it. -->
-                    <figure class="m-0 flex min-w-0 flex-1 flex-col items-center gap-3">
+                    <!-- `h-full min-h-0`: without them the figure is a flex
+                         item whose height comes from its content, so a tall
+                         picture pushed it past the row and out of the screen -
+                         and `max-h-full` on the image resolved against a box
+                         that had already overflowed. -->
+                    <figure class="m-0 flex h-full min-h-0 min-w-0 flex-1 flex-col items-center gap-3">
                         <img
                             v-if="current"
                             :src="current.url"

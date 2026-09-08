@@ -5,6 +5,23 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### Une image haute sortait de l'écran dans la visionneuse
+Ouverte en grand, une photo au format story dépassait l'écran par le haut et
+par le bas : à 1280 × 720, elle commençait 582 pixels au-dessus du bord et
+courait 618 en dessous.
+
+La figure qui la contient est un élément flex sans borne basse, donc sa hauteur
+venait de son contenu, et le `max-h-full` de l'image se calculait sur une boîte
+qui avait déjà débordé. Elle est maintenant tenue par la ligne qui la porte.
+
+La visionneuse gagne au passage une suite de tests qui mesure la position de
+l'image dans la fenêtre, pour deux formats et deux tailles d'écran : ce qui
+s'est cassé est une mise en page, et seule une vraie fenêtre la calcule.
+
 ## [0.9.75] - 2026-09-08
 
 ### Ajouté
