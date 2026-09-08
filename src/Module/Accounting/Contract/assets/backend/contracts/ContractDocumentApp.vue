@@ -7,12 +7,27 @@
  * the canonical form, when it was sealed, and whether it still matches - that
  * last one recomputed on this request, not read back from a column.
  */
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { toast } from "vue-sonner";
 import DOMPurify from "dompurify";
+import { usePrivileges } from "@/shared/composables/usePrivileges.js";
+import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
+import AppSignaturePad from "@/shared/components/form/input/AppSignaturePad.vue";
 import AppButton from "@/shared/components/action/AppButton.vue";
+import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppMessage from "@/shared/components/feedback/AppMessage.vue";
-import { ArrowLeft, Lock, ShieldAlert, ShieldCheck } from "lucide-vue-next";
+import AppModal from "@/shared/components/overlay/AppModal.vue";
+import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
+import {
+    ArrowLeft,
+    Check,
+    Lock,
+    PenLine,
+    ShieldAlert,
+    ShieldCheck,
+    X,
+} from "lucide-vue-next";
 
 const { t } = useI18n();
 
@@ -20,10 +35,81 @@ const props = defineProps({
     contract: { type: Object, required: true },
     indexPath: { type: String, required: true },
     freezePath: { type: String, required: true },
+    countersignPath: { type: String, required: true },
 });
 
-const seal = computed(() => props.contract.seal ?? {});
-const isFrozen = computed(() => props.contract.isFrozen === true);
+const { can } = usePrivileges();
+const { request } = useRequest();
+
+const contract = ref({ ...props.contract });
+const seal = computed(() => contract.value.seal ?? {});
+const isFrozen = computed(() => contract.value.isFrozen === true);
+
+/**
+ * Only after the customer has signed, and only once.
+ *
+ * The countersignature concludes, so there has to be something to conclude -
+ * the server enforces that too, and this is the affordance that matches it.
+ */
+const canCountersign = computed(
+    () =>
+        contract.value.status === "signed_by_customer" &&
+        can("accounting.contracts.countersign"),
+);
+
+const showCountersign = ref(false);
+const countersigning = ref(false);
+const countersignErrors = ref({});
+const countersignForm = ref({
+    firstName: "",
+    lastName: "",
+    email: "",
+    place: "",
+    date: new Date().toISOString().slice(0, 10),
+    signatureImage: "",
+    consent: true,
+    // Unused by this path: the provider is authenticated, so identity comes
+    // from the session rather than from a mailed code. Sent because the DTO is
+    // shared with the public form, where it is the credential.
+    code: "n/a",
+});
+
+const canSubmitCountersign = computed(
+    () =>
+        countersignForm.value.firstName.trim() !== "" &&
+        countersignForm.value.lastName.trim() !== "" &&
+        countersignForm.value.email.trim() !== "" &&
+        countersignForm.value.place.trim() !== "" &&
+        countersignForm.value.signatureImage !== "" &&
+        !countersigning.value,
+);
+
+async function countersign() {
+    if (!canSubmitCountersign.value) return;
+
+    countersigning.value = true;
+    countersignErrors.value = {};
+
+    try {
+        const data = await request(
+            props.countersignPath,
+            countersignForm.value,
+            { noGuard: true },
+        );
+
+        if (data?.errors) {
+            countersignErrors.value = data.errors;
+
+            return;
+        }
+
+        if (data?.contract) contract.value = data.contract;
+        showCountersign.value = false;
+        toast.success(t("backend.accounting.contracts.countersigned"));
+    } finally {
+        countersigning.value = false;
+    }
+}
 
 const sealedAt = computed(() => {
     if (!seal.value.frozenAt) return null;
@@ -87,10 +173,21 @@ const documentHtml = computed(() =>
                     {{ contract.customerName }} · {{ t(contract.statusLabel) }}
                 </p>
             </div>
-            <AppButton variant="ghost" size="md" :href="indexPath">
-                <ArrowLeft class="w-3.5 h-3.5" :stroke-width="2" />
-                {{ t("shared.common.back") }}
-            </AppButton>
+            <div class="flex flex-wrap items-center gap-2">
+                <AppButton variant="ghost" size="md" :href="indexPath">
+                    <ArrowLeft class="w-3.5 h-3.5" :stroke-width="2" />
+                    {{ t("shared.common.back") }}
+                </AppButton>
+                <AppButton
+                    v-if="canCountersign"
+                    variant="primary"
+                    size="md"
+                    v-on:click="showCountersign = true"
+                >
+                    <PenLine class="w-3.5 h-3.5" :stroke-width="2" />
+                    {{ t("backend.accounting.contracts.countersign") }}
+                </AppButton>
+            </div>
         </div>
 
         <!-- A draft has no document yet, and saying so is more useful than an
@@ -182,6 +279,99 @@ const documentHtml = computed(() =>
                 {{ t("backend.accounting.contracts.deferred_tokens_hint") }}
             </p>
         </template>
+
+        <AppModal
+            :show="showCountersign"
+            max-width="lg"
+            :closeable="false"
+            :title="t('backend.accounting.contracts.countersign')"
+            :icon="PenLine"
+            v-on:close="showCountersign = false"
+        >
+            <div class="space-y-4">
+                <AppMessage v-if="countersignErrors.status" variant="danger">
+                    {{ countersignErrors.status }}
+                </AppMessage>
+
+                <!-- The consequence, before the click: this is what concludes
+                     the contract. -->
+                <p class="text-sm text-secondary">
+                    {{ t("backend.accounting.contracts.countersign_intro") }}
+                </p>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <AppInput
+                        v-model="countersignForm.firstName"
+                        :label="t('accounting.public.sign.first_name')"
+                        :placeholder="t('accounting.public.sign.first_name_placeholder')"
+                        :error="countersignErrors.firstName"
+                        required
+                    />
+                    <AppInput
+                        v-model="countersignForm.lastName"
+                        :label="t('accounting.public.sign.last_name')"
+                        :placeholder="t('accounting.public.sign.last_name_placeholder')"
+                        :error="countersignErrors.lastName"
+                        required
+                    />
+                </div>
+
+                <AppInput
+                    v-model="countersignForm.email"
+                    :label="t('accounting.public.sign.email')"
+                    :placeholder="t('accounting.public.sign.email_placeholder')"
+                    :error="countersignErrors.email"
+                    type="email"
+                    required
+                />
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <AppInput
+                        v-model="countersignForm.place"
+                        :label="t('accounting.public.sign.place')"
+                        :placeholder="t('accounting.public.sign.place_placeholder')"
+                        :error="countersignErrors.place"
+                        required
+                    />
+                    <AppInput
+                        v-model="countersignForm.date"
+                        :label="t('accounting.public.sign.date')"
+                        :placeholder="t('accounting.public.sign.date_placeholder')"
+                        :error="countersignErrors.date"
+                        type="date"
+                        required
+                    />
+                </div>
+
+                <!-- The same pad the customer used, so the two signatures are
+                     the same kind of thing. -->
+                <AppSignaturePad
+                    v-model="countersignForm.signatureImage"
+                    :label="t('accounting.public.sign.signature')"
+                />
+                <p v-if="countersignErrors.signatureImage" class="text-xs text-red-500">
+                    {{ countersignErrors.signatureImage }}
+                </p>
+            </div>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="showCountersign = false">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="primary"
+                        size="md"
+                        :disabled="!canSubmitCountersign"
+                        :loading="countersigning"
+                        v-on:click="countersign"
+                    >
+                        <Check class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contracts.countersign") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
     </div>
 </template>
 

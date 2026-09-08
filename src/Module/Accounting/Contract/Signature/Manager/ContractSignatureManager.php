@@ -1,0 +1,275 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Aurora\Module\Accounting\Contract\Signature\Manager;
+
+use Aurora\Core\Mail\Service\MailService;
+use Aurora\Core\Validation\Exception\FieldException;
+use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
+use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputInterface;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignature;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureInterface;
+use Aurora\Module\Accounting\Contract\Signature\Enum\ContractSignatureRoleEnum;
+use Aurora\Module\Accounting\Contract\Signature\Repository\ContractSignatureRepository;
+use Aurora\Module\Dev\Audit\Service\AuditLogger;
+use Aurora\Module\Platform\User\Entity\CoreUserInterface;
+use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\Translation\TranslatorInterface;
+
+use function mb_substr;
+
+/**
+ * Recording a signature, and the order that has to hold while doing it.
+ *
+ * The customer signs first and the provider countersigns; the countersignature
+ * is what concludes the contract. That ordering was a deliberate reversal of
+ * the obvious one, and it buys two things: the moment of formation stays with
+ * the provider, and no signature can ever be invalidated by an edit, because
+ * the document was already sealed before either party saw it.
+ *
+ * Everything this class writes is evidence, so the sequence matters as much as
+ * the result:
+ *
+ * 1. **The payload is validated before the code is consumed.** A typo in a name
+ *    must not burn a credential and send somebody back to their mailbox.
+ * 2. **The code is verified and consumed in one step**, by the challenge
+ *    manager, which is where the limits live.
+ * 3. **The signature is written with the hash as it stands**, copied rather than
+ *    referenced, so a later divergence is detectable.
+ * 4. **The status moves last.** A contract that says "signed" with no signature
+ *    row would be the worst of the possible half-states.
+ */
+#[AsAlias(ContractSignatureManagerInterface::class)]
+class ContractSignatureManager implements ContractSignatureManagerInterface
+{
+    public function __construct(
+        protected readonly EntityManagerInterface $entityManager,
+        protected readonly AuditLogger $auditLogger,
+        protected readonly ContractSignatureRepository $signatures,
+        protected readonly ContractSignatureChallengeManagerInterface $challenges,
+        protected readonly MailService $mail,
+        protected readonly TranslatorInterface $translator,
+    ) {}
+
+    public function signAsCustomer(
+        ContractAccessLinkInterface $link,
+        ContractSignatureInputInterface $input,
+        Request $request,
+    ): ContractSignatureInterface {
+        $contract = $link->getContract();
+
+        $this->assertSignable($contract, ContractSignatureRoleEnum::Customer);
+
+        // Consumed here, after the payload has already been validated by the
+        // caller. Everything past this line has to succeed or the signer has
+        // to ask for a new code, so nothing that can fail on form input is
+        // left to happen afterwards.
+        $verifiedAt = $this->challenges->verify($link, $input->getCode());
+
+        $signature = $this->build($contract, $input, ContractSignatureRoleEnum::Customer, $request);
+        $signature
+            ->setChallengeVerifiedAt($verifiedAt)
+            ->setLinkSelector($link->getSelector());
+
+        $this->entityManager->persist($signature);
+
+        $contract->setStatus(ContractStatusEnum::SignedByCustomer);
+        $this->entityManager->flush();
+
+        $this->auditLogger->log('accounting', 'contract.signed_by_customer', 'Contract', $contract->getId(), [
+            ...$this->auditPayload($signature),
+            'selector' => $link->getSelector(),
+        ]);
+
+        $this->notifyProvider($signature);
+
+        return $signature;
+    }
+
+    public function countersign(
+        ContractInterface $contract,
+        ContractSignatureInputInterface $input,
+        CoreUserInterface $user,
+        Request $request,
+    ): ContractSignatureInterface {
+        $this->assertSignable($contract, ContractSignatureRoleEnum::Provider);
+
+        // The order, enforced rather than assumed: the countersignature is what
+        // concludes, so there has to be something to conclude.
+        if (!$this->signatures->findOneForRole($contract, ContractSignatureRoleEnum::Customer) instanceof ContractSignatureInterface) {
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.customer_has_not_signed'));
+        }
+
+        $signature = $this->build($contract, $input, ContractSignatureRoleEnum::Provider, $request);
+        // A session rather than a mailbox: the provider is authenticated, which
+        // is a stronger link to a person than a code, and asking them for a
+        // code mailed to themselves would add a step and no evidence.
+        $signature->setUser($user);
+
+        $this->entityManager->persist($signature);
+
+        $contract->setStatus(ContractStatusEnum::Countersigned);
+        $this->entityManager->flush();
+
+        $this->auditLogger->log('accounting', 'contract.countersigned', 'Contract', $contract->getId(), $this->auditPayload($signature));
+
+        $this->notifyBothParties($signature);
+
+        return $signature;
+    }
+
+    /**
+     * Whether this party can still sign this contract.
+     *
+     * Three refusals, and each is a different mistake: a document that was
+     * never sealed, a contract that has run out of time or been withdrawn, and
+     * a party that has already signed.
+     */
+    protected function assertSignable(ContractInterface $contract, ContractSignatureRoleEnum $role): void
+    {
+        if (!$contract->isFrozen()) {
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.seal_before_signing'));
+        }
+
+        if (ContractStatusEnum::Countersigned === $contract->getStatus()) {
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.already_concluded'));
+        }
+
+        foreach ([ContractStatusEnum::Refused, ContractStatusEnum::Expired, ContractStatusEnum::Revoked] as $closed) {
+            if ($closed === $contract->getStatus()) {
+                throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.contract_closed'));
+            }
+        }
+
+        if ($this->signatures->findOneForRole($contract, $role) instanceof ContractSignatureInterface) {
+            // The unique index says the same thing, as a driver exception. This
+            // says it as a sentence.
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.role_already_signed'));
+        }
+    }
+
+    /**
+     * The row, with the declared half and the observed half filled in.
+     *
+     * The hash is read off the contract and copied. Referencing it would mean
+     * this row says whatever the contract says today, which is exactly the
+     * property a signature must not have.
+     */
+    protected function build(
+        ContractInterface $contract,
+        ContractSignatureInputInterface $input,
+        ContractSignatureRoleEnum $role,
+        Request $request,
+    ): ContractSignatureInterface {
+        $declaredDate = DateTimeImmutable::createFromFormat('!Y-m-d', $input->getDate());
+
+        if (false === $declaredDate) {
+            throw new FieldException('date', $this->translator->trans('accounting.public.sign.errors.date_invalid', [], null, $contract->getLocale()));
+        }
+
+        $signature = $this->createSignature();
+
+        return $signature
+            ->setContract($contract)
+            ->setRole($role)
+            ->setDeclaredFirstName($input->getFirstName())
+            ->setDeclaredLastName($input->getLastName())
+            ->setDeclaredEmail($input->getEmail())
+            ->setDeclaredPlace($input->getPlace())
+            ->setDeclaredDate($declaredDate)
+            ->setSignedAt(new DateTimeImmutable())
+            ->setIpAddress($request->getClientIp())
+            // Truncated to what the column holds rather than refused: a browser
+            // sending a two-kilobyte user agent is odd, not a reason to stop
+            // somebody signing, and the first 500 characters identify it.
+            ->setUserAgent($this->userAgent($request))
+            ->setSignedContentHash((string) $contract->getContentHash())
+            ->setSignatureImage($input->getSignatureImage());
+    }
+
+    protected function userAgent(Request $request): ?string
+    {
+        $agent = $request->headers->get('User-Agent');
+
+        return null === $agent ? null : mb_substr($agent, 0, 500);
+    }
+
+    protected function createSignature(): ContractSignatureInterface
+    {
+        return new ContractSignature();
+    }
+
+    /**
+     * Tells the provider somebody signed.
+     *
+     * To the administrator address rather than to a person: whoever watches the
+     * back office needs to know there is a contract waiting to be concluded,
+     * and that is a mailbox rather than a name.
+     */
+    protected function notifyProvider(ContractSignatureInterface $signature): void
+    {
+        $contract = $signature->getContract();
+
+        $this->mail->sendToAdmin(
+            subjectKey: 'accounting.email.customer_signed.subject',
+            template: '@Accounting/email/customer_signed.html.twig',
+            context: [
+                'contract' => $contract,
+                'signature' => $signature,
+            ],
+            subjectParams: ['{reference}' => (string) $contract->getReference()],
+        );
+    }
+
+    /**
+     * Tells both parties it is concluded.
+     *
+     * The customer's copy goes to the address the contract names, not to the
+     * one they typed: the contractual address is the channel the document
+     * itself says counts.
+     */
+    protected function notifyBothParties(ContractSignatureInterface $signature): void
+    {
+        $contract = $signature->getContract();
+
+        $this->mail->send(
+            to: $contract->getCustomer()->getContractualEmail(),
+            subjectKey: 'accounting.email.concluded.subject',
+            template: '@Accounting/email/concluded.html.twig',
+            context: ['contract' => $contract],
+            locale: $contract->getLocale(),
+            subjectParams: ['{reference}' => (string) $contract->getReference()],
+        );
+
+        $this->mail->sendToAdmin(
+            subjectKey: 'accounting.email.concluded.subject',
+            template: '@Accounting/email/concluded.html.twig',
+            context: ['contract' => $contract],
+            subjectParams: ['{reference}' => (string) $contract->getReference()],
+        );
+    }
+
+    /** @return array<string, mixed> */
+    protected function auditPayload(ContractSignatureInterface $signature): array
+    {
+        return [
+            'reference' => $signature->getContract()->getReference(),
+            'role' => $signature->getRole()->value,
+            'declaredBy' => $signature->getDeclaredFullName(),
+            'declaredEmail' => $signature->getDeclaredEmail(),
+            'declaredPlace' => $signature->getDeclaredPlace(),
+            'declaredDate' => $signature->getDeclaredDate()->format('Y-m-d'),
+            // The evidence, in the trail as well as in the row: an audit line
+            // that says a contract was signed and cannot say against which
+            // document is not worth much.
+            'signedContentHash' => $signature->getSignedContentHash(),
+            'ip' => $signature->getIpAddress(),
+        ];
+    }
+}

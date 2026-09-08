@@ -35,6 +35,8 @@ backend:
                     frozen: Contract frozen and sealed
                     link_sent: Signing link sent
                     link_revoked: Signing link revoked
+                    signed_by_customer: 'Contract signed by the customer'
+                    countersigned: 'Contract countersigned and concluded'
                     deleted: Contract deleted
     permissions:
         names:
@@ -55,6 +57,7 @@ backend:
                     edit: Edit a contract
                     delete: Delete a contract
                     send: 'Send a contract to the customer'
+                    countersign: 'Countersign a contract'
     accounting:
         signatures:
             role:
@@ -103,6 +106,9 @@ backend:
             col_sealed_at: Sealed on
             col_link: Link
             read_document: Read the document
+            countersign: 'Countersign'
+            countersign_intro: 'Your countersignature concludes the contract. The customer is notified by email.'
+            countersigned: 'Contract countersigned and concluded.'
             send: Send to the customer
             send_confirm: 'Send the contract to {email}?'
             send_warning: 'A secret link goes out by email. Any link sent before is revoked: there is never more than one valid address.'
@@ -147,6 +153,11 @@ backend:
                 seal_before_sending: Seal the contract before sending it.
                 already_engaged: This contract is already signed. It cannot be sent again.
                 no_active_link: No active link to revoke.
+                seal_before_signing: 'Seal the contract before it can be signed.'
+                already_concluded: 'This contract is already signed by both parties.'
+                contract_closed: 'This contract is closed and can no longer be signed.'
+                role_already_signed: 'This party has already signed.'
+                customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
         contract_templates:
             title: Contract templates
             kind:
@@ -307,13 +318,65 @@ accounting:
             hash_notice: 'Document hash: {hash}. It guarantees this wording has not changed since it was sent.'
             footer: This link is personal to you. Please do not forward it.
         sign:
+            heading: 'Sign this contract'
+            intro: 'Fill in your details, sign in the frame, then confirm with the code we will email you.'
+            first_name: 'First name'
+            first_name_placeholder: 'Camille'
+            last_name: 'Last name'
+            last_name_placeholder: 'Durand'
+            email: 'Your email'
+            email_placeholder: 'camille@company.com'
+            email_hint: 'Your own address. The confirmation code goes to the company''s contractual address.'
+            place: 'Signed at'
+            place_placeholder: 'Lyon'
+            date: 'On'
+            date_placeholder: '2026-09-09'
+            signature: 'Your signature'
+            draw_hint: 'Sign with your finger, a mouse or a stylus.'
+            clear: 'Clear'
+            code_intro: 'When you are ready, we will send you a confirmation code.'
+            request_code: 'Send me the code'
+            complete_first: 'Fill in your details and sign the frame to receive the code.'
+            code: 'Confirmation code'
+            code_placeholder: '123456'
+            code_sent: 'Code sent to {email}.'
+            resend_code: 'Send another code'
+            consent: 'I have read the contract above and accept its terms. My electronic signature has the same value as a handwritten one.'
+            submit: 'Sign the contract'
+            read_first: 'Scroll through the contract to the end before signing.'
+            code_first: 'Request the confirmation code to continue.'
+            consent_first: 'Tick the acceptance box to continue.'
             errors:
+                first_name_required: 'Your first name is required.'
+                last_name_required: 'Your last name is required.'
+                email_required: 'Your email is required.'
+                email_invalid: 'This email is not valid.'
+                place_required: 'The place is required.'
+                date_required: 'The date is required.'
+                date_invalid: 'This date is not valid.'
+                image_required: 'Your signature is required.'
+                image_invalid: 'This signature cannot be used. Clear it and try again.'
+                image_too_large: 'This signature is too heavy. Clear it and try again.'
+                consent_required: 'You must accept the terms of the contract to sign.'
+                code_required: 'The confirmation code is required.'
                 code_invalid: 'This code is not valid. Ask for a new one.'
                 too_many_codes: 'Too many codes requested for this contract. Try again in an hour.'
+                too_many_requests: 'Too many attempts. Wait a few minutes.'
         unavailable:
             title: This link is no longer valid
             message: The address you opened does not exist, has expired, or has been revoked. If you were expecting a contract, ask your contact for a new link.
     email:
+        customer_signed:
+            subject: 'Contract {reference} signed by the customer'
+            body: 'Contract {reference} has just been signed by {name}. It is waiting for your countersignature.'
+            declared: 'Declared: signed at {place}, on {date}'
+            observed: 'Observed: {at}, from {ip}'
+            hash: 'Hash of the signed document: {hash}'
+            action: 'Countersign it from the back office to conclude it.'
+        concluded:
+            subject: 'Contract {reference} concluded'
+            body: 'Contract {reference} is signed by both parties.'
+            hash: 'Document hash: {hash}'
         signature_code:
             subject: 'Your signing code'
             intro: 'Here is your confirmation code to sign the contract.'

@@ -118,6 +118,9 @@ shared:
     reply: Reply
     react: React
   form:
+    signature_pad:
+      clear: 'Clear'
+      hint: 'Sign with your finger, a mouse or a stylus.'
     submit: Submit
     submitting: Sending…
     next: Next

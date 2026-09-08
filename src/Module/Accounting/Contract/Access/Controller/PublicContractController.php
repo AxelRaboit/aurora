@@ -5,11 +5,22 @@ declare(strict_types=1);
 namespace Aurora\Module\Accounting\Contract\Access\Controller;
 
 use Aurora\Core\Enum\HttpMethodEnum;
+use Aurora\Core\Enum\HttpStatusEnum;
+use Aurora\Core\Http\JsonRequestTrait;
+use Aurora\Core\Http\JsonResponseTrait;
+use Aurora\Core\Validation\Exception\FieldException;
+use Aurora\Core\Validation\Service\PayloadValidator;
 use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
 use Aurora\Module\Accounting\Contract\Access\Manager\ContractAccessLinkManagerInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputFactoryInterface;
+use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureChallengeManagerInterface;
+use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -36,7 +47,21 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/contracts', name: 'public_contract')]
 final class PublicContractController extends AbstractController
 {
-    public function __construct(private readonly ContractAccessLinkManagerInterface $links) {}
+    use JsonRequestTrait;
+    use JsonResponseTrait;
+
+    public function __construct(
+        private readonly ContractAccessLinkManagerInterface $links,
+        private readonly ContractSignatureManagerInterface $signatures,
+        private readonly ContractSignatureChallengeManagerInterface $challenges,
+        private readonly ContractSignatureInputFactoryInterface $inputFactory,
+        private readonly PayloadValidator $payloadValidator,
+        // Autowired by parameter name: `$contractSignatureLimiter` resolves to
+        // the `contract_signature` limiter declared in config, the same way the
+        // form controller reaches `form_submission`.
+        private readonly RateLimiterFactoryInterface $contractSignatureLimiter,
+        private readonly RateLimiterFactoryInterface $contractSignatureCodeLimiter,
+    ) {}
 
     /**
      * The alphabets are constrained in the route, so a path carrying anything
@@ -69,8 +94,128 @@ final class PublicContractController extends AbstractController
             // not be regenerated.
             'documentHtml' => $contract->getRenderedHtml() ?? '',
             'isSigned' => $contract->getStatus()->isEngaged(),
+            'codePath' => $this->generateUrl('public_contract_code', ['selector' => $selector, 'token' => $token]),
+            'signPath' => $this->generateUrl('public_contract_sign', ['selector' => $selector, 'token' => $token]),
             'isConcluded' => ContractStatusEnum::Countersigned === $contract->getStatus(),
         ]));
+    }
+
+    /**
+     * Sends a fresh code to the address the contract names.
+     *
+     * Rate limited on the IP, which is the outer wall: the ceiling per link and
+     * the ten-minute window are the ones that hold, because an IP is the
+     * attacker's to rotate.
+     */
+    #[Route(
+        '/{selector}/{token}/code',
+        name: '_code',
+        requirements: ['selector' => '[a-f0-9]{32}', 'token' => '[a-f0-9]{64}'],
+        methods: [HttpMethodEnum::Post->value],
+    )]
+    public function requestCode(string $selector, string $token, Request $request): JsonResponse
+    {
+        if (!$this->contractSignatureCodeLimiter->create($request->getClientIp())->consume()->isAccepted()) {
+            return $this->jsonFailure('accounting.public.sign.errors.too_many_requests', HttpStatusEnum::TooManyRequests->value);
+        }
+
+        $link = $this->links->resolveUsable($selector, $token);
+
+        if (!$link instanceof ContractAccessLinkInterface) {
+            // The same 404 as the page: a stranger probing addresses learns
+            // nothing from this endpoint either.
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            $this->challenges->issue($link);
+        } catch (FieldException $fieldException) {
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
+        }
+
+        return $this->jsonSuccess([
+            'sentTo' => $this->maskEmail($link->getRecipientEmail()),
+        ]);
+    }
+
+    /**
+     * Signing.
+     *
+     * The order is the point, and it is not the obvious one:
+     *
+     * 1. **Rate limit**, before any work at all.
+     * 2. **Validate the payload**, before the code is touched. A typo in a name
+     *    must not burn a credential and send somebody back to their mailbox -
+     *    and validating a form reveals nothing, so nothing is lost by doing it
+     *    first.
+     * 3. **Verify and consume the code**, inside the manager where the limits
+     *    live.
+     * 4. **Write**, and move the status last.
+     *
+     * There is no captcha here, and that is a decision rather than an omission.
+     * Reaching this endpoint already requires 128 bits of secret in the URL and
+     * a six-digit code mailed to the customer's own mailbox; a robot has
+     * neither. The one thing a captcha would add - slowing somebody who holds a
+     * leaked link - is already covered by the per-link ceiling and the limiter.
+     * The verifier also lives in the Editorial module, and importing it would
+     * make accounting stop working wherever Editorial is not installed.
+     */
+    #[Route(
+        '/{selector}/{token}/sign',
+        name: '_sign',
+        requirements: ['selector' => '[a-f0-9]{32}', 'token' => '[a-f0-9]{64}'],
+        methods: [HttpMethodEnum::Post->value],
+    )]
+    public function sign(string $selector, string $token, Request $request): JsonResponse
+    {
+        if (!$this->contractSignatureLimiter->create($request->getClientIp())->consume()->isAccepted()) {
+            return $this->jsonFailure('accounting.public.sign.errors.too_many_requests', HttpStatusEnum::TooManyRequests->value);
+        }
+
+        $link = $this->links->resolveUsable($selector, $token);
+
+        if (!$link instanceof ContractAccessLinkInterface) {
+            throw $this->createNotFoundException();
+        }
+
+        $input = $this->inputFactory->fromArray($this->decodeJson($request));
+
+        $errors = $this->payloadValidator->errors($input);
+        if ([] !== $errors) {
+            return $this->jsonInvalidInput($errors);
+        }
+
+        try {
+            $this->signatures->signAsCustomer($link, $input, $request);
+        } catch (FieldException $fieldException) {
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
+        }
+
+        return $this->jsonSuccess([
+            'signed' => true,
+            'reloadPath' => $this->generateUrl('public_contract_show', [
+                'selector' => $selector,
+                'token' => $token,
+            ]),
+        ]);
+    }
+
+    /**
+     * `co****@durand.test`, so the page can say where the code went.
+     *
+     * Masked because this reply goes to whoever holds the link, and the full
+     * address is one more thing they would not otherwise know. Enough of it
+     * shows for the person who owns the mailbox to recognise it.
+     */
+    private function maskEmail(string $email): string
+    {
+        $at = mb_strpos($email, '@');
+
+        if (false === $at || $at < 2) {
+            return '***';
+        }
+
+        return mb_substr($email, 0, 2).str_repeat('*', $at - 2).mb_substr($email, $at);
     }
 
     private function unavailable(): Response

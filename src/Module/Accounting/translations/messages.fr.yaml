@@ -35,6 +35,8 @@ backend:
                     frozen: Contrat gelé et scellé
                     link_sent: Lien de signature envoyé
                     link_revoked: Lien de signature révoqué
+                    signed_by_customer: 'Contrat signé par le client'
+                    countersigned: 'Contrat contresigné et conclu'
                     deleted: Contrat supprimé
     permissions:
         names:
@@ -55,6 +57,7 @@ backend:
                     edit: Modifier un contrat
                     delete: Supprimer un contrat
                     send: 'Envoyer un contrat au client'
+                    countersign: 'Contresigner un contrat'
     accounting:
         signatures:
             role:
@@ -103,6 +106,9 @@ backend:
             col_sealed_at: Scellé le
             col_link: Lien
             read_document: Lire le document
+            countersign: 'Contresigner'
+            countersign_intro: 'Votre contresignature conclut le contrat. Le client en sera informé par email.'
+            countersigned: 'Contrat contresigné et conclu.'
             send: Envoyer au client
             send_confirm: 'Envoyer le contrat à {email} ?'
             send_warning: 'Un lien secret part par email. Tout lien envoyé auparavant est révoqué : il n''y a jamais qu''une seule adresse valide.'
@@ -147,6 +153,11 @@ backend:
                 seal_before_sending: Scellez le contrat avant de l'envoyer.
                 already_engaged: Ce contrat est déjà signé. Il ne peut plus être renvoyé.
                 no_active_link: Aucun lien actif à révoquer.
+                seal_before_signing: 'Scellez le contrat avant de le faire signer.'
+                already_concluded: 'Ce contrat est déjà signé par les deux parties.'
+                contract_closed: 'Ce contrat est clos et ne peut plus être signé.'
+                role_already_signed: 'Cette partie a déjà signé.'
+                customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
         contract_templates:
             title: Trames de contrat
             kind:
@@ -307,13 +318,65 @@ accounting:
             hash_notice: 'Empreinte du document : {hash}. Elle garantit que ce texte n''a pas changé depuis son envoi.'
             footer: Ce lien vous est personnel. Ne le transmettez pas.
         sign:
+            heading: 'Signer ce contrat'
+            intro: 'Renseignez votre identité, signez dans le cadre, puis confirmez avec le code que nous vous enverrons par email.'
+            first_name: 'Prénom'
+            first_name_placeholder: 'Camille'
+            last_name: 'Nom'
+            last_name_placeholder: 'Durand'
+            email: 'Votre email'
+            email_placeholder: 'camille@societe.fr'
+            email_hint: 'Votre adresse personnelle. Le code de confirmation, lui, part à l''adresse contractuelle de la société.'
+            place: 'Fait à'
+            place_placeholder: 'Lyon'
+            date: 'Le'
+            date_placeholder: '2026-09-09'
+            signature: 'Votre signature'
+            draw_hint: 'Signez avec le doigt, la souris ou un stylet.'
+            clear: 'Effacer'
+            code_intro: 'Quand vous êtes prêt, nous vous envoyons un code de confirmation.'
+            request_code: 'Recevoir le code'
+            complete_first: 'Renseignez votre identité et signez le cadre pour recevoir le code.'
+            code: 'Code de confirmation'
+            code_placeholder: '123456'
+            code_sent: 'Code envoyé à {email}.'
+            resend_code: 'Renvoyer un code'
+            consent: 'J''ai lu le contrat ci-dessus et j''en accepte les termes. Ma signature électronique a la même valeur qu''une signature manuscrite.'
+            submit: 'Signer le contrat'
+            read_first: 'Faites défiler le contrat jusqu''en bas avant de signer.'
+            code_first: 'Demandez le code de confirmation pour continuer.'
+            consent_first: 'Cochez la case d''acceptation pour continuer.'
             errors:
+                first_name_required: 'Votre prénom est obligatoire.'
+                last_name_required: 'Votre nom est obligatoire.'
+                email_required: 'Votre email est obligatoire.'
+                email_invalid: 'Cet email n''est pas valide.'
+                place_required: 'Le lieu est obligatoire.'
+                date_required: 'La date est obligatoire.'
+                date_invalid: 'Cette date n''est pas valide.'
+                image_required: 'Votre signature est obligatoire.'
+                image_invalid: 'Cette signature n''est pas exploitable. Effacez et recommencez.'
+                image_too_large: 'Cette signature est trop lourde. Effacez et recommencez.'
+                consent_required: 'Vous devez accepter les termes du contrat pour signer.'
+                code_required: 'Le code de confirmation est obligatoire.'
                 code_invalid: 'Ce code n''est pas valide. Demandez-en un nouveau.'
                 too_many_codes: 'Trop de codes demandés pour ce contrat. Réessayez dans une heure.'
+                too_many_requests: 'Trop de tentatives. Patientez quelques minutes.'
         unavailable:
             title: Ce lien n'est plus valide
             message: L'adresse que vous avez ouverte n'existe pas, a expiré, ou a été révoquée. Si vous attendiez un contrat, demandez un nouveau lien à votre interlocuteur.
     email:
+        customer_signed:
+            subject: 'Contrat {reference} signé par le client'
+            body: 'Le contrat {reference} vient d''être signé par {name}. Il attend votre contresignature.'
+            declared: 'Déclaré : fait à {place}, le {date}'
+            observed: 'Observé : {at}, depuis {ip}'
+            hash: 'Empreinte du document signé : {hash}'
+            action: 'Contresignez-le depuis le back-office pour le conclure.'
+        concluded:
+            subject: 'Contrat {reference} conclu'
+            body: 'Le contrat {reference} est signé par les deux parties.'
+            hash: 'Empreinte du document : {hash}'
         signature_code:
             subject: 'Votre code de signature'
             intro: 'Voici votre code de confirmation pour signer le contrat.'

@@ -59,6 +59,15 @@
         {{ documentHtml|raw }}
     </article>
 
+    {# The form comes after the document, which is the order the page asks for
+       things: read, then sign. #}
+    {% if not isSigned %}
+        <div {{ vue_component('accounting/public/sign/ContractSignApp', {
+            codePath: codePath,
+            signPath: signPath,
+        }) }}></div>
+    {% endif %}
+
     <p class="text-xs text-muted">
         {{ 'accounting.public.contract.hash_notice'|trans({'{hash}': contract.contentHash|slice(0, 16)}, null, contract.locale) }}
     </p>

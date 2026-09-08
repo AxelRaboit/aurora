@@ -118,6 +118,9 @@ shared:
     reply: Répondre
     react: Réagir
   form:
+    signature_pad:
+      clear: 'Effacer'
+      hint: 'Signez avec le doigt, la souris ou un stylet.'
     submit: Envoyer
     submitting: Envoi en cours…
     next: Suivant

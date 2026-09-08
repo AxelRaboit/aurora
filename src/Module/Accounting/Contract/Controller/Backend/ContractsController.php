@@ -18,7 +18,10 @@ use Aurora\Module\Accounting\Contract\Entity\Contract;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Contract\Manager\ContractManagerInterface;
 use Aurora\Module\Accounting\Contract\Serializer\ContractSerializerInterface;
+use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputFactoryInterface;
+use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManagerInterface;
 use Aurora\Module\Accounting\Contract\View\ContractsViewBuilder;
+use Aurora\Module\Platform\User\Entity\CoreUserInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,6 +45,8 @@ class ContractsController extends AbstractController
         protected readonly PayloadValidator $payloadValidator,
         protected readonly ContractAccessLinkManagerInterface $accessLinks,
         protected readonly ContractAccessLinkRepository $accessLinkRepository,
+        protected readonly ContractSignatureManagerInterface $signatures,
+        protected readonly ContractSignatureInputFactoryInterface $signatureInputFactory,
         protected readonly TranslatorInterface $translator,
     ) {}
 
@@ -170,6 +175,42 @@ class ContractsController extends AbstractController
         }
 
         $this->accessLinks->revoke($link);
+
+        return $this->jsonSuccess([
+            'contract' => $this->serializer->serialize($contract),
+            'contracts' => $this->viewBuilder->contracts(),
+        ]);
+    }
+
+    /**
+     * The countersignature, which concludes the contract.
+     *
+     * Its own permission: concluding a contract is not the same act as
+     * preparing one, and the person who may draft is not necessarily the person
+     * who may commit the company.
+     */
+    #[Route('/{id}/countersign', name: '_countersign', requirements: ['id' => '\d+'], methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('accounting.contracts.countersign')]
+    public function countersign(Contract $contract, Request $request): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof CoreUserInterface) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $input = $this->signatureInputFactory->fromArray($this->decodeJson($request));
+
+        $errors = $this->payloadValidator->errors($input);
+        if ([] !== $errors) {
+            return $this->jsonInvalidInput($errors);
+        }
+
+        try {
+            $this->signatures->countersign($contract, $input, $user, $request);
+        } catch (FieldException $fieldException) {
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
+        }
 
         return $this->jsonSuccess([
             'contract' => $this->serializer->serialize($contract),

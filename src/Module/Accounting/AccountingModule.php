@@ -45,6 +45,7 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
             new NavPermission('accounting.contracts.edit'),
             new NavPermission('accounting.contracts.delete'),
             new NavPermission('accounting.contracts.send'),
+            new NavPermission('accounting.contracts.countersign'),
         ];
     }
 
