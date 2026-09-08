@@ -14,6 +14,17 @@ backend:
                     created: Customer created
                     updated: Customer updated
                     deleted: Customer deleted
+                contract_template:
+                    created: Contract template created
+                    updated: Contract template updated
+                    archived: Contract template archived
+                    restored: Contract template restored
+                    deleted: Contract template deleted
+                contract_template_version:
+                    opened: Template version opened
+                    updated: Template version edited
+                    published: Template version published
+                    discarded: Template draft discarded
     permissions:
         names:
             accounting:
@@ -23,6 +34,17 @@ backend:
                     edit: Edit a customer
                     delete: Delete a customer
     accounting:
+        contract_templates:
+            title: Contract templates
+            kind:
+                body: Contract body
+                annex: Annex
+            errors:
+                name_required: The template name is required.
+                name_too_long: The template name cannot exceed 180 characters.
+                translations_required: A version must carry at least one language.
+                draft_already_open: 'A draft is already open on this template (version {number}). Finish or discard it before opening another.'
+                nothing_to_publish: This version has no wording to publish.
         customers:
             title: Customers
             add: Add a customer

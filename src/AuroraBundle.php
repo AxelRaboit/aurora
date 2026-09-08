@@ -11,6 +11,12 @@ use Aurora\Core\Locale\Entity\LocaleInterface;
 use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Core\Notification\Entity\NotificationInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplate;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersion;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslation;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslationInterface;
 use Aurora\Module\Accounting\Customer\Entity\Customer;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Configuration\Setting\Entity\Setting;
@@ -199,6 +205,9 @@ class AuroraBundle extends AbstractBundle
                     TaxonomyTermInterface::class => TaxonomyTerm::class,
                     TaxonomyTermTranslationInterface::class => TaxonomyTermTranslation::class,
                     CustomerInterface::class => Customer::class,
+                    ContractTemplateInterface::class => ContractTemplate::class,
+                    ContractTemplateVersionInterface::class => ContractTemplateVersion::class,
+                    ContractTemplateVersionTranslationInterface::class => ContractTemplateVersionTranslation::class,
                 ],
                 'mappings' => array_merge(
                     [
