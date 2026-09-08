@@ -5,6 +5,25 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.83] - 2026-09-08
+
+### Corrigé
+
+#### Les tests pouvaient passer au vert en testant un autre dossier
+Composer déduit l'emplacement du code du `__FILE__` de son propre autoloader,
+et PHP résout ça à travers les liens symboliques. Un `vendor/` lié depuis un
+autre checkout - le raccourci évident quand on monte un worktree git - fait
+donc charger le `src/` de l'autre dossier. La suite tourne, elle est verte, et
+elle a testé du code que personne n'a modifié.
+
+C'est la pire réponse qu'un lancement de tests puisse donner : une mauvaise qui
+a l'air bonne. Le démarrage de la suite vérifie maintenant que l'autoloader
+pointe bien à l'intérieur du dossier depuis lequel on l'a lancée, et s'arrête
+en le disant sinon.
+
+Rien à changer dans un projet client : sur une installation normale la
+vérification ne se voit pas.
+
 ## [0.9.82] - 2026-09-08
 
 ### Ajouté
