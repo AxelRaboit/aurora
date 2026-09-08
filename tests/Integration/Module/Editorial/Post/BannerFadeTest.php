@@ -43,6 +43,57 @@ final class BannerFadeTest extends IntegrationTestCase
         self::assertStringNotContainsString('to-bg', $this->render([]));
     }
 
+    /**
+     * A call to action belongs to the sentence that justifies it.
+     *
+     * As its own item it lands on the row below, which in a banner with a
+     * tall picture beside it is half a portrait further down. Both fields
+     * already travelled with every item; the text costume simply never drew
+     * them.
+     */
+    public function testATextCarriesItsOwnButton(): void
+    {
+        $html = $this->renderItems(
+            [['id' => 'a1', 'type' => 'text']],
+            ['a1' => ['title' => 'Bonjour', 'description' => 'Une phrase.', 'label' => 'Me contacter', 'url' => 'https://example.test']],
+        );
+
+        self::assertStringContainsString('Me contacter', $html);
+        self::assertStringContainsString('https://example.test', $html);
+        // Under the words it answers, not before them.
+        self::assertLessThan(
+            (int) mb_strpos($html, 'Me contacter'),
+            (int) mb_strpos($html, 'Une phrase.'),
+        );
+    }
+
+    /** A label with nowhere to go draws nothing: a dead control is worse than none. */
+    public function testALabelWithoutAnAddressDrawsNoButton(): void
+    {
+        $html = $this->renderItems(
+            [['id' => 'a1', 'type' => 'text']],
+            ['a1' => ['title' => 'Bonjour', 'label' => 'Me contacter']],
+        );
+
+        self::assertStringNotContainsString('Me contacter', $html);
+    }
+
+    /**
+     * @param list<array<string, mixed>>          $items
+     * @param array<string, array<string, mixed>> $words
+     */
+    private function renderItems(array $items, array $words): string
+    {
+        $banner = $this->bannerViewBuilder->build(
+            ['enabled' => true, 'items' => $items],
+            ['items' => $words],
+        );
+
+        self::assertNotNull($banner);
+
+        return $this->twig->render(self::TEMPLATE, ['banner' => $banner]);
+    }
+
     /** @param array<string, mixed> $overrides */
     private function render(array $overrides): string
     {

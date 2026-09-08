@@ -5,6 +5,23 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.75] - 2026-09-08
+
+### Ajouté
+
+#### Un texte d'en-tête peut porter son propre bouton
+Un appel à l'action posé comme élément séparé tombe sur la ligne suivante de
+la grille. Dans une bannière où une image haute occupe la même ligne, cela le
+place une demi-photo plus bas que la phrase qui le justifie.
+
+Un élément Texte affiche maintenant son bouton juste sous sa description,
+quand il porte un libellé et une adresse. Les deux champs voyageaient déjà
+avec chaque élément : c'est le costume qui ne les dessinait pas, si bien qu'on
+pouvait remplir un libellé et ne rien voir.
+
+Un libellé sans adresse ne dessine toujours rien : un bouton qui ne mène nulle
+part est pire qu'absent.
+
 ## [0.9.74] - 2026-09-08
 
 ### Corrigé
