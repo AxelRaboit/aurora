@@ -3,8 +3,14 @@ import { deepMerge } from "@/shared/utils/data/deepMerge.js";
 
 // Generated from translations/messages.{locale}.yaml via `php bin/console app:translations:dump-js`.
 // Single source of truth for all Vue + Twig translations.
+//
+// One import per locale of LocaleEnum, and a language missing from this list
+// is a language whose Vue components silently render in French - the Twig half
+// of a page translated, the components on it not. See LocaleBundleTest, which
+// exists because that is exactly what happened when Spanish was added.
 import frYaml from "@/locales/generated/fr.json";
 import enYaml from "@/locales/generated/en.json";
+import esYaml from "@/locales/generated/es.json";
 
 // Optional client-specific locale sources (e.g. custom module permission names).
 // Resolves via the @client alias; returns {} when AURORA_CLIENT_DIR is unset.
@@ -12,22 +18,28 @@ import enYaml from "@/locales/generated/en.json";
 const clientLocales = import.meta.glob("@client/src/locales/*.js", {
     eager: true,
 });
-const clientFr =
-    Object.entries(clientLocales).find(([k]) => k.endsWith("/fr.js"))?.[1]
-        ?.default ?? {};
-const clientEn =
-    Object.entries(clientLocales).find(([k]) => k.endsWith("/en.js"))?.[1]
-        ?.default ?? {};
+
+function client(locale) {
+    return (
+        Object.entries(clientLocales).find(([path]) =>
+            path.endsWith(`/${locale}.js`),
+        )?.[1]?.default ?? {}
+    );
+}
 
 // Client wins last so custom modules can override or extend any key.
-const fr = deepMerge(frYaml, clientFr);
-const en = deepMerge(enYaml, clientEn);
+const fr = deepMerge(frYaml, client("fr"));
+const en = deepMerge(enYaml, client("en"));
+const es = deepMerge(esYaml, client("es"));
 
 export function createAppI18n(locale = "fr") {
     return createI18n({
         legacy: false,
         locale,
+        // French is the source language, and it is what the Twig half falls
+        // back to as well: a page half-translated should read in one language
+        // rather than in two.
         fallbackLocale: "fr",
-        messages: { fr, en },
+        messages: { fr, en, es },
     });
 }

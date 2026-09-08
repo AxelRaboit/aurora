@@ -5,6 +5,36 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### Les composants rendaient en français sur un site en espagnol
+Une page en espagnol s'affichait en espagnol, sauf ce que dessine Vue : le
+bouton d'un formulaire disait « Envoyer », la visionneuse et les commentaires
+avec lui.
+
+Twig lit les catalogues YAML, donc une langue ajoutée est traduite côté serveur
+dès que ses fichiers existent. Les composants, non : on leur passe un paquet
+assemblé à la main dans `i18n.js`, un import par langue. L'espagnol était bien
+généré et jamais importé, alors vue-i18n retombait sur le français pour chaque
+clé demandée par un composant.
+
+L'espagnol y est. Les 144 clés du site public sont traduites ; le back-office
+en espagnol reste en repli français, ce qui n'a pas changé.
+
+Un test lit `i18n.js` et vérifie que chaque langue déclarée par l'application
+figure dans le paquet servi au navigateur. C'était le trou : les deux moitiés
+sont écrites dans deux langages et aucune n'importe l'autre, donc rien ne
+signalait l'oubli.
+
+### Ajouté
+
+#### Les états vides du thème et les pages de partage en espagnol
+Le titre des archives, le champ de recherche et les messages « aucun article »
+du thème, plus les six phrases de la page qu'ouvre un lien de planning
+partagé.
+
 ## [0.9.79] - 2026-09-08
 
 ### Ajouté

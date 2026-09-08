@@ -1,0 +1,9 @@
+frontend:
+  plannings:
+    share:
+      unavailable_title: "Enlace no disponible"
+      unavailable_body: "Este enlace ya no es válido. Puede haber caducado o haber sido revocado. Pida uno nuevo a la persona que se lo envió."
+      read_only: "Solo lectura"
+      until: "hasta el %date%"
+      times_in: "Horas en {zone}"
+      nothing: "Ningún calendario"
