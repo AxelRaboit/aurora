@@ -601,6 +601,9 @@ backend:
       zone_post: Publication à afficher
       zone_post_hint: "Choisie parmi les publications liées. Elle s'affiche dans la langue de la page, donc ce choix vaut pour toutes."
       zone_video: Adresse de la vidéo
+      zone_video_file: Choisir une vidéo
+      zone_video_file_chosen: Vidéo de la médiathèque
+      zone_video_file_none: Aucune vidéo choisie
       zone_video_hint: "YouTube, Vimeo ou Dailymotion. Une autre adresse s'affichera en lien plutôt qu'en lecteur."
       move_up: Monter
       move_down: Descendre

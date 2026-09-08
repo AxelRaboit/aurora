@@ -16,6 +16,7 @@ import { useI18n } from "vue-i18n";
 import AppBlockEditor from "@/shared/components/editor/AppBlockEditor.vue";
 import AppChoiceRow from "@/shared/components/form/select/AppChoiceRow.vue";
 import AppImagePickerField from "@/shared/components/form/file/AppImagePickerField.vue";
+import { openDocumentPicker } from "@/shared/utils/documentPicker.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppIconButton from "@/shared/components/action/AppIconButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
@@ -74,6 +75,15 @@ const { t } = useI18n();
  * same one handed a new object.
  */
 const bound = props.fields;
+
+/** Opens the library filtered to what a browser can play. */
+async function pickVideo() {
+    const picked = await openDocumentPicker({ mimePrefix: "video/" });
+
+    if (picked) {
+        bound.media.value = picked;
+    }
+}
 
 const publicationOptions = computed(() =>
     props.postOptions.map((post) => ({ value: post.id, label: post.title ?? `#${post.id}` })),
@@ -470,13 +480,37 @@ const descriptionHint = computed(() =>
              not content of its own, and a catch-all would have offered it a
              video address. -->
         <template v-else-if="zone.type === 'video'">
+            <!-- A film the site hosts, chosen like a picture. Shared by every
+                 language: the same file plays whatever the page is read in,
+                 which is why it sits outside the translated block below. -->
+            <div class="flex items-center gap-3">
+                <span class="min-w-0 flex-1 truncate text-sm text-secondary">
+                    {{ bound.media.value?.id
+                        ? t("backend.posts.grid.zone_video_file_chosen")
+                        : t("backend.posts.grid.zone_video_file_none") }}
+                </span>
+                <AppTextLinkButton size="xs" v-on:click="pickVideo">
+                    {{ bound.media.value?.id ? t("shared.media.change") : t("backend.posts.grid.zone_video_file") }}
+                </AppTextLinkButton>
+                <AppTextLinkButton
+                    v-if="bound.media.value?.id"
+                    color="danger"
+                    size="xs"
+                    v-on:click="bound.media.value = null"
+                >
+                    {{ t("shared.common.remove") }}
+                </AppTextLinkButton>
+            </div>
+
             <div class="rounded-lg border border-dashed border-line p-3 space-y-4">
                 <p class="text-xs uppercase tracking-wide text-muted">
                     {{ t("backend.posts.grid.translated_fields", { locale }) }}
                 </p>
-                <!-- The address is per language: a localised video has
-                     a localised URL. -->
+                <!-- Only reached when no file is picked above, which is the
+                     order the renderer uses too: a hosted film is played by
+                     the browser, an address by its provider. -->
                 <AppInput
+                    v-if="!bound.media.value?.id"
                     v-model="bound.url.value"
                     :label="t('backend.posts.grid.zone_video')"
                     :hint="t('backend.posts.grid.zone_video_hint')"

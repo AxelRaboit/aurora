@@ -5,6 +5,26 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.77] - 2026-09-08
+
+### Ajouté
+
+#### Une zone Vidéo peut jouer un fichier de la médiathèque
+Elle n'acceptait qu'une adresse YouTube, Vimeo ou Dailymotion. Le film d'un
+client devait donc être publié chez un tiers avant de pouvoir apparaître sur
+son propre site, ce qui n'est pas toujours souhaitable ni possible.
+
+On choisit maintenant une vidéo dans la médiathèque, comme on choisit une
+image, et le navigateur la lit. Les deux voies coexistent : une adresse va
+chercher le lecteur du fournisseur, un document est joué sur place. La réponse
+dépend du projet.
+
+Le lecteur ne précharge rien et affiche l'image de couverture du document, s'il
+en a une : une page de portfolio peut porter plusieurs films, et le visiteur en
+regarde un. Le type du fichier est vérifié au moment du rendu et non à
+l'enregistrement, parce qu'un document dont le fichier est remplacé après coup
+laisserait sinon un lecteur pointé sur un PDF.
+
 ## [0.9.76] - 2026-09-08
 
 ### Corrigé

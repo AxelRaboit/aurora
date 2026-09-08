@@ -21,6 +21,8 @@ enum MimeTypeEnum: string
     case Webp = 'image/webp';
     case Svg = 'image/svg+xml';
     case Pdf = 'application/pdf';
+    case Mp4 = 'video/mp4';
+    case Webm = 'video/webm';
 
     /** True for any image/* (raster or vector). Excludes PDFs. */
     public function isImage(): bool
@@ -35,6 +37,21 @@ enum MimeTypeEnum: string
     {
         return match ($this) {
             self::Jpeg, self::Jpg, self::Png, self::Gif, self::Webp => true,
+            default => false,
+        };
+    }
+
+    /**
+     * True for a file a browser can play in a `<video>`.
+     *
+     * The two formats worth naming: MP4 with H.264 plays everywhere, WebM
+     * covers the rest. Anything else uploaded stays a file to download, which
+     * is what it was before this existed.
+     */
+    public function isVideo(): bool
+    {
+        return match ($this) {
+            self::Mp4, self::Webm => true,
             default => false,
         };
     }
@@ -78,6 +95,8 @@ enum MimeTypeEnum: string
             self::Webp => 'webp',
             self::Svg => 'svg',
             self::Pdf => 'pdf',
+            self::Mp4 => 'mp4',
+            self::Webm => 'webm',
         };
     }
 }

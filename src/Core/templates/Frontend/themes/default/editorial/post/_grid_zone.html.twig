@@ -256,7 +256,28 @@
         </nav>
 
     {% elseif zone.type == 'video' %}
-        {% if zone.video %}
+        {% if zone.file %}
+            {# A film the site hosts: played by the browser, not by a provider.
+               `preload="none"` because a portfolio page can carry several and
+               a visitor watches one - metadata alone would be a request per
+               film before anyone asked for any. The poster is what stands in
+               until then. #}
+            <div class="not-prose overflow-hidden rounded-lg">
+                <video
+                    class="block h-auto w-full"
+                    controls
+                    playsinline
+                    preload="none"
+                    {% if zone.file.poster %}poster="{{ zone.file.poster }}"{% endif %}
+                >
+                    <source src="{{ zone.file.url }}" type="{{ zone.file.mimeType }}">
+                </video>
+            </div>
+            {% if zone.caption %}
+                <p class="mt-2 text-sm text-secondary">{{ zone.caption }}</p>
+            {% endif %}
+
+        {% elseif zone.video %}
             {# The src is built from an extracted id against a whitelist
                of three providers - see VideoEmbedResolver. An iframe
                runs what its host serves, so an arbitrary address is

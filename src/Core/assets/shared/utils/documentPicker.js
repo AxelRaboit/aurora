@@ -11,13 +11,15 @@ import DocumentPickerModal from "@ged/backend/documents/components/DocumentPicke
  * Resolves with the selected document (full serialized payload from
  * `/backend/ged/documents/list`) or `null` if the user cancels.
  *
- * `imagesOnly` filters the visible documents to `image/*` MIME types.
+ * `imagesOnly` filters the visible documents to `image/*` MIME types, and
+ * `mimePrefix` does the same for any other family - `video/` for a film.
  * `mimeFilter` is the more granular knob (single MIME, e.g.
  * "application/pdf") and is forwarded to the modal directly.
  */
 export function openDocumentPicker({
     imagesOnly = false,
     mimeFilter = null,
+    mimePrefix = null,
     multiple = false,
     listPath = "/backend/ged/documents/list",
 } = {}) {
@@ -51,7 +53,7 @@ export function openDocumentPicker({
                     show: show.value,
                     listPath,
                     mimeFilter,
-                    mimePrefix: imagesOnly ? "image/" : null,
+                    mimePrefix: mimePrefix ?? (imagesOnly ? "image/" : null),
                     multiple,
                     onClose: () => finish(multiple ? [] : null),
                     onSelect: (item) => finish(item),

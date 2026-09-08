@@ -57,6 +57,24 @@ final readonly class DocumentUrlGenerator
         );
     }
 
+    /**
+     * The still that stands for a document, when it has one.
+     *
+     * Written for PDFs, which get a rendered first page; a video uses the same
+     * field for its poster frame, so a player can show something before a byte
+     * of the film is fetched.
+     */
+    public function thumbnailPathUrl(?DocumentInterface $document): ?string
+    {
+        $path = $document?->getThumbnailPath();
+
+        if (null === $path || '' === $path) {
+            return null;
+        }
+
+        return $this->urlGenerator->generate('uploads_serve', ['path' => $path]);
+    }
+
     public function variantUrl(?DocumentInterface $document, string $variant): ?string
     {
         if (!$document instanceof DocumentInterface) {
