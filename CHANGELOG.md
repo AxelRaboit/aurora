@@ -63,9 +63,11 @@ le mauvais échange.
 
 ### Dans aurora-client
 
-**1. Déclarer les deux limites de débit.** Les routes publiques de signature
-sont non authentifiées, et le contrôleur les câble par nom. Sans ces deux
-entrées, le conteneur ne se construit pas :
+**1. Déclarer les deux limites de débit, avant de lancer `make aurora-update`.**
+Les routes publiques de signature sont non authentifiées, et le contrôleur les
+câble par nom : sans ces deux entrées le conteneur ne se construit pas, et le
+`cache:clear` que la cible enchaîne échoue au milieu de la mise à jour. C'est
+donc la seule chose de cette liste à poser d'abord :
 
 ```yaml
 # config/packages/rate_limiter.yaml
