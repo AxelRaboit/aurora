@@ -7,6 +7,7 @@ namespace Aurora\Module\Editorial\Post\Grid;
 use Aurora\Core\Content\ContentValueNormalizer;
 use Aurora\Core\Content\VideoEmbedResolver;
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
+use Aurora\Core\Storage\Enum\MimeTypeEnum;
 use Aurora\Module\Editorial\Form\Entity\FormInterface;
 use Aurora\Module\Editorial\Form\Entity\FormTranslationInterface;
 use Aurora\Module\Editorial\Form\Repository\FormRepository;
@@ -154,6 +155,15 @@ final readonly class GridViewBuilder
                     : null,
                 'video' => GridNormalizer::ZONE_VIDEO === $zone['type']
                     ? $this->videoEmbedResolver->resolve($held['url'])
+                    : null,
+                // A film the site hosts itself, picked from the library like a
+                // picture. The embed and this are alternatives, not a pair: an
+                // address goes to a provider's player, a document is played by
+                // the browser. The zone offers both because the answer differs
+                // per project - a client's showreel has no business on YouTube,
+                // and a conference talk has no business on their server.
+                'file' => GridNormalizer::ZONE_VIDEO === $zone['type']
+                    ? $this->videoFile($documents[$zone['mediaId']] ?? null)
                     : null,
                 // Kept beside the embed so a zone whose address belongs to
                 // no known provider can still offer the link rather than
@@ -544,7 +554,12 @@ final readonly class GridViewBuilder
         // The whole tree, stacks included: a picture inside a stack must be
         // fetched by the same one query as the rest, not by a second one.
         foreach (GridNormalizer::flatten($layout['zones']) as $zone) {
-            if (GridNormalizer::ZONE_MEDIA === $zone['type'] && null !== $zone['mediaId']) {
+            // A video zone too: it can play a film the library holds, and it
+            // reads it from the same prefetch rather than from a query of its
+            // own.
+            $carriesMedia = in_array($zone['type'], [GridNormalizer::ZONE_MEDIA, GridNormalizer::ZONE_VIDEO], true);
+
+            if ($carriesMedia && null !== $zone['mediaId']) {
                 $ids[] = $zone['mediaId'];
             }
 
@@ -738,13 +753,49 @@ final readonly class GridViewBuilder
     }
 
     /**
-     * @param ?string $url an address standing in for a document, used only when
-     *                     no document is picked
-     *
      * @return array<string, mixed>|null null whenever there is no picture to
      *                                   draw, which the template reads as a
      *                                   zone that renders nothing
      */
+    /**
+     * A video the library holds, ready for a `<video>`.
+     *
+     * The mime is checked rather than trusted: the picker offers videos, but a
+     * fixture, an API write or a file replaced after the zone was configured
+     * all reach past it - and a player pointed at a PDF is a black rectangle
+     * with nothing said anywhere. Same reasoning as {@see mediaData}, and the
+     * same place to ask it: only the render knows what the file is today.
+     *
+     * @return array{url: string, mimeType: string, poster: string|null}|null
+     */
+    private function videoFile(?DocumentInterface $media): ?array
+    {
+        if (!$media instanceof DocumentInterface) {
+            return null;
+        }
+
+        $mime = MimeTypeEnum::tryFrom((string) $media->getMimeType());
+
+        if (!$mime?->isVideo()) {
+            return null;
+        }
+
+        $url = $this->documentUrlGenerator->publicUrl($media);
+
+        if (null === $url) {
+            return null;
+        }
+
+        return [
+            'url' => $url,
+            'mimeType' => $mime->value,
+            // The still the player shows before anything is downloaded. Null
+            // is fine: the browser then draws a black frame, which is what it
+            // did before this existed.
+            'poster' => $this->documentUrlGenerator->thumbnailPathUrl($media),
+        ];
+    }
+
     private function mediaData(?DocumentInterface $media, string $alt, ?string $url = null): ?array
     {
         // The library wins whenever it has an answer: a document carries a

@@ -1,4 +1,9 @@
 backend:
+  posts:
+    grid:
+      zone_video_file: Elegir un vídeo
+      zone_video_file_chosen: Vídeo de la mediateca
+      zone_video_file_none: Ningún vídeo elegido
   menus:
     section: Sección que encabeza esta entrada
     no_section: Ninguna

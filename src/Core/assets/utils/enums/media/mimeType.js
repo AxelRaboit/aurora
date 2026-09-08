@@ -14,7 +14,16 @@ export const MimeType = Object.freeze({
     Webp: "image/webp",
     Svg: "image/svg+xml",
     Pdf: "application/pdf",
+    Mp4: "video/mp4",
+    Webm: "video/webm",
 });
+
+const VIDEO_TYPES = new Set([MimeType.Mp4, MimeType.Webm]);
+
+/** True for a file a browser can play in a `<video>`. */
+export function isVideoMimeType(mimeType) {
+    return VIDEO_TYPES.has(mimeType);
+}
 
 const IMAGE_TYPES = new Set([
     MimeType.Jpeg,

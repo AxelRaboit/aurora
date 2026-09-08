@@ -140,6 +140,58 @@ final class GridSurfaceRenderTest extends IntegrationTestCase
     }
 
     /**
+     * A film the library holds is played by the browser, not by a provider.
+     *
+     * The zone offered an address and nothing else, so a client's showreel had
+     * to be published on YouTube before it could appear on their own site.
+     */
+    public function testAVideoZonePlaysAFileFromTheLibrary(): void
+    {
+        $html = $this->render($this->videoZone('video/mp4'));
+
+        self::assertStringContainsString('<video', $html);
+        self::assertStringContainsString('reel.mp4', $html);
+        self::assertStringContainsString('preload="none"', $html);
+        // No iframe: a hosted film has no provider to embed.
+        self::assertStringNotContainsString('<iframe', $html);
+    }
+
+    /**
+     * The mime is checked at render, not trusted from the layout: a document
+     * whose file is replaced after the zone was configured would otherwise
+     * point a player at a PDF.
+     */
+    public function testAVideoZoneRefusesADocumentThatIsNotAFilm(): void
+    {
+        self::assertStringNotContainsString('<video', $this->render($this->videoZone('application/pdf')));
+    }
+
+    private function videoZone(string $mimeType): array
+    {
+        $document = new Document();
+        $document->setTitle('Réel');
+        $document->setMimeType($mimeType);
+        $document->setFilePath('ged/2026/09/reel.mp4');
+
+        $this->entityManager->persist($document);
+        $this->entityManager->flush();
+        $this->created[] = (int) $document->getId();
+
+        $grid = $this->gridViewBuilder->build(
+            [
+                'enabled' => true,
+                'zones' => [['id' => 'v1', 'type' => 'video', 'mediaId' => $document->getId()]],
+            ],
+            ['zones' => ['v1' => []]],
+            'fr',
+        );
+
+        self::assertNotNull($grid);
+
+        return $grid['zones'][0];
+    }
+
+    /**
      * The three alignments a button offers, each landing where it says.
      *
      * The template used to test for `end`, a word the normaliser never
