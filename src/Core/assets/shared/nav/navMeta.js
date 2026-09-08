@@ -67,6 +67,7 @@ import {
     SlidersHorizontal,
     ScrollText,
     ClipboardCheck,
+    FileSignature,
 } from "lucide-vue-next";
 
 export const ICON_MAP = {
@@ -110,6 +111,7 @@ export const ICON_MAP = {
     flame: Flame,
     "scroll-text": ScrollText,
     "clipboard-check": ClipboardCheck,
+    "file-signature": FileSignature,
     "sticky-note": StickyNote,
     "notebook-pen": NotebookPen,
     wallet: Wallet,
@@ -141,6 +143,7 @@ export const MODULE_COLOR = {
     editorial: "rose",
     ged: "lime",
     media: "pink",
+    accounting: "emerald",
     dev: "orange",
 };
 

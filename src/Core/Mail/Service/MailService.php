@@ -6,6 +6,7 @@ namespace Aurora\Core\Mail\Service;
 
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Translation\LocaleSwitcher;
@@ -39,6 +40,10 @@ final readonly class MailService
         private SettingRepository $settingRepository,
         private TranslatorInterface $translator,
         private LocaleSwitcher $localeSwitcher,
+        // Only used to report an attachment that could not be read. A mail is
+        // still worth sending without its copy, and a skip nobody records is
+        // a skip nobody fixes.
+        private LoggerInterface $logger,
         private string $mailerFrom,
         private string $adminEmail = '',
     ) {}
@@ -46,14 +51,20 @@ final readonly class MailService
     /**
      * Send a templated email to a recipient.
      *
-     * @param string                $to            Recipient email; empty = silent no-op
-     * @param string                $subjectKey    i18n key, will be wrapped as "[SiteName] <translated>"
-     * @param string                $template      Twig template (e.g. "@Ecommerce/email/order_paid.html.twig")
-     * @param array<string, mixed>  $context       Template variables (siteName injected automatically)
-     * @param list<string>          $cc            CC recipients (filtered to avoid duplicate of $to)
-     * @param string|null           $locale        Override locale (e.g. customer's stored locale).
-     *                                             When null, falls back to EmailLocale setting → DefaultLocale.
-     * @param array<string, string> $subjectParams Translation parameters for the subject (e.g. ['{title}' => $title])
+     * @param string                                   $to            Recipient email; empty = silent no-op
+     * @param string                                   $subjectKey    i18n key, will be wrapped as "[SiteName] <translated>"
+     * @param string                                   $template      Twig template (e.g. "@Ecommerce/email/order_paid.html.twig")
+     * @param array<string, mixed>                     $context       Template variables (siteName injected automatically)
+     * @param list<string>                             $cc            CC recipients (filtered to avoid duplicate of $to)
+     * @param string|null                              $locale        Override locale (e.g. customer's stored locale).
+     *                                                                When null, falls back to EmailLocale setting → DefaultLocale.
+     * @param array<string, string>                    $subjectParams Translation parameters for the subject (e.g. ['{title}' => $title])
+     * @param list<array{path: string, name?: string}> $attachments   Files to attach, by absolute path.
+     *                                                                A path that is not a readable file is skipped
+     *                                                                rather than fatal: a mail that says a contract is
+     *                                                                concluded is worth sending without its copy, and
+     *                                                                the alternative is an exception in the middle of
+     *                                                                recording a signature.
      */
     public function send(
         string $to,
@@ -63,12 +74,13 @@ final readonly class MailService
         array $cc = [],
         ?string $locale = null,
         array $subjectParams = [],
+        array $attachments = [],
     ): void {
         if ('' === $to) {
             return;
         }
 
-        $send = function () use ($to, $subjectKey, $template, $context, $cc, $subjectParams): void {
+        $send = function () use ($to, $subjectKey, $template, $context, $cc, $subjectParams, $attachments): void {
             $siteName = $this->siteName();
             $body = $this->twig->render($template, ['siteName' => $siteName] + $context);
             $subject = sprintf('[%s] %s', $siteName, $this->translator->trans($subjectKey, $subjectParams));
@@ -78,6 +90,21 @@ final readonly class MailService
                 ->to($to)
                 ->subject($subject)
                 ->html($body);
+
+            foreach ($attachments as $attachment) {
+                $path = $attachment['path'];
+
+                // Skipped rather than fatal, and deliberately: this runs inside
+                // the request that records a signature, and a missing file must
+                // not undo it.
+                if ('' === $path || !is_file($path) || !is_readable($path)) {
+                    $this->logger->warning('Mail attachment skipped: {path} is not a readable file.', ['path' => $path]);
+
+                    continue;
+                }
+
+                $email->attachFromPath($path, $attachment['name'] ?? null);
+            }
 
             foreach ($cc as $ccAddress) {
                 if ('' !== $ccAddress && $ccAddress !== $to) {

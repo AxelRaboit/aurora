@@ -1,0 +1,427 @@
+backend:
+    modules:
+        accounting_backend: Comptabilité
+        accounting_backend_description: Clients, contrats et pièces comptables. Le back-office de la facturation.
+    nav:
+        sections:
+            accounting: Comptabilité
+        accounting_contract_templates: Trames de contrat
+        accounting_contract_templates_description: Les documents types dont partent les contrats, et leurs versions.
+        accounting_customers: Clients
+        accounting_customers_description: Les sociétés avec qui vous contractez, et leur bloc d'identité légale.
+        accounting_contracts: Contrats
+        accounting_contracts_description: Les contrats préparés, scellés et signés.
+    audit:
+        actions:
+            accounting:
+                customer:
+                    created: Client créé
+                    updated: Client mis à jour
+                    deleted: Client supprimé
+                contract_template:
+                    created: Trame de contrat créée
+                    updated: Trame de contrat mise à jour
+                    archived: Trame de contrat archivée
+                    restored: Trame de contrat réactivée
+                    deleted: Trame de contrat supprimée
+                contract_template_version:
+                    opened: Version de trame ouverte
+                    updated: Version de trame modifiée
+                    published: Version de trame publiée
+                    discarded: Brouillon de trame abandonné
+                contract:
+                    created: Contrat créé
+                    updated: Contrat modifié
+                    frozen: Contrat gelé et scellé
+                    link_sent: Lien de signature envoyé
+                    link_revoked: Lien de signature révoqué
+                    signed_by_customer: 'Contrat signé par le client'
+                    countersigned: 'Contrat contresigné et conclu'
+                    deleted: Contrat supprimé
+    permissions:
+        names:
+            accounting:
+                customers:
+                    view: Consulter les clients
+                    create: Créer un client
+                    edit: Modifier un client
+                    delete: Supprimer un client
+                contract_templates:
+                    view: Consulter les trames de contrat
+                    create: Créer une trame de contrat
+                    edit: Modifier une trame de contrat
+                    delete: Supprimer une trame de contrat
+                contracts:
+                    view: Consulter les contrats
+                    create: Créer un contrat
+                    edit: Modifier un contrat
+                    delete: Supprimer un contrat
+                    send: 'Envoyer un contrat au client'
+                    countersign: 'Contresigner un contrat'
+    accounting:
+        signatures:
+            role:
+                customer: 'Le client'
+                provider: 'Le prestataire'
+        contracts:
+            title: Contrats
+            add: Préparer un contrat
+            create: Nouveau contrat
+            edit: 'Modifier le contrat de {name}'
+            created: Contrat créé.
+            updated: Contrat mis à jour.
+            deleted: Contrat supprimé.
+            empty: Aucun contrat pour le moment.
+            search_placeholder: Rechercher par référence ou par client…
+            draft_title: Contrat en préparation
+            in_preparation: En préparation
+            sealed: Scellés
+            customer: Client
+            customer_placeholder: Choisir un client
+            body: Corps du contrat
+            body_placeholder: Choisir une trame
+            body_hint: La version publiée du jour est figée sur le contrat dès sa création.
+            annex: Annexe
+            annex_none: Aucune annexe
+            annex_hint: Facultative. C'est elle qui porte ce qui varie d'une offre à l'autre.
+            amount: Montant
+            amount_placeholder: '850'
+            amount_hint: Le point comme la virgule sont acceptés.
+            currency: Devise
+            effective_date: Date de prise d'effet
+            effective_date_placeholder: '2026-10-01'
+            effective_date_hint: Reprise dans le contrat via la variable correspondante.
+            locale: Langue du contrat
+            locale_hint: La langue dans laquelle il sera rédigé, lu et signé.
+            version_label: 'version {number}'
+            with_annex: 'Avec l''annexe {name}'
+            outdated_version: Une version plus récente de la trame a été publiée depuis. Ce contrat reste sur celle qui a été choisie.
+            freeze: Sceller
+            freeze_confirm: 'Sceller le contrat de {name} ?'
+            freeze_warning: 'Le document devient définitif : son texte, ses montants et son hash ne pourront plus changer. C''est ce qui rend la signature défendable, et c''est irréversible.'
+            delete_confirm: 'Supprimer le contrat de {name} ?'
+            col_reference: Référence
+            col_customer: Client
+            col_status: Statut
+            col_sealed_at: Scellé le
+            col_link: Lien
+            read_document: Lire le document
+            download_pdf: 'Télécharger le PDF signé'
+            countersign: 'Contresigner'
+            countersign_intro: 'Votre contresignature conclut le contrat. Le client en sera informé par email.'
+            countersigned: 'Contrat contresigné et conclu.'
+            send: Envoyer au client
+            send_confirm: 'Envoyer le contrat à {email} ?'
+            send_warning: 'Un lien secret part par email. Tout lien envoyé auparavant est révoqué : il n''y a jamais qu''une seule adresse valide.'
+            sent_to: 'Envoyé à {email}'
+            revoke_link: Révoquer le lien
+            revoke_link_confirm: 'Révoquer le lien envoyé à {email} ? L''adresse cessera de fonctionner immédiatement.'
+            link_expires: 'Valide jusqu''au {date}'
+            link_never_opened: Jamais ouvert
+            link_opened_at: 'Ouvert le {date}'
+            no_link: Aucun lien actif
+            not_sealed_yet: Ce contrat n'est pas encore scellé. Son texte sera figé au moment du scellement.
+            seal_intact: Le sceau est intact
+            seal_intact_hint: Le document stocké correspond exactement au hash pris lors du scellement.
+            seal_broken: Le sceau ne correspond plus
+            seal_broken_hint: 'Le document a changé depuis son scellement. Ne réparez pas le hash : cherchez ce qui a écrit dessus.'
+            seal_hash: Empreinte du document
+            seal_algo: Algorithme et forme canonique
+            seal_sealed_at: Scellé le
+            deferred_tokens_hint: 'La ville et la date de signature restent des variables : c''est le signataire qui les déclarera.'
+            status:
+                draft: Brouillon
+                sealed: Scellé
+                sent: Envoyé
+                opened: Ouvert
+                signed_by_customer: Signé par le client
+                countersigned: Contresigné
+                refused: Refusé
+                expired: Expiré
+                revoked: Révoqué
+            errors:
+                body_required: Un contrat a besoin d'un corps de contrat.
+                version_not_published: 'La version {number} de « {template} » n''est pas publiée. Un brouillon ne peut pas être envoyé.'
+                locale_missing: '« {template} » n''a pas de texte en {locale}.'
+                unknown_tokens: 'Ces variables ne correspondent à rien et arriveraient telles quelles chez le client : {tokens}'
+                customer_required: Un contrat a besoin d'un client.
+                locale_required: La langue du contrat est obligatoire.
+                amount_invalid: Le montant ne peut pas être négatif.
+                effective_date_invalid: Cette date n'est pas valide.
+                template_not_found: Cette trame n'existe pas, ou n'est pas du type attendu.
+                template_never_published: '« {template} » n''a aucune version publiée.'
+                already_frozen: 'Ce contrat est scellé : il ne peut plus être modifié.'
+                seal_before_sending: Scellez le contrat avant de l'envoyer.
+                already_engaged: Ce contrat est déjà signé. Il ne peut plus être renvoyé.
+                no_active_link: Aucun lien actif à révoquer.
+                seal_before_signing: 'Scellez le contrat avant de le faire signer.'
+                already_concluded: 'Ce contrat est déjà signé par les deux parties.'
+                contract_closed: 'Ce contrat est clos et ne peut plus être signé.'
+                role_already_signed: 'Cette partie a déjà signé.'
+                customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
+                governing_locale_conflict: 'Le corps et l''annexe ne désignent pas la même langue faisant foi ({locales}). Un document ne peut pas avoir deux textes de référence.'
+        contract_templates:
+            title: Trames de contrat
+            kind:
+                body: Corps de contrat
+                annex: Annexe
+            errors:
+                name_required: Le nom de la trame est obligatoire.
+                name_too_long: Le nom de la trame ne peut pas dépasser 180 caractères.
+                translations_required: Une version doit contenir au moins une langue.
+                draft_already_open: 'Un brouillon est déjà ouvert sur cette trame (version {number}). Terminez-le ou abandonnez-le avant d''en ouvrir un autre.'
+                nothing_to_publish: Cette version n'a aucun texte à publier.
+                already_published: 'Cette version est publiée : son texte ne peut plus être modifié. Ouvrez une nouvelle version.'
+                governing_locale_unknown: Cette langue n'est pas gérée par l'application.
+                governing_locale_not_written: 'La langue faisant foi ({locale}) n''est pas rédigée dans cette version.'
+                governing_locale_required: 'Cette version est rédigée en plusieurs langues : indiquez laquelle fait foi avant de publier.'
+            name: Nom de la trame
+            name_placeholder: Contrat de prestation de services, formule mensuelle
+            kind_label: Type
+            kind_hint: Un corps se signe seul. Une annexe complète un corps.
+            add: Ajouter une trame
+            create: Nouvelle trame
+            edit: 'Modifier {name}'
+            updated: Trame mise à jour.
+            archived: Trame archivée.
+            restored: Trame réactivée.
+            deleted: Trame supprimée.
+            saved: Brouillon enregistré.
+            published: Version publiée.
+            empty: Aucune trame de contrat pour le moment.
+            search_placeholder: Rechercher une trame…
+            delete_confirm: 'Supprimer {name} ?'
+            delete_warning: Les contrats déjà signés depuis cette trame gardent leur propre copie du texte et ne sont pas touchés. Ce qui disparaît est le lien vers la trame d'origine.
+            in_force: En vigueur
+            never_published: Jamais publiée
+            no_draft: Aucun brouillon
+            open_draft: Ouvrir un brouillon
+            archive: Archiver
+            restore: Réactiver
+            show_archived: 'Afficher les archivées ({count})'
+            hide_archived: Masquer les archivées
+            state_published: Publiée
+            state_draft: Brouillon
+            state_archived: Archivée
+            version_label: 'Version {number}'
+            other_versions: Autres versions
+            locale_written: Cette langue est rédigée
+            governing_locale: Langue faisant foi
+            governing_locale_none: Une seule langue
+            governing_locale_hint: 'En cas de divergence entre les traductions, c''est cette version qui fait foi. La clause est écrite dans le document.'
+            governing_locale_needed: 'Plusieurs langues sont rédigées : choisissez celle qui fait foi pour pouvoir publier.'
+            document_title: Titre du document
+            document_title_placeholder: CONTRAT DE PRESTATION DE SERVICES
+            document_title_hint: Ce qui s'imprime en tête du contrat, dans cette langue.
+            content_placeholder: Rédigez les articles du contrat…
+            publish: Publier
+            publish_confirm: 'Publier la version {number} ?'
+            publish_warning: 'Une version publiée devient définitive : son texte ne pourra plus être modifié. Pour le changer ensuite, il faudra ouvrir une nouvelle version.'
+            published_notice: 'La version {number} est publiée. Son texte est définitif et ne peut plus être modifié.'
+            discard: Abandonner
+            discard_confirm: 'Abandonner le brouillon de la version {number} ? Son texte sera perdu.'
+            variables:
+                title: Variables disponibles
+                hint: Copiez un jeton et collez-le dans le texte. Il sera remplacé à la construction du contrat.
+                customer: Le client
+                contract: Le contrat
+                customer_legal_name: Raison sociale
+                customer_legal_form: Forme juridique
+                customer_share_capital: Capital social
+                customer_registered_office: Siège social
+                customer_siret: SIRET
+                customer_trade_register: RCS
+                customer_vat_number: TVA intracommunautaire
+                customer_activity_sector: Secteur d'activité
+                customer_representative_full_name: Représentant
+                customer_representative_role: Qualité du représentant
+                customer_contractual_email: Email contractuel
+                customer_phone: Téléphone
+                contract_reference: Référence du contrat
+                contract_amount: Montant
+                contract_effective_date: Date de prise d'effet
+                contract_signature_city: Ville de signature
+                contract_signature_date: Date de signature
+        customers:
+            title: Clients
+            add: Ajouter un client
+            create: Nouveau client
+            edit: 'Modifier {name}'
+            empty: Aucun client pour le moment.
+            search_placeholder: Rechercher par raison sociale, SIRET, représentant…
+            created: Client créé.
+            updated: Client mis à jour.
+            deleted: Client supprimé.
+            delete_confirm: 'Supprimer {name} ?'
+            delete_warning: Les contrats déjà signés avec ce client resteront en base, mais ne pointeront plus vers sa fiche.
+            linked_account: 'Compte : {name}'
+
+            col_company: Société
+            col_representative: Représentant
+            col_siret: SIRET
+            col_contact: Contact
+
+            group_identity: Identité de la société
+            group_representative: Représentant légal
+            group_contact: Contact et accès
+
+            legal_name: Raison sociale
+            legal_name_placeholder: Nom de la société
+            legal_form: Forme juridique
+            legal_form_placeholder: SARL, SAS, EI, association…
+            share_capital: Capital social
+            share_capital_placeholder: '10000'
+            share_capital_hint: Le point comme la virgule sont acceptés.
+            currency: Devise
+            registered_office: Siège social
+            registered_office_placeholder: Adresse complète, telle qu'elle apparaîtra au contrat
+            siret: SIRET
+            siret_placeholder: 123 456 789 00012
+            siret_hint: Quatorze chiffres. Les espaces sont ignorés, la clé de contrôle est vérifiée.
+            trade_register: RCS
+            trade_register_placeholder: 'Lyon B 123 456 789'
+            vat_number: TVA intracommunautaire
+            vat_number_placeholder: FR12345678901
+            activity_sector: Secteur d'activité
+            activity_sector_placeholder: Restauration, immobilier, artisanat…
+            activity_sector_hint: Repris dans le préambule du contrat.
+            representative_first_name: Prénom
+            representative_last_name: Nom
+            representative_first_name_placeholder: Camille
+            representative_last_name_placeholder: Durand
+            representative_role: Qualité
+            representative_role_placeholder: Gérant, Président, Directrice…
+            contractual_email: Email contractuel
+            contractual_email_placeholder: contact@societe.fr
+            contractual_email_hint: C'est à cette adresse que partira le lien de signature.
+            phone: Téléphone
+            phone_placeholder: 06 12 34 56 78
+            account: Compte utilisateur
+            account_none: Aucun compte rattaché
+            account_hint: Facultatif. À renseigner seulement si le client se connecte au site.
+
+            row_actions:
+                edit_description: Modifier la fiche de ce client
+                delete_description: Supprimer ce client
+
+            errors:
+                legal_name_required: La raison sociale est obligatoire.
+                legal_name_too_long: La raison sociale ne peut pas dépasser 180 caractères.
+                contractual_email_required: L'email contractuel est obligatoire.
+                contractual_email_invalid: Cet email n'est pas valide.
+                share_capital_invalid: Le capital social ne peut pas être négatif.
+                siret_invalid: 'Ce SIRET est invalide : quatorze chiffres et une clé de contrôle correcte sont attendus.'
+                siret_taken: 'Ce SIRET est déjà enregistré pour {name}.'
+accounting:
+    contract:
+        # Écrit dans le document lui-même, donc scellé avec lui : ces phrases
+        # partent dans le HTML rendu, pas dans l'habillage de la page.
+        language:
+            fr: française
+            en: anglaise
+            es: espagnole
+        governing_language:
+            heading: Langue du contrat
+            body: 'Le présent contrat est établi en plusieurs langues. En cas de divergence d''interprétation entre les versions, seule la version {language} fait foi.'
+            translation_notice: 'La version {language} que vous lisez est une traduction fournie pour votre commodité.'
+    public:
+        contract:
+            title: Contrat
+            heading: Contrat de prestation de services
+            intro: 'Ce document vous est adressé au nom de {company}. Prenez le temps de le lire entièrement.'
+            to_sign: Ce contrat attend votre signature.
+            to_sign_hint: Il vous sera demandé vos nom et prénom, votre email, le lieu et la date, puis votre signature. Un code de confirmation sera envoyé à votre adresse email.
+            valid_until: 'Ce lien est valide jusqu''au {date}.'
+            signed: Vous avez signé ce contrat.
+            signed_hint: Il ne vous est plus rien demandé. Vous recevrez le document contresigné par email.
+            concluded: Ce contrat est signé par les deux parties.
+            hash_notice: 'Empreinte du document : {hash}. Elle garantit que ce texte n''a pas changé depuis son envoi.'
+            footer: Ce lien vous est personnel. Ne le transmettez pas.
+        sign:
+            heading: 'Signer ce contrat'
+            intro: 'Renseignez votre identité, signez dans le cadre, puis confirmez avec le code que nous vous enverrons par email.'
+            first_name: 'Prénom'
+            first_name_placeholder: 'Camille'
+            last_name: 'Nom'
+            last_name_placeholder: 'Durand'
+            email: 'Votre email'
+            email_placeholder: 'camille@societe.fr'
+            email_hint: 'Votre adresse personnelle. Le code de confirmation, lui, part à l''adresse contractuelle de la société.'
+            place: 'Fait à'
+            place_placeholder: 'Lyon'
+            date: 'Le'
+            date_placeholder: '2026-09-09'
+            signature: 'Votre signature'
+            draw_hint: 'Signez avec le doigt, la souris ou un stylet.'
+            clear: 'Effacer'
+            code_intro: 'Quand vous êtes prêt, nous vous envoyons un code de confirmation.'
+            request_code: 'Recevoir le code'
+            complete_first: 'Renseignez votre identité et signez le cadre pour recevoir le code.'
+            code: 'Code de confirmation'
+            code_placeholder: '123456'
+            code_sent: 'Code envoyé à {email}.'
+            resend_code: 'Renvoyer un code'
+            consent: 'J''ai lu le contrat ci-dessus et j''en accepte les termes. Ma signature électronique a la même valeur qu''une signature manuscrite.'
+            submit: 'Signer le contrat'
+            read_first: 'Faites défiler le contrat jusqu''en bas avant de signer.'
+            code_first: 'Demandez le code de confirmation pour continuer.'
+            consent_first: 'Cochez la case d''acceptation pour continuer.'
+            errors:
+                first_name_required: 'Votre prénom est obligatoire.'
+                last_name_required: 'Votre nom est obligatoire.'
+                email_required: 'Votre email est obligatoire.'
+                email_invalid: 'Cet email n''est pas valide.'
+                place_required: 'Le lieu est obligatoire.'
+                date_required: 'La date est obligatoire.'
+                date_invalid: 'Cette date n''est pas valide.'
+                image_required: 'Votre signature est obligatoire.'
+                image_invalid: 'Cette signature n''est pas exploitable. Effacez et recommencez.'
+                image_too_large: 'Cette signature est trop lourde. Effacez et recommencez.'
+                consent_required: 'Vous devez accepter les termes du contrat pour signer.'
+                code_required: 'Le code de confirmation est obligatoire.'
+                code_invalid: 'Ce code n''est pas valide. Demandez-en un nouveau.'
+                too_many_codes: 'Trop de codes demandés pour ce contrat. Réessayez dans une heure.'
+                too_many_requests: 'Trop de tentatives. Patientez quelques minutes.'
+        unavailable:
+            title: Ce lien n'est plus valide
+            message: L'adresse que vous avez ouverte n'existe pas, a expiré, ou a été révoquée. Si vous attendiez un contrat, demandez un nouveau lien à votre interlocuteur.
+    pdf:
+        footer: 'Contrat {reference} - document signé électroniquement'
+        signed_at: 'Fait à {place}, le {date}'
+        role:
+            customer: 'Le Client'
+            provider: 'Le Prestataire'
+        seal:
+            title: 'Preuve de signature électronique'
+            reference: 'Référence'
+            sealed_at: 'Document scellé le'
+            hash: 'Empreinte du document'
+            observed: 'Signé le {at}, depuis {ip}'
+            code_verified: 'Code de confirmation vérifié le {at}, envoyé à {email}'
+            authenticated: 'Signé depuis un compte authentifié du back-office'
+            notice: 'Cette empreinte identifie le texte signé. Toute modification du document produirait une empreinte différente.'
+    email:
+        customer_signed:
+            subject: 'Contrat {reference} signé par le client'
+            body: 'Le contrat {reference} vient d''être signé par {name}. Il attend votre contresignature.'
+            declared: 'Déclaré : fait à {place}, le {date}'
+            observed: 'Observé : {at}, depuis {ip}'
+            hash: 'Empreinte du document signé : {hash}'
+            action: 'Contresignez-le depuis le back-office pour le conclure.'
+        concluded:
+            subject: 'Contrat {reference} conclu'
+            body: 'Le contrat {reference} est signé par les deux parties.'
+            hash: 'Empreinte du document : {hash}'
+        signature_code:
+            subject: 'Votre code de signature'
+            intro: 'Voici votre code de confirmation pour signer le contrat.'
+            validity: 'Ce code est valable {minutes} minutes.'
+            warning: 'Si vous n''avez pas demandé ce code, ignorez ce message.'
+        contract_link:
+            subject: Un contrat attend votre signature
+            greeting: 'Bonjour {name},'
+            body: 'Le contrat {reference} est prêt et attend votre signature. Vous pouvez le lire et le signer en ligne.'
+            action: Lire et signer le contrat
+            expiry: 'Ce lien est valide jusqu''au {date}.'
+            warning: Ce lien vous est personnel. Ne le transmettez pas.
+            signature: '{company}'

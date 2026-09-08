@@ -1,0 +1,427 @@
+backend:
+    modules:
+        accounting_backend: Accounting
+        accounting_backend_description: Customers, contracts and accounting records. The billing back office.
+    nav:
+        sections:
+            accounting: Accounting
+        accounting_contract_templates: Contract templates
+        accounting_contract_templates_description: The model documents contracts are built from, and their versions.
+        accounting_customers: Customers
+        accounting_customers_description: The companies you contract with, and their legal identity block.
+        accounting_contracts: Contracts
+        accounting_contracts_description: Contracts prepared, sealed and signed.
+    audit:
+        actions:
+            accounting:
+                customer:
+                    created: Customer created
+                    updated: Customer updated
+                    deleted: Customer deleted
+                contract_template:
+                    created: Contract template created
+                    updated: Contract template updated
+                    archived: Contract template archived
+                    restored: Contract template restored
+                    deleted: Contract template deleted
+                contract_template_version:
+                    opened: Template version opened
+                    updated: Template version edited
+                    published: Template version published
+                    discarded: Template draft discarded
+                contract:
+                    created: Contract created
+                    updated: Contract edited
+                    frozen: Contract frozen and sealed
+                    link_sent: Signing link sent
+                    link_revoked: Signing link revoked
+                    signed_by_customer: 'Contract signed by the customer'
+                    countersigned: 'Contract countersigned and concluded'
+                    deleted: Contract deleted
+    permissions:
+        names:
+            accounting:
+                customers:
+                    view: View customers
+                    create: Create a customer
+                    edit: Edit a customer
+                    delete: Delete a customer
+                contract_templates:
+                    view: View contract templates
+                    create: Create a contract template
+                    edit: Edit a contract template
+                    delete: Delete a contract template
+                contracts:
+                    view: View contracts
+                    create: Create a contract
+                    edit: Edit a contract
+                    delete: Delete a contract
+                    send: 'Send a contract to the customer'
+                    countersign: 'Countersign a contract'
+    accounting:
+        signatures:
+            role:
+                customer: 'The customer'
+                provider: 'The provider'
+        contracts:
+            title: Contracts
+            add: Prepare a contract
+            create: New contract
+            edit: 'Edit the contract of {name}'
+            created: Contract created.
+            updated: Contract updated.
+            deleted: Contract deleted.
+            empty: No contracts yet.
+            search_placeholder: Search by reference or customer…
+            draft_title: Contract in preparation
+            in_preparation: In preparation
+            sealed: Sealed
+            customer: Customer
+            customer_placeholder: Pick a customer
+            body: Contract body
+            body_placeholder: Pick a template
+            body_hint: The version published today is pinned to the contract as soon as it is created.
+            annex: Annex
+            annex_none: No annex
+            annex_hint: Optional. This is where what varies between offers lives.
+            amount: Amount
+            amount_placeholder: '850'
+            amount_hint: Both the dot and the comma are accepted.
+            currency: Currency
+            effective_date: Effective date
+            effective_date_placeholder: '2026-10-01'
+            effective_date_hint: Used in the contract through the matching variable.
+            locale: Contract language
+            locale_hint: The language it will be written, read and signed in.
+            version_label: 'version {number}'
+            with_annex: 'With the {name} annex'
+            outdated_version: A newer version of the template has been published since. This contract stays on the one that was chosen.
+            freeze: Seal
+            freeze_confirm: 'Seal the contract of {name}?'
+            freeze_warning: 'The document becomes final: its wording, its amounts and its hash can no longer change. That is what makes the signature defensible, and it cannot be undone.'
+            delete_confirm: 'Delete the contract of {name}?'
+            col_reference: Reference
+            col_customer: Customer
+            col_status: Status
+            col_sealed_at: Sealed on
+            col_link: Link
+            read_document: Read the document
+            download_pdf: 'Download the signed PDF'
+            countersign: 'Countersign'
+            countersign_intro: 'Your countersignature concludes the contract. The customer is notified by email.'
+            countersigned: 'Contract countersigned and concluded.'
+            send: Send to the customer
+            send_confirm: 'Send the contract to {email}?'
+            send_warning: 'A secret link goes out by email. Any link sent before is revoked: there is never more than one valid address.'
+            sent_to: 'Sent to {email}'
+            revoke_link: Revoke the link
+            revoke_link_confirm: 'Revoke the link sent to {email}? The address stops working immediately.'
+            link_expires: 'Valid until {date}'
+            link_never_opened: Never opened
+            link_opened_at: 'Opened on {date}'
+            no_link: No active link
+            not_sealed_yet: This contract is not sealed yet. Its wording is frozen at the moment of sealing.
+            seal_intact: The seal is intact
+            seal_intact_hint: The stored document matches exactly the hash taken when it was sealed.
+            seal_broken: The seal no longer matches
+            seal_broken_hint: 'The document has changed since it was sealed. Do not repair the hash: find out what wrote to it.'
+            seal_hash: Document hash
+            seal_algo: Algorithm and canonical form
+            seal_sealed_at: Sealed on
+            deferred_tokens_hint: 'The city and date of signature stay as variables: the signer states them.'
+            status:
+                draft: Draft
+                sealed: Sealed
+                sent: Sent
+                opened: Opened
+                signed_by_customer: Signed by the customer
+                countersigned: Countersigned
+                refused: Refused
+                expired: Expired
+                revoked: Revoked
+            errors:
+                body_required: A contract needs a contract body.
+                version_not_published: 'Version {number} of "{template}" is not published. A draft cannot be sent.'
+                locale_missing: '"{template}" carries no wording in {locale}.'
+                unknown_tokens: 'These variables stand for nothing and would reach the customer as they are: {tokens}'
+                customer_required: A contract needs a customer.
+                locale_required: The contract language is required.
+                amount_invalid: The amount cannot be negative.
+                effective_date_invalid: This date is not valid.
+                template_not_found: This template does not exist, or is not of the expected kind.
+                template_never_published: '"{template}" has no published version.'
+                already_frozen: 'This contract is sealed: it can no longer be changed.'
+                seal_before_sending: Seal the contract before sending it.
+                already_engaged: This contract is already signed. It cannot be sent again.
+                no_active_link: No active link to revoke.
+                seal_before_signing: 'Seal the contract before it can be signed.'
+                already_concluded: 'This contract is already signed by both parties.'
+                contract_closed: 'This contract is closed and can no longer be signed.'
+                role_already_signed: 'This party has already signed.'
+                customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
+                governing_locale_conflict: 'The body and the annex name different governing languages ({locales}). A document cannot have two authoritative texts.'
+        contract_templates:
+            title: Contract templates
+            kind:
+                body: Contract body
+                annex: Annex
+            errors:
+                name_required: The template name is required.
+                name_too_long: The template name cannot exceed 180 characters.
+                translations_required: A version must carry at least one language.
+                draft_already_open: 'A draft is already open on this template (version {number}). Finish or discard it before opening another.'
+                nothing_to_publish: This version has no wording to publish.
+                already_published: 'This version is published: its wording can no longer be changed. Open a new version.'
+                governing_locale_unknown: This language is not one the application offers.
+                governing_locale_not_written: 'The governing language ({locale}) is not written in this version.'
+                governing_locale_required: 'This version is written in several languages: say which one prevails before publishing it.'
+            name: Template name
+            name_placeholder: Service agreement, monthly plan
+            kind_label: Type
+            kind_hint: A body is signed on its own. An annex completes a body.
+            add: Add a template
+            create: New template
+            edit: 'Edit {name}'
+            updated: Template updated.
+            archived: Template archived.
+            restored: Template restored.
+            deleted: Template deleted.
+            saved: Draft saved.
+            published: Version published.
+            empty: No contract templates yet.
+            search_placeholder: Search a template…
+            delete_confirm: 'Delete {name}?'
+            delete_warning: Contracts already signed from this template keep their own copy of the wording and are untouched. What disappears is the trail back to the template.
+            in_force: In force
+            never_published: Never published
+            no_draft: No draft
+            open_draft: Open a draft
+            archive: Archive
+            restore: Restore
+            show_archived: 'Show archived ({count})'
+            hide_archived: Hide archived
+            state_published: Published
+            state_draft: Draft
+            state_archived: Archived
+            version_label: 'Version {number}'
+            other_versions: Other versions
+            locale_written: This language is written
+            governing_locale: Governing language
+            governing_locale_none: A single language
+            governing_locale_hint: 'Should the translations diverge, this is the version that prevails. The clause is written into the document.'
+            governing_locale_needed: 'Several languages are written: choose the one that prevails to publish.'
+            document_title: Document title
+            document_title_placeholder: SERVICE AGREEMENT
+            document_title_hint: What prints at the top of the contract, in this language.
+            content_placeholder: Write the articles of the contract…
+            publish: Publish
+            publish_confirm: 'Publish version {number}?'
+            publish_warning: 'A published version is final: its wording can no longer be changed. To change it afterwards, open a new version.'
+            published_notice: 'Version {number} is published. Its wording is final and can no longer be changed.'
+            discard: Discard
+            discard_confirm: 'Discard the draft of version {number}? Its wording will be lost.'
+            variables:
+                title: Available variables
+                hint: Copy a token and paste it into the wording. It is replaced when the contract is built.
+                customer: The customer
+                contract: The contract
+                customer_legal_name: Company name
+                customer_legal_form: Legal form
+                customer_share_capital: Share capital
+                customer_registered_office: Registered office
+                customer_siret: Registration number
+                customer_trade_register: Trade register
+                customer_vat_number: VAT number
+                customer_activity_sector: Line of business
+                customer_representative_full_name: Representative
+                customer_representative_role: Representative capacity
+                customer_contractual_email: Contractual email
+                customer_phone: Phone
+                contract_reference: Contract reference
+                contract_amount: Amount
+                contract_effective_date: Effective date
+                contract_signature_city: City of signature
+                contract_signature_date: Date of signature
+        customers:
+            title: Customers
+            add: Add a customer
+            create: New customer
+            edit: 'Edit {name}'
+            empty: No customers yet.
+            search_placeholder: Search by company name, registration number, representative…
+            created: Customer created.
+            updated: Customer updated.
+            deleted: Customer deleted.
+            delete_confirm: 'Delete {name}?'
+            delete_warning: Contracts already signed with this customer stay in the database, but will no longer point to their record.
+            linked_account: 'Account: {name}'
+
+            col_company: Company
+            col_representative: Representative
+            col_siret: Registration no.
+            col_contact: Contact
+
+            group_identity: Company identity
+            group_representative: Legal representative
+            group_contact: Contact and access
+
+            legal_name: Company name
+            legal_name_placeholder: Registered company name
+            legal_form: Legal form
+            legal_form_placeholder: Ltd, LLC, sole trader, association…
+            share_capital: Share capital
+            share_capital_placeholder: '10000'
+            share_capital_hint: Both the dot and the comma are accepted.
+            currency: Currency
+            registered_office: Registered office
+            registered_office_placeholder: Full address, as it will appear on the contract
+            siret: Registration number
+            siret_placeholder: 123 456 789 00012
+            siret_hint: Fourteen digits. Spaces are ignored and the checksum is verified.
+            trade_register: Trade register
+            trade_register_placeholder: 'Lyon B 123 456 789'
+            vat_number: VAT number
+            vat_number_placeholder: FR12345678901
+            activity_sector: Line of business
+            activity_sector_placeholder: Catering, real estate, crafts…
+            activity_sector_hint: Used in the contract preamble.
+            representative_first_name: First name
+            representative_last_name: Last name
+            representative_first_name_placeholder: Camille
+            representative_last_name_placeholder: Durand
+            representative_role: Capacity
+            representative_role_placeholder: Manager, President, Director…
+            contractual_email: Contractual email
+            contractual_email_placeholder: contact@company.com
+            contractual_email_hint: This is where the signing link will be sent.
+            phone: Phone
+            phone_placeholder: +33 6 12 34 56 78
+            account: User account
+            account_none: No account linked
+            account_hint: Optional. Only needed if this customer signs in to the site.
+
+            row_actions:
+                edit_description: Edit this customer's record
+                delete_description: Delete this customer
+
+            errors:
+                legal_name_required: The company name is required.
+                legal_name_too_long: The company name cannot exceed 180 characters.
+                contractual_email_required: The contractual email is required.
+                contractual_email_invalid: This email is not valid.
+                share_capital_invalid: Share capital cannot be negative.
+                siret_invalid: 'This registration number is invalid: fourteen digits with a correct checksum are expected.'
+                siret_taken: 'This registration number is already recorded for {name}.'
+accounting:
+    contract:
+        # Written into the document itself, and therefore sealed with it: these
+        # sentences end up in the rendered HTML, not in the page around it.
+        language:
+            fr: French
+            en: English
+            es: Spanish
+        governing_language:
+            heading: Language of the contract
+            body: 'This contract is drawn up in several languages. Should the versions diverge in interpretation, only the {language} version prevails.'
+            translation_notice: 'The {language} version you are reading is a translation provided for your convenience.'
+    public:
+        contract:
+            title: Contract
+            heading: Service agreement
+            intro: 'This document is addressed to you on behalf of {company}. Take the time to read it in full.'
+            to_sign: This contract is waiting for your signature.
+            to_sign_hint: You will be asked for your first and last name, your email, the place and the date, then your signature. A confirmation code will be sent to your email address.
+            valid_until: 'This link is valid until {date}.'
+            signed: You have signed this contract.
+            signed_hint: Nothing more is asked of you. You will receive the countersigned document by email.
+            concluded: This contract is signed by both parties.
+            hash_notice: 'Document hash: {hash}. It guarantees this wording has not changed since it was sent.'
+            footer: This link is personal to you. Please do not forward it.
+        sign:
+            heading: 'Sign this contract'
+            intro: 'Fill in your details, sign in the frame, then confirm with the code we will email you.'
+            first_name: 'First name'
+            first_name_placeholder: 'Camille'
+            last_name: 'Last name'
+            last_name_placeholder: 'Durand'
+            email: 'Your email'
+            email_placeholder: 'camille@company.com'
+            email_hint: 'Your own address. The confirmation code goes to the company''s contractual address.'
+            place: 'Signed at'
+            place_placeholder: 'Lyon'
+            date: 'On'
+            date_placeholder: '2026-09-09'
+            signature: 'Your signature'
+            draw_hint: 'Sign with your finger, a mouse or a stylus.'
+            clear: 'Clear'
+            code_intro: 'When you are ready, we will send you a confirmation code.'
+            request_code: 'Send me the code'
+            complete_first: 'Fill in your details and sign the frame to receive the code.'
+            code: 'Confirmation code'
+            code_placeholder: '123456'
+            code_sent: 'Code sent to {email}.'
+            resend_code: 'Send another code'
+            consent: 'I have read the contract above and accept its terms. My electronic signature has the same value as a handwritten one.'
+            submit: 'Sign the contract'
+            read_first: 'Scroll through the contract to the end before signing.'
+            code_first: 'Request the confirmation code to continue.'
+            consent_first: 'Tick the acceptance box to continue.'
+            errors:
+                first_name_required: 'Your first name is required.'
+                last_name_required: 'Your last name is required.'
+                email_required: 'Your email is required.'
+                email_invalid: 'This email is not valid.'
+                place_required: 'The place is required.'
+                date_required: 'The date is required.'
+                date_invalid: 'This date is not valid.'
+                image_required: 'Your signature is required.'
+                image_invalid: 'This signature cannot be used. Clear it and try again.'
+                image_too_large: 'This signature is too heavy. Clear it and try again.'
+                consent_required: 'You must accept the terms of the contract to sign.'
+                code_required: 'The confirmation code is required.'
+                code_invalid: 'This code is not valid. Ask for a new one.'
+                too_many_codes: 'Too many codes requested for this contract. Try again in an hour.'
+                too_many_requests: 'Too many attempts. Wait a few minutes.'
+        unavailable:
+            title: This link is no longer valid
+            message: The address you opened does not exist, has expired, or has been revoked. If you were expecting a contract, ask your contact for a new link.
+    pdf:
+        footer: 'Contract {reference} - electronically signed document'
+        signed_at: 'Signed at {place}, on {date}'
+        role:
+            customer: 'The Customer'
+            provider: 'The Provider'
+        seal:
+            title: 'Electronic signature evidence'
+            reference: 'Reference'
+            sealed_at: 'Document sealed on'
+            hash: 'Document hash'
+            observed: 'Signed on {at}, from {ip}'
+            code_verified: 'Confirmation code verified on {at}, sent to {email}'
+            authenticated: 'Signed from an authenticated back office account'
+            notice: 'This hash identifies the signed wording. Any change to the document would produce a different one.'
+    email:
+        customer_signed:
+            subject: 'Contract {reference} signed by the customer'
+            body: 'Contract {reference} has just been signed by {name}. It is waiting for your countersignature.'
+            declared: 'Declared: signed at {place}, on {date}'
+            observed: 'Observed: {at}, from {ip}'
+            hash: 'Hash of the signed document: {hash}'
+            action: 'Countersign it from the back office to conclude it.'
+        concluded:
+            subject: 'Contract {reference} concluded'
+            body: 'Contract {reference} is signed by both parties.'
+            hash: 'Document hash: {hash}'
+        signature_code:
+            subject: 'Your signing code'
+            intro: 'Here is your confirmation code to sign the contract.'
+            validity: 'This code is valid for {minutes} minutes.'
+            warning: 'If you did not request this code, ignore this message.'
+        contract_link:
+            subject: A contract is waiting for your signature
+            greeting: 'Hello {name},'
+            body: 'Contract {reference} is ready and waiting for your signature. You can read and sign it online.'
+            action: Read and sign the contract
+            expiry: 'This link is valid until {date}.'
+            warning: This link is personal to you. Please do not forward it.
+            signature: '{company}'

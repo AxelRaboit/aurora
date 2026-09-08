@@ -18,6 +18,7 @@
         "doctrine/doctrine-bundle": "^3.2.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6.6",
+        "dompdf/dompdf": "^3.1",
         "dragonmantank/cron-expression": ">=3.6",
         "knplabs/doctrine-behaviors": "^3.1",
         "pentatrion/vite-bundle": "^8.2.4",

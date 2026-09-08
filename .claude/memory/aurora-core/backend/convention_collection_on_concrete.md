@@ -1,19 +1,29 @@
 ---
 name: convention_collection_on_concrete
-description: Les Collection Doctrine (ManyToMany owning, OneToMany inverse) vivent sur la classe concrète, pas sur l'Abstract MappedSuperclass.
+description: Les Collection ManyToMany propriétaires vivent sur la classe concrète. Les OneToMany inverses vivent sur l'Abstract, avec leur constructeur - c'est ce que fait le code depuis Editorial.
 metadata:
   type: feedback
 ---
 
 ## Règle
 
-Les propriétés `Collection` Doctrine (ManyToMany owning, OneToMany inverse,
-ManyToMany inverse) sont déclarées **sur la classe concrète**, jamais sur
-`Abstract<Name>` (MappedSuperclass). Le constructeur qui les initialise
-(`new ArrayCollection()`) vit lui aussi sur la concrete.
+**ManyToMany propriétaire (et ManyToMany inverse)** : sur la classe concrète.
+Précédents actuels : `Post::$terms`, `Post::$relatedPosts`.
+
+**OneToMany inverse** : sur `Abstract<Name>` (MappedSuperclass), avec le
+constructeur qui l'initialise. C'est ce que font les quatre entités à
+collections du code actuel : `AbstractPost`, `AbstractForm`,
+`AbstractTaxonomy`, `AbstractPlanning`. Le coût est réel et assumé : un client
+qui substitue la concrète doit appeler `parent::__construct()`.
+
+> **Corrigé le 08/09/2026.** Cette mémoire affirmait « toute Collection sur la
+> concrète », y compris les OneToMany. Le code dit l'inverse depuis la
+> reconstruction d'Editorial, et les précédents qu'elle citait
+> (`Listing`, `ListingCategory`, `ListingTag`) ont quitté le core avec leur
+> module. Vérifié entité par entité avant de réécrire la règle.
 
 ```php
-// ✅ Sur Concrete
+// ✅ ManyToMany propriétaire sur la Concrete
 class ListingCategory extends AbstractListingCategory implements ListingCategoryInterface
 {
     /** @var Collection<int, ListingInterface> */
@@ -33,9 +43,22 @@ class ListingCategory extends AbstractListingCategory implements ListingCategory
 }
 ```
 
-Précédents établis dans cette session : `Listing::$categories`, `Listing::$tags`,
-`ListingCategory::$children`, `ListingCategory::$translations`,
-`ListingTag::$listings`, `ListingTag::$translations`.
+Pour un OneToMany inverse, c'est l'Abstract :
+
+```php
+// ✅ OneToMany inverse sur l'Abstract, constructeur compris
+abstract class AbstractContractTemplate implements ContractTemplateInterface
+{
+    /** @var Collection<int, ContractTemplateVersionInterface> */
+    #[ORM\OneToMany(targetEntity: ContractTemplateVersionInterface::class, mappedBy: 'template')]
+    protected Collection $versions;
+
+    public function __construct()
+    {
+        $this->versions = new ArrayCollection();
+    }
+}
+```
 
 ## Pourquoi
 
@@ -56,8 +79,9 @@ laisser le maximum de flexibilité dans la concrete.
 
 ## Comment l'appliquer
 
-1. Ajout d'une relation ManyToMany / OneToMany inverse → la propriété va dans
-   `<Name>.php` (concrete). Pas dans `Abstract<Name>.php`.
+1. ManyToMany propriétaire ou inverse → la propriété va dans `<Name>.php`
+   (concrete). OneToMany inverse → dans `Abstract<Name>.php`, avec son
+   `new ArrayCollection()` dans le constructeur de l'Abstract.
 2. Le getter/setter peut vivre dans `Abstract<Name>` (logique partagée) si la
    propriété est protected. Mais l'init `new ArrayCollection()` reste dans le
    constructor de la concrete.

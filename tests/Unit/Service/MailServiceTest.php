@@ -9,6 +9,7 @@ use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Translation\LocaleSwitcher;
@@ -38,6 +39,10 @@ final class MailServiceTest extends TestCase
             $this->settings,
             $this->translator,
             $this->localeSwitcher,
+            // Only reached when an attachment cannot be read, which no test
+            // here exercises: a null logger keeps the constructor honest
+            // without pretending to assert on it.
+            new NullLogger(),
             'noreply@aurora.local',
         );
     }
@@ -237,6 +242,7 @@ final class MailServiceTest extends TestCase
             $this->settings,
             $this->translator,
             $this->localeSwitcher,
+            new NullLogger(),
             'noreply@aurora.local',
             $adminEmail,
         );

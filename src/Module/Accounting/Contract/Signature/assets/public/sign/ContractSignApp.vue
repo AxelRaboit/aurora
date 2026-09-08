@@ -1,0 +1,332 @@
+<script setup>
+/**
+ * The form a customer signs with.
+ *
+ * Two things about it are deliberate and worth reading before changing.
+ *
+ * **The button waits for the document to have been read.** Not as a security
+ * control - a server cannot verify scrolling, and this one does not pretend to -
+ * but because "I have read and accept" under a document nobody scrolled is a
+ * box people tick without meaning it. The gate makes the claim slightly truer
+ * and costs nothing.
+ *
+ * **The code is asked for on the page, not before.** Sending it when the mail
+ * with the link goes out would mean it expires long before somebody sits down
+ * to read nineteen articles. It is requested when the signer says they are
+ * ready, which is also the moment it starts proving something.
+ */
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
+import AppSignaturePad from "@/shared/components/form/input/AppSignaturePad.vue";
+import AppButton from "@/shared/components/action/AppButton.vue";
+import AppInput from "@/shared/components/form/input/AppInput.vue";
+import AppMessage from "@/shared/components/feedback/AppMessage.vue";
+import { Check, Mail, PenLine } from "lucide-vue-next";
+
+const props = defineProps({
+    codePath: { type: String, required: true },
+    signPath: { type: String, required: true },
+    documentSelector: { type: String, default: ".contract-document" },
+});
+
+const { t } = useI18n();
+const { request } = useRequest();
+
+const form = ref({
+    firstName: "",
+    lastName: "",
+    email: "",
+    place: "",
+    date: new Date().toISOString().slice(0, 10),
+    signatureImage: "",
+    consent: false,
+    code: "",
+});
+
+const errors = ref({});
+const hasDrawn = ref(false);
+const hasRead = ref(false);
+const codeSentTo = ref(null);
+const requestingCode = ref(false);
+const signing = ref(false);
+const signed = ref(false);
+
+/**
+ * Whether the document has been scrolled past.
+ *
+ * Watched on the article the page already renders rather than on a copy inside
+ * this component: the document belongs to the page, and duplicating it here
+ * would mean rendering the sealed HTML twice.
+ */
+let observer = null;
+
+onMounted(() => {
+    const article = document.querySelector(props.documentSelector);
+
+    if (!article) {
+        // No document to watch means no gate to hold. Better than locking the
+        // button on a page whose markup moved.
+        hasRead.value = true;
+
+        return;
+    }
+
+    // A sentinel after the last article, rather than a scroll listener: it
+    // works the same whether the page scrolls, the window does, or the reader
+    // jumps with a keyboard.
+    const sentinel = document.createElement("div");
+    sentinel.style.height = "1px";
+    article.after(sentinel);
+
+    if (typeof IntersectionObserver === "undefined") {
+        hasRead.value = true;
+
+        return;
+    }
+
+    observer = new IntersectionObserver(
+        (entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                hasRead.value = true;
+                observer?.disconnect();
+            }
+        },
+        { rootMargin: "0px 0px -40px 0px" },
+    );
+
+    observer.observe(sentinel);
+});
+
+onBeforeUnmount(() => observer?.disconnect());
+
+const identityComplete = computed(
+    () =>
+        form.value.firstName.trim() !== "" &&
+        form.value.lastName.trim() !== "" &&
+        form.value.email.trim() !== "" &&
+        form.value.place.trim() !== "" &&
+        form.value.date !== "",
+);
+
+const canRequestCode = computed(
+    () => identityComplete.value && hasDrawn.value && !requestingCode.value,
+);
+
+const canSign = computed(
+    () =>
+        canRequestCode.value &&
+        codeSentTo.value !== null &&
+        form.value.consent &&
+        hasRead.value &&
+        form.value.code.trim().length > 0 &&
+        !signing.value,
+);
+
+async function requestCode() {
+    if (!canRequestCode.value) return;
+
+    requestingCode.value = true;
+    errors.value = {};
+
+    try {
+        const data = await request(props.codePath, {}, { noGuard: true });
+
+        if (data?.errors) {
+            errors.value = data.errors;
+
+            return;
+        }
+
+        if (data?.error) {
+            errors.value = { code: t("accounting.public.sign.errors.too_many_requests") };
+
+            return;
+        }
+
+        codeSentTo.value = data?.sentTo ?? "";
+    } finally {
+        requestingCode.value = false;
+    }
+}
+
+async function sign() {
+    if (!canSign.value) return;
+
+    signing.value = true;
+    errors.value = {};
+
+    try {
+        const data = await request(props.signPath, form.value, { noGuard: true });
+
+        if (data?.errors) {
+            errors.value = data.errors;
+
+            return;
+        }
+
+        if (data?.signed) {
+            signed.value = true;
+            // Reloaded rather than patched in place: the page then shows the
+            // signed state the server decided on, which is the only version of
+            // it worth showing.
+            window.location.assign(data.reloadPath);
+        }
+    } finally {
+        signing.value = false;
+    }
+}
+</script>
+
+<template>
+    <section class="space-y-5 rounded-lg border border-line bg-surface p-5">
+        <header class="space-y-1">
+            <h2 class="flex items-center gap-2 font-medium text-primary">
+                <PenLine class="h-4 w-4 shrink-0" :stroke-width="2" />
+                {{ t("accounting.public.sign.heading") }}
+            </h2>
+            <p class="text-sm text-secondary">
+                {{ t("accounting.public.sign.intro") }}
+            </p>
+        </header>
+
+        <AppMessage v-if="errors.status" variant="danger">
+            {{ errors.status }}
+        </AppMessage>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <AppInput
+                v-model="form.firstName"
+                :label="t('accounting.public.sign.first_name')"
+                :placeholder="t('accounting.public.sign.first_name_placeholder')"
+                :error="errors.firstName"
+                required
+            />
+            <AppInput
+                v-model="form.lastName"
+                :label="t('accounting.public.sign.last_name')"
+                :placeholder="t('accounting.public.sign.last_name_placeholder')"
+                :error="errors.lastName"
+                required
+            />
+        </div>
+
+        <AppInput
+            v-model="form.email"
+            :label="t('accounting.public.sign.email')"
+            :placeholder="t('accounting.public.sign.email_placeholder')"
+            :hint="t('accounting.public.sign.email_hint')"
+            :error="errors.email"
+            type="email"
+            required
+        />
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <AppInput
+                v-model="form.place"
+                :label="t('accounting.public.sign.place')"
+                :placeholder="t('accounting.public.sign.place_placeholder')"
+                :error="errors.place"
+                required
+            />
+            <AppInput
+                v-model="form.date"
+                :label="t('accounting.public.sign.date')"
+                :placeholder="t('accounting.public.sign.date_placeholder')"
+                :error="errors.date"
+                type="date"
+                required
+            />
+        </div>
+
+        <AppSignaturePad
+            v-model="form.signatureImage"
+            :label="t('accounting.public.sign.signature')"
+            v-on:drawn="hasDrawn = $event"
+        />
+        <p v-if="errors.signatureImage" class="text-xs text-red-500">
+            {{ errors.signatureImage }}
+        </p>
+
+        <!-- The code, asked for when the signer says they are ready. Sending it
+             with the link would mean it expires long before anybody has read
+             the document. -->
+        <div class="space-y-3 rounded-lg border border-line/70 bg-surface-2/40 p-4">
+            <div v-if="codeSentTo === null" class="space-y-2">
+                <p class="text-sm text-secondary">
+                    {{ t("accounting.public.sign.code_intro") }}
+                </p>
+                <AppButton
+                    variant="secondary"
+                    size="md"
+                    :disabled="!canRequestCode"
+                    :loading="requestingCode"
+                    v-on:click="requestCode"
+                >
+                    <Mail class="h-3.5 w-3.5" :stroke-width="2" />
+                    {{ t("accounting.public.sign.request_code") }}
+                </AppButton>
+                <p v-if="!identityComplete || !hasDrawn" class="text-xs text-muted">
+                    {{ t("accounting.public.sign.complete_first") }}
+                </p>
+            </div>
+
+            <div v-else class="space-y-2">
+                <AppInput
+                    v-model="form.code"
+                    :label="t('accounting.public.sign.code')"
+                    :placeholder="t('accounting.public.sign.code_placeholder')"
+                    :hint="t('accounting.public.sign.code_sent', { email: codeSentTo })"
+                    :error="errors.code"
+                    required
+                />
+                <button
+                    type="button"
+                    class="text-xs text-muted underline hover:text-primary"
+                    v-on:click="requestCode"
+                >
+                    {{ t("accounting.public.sign.resend_code") }}
+                </button>
+            </div>
+        </div>
+
+        <label class="flex items-start gap-2 text-sm">
+            <input
+                v-model="form.consent"
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 shrink-0 rounded border-line"
+            >
+            <span class="text-secondary">
+                {{ t("accounting.public.sign.consent") }}
+            </span>
+        </label>
+        <p v-if="errors.consent" class="text-xs text-red-500">{{ errors.consent }}</p>
+
+        <div class="space-y-2">
+            <AppButton
+                variant="primary"
+                size="md"
+                class="w-full sm:w-auto"
+                :disabled="!canSign"
+                :loading="signing || signed"
+                v-on:click="sign"
+            >
+                <Check class="h-3.5 w-3.5" :stroke-width="2" />
+                {{ t("accounting.public.sign.submit") }}
+            </AppButton>
+
+            <!-- Says what is still missing rather than leaving a disabled
+                 button with no explanation, which is the most common way a form
+                 like this loses somebody. -->
+            <p v-if="!hasRead" class="text-xs text-muted">
+                {{ t("accounting.public.sign.read_first") }}
+            </p>
+            <p v-else-if="codeSentTo === null" class="text-xs text-muted">
+                {{ t("accounting.public.sign.code_first") }}
+            </p>
+            <p v-else-if="!form.consent" class="text-xs text-muted">
+                {{ t("accounting.public.sign.consent_first") }}
+            </p>
+        </div>
+    </section>
+</template>

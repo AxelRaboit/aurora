@@ -215,6 +215,9 @@ backend:
     core_menu_item_prefix:
       label: Préfixe des références éléments de menu
       description: 'Préfixe de la référence auto-générée (ex: XXX). Laissez vide pour désactiver.'
+    accounting_contract_prefix:
+      label: Préfixe des références de contrat
+      description: 'Préfixe des références de contrat. CTR par défaut, ce qui donne CTR-2026-0001.'
     nav_section_aliases:
       label: Alias des sections de navigation
       description: 'Carte JSON des alias de sections (géré via l''interface).'

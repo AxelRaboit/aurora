@@ -1,0 +1,40 @@
+{# A page for somebody with no account, holding a secret address.
+
+   Its own layout rather than the backend's: there is no side menu to put a
+   customer in. Modelled on the note share layout so a guest page reads as the
+   same application, with one difference that matters here - this one carries a
+   document somebody is about to be asked to sign, so the type is set for
+   reading a contract rather than for scanning an interface. #}
+<!DOCTYPE html>
+<html lang="{{ contractLocale|default(app.request.locale) }}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {# Nothing here is meant to be found. The address is a secret handed to
+           one person, and a search engine that indexed it would hand it to
+           everybody, permanently and beyond any revocation. #}
+        <meta name="robots" content="noindex, nofollow, noarchive">
+        <meta name="referrer" content="no-referrer">
+        <meta name="generator" content="Aurora by axelraboit">
+        <title>{% block title %}{{ siteName|default('') }}{% endblock %}</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        {{ include('@Shared/components/theme_script.html.twig', {colorScheme: true}) }}
+        {{ vite_entry_link_tags('app') }}
+        {{ include('@Shared/components/primary_color_style.html.twig') }}
+        {{ vite_entry_script_tags('app') }}
+        {{ vite_entry_script_tags('theme') }}
+        {# The document's own typography, shared with the PDF template. #}
+        {{ include('@Accounting/public/document_style.html.twig') }}
+    </head>
+    <body class="min-h-screen bg-body transition-colors duration-200">
+        <div class="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
+            {% block body %}{% endblock %}
+
+            {# Says where this came from, because a page with no navigation and
+               no account gives a reader nothing else to place it by. #}
+            <footer class="mt-auto border-t border-line/50 pt-3 text-2xs text-muted">
+                {% block footer %}{% endblock %}
+            </footer>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,118 @@
+# Lo que lee un cliente, en español.
+#
+# Solo la parte pública: la página del contrato, el formulario de firma, el PDF
+# y los correos. El back-office sigue con el repli francés, como en el resto de
+# la aplicación desde la 0.9.69, y eso es una decisión: quien administra los
+# contratos trabaja en francés, mientras que quien firma no elige el idioma de
+# su contrato.
+accounting:
+    contract:
+        language:
+            fr: francesa
+            en: inglesa
+            es: española
+        governing_language:
+            heading: Idioma del contrato
+            body: 'El presente contrato se redacta en varios idiomas. En caso de divergencia de interpretación entre las versiones, solo prevalece la versión {language}.'
+            translation_notice: 'La versión {language} que usted lee es una traducción facilitada para su comodidad.'
+    public:
+        contract:
+            title: Contrato
+            heading: Contrato de prestación de servicios
+            intro: 'Este documento se le dirige en nombre de {company}. Tómese el tiempo de leerlo por completo.'
+            to_sign: Este contrato espera su firma.
+            to_sign_hint: Se le pedirán su nombre y apellidos, su email, el lugar y la fecha, y después su firma. Se enviará un código de confirmación a su dirección de email.
+            valid_until: 'Este enlace es válido hasta el {date}.'
+            signed: Ha firmado este contrato.
+            signed_hint: No se le pide nada más. Recibirá el documento contrafirmado por email.
+            concluded: Este contrato está firmado por ambas partes.
+            hash_notice: 'Huella del documento: {hash}. Garantiza que este texto no ha cambiado desde su envío.'
+            footer: Este enlace es personal. No lo transmita.
+        sign:
+            heading: 'Firmar este contrato'
+            intro: 'Indique su identidad, firme en el recuadro y confirme con el código que le enviaremos por email.'
+            first_name: 'Nombre'
+            first_name_placeholder: 'Camille'
+            last_name: 'Apellidos'
+            last_name_placeholder: 'Durand'
+            email: 'Su email'
+            email_placeholder: 'camille@empresa.es'
+            email_hint: 'Su dirección personal. El código de confirmación, en cambio, se envía a la dirección contractual de la empresa.'
+            place: 'Firmado en'
+            place_placeholder: 'Lyon'
+            date: 'Fecha'
+            date_placeholder: '2026-09-09'
+            signature: 'Su firma'
+            draw_hint: 'Firme con el dedo, el ratón o un lápiz digital.'
+            clear: 'Borrar'
+            code_intro: 'Cuando esté listo, le enviamos un código de confirmación.'
+            request_code: 'Recibir el código'
+            complete_first: 'Indique su identidad y firme el recuadro para recibir el código.'
+            code: 'Código de confirmación'
+            code_placeholder: '123456'
+            code_sent: 'Código enviado a {email}.'
+            resend_code: 'Enviar otro código'
+            consent: 'He leído el contrato anterior y acepto sus términos. Mi firma electrónica tiene el mismo valor que una firma manuscrita.'
+            submit: 'Firmar el contrato'
+            read_first: 'Desplace el contrato hasta el final antes de firmar.'
+            code_first: 'Solicite el código de confirmación para continuar.'
+            consent_first: 'Marque la casilla de aceptación para continuar.'
+            errors:
+                first_name_required: 'Su nombre es obligatorio.'
+                last_name_required: 'Sus apellidos son obligatorios.'
+                email_required: 'Su email es obligatorio.'
+                email_invalid: 'Este email no es válido.'
+                place_required: 'El lugar es obligatorio.'
+                date_required: 'La fecha es obligatoria.'
+                date_invalid: 'Esta fecha no es válida.'
+                image_required: 'Su firma es obligatoria.'
+                image_invalid: 'Esta firma no es utilizable. Bórrela y vuelva a empezar.'
+                image_too_large: 'Esta firma es demasiado pesada. Bórrela y vuelva a empezar.'
+                consent_required: 'Debe aceptar los términos del contrato para firmar.'
+                code_required: 'El código de confirmación es obligatorio.'
+                code_invalid: 'Este código no es válido. Solicite uno nuevo.'
+                too_many_codes: 'Demasiados códigos solicitados para este contrato. Vuelva a intentarlo dentro de una hora.'
+                too_many_requests: 'Demasiados intentos. Espere unos minutos.'
+        unavailable:
+            title: Este enlace ya no es válido
+            message: La dirección que ha abierto no existe, ha caducado o ha sido revocada. Si esperaba un contrato, pida un nuevo enlace a su interlocutor.
+    pdf:
+        footer: 'Contrato {reference} - documento firmado electrónicamente'
+        signed_at: 'Firmado en {place}, el {date}'
+        role:
+            customer: 'El Cliente'
+            provider: 'El Prestador'
+        seal:
+            title: 'Prueba de firma electrónica'
+            reference: 'Referencia'
+            sealed_at: 'Documento sellado el'
+            hash: 'Huella del documento'
+            observed: 'Firmado el {at}, desde {ip}'
+            code_verified: 'Código de confirmación verificado el {at}, enviado a {email}'
+            authenticated: 'Firmado desde una cuenta autenticada del back-office'
+            notice: 'Esta huella identifica el texto firmado. Cualquier modificación del documento produciría una huella diferente.'
+    email:
+        customer_signed:
+            subject: 'Contrato {reference} firmado por el cliente'
+            body: 'El contrato {reference} acaba de ser firmado por {name}. Espera su contrafirma.'
+            declared: 'Declarado: firmado en {place}, el {date}'
+            observed: 'Observado: {at}, desde {ip}'
+            hash: 'Huella del documento firmado: {hash}'
+            action: 'Contrafírmelo desde el back-office para concluirlo.'
+        concluded:
+            subject: 'Contrato {reference} concluido'
+            body: 'El contrato {reference} está firmado por ambas partes.'
+            hash: 'Huella del documento: {hash}'
+        signature_code:
+            subject: 'Su código de firma'
+            intro: 'Aquí tiene su código de confirmación para firmar el contrato.'
+            validity: 'Este código es válido durante {minutes} minutos.'
+            warning: 'Si no ha solicitado este código, ignore este mensaje.'
+        contract_link:
+            subject: Un contrato espera su firma
+            greeting: 'Hola {name}:'
+            body: 'El contrato {reference} está listo y espera su firma. Puede leerlo y firmarlo en línea.'
+            action: Leer y firmar el contrato
+            expiry: 'Este enlace es válido hasta el {date}.'
+            warning: Este enlace es personal. No lo transmita.
+            signature: '{company}'

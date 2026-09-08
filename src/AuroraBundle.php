@@ -11,6 +11,22 @@ use Aurora\Core\Locale\Entity\LocaleInterface;
 use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Core\Notification\Entity\NotificationInterface;
+use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLink;
+use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
+use Aurora\Module\Accounting\Contract\Entity\Contract;
+use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplate;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersion;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslation;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslationInterface;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignature;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallenge;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallengeInterface;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureInterface;
+use Aurora\Module\Accounting\Customer\Entity\Customer;
+use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Configuration\Setting\Entity\Setting;
 use Aurora\Module\Configuration\Setting\Entity\SettingInterface;
 use Aurora\Module\Configuration\Theme\Entity\Theme;
@@ -196,6 +212,14 @@ class AuroraBundle extends AbstractBundle
                     TaxonomyTranslationInterface::class => TaxonomyTranslation::class,
                     TaxonomyTermInterface::class => TaxonomyTerm::class,
                     TaxonomyTermTranslationInterface::class => TaxonomyTermTranslation::class,
+                    CustomerInterface::class => Customer::class,
+                    ContractInterface::class => Contract::class,
+                    ContractAccessLinkInterface::class => ContractAccessLink::class,
+                    ContractSignatureInterface::class => ContractSignature::class,
+                    ContractSignatureChallengeInterface::class => ContractSignatureChallenge::class,
+                    ContractTemplateInterface::class => ContractTemplate::class,
+                    ContractTemplateVersionInterface::class => ContractTemplateVersion::class,
+                    ContractTemplateVersionTranslationInterface::class => ContractTemplateVersionTranslation::class,
                 ],
                 'mappings' => array_merge(
                     [

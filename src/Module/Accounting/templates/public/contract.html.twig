@@ -1,0 +1,78 @@
+{% extends '@Accounting/public/layout.html.twig' %}
+
+{% set contractLocale = contract.locale %}
+
+{% block title %}{{ 'accounting.public.contract.title'|trans({}, null, contract.locale) }} {{ contract.reference }}{% endblock %}
+
+{% block body %}
+    <header class="space-y-2">
+        <p class="font-mono text-2xs uppercase tracking-widest text-muted">
+            {{ contract.reference }}
+        </p>
+        <h1 class="text-xl font-semibold text-primary">
+            {{ 'accounting.public.contract.heading'|trans({}, null, contract.locale) }}
+        </h1>
+        <p class="text-sm text-secondary">
+            {{ 'accounting.public.contract.intro'|trans({'{company}': customer.legalName}, null, contract.locale) }}
+        </p>
+    </header>
+
+    {% if isConcluded %}
+        {# Fully signed. Nothing is asked of the reader any more, so the page
+           says that first rather than leaving them looking for a button. #}
+        <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-4 text-sm">
+            <p class="font-medium text-emerald-500">
+                {{ 'accounting.public.contract.concluded'|trans({}, null, contract.locale) }}
+            </p>
+        </div>
+    {% elseif isSigned %}
+        <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-4 text-sm space-y-1">
+            <p class="font-medium text-emerald-500">
+                {{ 'accounting.public.contract.signed'|trans({}, null, contract.locale) }}
+            </p>
+            <p class="text-secondary">
+                {{ 'accounting.public.contract.signed_hint'|trans({}, null, contract.locale) }}
+            </p>
+        </div>
+    {% else %}
+        {# What happens next, before the document rather than after it. Reading
+           nineteen articles and only then discovering what is being asked is
+           the wrong order. #}
+        <div class="rounded-lg border border-line bg-surface p-4 text-sm space-y-1">
+            <p class="font-medium text-primary">
+                {{ 'accounting.public.contract.to_sign'|trans({}, null, contract.locale) }}
+            </p>
+            <p class="text-secondary">
+                {{ 'accounting.public.contract.to_sign_hint'|trans({}, null, contract.locale) }}
+            </p>
+            <p class="text-xs text-muted pt-1">
+                {{ 'accounting.public.contract.valid_until'|trans({'{date}': link.expiresAt|date('d/m/Y')}, null, contract.locale) }}
+            </p>
+        </div>
+    {% endif %}
+
+    {# The document, printed from the stored HTML and never re-rendered: this is
+       byte for byte what the hash covers, which is the whole point of having
+       sealed it. `raw` is safe here because the renderer that produced it
+       sanitised every text and escaped every substituted value. #}
+    <article class="contract-document rounded-lg border border-line bg-surface p-6 sm:p-8">
+        {{ documentHtml|raw }}
+    </article>
+
+    {# The form comes after the document, which is the order the page asks for
+       things: read, then sign. #}
+    {% if not isSigned %}
+        <div {{ vue_component('accounting/public/sign/ContractSignApp', {
+            codePath: codePath,
+            signPath: signPath,
+        }) }}></div>
+    {% endif %}
+
+    <p class="text-xs text-muted">
+        {{ 'accounting.public.contract.hash_notice'|trans({'{hash}': contract.contentHash|slice(0, 16)}, null, contract.locale) }}
+    </p>
+{% endblock %}
+
+{% block footer %}
+    {{ 'accounting.public.contract.footer'|trans({}, null, contract.locale) }}
+{% endblock %}

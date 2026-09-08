@@ -5,6 +5,98 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.86] - 2026-09-08
+
+### Ajouté
+
+#### Un module de comptabilité, qui commence par des contrats signés en ligne
+Le module se construit comme une publication : des trames versionnées, un
+contrat monté depuis une trame, un lien public, une signature, un PDF. Trois
+écrans dans le back-office (clients, trames, contrats), une seule page pour le
+signataire, et rien à installer chez lui.
+
+**Le client est une entité, rattachée ou pas à un compte.** Le bloc d'identité
+qu'ouvre un contrat de prestation français : raison sociale, forme juridique,
+capital, siège, SIRET, RCS, représentant. Le SIRET est validé par sa clé de
+Luhn, avec la règle particulière de La Poste, et il est unique quand il est
+renseigné.
+
+**Une trame est versionnée, et une version publiée ne bouge plus.** La garde
+est sur l'entité, pas dans le service : un chemin de code qui l'oublierait
+n'existe pas. Modifier un texte publié se fait en ouvrant une nouvelle version,
+amorcée depuis celle en vigueur. Un seul brouillon à la fois, tenu par un index
+partiel en base.
+
+**Un contrat est scellé avant de partir.** À l'envoi, le module fige d'un seul
+tenant la référence, le texte rendu, les valeurs substituées et une empreinte
+SHA-256 calculée sur une forme canonique dont le numéro est stocké avec elle.
+Ce que lit le signataire est l'octet près ce que couvre l'empreinte, et
+`aurora:contracts:verify` sait le dire pour tout le stock.
+
+**Le lien public est un sélecteur plus un jeton haché.** Une fuite de base ne
+permet pas de signer. Toutes les façons d'échouer rendent la même page. Rien
+n'est indexable, et le lien ne porte jamais le document, seulement l'adresse.
+
+**La signature est simple au sens de l'article 1367 du Code civil.** Identité
+déclarée, dessin de la signature, consentement explicite, code à six chiffres
+envoyé à l'adresse contractuelle, puis l'heure, l'IP et le code vérifié
+conservés avec la signature. Le client signe le premier, le prestataire
+contresigne et conclut : le document étant déjà scellé, aucune signature ne
+peut être invalidée par une modification.
+
+**Le PDF est généré une fois, à la contresignature.** Avec son propre SHA-256,
+son bloc de preuve, et un refus net si on lui en demande un second : un
+document régénéré serait celui que produit le moteur du jour. Il part en pièce
+jointe du mail de conclusion.
+
+**La langue du contrat pilote tout ce que voit le signataire** - la page, le
+formulaire, les mails, le PDF - et une trame écrite en plusieurs langues doit
+dire laquelle fait foi. La clause est rendue dans le document scellé, pas dans
+l'habillage de la page : un encart de gabarit serait absent du PDF que le
+client garde.
+
+#### Une pièce jointe dans le service de mail
+`MailService::send()` accepte des pièces jointes. Un fichier illisible est
+ignoré avec un avertissement plutôt que fatal : l'envoi tourne dans la requête
+qui enregistre une signature, et perdre la signature pour un PDF absent serait
+le mauvais échange.
+
+### Dans aurora-client
+
+**1. Déclarer les deux limites de débit, avant de lancer `make aurora-update`.**
+Les routes publiques de signature sont non authentifiées, et le contrôleur les
+câble par nom : sans ces deux entrées le conteneur ne se construit pas, et le
+`cache:clear` que la cible enchaîne échoue au milieu de la mise à jour. C'est
+donc la seule chose de cette liste à poser d'abord :
+
+```yaml
+# config/packages/rate_limiter.yaml
+framework:
+    rate_limiter:
+        contract_signature:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        contract_signature_code:
+            policy: sliding_window
+            limit: 15
+            interval: '1 hour'
+```
+
+**2. Migrer.** Sept migrations arrivent avec le module : les clients, les
+trames et leurs versions, les contrats, les liens publics, les signatures et
+leurs codes, le PDF signé, la langue faisant foi.
+
+```bash
+php bin/console doctrine:migrations:migrate
+```
+
+**3. Rien à ajouter dans composer.json.** dompdf arrive avec le bundle.
+
+**4. Vérifier les droits sur `var/uploads/`.** Les PDF signés sont écrits sous
+`var/uploads/contracts/{année}/`, servis par une route gatée du back-office et
+jamais par le catch-all des uploads.
+
 ## [0.9.85] - 2026-09-08
 
 ### Modifié

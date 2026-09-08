@@ -32,6 +32,9 @@ import { isRef } from "vue";
  * Both were missing and fell through to `accent`, which is why those two
  * sections looked like they had no colour while every other one did.
  * `SidemenuSectionThemeTest` now fails when a section ships without an entry.
+ *
+ * `accounting` (45) closes the list under notes (violet), so it takes emerald:
+ * the furthest hue from a purple, and the one every ledger already reads in.
  */
 const SECTION_THEMES = {
     general: makeTheme("sky"),
@@ -41,6 +44,7 @@ const SECTION_THEMES = {
     editorial: makeTheme("rose"),
     ged: makeTheme("lime"),
     notes: makeTheme("violet"),
+    accounting: makeTheme("emerald"),
     dev: makeTheme("orange"),
 };
 

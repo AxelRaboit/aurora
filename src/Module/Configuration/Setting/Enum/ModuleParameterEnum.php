@@ -19,6 +19,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
     case GedBackend = 'modules_ged_backend';
     case PlanningBackend = 'modules_planning_backend';
     case NotesBackend = 'modules_notes_backend';
+    case AccountingBackend = 'modules_accounting_backend';
 
     // Top-level modules - frontend (public site)
 
@@ -52,6 +53,10 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
     case GedFolders = 'modules_ged_folders';
     case GedFrontend = 'modules_ged_frontend';
     case NotesMarkdown = 'modules_notes_markdown';
+
+    // Sub-modules - Accounting
+    case AccountingCustomers = 'modules_accounting_customers';
+    case AccountingContracts = 'modules_accounting_contracts';
 
     public function getKey(): string
     {
@@ -89,6 +94,9 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedFrontend => 'backend.modules.ged_frontend',
             self::NotesBackend => 'backend.modules.notes_backend',
             self::NotesMarkdown => 'backend.nav.notes_markdown',
+            self::AccountingBackend => 'backend.modules.accounting_backend',
+            self::AccountingCustomers => 'backend.nav.accounting_customers',
+            self::AccountingContracts => 'backend.nav.accounting_contract_templates',
         };
     }
 
@@ -123,6 +131,9 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedFrontend => 'backend.modules.ged_frontend_description',
             self::NotesBackend => 'backend.modules.notes_backend_description',
             self::NotesMarkdown => 'backend.nav.notes_markdown_description',
+            self::AccountingBackend => 'backend.modules.accounting_backend_description',
+            self::AccountingCustomers => 'backend.nav.accounting_customers_description',
+            self::AccountingContracts => 'backend.nav.accounting_contract_templates_description',
         };
     }
 
@@ -154,6 +165,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::EditorialFrontend, self::EditorialPosts, self::EditorialPostTypes, self::EditorialTaxonomies, self::EditorialMenus, self::EditorialSeo, self::EditorialComments, self::EditorialForms => self::EditorialBackend,
             self::GedDocuments, self::GedCategories, self::GedTags, self::GedFolders, self::GedFrontend => self::GedBackend,
             self::NotesMarkdown => self::NotesBackend,
+            self::AccountingCustomers, self::AccountingContracts => self::AccountingBackend,
             default => null,
         };
     }
@@ -200,6 +212,12 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedFolders => self::GedBackend->value,
             self::GedFrontend => self::GedBackend->value,
             self::NotesMarkdown => self::NotesBackend->value,
+            // Accounting sub-modules
+            self::AccountingCustomers => self::AccountingBackend->value,
+            // A contract is signed with somebody, and that somebody is a
+            // customer. Templates without the customer screen would build
+            // documents with nobody to address them to.
+            self::AccountingContracts => self::AccountingCustomers->value,
             default => null,
         };
     }
@@ -256,6 +274,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedBackend => 'ged',
             self::PlanningBackend => 'planning',
             self::NotesBackend => 'notes',
+            self::AccountingBackend => 'accounting',
             default => null,
         };
     }

@@ -4,3 +4,16 @@ framework:
             policy: sliding_window
             limit: 10
             interval: '1 hour'
+
+        # The two write paths a stranger with a link can reach. Both are keyed
+        # on the client IP, which is the attacker's to rotate - so they are the
+        # outer wall, not the only one: the code carries its own attempt limit
+        # and its own ceiling per link.
+        contract_signature:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        contract_signature_code:
+            policy: sliding_window
+            limit: 15
+            interval: '1 hour'
