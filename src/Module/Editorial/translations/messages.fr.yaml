@@ -101,7 +101,7 @@ backend:
     editorial_backend: Éditorial
     editorial_backend_description: "Active la section Éditorial dans l'administration."
     editorial_frontend: Site public éditorial
-    editorial_frontend_description: "Sert les publications, archives et pages de taxonomie aux lecteurs."
+    editorial_frontend_description: "Sert les publications, pages de liste et pages de taxonomie aux lecteurs."
   editorial:
     bootstrap:
       post_types:
@@ -162,7 +162,7 @@ backend:
     slug_locked: "Un type natif conserve son slug : les routes et les contenus existants pointent dessus."
     label: Libellé
     icon: Icône
-    has_archive: Possède une page d'archive
+    has_archive: Possède une page de liste
     has_archive_hint: "Publie une page de liste pour ce type sur le site public."
     archive_title: Titre de la page de liste
     archive_title_hint: "Le libellé nomme une publication ; la page qui les liste toutes s'appelle autrement. Laissé vide, elle prend le libellé."
@@ -632,7 +632,7 @@ backend:
     related_posts_hint: "D'autres publications que celle-ci peut citer, par exemple pour les proposer dans une zone « Publication » de sa grille."
     related_posts_empty: Aucune publication liée pour le moment.
     thumbnail: Vignette
-    thumbnail_hint: "L'image qui représente cette publication partout où elle est listée : une carte d'archive, une zone de grille qui pointe vers elle, l'aperçu d'un lien partagé."
+    thumbnail_hint: "L'image qui représente cette publication partout où elle est listée : une carte de liste, une zone de grille qui pointe vers elle, l'aperçu d'un lien partagé."
     thumbnail_image: Image
     thumbnail_fit: Cadrage
     thumbnail_fits:
@@ -911,7 +911,7 @@ backend:
     target_types:
       post: Publication
       term: Terme
-      post_type_archive: Archive de type de contenu
+      post_type_archive: Liste d'un type de contenu
       home: Accueil
       custom_url: URL libre
       frontend_login: Connexion

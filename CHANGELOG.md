@@ -5,6 +5,25 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Modifié
+
+#### « Archive » ne veut plus dire deux choses
+Le mot servait à deux notions sans rapport : le **statut** d'une publication
+retirée du site, et la **page qui liste** les publications d'un type. Héritage
+de WordPress, où toute page de liste automatique s'appelle une archive.
+
+En français c'est franchement trompeur, « archive » disant plutôt « rangé,
+plus d'actualité », alors que la page en question est la vitrine d'un type de
+contenu. L'interface disait d'ailleurs déjà « page de liste » presque partout,
+sauf à l'endroit qui compte le plus : la case qui la crée.
+
+Le mot est désormais réservé au statut. Partout ailleurs on lit « page de
+liste ». Les clés de traduction, les colonnes et les routes ne bougent pas :
+renommer ce que le lecteur lit ne coûte rien, renommer ce sur quoi le code
+s'appuie casserait les projets clients pour un synonyme.
+
 ## [0.9.84] - 2026-09-08
 
 ### Ajouté
