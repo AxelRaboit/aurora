@@ -5,6 +5,21 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### L'image de partage pesait le poids du fichier d'origine
+La balise `og:image` pointait sur le fichier tel qu'il a été envoyé. Sur une
+publication dont l'image à la une est un PNG de 1744 × 2700, cela fait 2,8 Mo
+téléchargés par chaque robot qui rencontre le lien, pour une carte affichée à
+environ 1200 pixels de large.
+
+Rien sur la page n'était lent, donc rien ne le disait : le coût tombe sur
+l'aperçu du lien, hors de vue. La balise sert maintenant la variante `large`,
+plafonnée à 1920 pixels, et retombe sur l'original pour les documents qui n'ont
+pas de variante.
+
 ## [0.9.73] - 2026-09-08
 
 ### Modifié

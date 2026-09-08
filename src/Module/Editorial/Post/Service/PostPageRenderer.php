@@ -118,7 +118,18 @@ final readonly class PostPageRenderer
             'noindex' => $translation->isNoindex(),
             'ogImage' => $ogImage instanceof DocumentInterface
                 ? [
-                    'publicUrl' => $this->documentUrlGenerator->publicUrl($ogImage),
+                    // The `large` variant rather than the original: a share
+                    // image is downloaded by every crawler that meets the
+                    // link, and the original is whatever was uploaded - a
+                    // 2.8 MB PNG in one case here, for a card that renders at
+                    // 1200 pixels wide. The variant is capped at 1920, which
+                    // is above what any platform asks for.
+                    //
+                    // Falls back to the original for the documents that have
+                    // no variants: a file uploaded before they existed, or a
+                    // format GD cannot re-encode.
+                    'publicUrl' => $this->documentUrlGenerator->variantUrl($ogImage, 'large')
+                        ?? $this->documentUrlGenerator->publicUrl($ogImage),
                     // The document's own description. There is no per-post
                     // one, and adding a field for this alone would be a field
                     // to fill on every publication for a string the document
