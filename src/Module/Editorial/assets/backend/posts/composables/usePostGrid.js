@@ -405,6 +405,9 @@ function newZone(type) {
         language: null,
         textSize: "normal",
         lineNumbers: false,
+        // No name until someone means to link to the zone. An id on every
+        // zone would be a page full of addresses nobody chose.
+        anchor: "",
         // Nothing behind it and inside its column: a zone arrives as part of
         // the page, and becomes a section only when someone says so.
         surface: "none",
@@ -1088,6 +1091,7 @@ export function usePostGrid(layout, content) {
                 language: shared("language"),
                 textSize: shared("textSize"),
                 lineNumbers: shared("lineNumbers"),
+                anchor: shared("anchor"),
                 surface: shared("surface"),
                 fullBleed: shared("fullBleed"),
                 // The width control drives the large-screen span only. Below

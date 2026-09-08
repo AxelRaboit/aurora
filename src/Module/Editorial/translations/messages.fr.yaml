@@ -465,6 +465,10 @@ backend:
         small: Mentions
       full_bleed: Pleine largeur
       full_bleed_hint: "La zone sort de la colonne et traverse l'écran. Les mots restent centrés à la largeur de la page ; une image, elle, va d'un bord à l'autre."
+      anchor: "Point d'ancrage"
+      anchor_placeholder: "me-retrouver"
+      anchor_hint: "Un nom pour pointer un lien directement sur cette zone. Vide, la zone n'a pas d'adresse."
+      anchor_hint_set: "Un lien vers cette page suivi de #{anchor} descend jusqu'ici."
       full_bleed_width_note: "La largeur et le décalage sont fixés à la ligne entière : une bande qui traverse l'écran se centre sur son conteneur, et elle ne tombe au milieu que si ce conteneur est la ligne."
       surface: Fond
       surface_hint: "Ce sur quoi la zone est posée. C'est ce qui fait lire une suite de zones comme des sections."

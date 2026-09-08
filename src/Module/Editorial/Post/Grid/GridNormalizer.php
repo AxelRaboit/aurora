@@ -440,17 +440,21 @@ final readonly class GridNormalizer
     {
         $raw = is_array($data['zones'] ?? null) ? $data['zones'] : [];
         $used = [];
+        $anchors = [];
 
-        return $this->zoneList($raw, $used, true);
+        return $this->zoneList($raw, $used, $anchors, true);
     }
 
     /**
      * @param array<mixed>        $raw
-     * @param array<string, true> $used ids already taken, across the whole tree
+     * @param array<string, true> $used    ids already taken, across the whole tree
+     * @param array<string, true> $anchors anchors already taken, likewise - a
+     *                                     link points at one zone, so a name
+     *                                     belongs to one zone
      *
      * @return list<array<string, mixed>>
      */
-    private function zoneList(array $raw, array &$used, bool $allowStacks): array
+    private function zoneList(array $raw, array &$used, array &$anchors, bool $allowStacks): array
     {
         $zones = [];
         $limit = $allowStacks ? self::MAX_ZONES : self::MAX_STACK_CHILDREN;
@@ -477,6 +481,16 @@ final readonly class GridNormalizer
             $id = $this->values->itemId($entry['id'] ?? null, $used);
             $used[$id] = true;
 
+            // The name a link may jump to. Separate from the id on purpose:
+            // the id is the editor's handle on a zone and means nothing to a
+            // reader, while this is written to be read in an address bar and
+            // survives the zone being rebuilt.
+            $anchor = $this->values->anchor($entry['anchor'] ?? null, $anchors);
+
+            if ('' !== $anchor) {
+                $anchors[$anchor] = true;
+            }
+
             // Every key is present whatever the type. Switching a zone from
             // media to text and back in the editor would otherwise lose what
             // was picked, and the front would have to guard every read.
@@ -500,6 +514,7 @@ final readonly class GridNormalizer
 
             $zones[] = [
                 'id' => $id,
+                'anchor' => $anchor,
                 'type' => $type,
                 // On a row this is a width; inside a stack it is a share of the
                 // height. Both are a fraction of the space along the axis the
@@ -579,7 +594,7 @@ final readonly class GridNormalizer
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
                 'children' => self::ZONE_STACK === $type
-                    ? $this->zoneList(is_array($entry['children'] ?? null) ? $entry['children'] : [], $used, false)
+                    ? $this->zoneList(is_array($entry['children'] ?? null) ? $entry['children'] : [], $used, $anchors, false)
                     : [],
             ];
         }
