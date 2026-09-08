@@ -19,6 +19,7 @@ function emptyForm(supportOptions) {
         // which is what every type did before these existed.
         archiveTitle: "",
         archivePostId: null,
+        archiveShowsList: true,
     };
 }
 
@@ -133,6 +134,7 @@ export function usePostTypesForm(props) {
             supports: [...(postType.supports ?? [])],
             archiveTitle: postType.archiveTitle ?? "",
             archivePostId: postType.archivePostId ?? null,
+            archiveShowsList: postType.archiveShowsList ?? true,
         };
         clearEdit();
         showEdit.value = true;

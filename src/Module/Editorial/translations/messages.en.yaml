@@ -168,6 +168,8 @@ backend:
     archive_title_hint: "The label names one publication; the page listing them all is called something else. Left empty, it takes the label."
     archive_title_placeholder: "Services"
     archive_post: Borrowed header
+    archive_shows_list: "List the publications under the content"
+    archive_shows_list_hint: "The listing page also takes this publication's grid. Untick when that grid already places every publication: otherwise each appears twice, once arranged and once as a card."
     archive_post_hint: "The listing page takes this publication's banner, with its settings and its words in every language. That publication keeps an address of its own: tick 'Do not index' on it."
     archive_post_placeholder: "Pick a publication"
     supports: Capabilities

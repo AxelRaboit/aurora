@@ -24,6 +24,7 @@ class PostTypeSerializer implements PostTypeSerializerInterface
             // Just the id: the screen already holds the list of publications
             // it lets you pick from, so it has the title to show for it.
             'archivePostId' => $postType->getArchivePostId(),
+            'archiveShowsList' => $postType->archiveShowsList(),
             'isBuiltIn' => $postType->isBuiltIn(),
             'supports' => $postType->getSupports(),
             'fields' => array_map(

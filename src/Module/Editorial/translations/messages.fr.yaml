@@ -168,6 +168,8 @@ backend:
     archive_title_hint: "Le libellé nomme une publication ; la page qui les liste toutes s'appelle autrement. Laissé vide, elle prend le libellé."
     archive_title_placeholder: "Services"
     archive_post: En-tête emprunté
+    archive_shows_list: "Lister les publications sous le contenu"
+    archive_shows_list_hint: "La page de liste reprend aussi la grille de cette publication. Décochez quand cette grille place déjà chaque publication : sinon elles apparaissent deux fois, une fois arrangées et une fois en carte."
     archive_post_hint: "La page de liste reprend la bannière de cette publication, avec ses réglages et ses textes dans chaque langue. Elle garde aussi son adresse à elle : pensez à cocher « Ne pas indexer » sur cette publication."
     archive_post_placeholder: "Choisir une publication"
     supports: Capacités

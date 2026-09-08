@@ -50,5 +50,23 @@
             {% endif %}
         </header>
     {% endif %}
-    {{ include('Frontend/themes/default/editorial/_posts.html.twig') }}
+    {# What the designated publication holds, rendered by the same partial its
+       own page uses - so a zone behaves the same whether it is read here or
+       there. Absent on every archive that designates nothing, which is every
+       one of them until somebody composes one. #}
+    {% if postType.grid %}
+        {{ include('Frontend/themes/default/editorial/post/_grid.html.twig', {grid: postType.grid, locale: locale}) }}
+    {% endif %}
+
+    {# The automatic list, unless the composed part above already places every
+       entry - in which case showing it would show each of them twice, once
+       arranged and once as a card nobody arranged. #}
+    {# `is defined` and not `|default(true)`: Twig's default filter answers on
+       emptiness, not on absence, so `false|default(true)` is true - and the
+       switch would have been permanently on. #}
+    {% if postType.showsList is not defined or postType.showsList %}
+        <div class="{{ postType.grid ? 'mt-12' : '' }}">
+            {{ include('Frontend/themes/default/editorial/_posts.html.twig') }}
+        </div>
+    {% endif %}
 {% endblock %}
