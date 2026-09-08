@@ -1,18 +1,23 @@
 import { onBeforeUnmount, ref } from "vue";
 
 /**
- * The anti-robot check on the comment form, when the site has one configured.
+ * The anti-robot check on anything a visitor can post, when the site has one
+ * configured: a comment thread, a contact form.
  *
  * Two services, two shapes, one interface. Turnstile draws a widget and hands
  * over a token when the reader passes it; reCAPTCHA v3 draws nothing and is
  * asked for a token at submit time, scoring behaviour instead. So the caller
- * gets `mount()` for the box and `token()` for the value, and does not care
- * which one is configured.
+ * gets `mount()` for the box and `currentToken()` for the value, and does not
+ * care which one is configured.
+ *
+ * `action` is what reCAPTCHA files the score under, so a form and a comment
+ * are told apart in the provider's own dashboard. Turnstile has no such notion
+ * and ignores it.
  *
  * Nothing is loaded when the check is off: a site without one must not fetch
- * a script from Cloudflare or Google to render a comment form.
+ * a script from Cloudflare or Google to render a form.
  */
-export function useCommentCaptcha(config) {
+export function usePublicCaptcha(config, action = "submit") {
     const ready = ref(false);
     const token = ref("");
 
@@ -21,6 +26,7 @@ export function useCommentCaptcha(config) {
 
     let widgetId = null;
     let scriptElement = null;
+    let mountedElement = null;
 
     /**
      * One script tag per page, whoever asks first. Loading it twice makes the
@@ -55,9 +61,24 @@ export function useCommentCaptcha(config) {
         });
     }
 
-    /** Draws the widget into `element`, for the provider that has one. */
+    /**
+     * Draws the widget into `element`, for the provider that has one.
+     *
+     * Asked twice for the same node it does nothing, and asked for a new one
+     * it takes the old widget down first. A multi-step form only shows the box
+     * on its last step, so the node is created and destroyed as the visitor
+     * moves through it, and rendering into each new one without removing the
+     * last leaks a widget per round trip.
+     */
     async function mount(element) {
-        if (!enabled || !element) return;
+        if (!enabled || !element || mountedElement === element) return;
+
+        if (null !== widgetId) {
+            window.turnstile?.remove(widgetId);
+            widgetId = null;
+        }
+
+        mountedElement = element;
 
         const loaded = await loadScript();
         if (!loaded) return;
@@ -99,7 +120,7 @@ export function useCommentCaptcha(config) {
                     try {
                         resolve(
                             await window.grecaptcha.execute(config.siteKey, {
-                                action: "comment",
+                                action,
                             }),
                         );
                     } catch {

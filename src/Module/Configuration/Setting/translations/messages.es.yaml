@@ -3,7 +3,7 @@ backend:
     disable_anyway: Desactivar de todos modos
     tabs:
       captcha: Antirrobots
-      captcha_description: "Verificación del formulario de comentarios: servicio, claves y activación."
+      captcha_description: "Verificación de comentarios y formularios: servicio, claves y activación."
   parameters:
     media_credit_visible:
       label: Mostrar el crédito de las fotos
@@ -11,7 +11,7 @@ backend:
       description: "Muestra el nombre del fotógrafo y el enlace al banco de imágenes bajo las fotos que lo llevan. Las condiciones de uso de la API de Pexels piden este crédito: desactivarlo es una decisión suya sobre su propia cuenta."
     captcha:
       title: Verificación antirrobots
-      intro: "Una comprobación adicional en el formulario de comentarios, además de la trampa para robots, el filtro de enlaces, el límite de envíos y la moderación que ya existen."
+      intro: "Una comprobación adicional en todo lo que un visitante puede enviar, comentarios y formularios, además de la trampa para robots, el filtro de enlaces, el límite de envíos y la moderación que ya existen."
       privacy: "El servicio elegido recibe la dirección IP del visitante. Es un dato personal: la cuenta debe ser la del sitio, y la política de privacidad debe decirlo."
       enabled: Activar la verificación
       provider: Servicio

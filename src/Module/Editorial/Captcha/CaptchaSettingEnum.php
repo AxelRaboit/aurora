@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Aurora\Module\Editorial\Comment\Captcha;
+namespace Aurora\Module\Editorial\Captcha;
 
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnumInterface;
 

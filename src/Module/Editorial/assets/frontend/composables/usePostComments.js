@@ -1,7 +1,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRequest } from "@/shared/composables/http/frontend/useRequest.js";
-import { useCommentCaptcha } from "./useCommentCaptcha.js";
+import { usePublicCaptcha } from "./usePublicCaptcha.js";
 import { buildPath } from "@/shared/utils/http/buildPath.js";
 import { HttpMethod } from "@/shared/utils/http/httpMethod.js";
 
@@ -20,7 +20,7 @@ function emptyForm() {
 export function usePostComments(props) {
     const { t } = useI18n();
     const { request } = useRequest();
-    const captcha = useCommentCaptcha(props.captcha);
+    const captcha = usePublicCaptcha(props.captcha, "comment");
 
     const comments = ref([]);
     const total = ref(0);

@@ -9,7 +9,7 @@ use Aurora\Core\Enum\HttpStatusEnum;
 use Aurora\Core\Frontend\Service\Context;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Core\Validation\Service\PayloadValidator;
-use Aurora\Module\Editorial\Comment\Captcha\CaptchaVerifier;
+use Aurora\Module\Editorial\Captcha\CaptchaVerifier;
 use Aurora\Module\Editorial\Comment\Dto\CommentInputFactoryInterface;
 use Aurora\Module\Editorial\Comment\Entity\CommentInterface;
 use Aurora\Module\Editorial\Comment\Enum\ReactionTypeEnum;

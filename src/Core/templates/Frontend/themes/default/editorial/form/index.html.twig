@@ -20,6 +20,7 @@
     <div {{ vue_component('editorial/frontend/FormRender', {
         form: formData,
         submitPath: submitPath,
+        captcha: public_captcha(),
     }) }}></div>
 </div>
 {% endblock %}

@@ -27,7 +27,7 @@ backend:
       pexels: Pexels
       pexels_description: 'Free stock photo library: enabling, API key and acceptance of the terms.'
       captcha: Anti-robot
-      captcha_description: "Checking the comment form: service, keys and activation."
+      captcha_description: "Checking comments and forms: service, keys and activation."
       notes: Notes
       notes_description: "Markdown notes module settings: image upload size and quality."
       modules: Modules
@@ -76,7 +76,7 @@ backend:
       description: "Shows the photographer's name and a link to the stock library under the pictures that carry one. The Pexels API guidelines ask for this credit: switching it off is your decision about your own account."
     captcha:
       title: Anti-robot check
-      intro: "One more check on the comment form, on top of the honeypot, the link filter, the flood limit and the moderation already there."
+      intro: "One more check on anything a visitor can send, comments and forms alike, on top of the honeypot, the link filter, the flood limit and the moderation already there."
       privacy: "The chosen service receives the visitor's IP address. That is personal data: the account should be the site's own, and the privacy notice should say so."
       enabled: Turn the check on
       provider: Service

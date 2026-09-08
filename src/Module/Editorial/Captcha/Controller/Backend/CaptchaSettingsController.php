@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Aurora\Module\Editorial\Comment\Controller\Backend;
+namespace Aurora\Module\Editorial\Captcha\Controller\Backend;
 
 use Aurora\Core\Enum\HttpMethodEnum;
 use Aurora\Core\Http\JsonRequestTrait;
 use Aurora\Core\Http\JsonResponseTrait;
-use Aurora\Module\Editorial\Comment\Captcha\CaptchaProviderEnum;
-use Aurora\Module\Editorial\Comment\Captcha\CaptchaSettings;
+use Aurora\Module\Editorial\Captcha\CaptchaProviderEnum;
+use Aurora\Module\Editorial\Captcha\CaptchaSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

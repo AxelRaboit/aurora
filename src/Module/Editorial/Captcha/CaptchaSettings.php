@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Aurora\Module\Editorial\Comment\Captcha;
+namespace Aurora\Module\Editorial\Captcha;
 
 use Aurora\Core\Encryption\Service\EncryptionServiceInterface;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use SensitiveParameter;
 
 /**
- * Whether the comment form is checked against an anti-robot service, and with
- * whose keys.
+ * Whether what a visitor posts - a comment, a form - is checked against an
+ * anti-robot service, and with whose keys.
  *
  * Off until somebody turns it on, and off by default on every site delivered.
  * The account behind the keys belongs to the client, like every other
@@ -62,8 +62,8 @@ final readonly class CaptchaSettings
         // A secret written before the encryption key was rotated decrypts to
         // null. Treated as absent rather than fatal: the check goes quiet and
         // the tab asks for the key again, which is the one thing that fixes
-        // it. Quiet here means comments keep working - a rotated key must not
-        // close the form.
+        // it. Quiet here means comments and forms keep working - a rotated key
+        // must not close the site's only way of being contacted.
         return $this->encryption->decrypt($stored) ?? '';
     }
 

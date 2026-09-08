@@ -5,6 +5,56 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.79] - 2026-09-08
+
+### Ajouté
+
+#### La vérification anti-robots protège aussi les formulaires
+Elle ne gardait que les commentaires, et c'était l'inverse de ce qu'il fallait :
+un commentaire attend un modérateur, alors qu'un envoi de formulaire est
+validé, enregistré, envoyé par mail au propriétaire et poussé vers son webhook
+dès qu'il arrive. Un formulaire est aussi la seule chose sur un site qu'un
+robot trouve sans avoir de lien à suivre.
+
+Le même réglage sert maintenant aux deux. Rien à activer en plus : un site qui
+avait déjà configuré Turnstile ou reCAPTCHA voit ses formulaires protégés à la
+mise à jour, et un site qui n'en a pas continue exactement comme avant.
+
+Sur un formulaire en plusieurs étapes, la case n'apparaît qu'à la dernière :
+répondue à l'étape une, elle aurait expiré pendant que le visiteur remplit
+l'étape trois.
+
+Le refus emprunte le message de la limite d'envois. Dire lequel des contrôles a
+refusé, c'est indiquer au robot quoi changer.
+
+### Modifié
+
+#### La vérification anti-robots n'appartient plus aux commentaires
+Le code vivait sous le module de commentaires, qui était son seul client. Il
+remonte d'un cran, à `Editorial\Captcha`, puisqu'il en a deux. Les clés
+enregistrées ne bougent pas : les lignes de réglages portaient déjà un nom de
+module et non de fonctionnalité.
+
+La fonction Twig s'appelle désormais `public_captcha()`. L'ancien nom,
+`comment_captcha()`, continue de répondre : un thème est un fichier dans le
+projet d'un client, et le renommer là-bas n'est pas quelque chose qu'une
+version de ce paquet peut faire.
+
+### Dans aurora-client
+Un thème qui dessine un formulaire doit lui passer la configuration, comme le
+fait le thème par défaut :
+
+```twig
+{{ vue_component('editorial/frontend/FormRender', {
+    form: formData,
+    submitPath: submitPath,
+    captcha: public_captcha(),
+}) }}
+```
+
+Sans cette ligne le formulaire s'affiche et s'envoie comme avant, mais sans
+case et sans jeton : le serveur le refusera si la vérification est activée.
+
 ## [0.9.78] - 2026-09-08
 
 ### Ajouté
