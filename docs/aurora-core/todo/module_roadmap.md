@@ -309,9 +309,15 @@ du confort.
 
 ### Contrats / Abonnements
 **Inspiré de :** Dolibarr - Module Contrats  
-**Pourquoi :** Génère des factures récurrentes automatiquement. Indispensable pour les modèles SaaS, maintenance, abonnements.  
-**Fonctionnalités cibles :**
-- Contrats avec période, montant, renouvellement
+**Pourquoi :** Génère des factures récurrentes automatiquement. Indispensable pour les modèles SaaS, maintenance, abonnements.
+
+**Fait (0.9.82, module `Accounting`) :** la moitié « contrat » est livrée -
+clients, trames versionnées, contrat scellé, lien public, signature électronique
+simple avec OTP email, contresignature et PDF signé. Décisions et invariants :
+[`.claude/memory/aurora-core/architecture/project_accounting_contract_seal.md`](../../../.claude/memory/aurora-core/architecture/project_accounting_contract_seal.md).
+
+**Reste à faire :** la moitié « abonnements ».
+- Période, montant récurrent, renouvellement
 - Génération automatique de factures récurrentes
 - Alertes d'échéance
 - Lien vers tiers (Billing)
