@@ -9,6 +9,7 @@ use Aurora\Core\Enum\HttpStatusEnum;
 use Aurora\Core\Frontend\Service\Context;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Module\Configuration\Theme\Service\ThemeResolver;
+use Aurora\Module\Editorial\Captcha\CaptchaVerifier;
 use Aurora\Module\Editorial\Form\Entity\FormTranslationInterface;
 use Aurora\Module\Editorial\Form\Manager\FormManagerInterface;
 use Aurora\Module\Editorial\Form\Service\FormSubmissionValidator;
@@ -38,6 +39,7 @@ class FormController extends AbstractController
         private readonly ThemeResolver $themeResolver,
         private readonly Context $context,
         private readonly RateLimiterFactoryInterface $formSubmissionLimiter,
+        private readonly CaptchaVerifier $captcha,
     ) {}
 
     #[Route(
@@ -83,6 +85,22 @@ class FormController extends AbstractController
         }
 
         $answers = $this->payload($request);
+
+        // Before validation and before anything is written, for the same
+        // reason the rate limit is: a robot that cannot answer the challenge
+        // should not have its answers read, let alone stored, mailed to the
+        // owner and pushed to their webhook. The message is the one a flood
+        // gets, because naming which check refused is telling a spammer what
+        // to change.
+        if (!$this->captcha->verify(
+            is_string($answers['captchaToken'] ?? null) ? $answers['captchaToken'] : null,
+            $request->getClientIp(),
+        )) {
+            return $this->jsonFailure(
+                'frontend.editorial.forms.errors.too_many',
+                HttpStatusEnum::TooManyRequests->value,
+            );
+        }
 
         $errors = $this->submissionValidator->validate($form, $answers);
         if ([] !== $errors) {

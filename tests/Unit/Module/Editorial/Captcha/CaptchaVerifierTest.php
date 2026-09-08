@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Aurora\Tests\Unit\Module\Editorial\Comment\Captcha;
+namespace Aurora\Tests\Unit\Module\Editorial\Captcha;
 
 use Aurora\Core\Encryption\Service\EncryptionServiceInterface;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
-use Aurora\Module\Editorial\Comment\Captcha\CaptchaSettingEnum;
-use Aurora\Module\Editorial\Comment\Captcha\CaptchaSettings;
-use Aurora\Module\Editorial\Comment\Captcha\CaptchaVerifier;
+use Aurora\Module\Editorial\Captcha\CaptchaSettingEnum;
+use Aurora\Module\Editorial\Captcha\CaptchaSettings;
+use Aurora\Module\Editorial\Captcha\CaptchaVerifier;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;

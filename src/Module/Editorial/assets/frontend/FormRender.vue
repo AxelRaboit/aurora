@@ -1,4 +1,5 @@
 <script setup>
+import { useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useFormRender } from "./composables/useFormRender.js";
 
@@ -12,14 +13,27 @@ import { useFormRender } from "./composables/useFormRender.js";
 const props = defineProps({
     form: { type: Object, required: true },
     submitPath: { type: String, required: true },
+    // Absent on a site with no check configured, which is the default: the
+    // component then draws no box and sends no token, and the server accepts
+    // the submission as it always did.
+    captcha: { type: Object, default: () => ({ enabled: false }) },
 });
 
 const { t } = useI18n();
 
 const {
-    answers, errors, sending, sent, notice,
+    captcha, answers, errors, sending, sent, notice,
     steps, stepIndex, fieldsForStep, isLastStep, goToStep, submit,
 } = useFormRender(props);
+
+// Watched rather than drawn on mount: on a multi-step form the box only
+// exists once the visitor reaches the last step, so at mount there is no node
+// to render into. The watcher fires whenever one appears.
+const captchaBox = useTemplateRef("captchaBox");
+
+watch(captchaBox, (element) => {
+    if (element) captcha.mount(element);
+});
 
 const inputClass =
     "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-primary";
@@ -110,6 +124,10 @@ function inputType(type) {
                 {{ errors[String(field.id)] }}
             </span>
         </label>
+
+        <!-- On the last step only: a widget on step one is answered, then
+             expires while the visitor is still filling in step three. -->
+        <div v-if="captcha.enabled && isLastStep" ref="captchaBox" class="min-h-0" />
 
         <div class="flex items-center gap-2">
             <button

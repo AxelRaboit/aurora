@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Aurora\Module\Editorial\Comment\Captcha;
+namespace Aurora\Module\Editorial\Captcha;
 
 /**
  * The two services the comment form can be checked against.

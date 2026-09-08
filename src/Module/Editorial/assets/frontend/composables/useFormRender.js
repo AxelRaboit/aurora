@@ -1,6 +1,7 @@
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRequest } from "@/shared/composables/http/frontend/useRequest.js";
+import { usePublicCaptcha } from "./usePublicCaptcha.js";
 
 /**
  * Mirrors FormConditionEvaluator on the PHP side.
@@ -39,6 +40,10 @@ function blankAnswers(fields) {
 export function useFormRender(props) {
     const { t } = useI18n();
     const { request } = useRequest();
+
+    // The same check the comment thread uses, told apart by its action so the
+    // provider scores a contact form and a comment separately.
+    const captcha = usePublicCaptcha(props.captcha, "form");
 
     const answers = ref(blankAnswers(props.form.fields ?? []));
     const errors = ref({});
@@ -96,10 +101,22 @@ export function useFormRender(props) {
                 ]),
             );
 
+            // Beside the answers rather than among them: the server reads
+            // answers by field id, and no field is named this.
+            payload.captchaToken = await captcha.currentToken();
+
             const data = await request(props.submitPath, payload);
-            if (!data) return;
+            if (!data) {
+                captcha.reset();
+
+                return;
+            }
 
             if (!data.success) {
+                // Spent either way - a provider hands out one token per
+                // challenge, and retrying with it is refused.
+                captcha.reset();
+
                 errors.value = Object.fromEntries(
                     Object.entries(data.errors ?? {}).map(([field, key]) => [
                         field,
@@ -134,6 +151,7 @@ export function useFormRender(props) {
     }
 
     return {
+        captcha,
         answers,
         errors,
         sending,
