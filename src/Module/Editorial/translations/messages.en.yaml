@@ -456,6 +456,7 @@ backend:
         stack: Stack
       zone_form: "Form"
       zone_form_hint: "The form is drawn in the page and posts where its own page posts."
+      zone_form_none: "Choose a form…"
       text_size: Setting
       text_size_hint: "A standfirst enlarges the first paragraph; fine print is smaller and quieter."
       text_sizes:
@@ -464,6 +465,7 @@ backend:
         small: Fine print
       full_bleed: Full width
       full_bleed_hint: "The zone leaves the column and spans the screen. Words stay centred at the page's width; a picture goes edge to edge."
+      full_bleed_width_note: "Width and offset are set to the whole row: a band spanning the screen centres on its container, and it only lands in the middle when that container is the row."
       surface: Background
       surface_hint: "What the zone sits on. It is what makes a run of zones read as sections."
       surfaces:

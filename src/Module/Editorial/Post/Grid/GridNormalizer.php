@@ -480,20 +480,38 @@ final readonly class GridNormalizer
             // Every key is present whatever the type. Switching a zone from
             // media to text and back in the editor would otherwise lose what
             // was picked, and the front would have to guard every read.
+            // A zone that escapes its column and spans the viewport - a
+            // picture, or the band a surface draws behind one. Only meaningful
+            // at the top level: inside a stack there is no column to escape.
+            $fullBleed = $allowStacks && (bool) ($entry['fullBleed'] ?? false);
+
+            // Full bleed is drawn by pushing a viewport-wide box back by half
+            // its own container, which only lands on the middle of the screen
+            // when the container is the whole row. Left at 32 columns the band
+            // centres on the middle of those 32 and hangs off to one side.
+            //
+            // So the width is not a question a full-bleed zone gets to answer.
+            // Decided here rather than in the stylesheet, because the same
+            // arrangement is read by the editor's preview, and two places
+            // deciding it is two places to disagree.
+            $span = $fullBleed
+                ? array_fill_keys(ContentValueNormalizer::BREAKPOINTS, self::COLUMNS)
+                : $this->values->span($entry['span'] ?? null);
+
             $zones[] = [
                 'id' => $id,
                 'type' => $type,
                 // On a row this is a width; inside a stack it is a share of the
                 // height. Both are a fraction of the space along the axis the
                 // zone flows on, which is why one field says both.
-                'span' => $this->values->span($entry['span'] ?? null),
+                'span' => $span,
                 // Empty columns to the left, and a break before. Both are
                 // arrangement, so both are shared; both are meaningless inside
                 // a stack, where the axis of flow is vertical and there is no
                 // row to start or to sit at the end of - hence `$allowStacks`,
                 // which is only true at the top level.
                 'offset' => $allowStacks
-                    ? self::clampOffset($entry['offset'] ?? null, $this->values->span($entry['span'] ?? null))
+                    ? self::clampOffset($entry['offset'] ?? null, $span)
                     : 0,
                 'newRow' => $allowStacks && (bool) ($entry['newRow'] ?? false),
                 // Shared, like the span: how a picture is cropped is design,
@@ -556,11 +574,8 @@ final readonly class GridNormalizer
                 // What the zone sits on. Every type can have one: a card of
                 // figures, a tinted FAQ, a call to action on accent.
                 'surface' => $this->values->oneOf($entry['surface'] ?? null, self::SURFACES, self::SURFACES[0]),
-                // A zone that escapes its column and spans the viewport -
-                // a picture, or the band a surface draws behind one. Only
-                // meaningful at the top level: inside a stack there is no
-                // column to escape.
-                'fullBleed' => $allowStacks && (bool) ($entry['fullBleed'] ?? false),
+                // Decided above, because the width depends on it.
+                'fullBleed' => $fullBleed,
                 // Present on every zone, empty unless it is a stack - same
                 // reasoning as the keys above, so nothing has to guard the read.
                 'children' => self::ZONE_STACK === $type

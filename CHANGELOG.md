@@ -5,6 +5,45 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Corrigé
+
+#### Une zone en pleine largeur partait sur le côté
+Mise en pleine largeur, une zone plus étroite que la ligne se décalait au lieu
+de traverser l'écran. La bande est dessinée en repoussant une boîte large comme
+l'écran de la moitié de son conteneur, et ça ne tombe au milieu que si ce
+conteneur est la ligne entière : à deux tiers de large, la bande se centrait
+sur le milieu de ces deux tiers.
+
+La largeur n'est donc plus une question qu'une zone en pleine largeur a le
+droit de poser : elle prend la ligne. L'éditeur cache d'ailleurs la largeur et
+le décalage quand l'option est cochée, parce qu'un réglage dont la valeur est
+ensuite écrasée est un réglage qui ment.
+
+#### La liste des formulaires n'arrivait pas jusqu'à l'éditeur
+Le sélecteur de formulaire d'une zone n'affichait que son texte d'attente, et
+une zone qui désignait pourtant un formulaire s'affichait comme si elle n'en
+désignait aucun : un navigateur retombe sur la première option quand la valeur
+choisie ne correspond à aucune autre.
+
+L'écran d'édition calculait la liste depuis toujours et le gabarit qui monte
+l'éditeur ne la transmettait pas. Rien ne le signalait, le composant déclarant
+une liste vide par défaut.
+
+Le texte d'attente disait « Tous », emprunté aux filtres d'une liste
+automatique où « tous » veut dire quelque chose. Pour un formulaire, non : il
+dit maintenant « Choisir un formulaire ».
+
+#### La moitié des zones n'avaient pas d'icône
+La palette dessinait un pictogramme pour cinq types et un mot nu pour les sept
+autres. La table des icônes vivait dans les deux composants qui la dessinent,
+et les deux copies s'étaient arrêtées aux types qui existaient le jour où elle
+a été écrite.
+
+Elle vit maintenant à un seul endroit, complète, et un test la compare à la
+liste des types : un type ajouté demain échoue tant qu'il n'a pas la sienne.
+
 ## [0.9.80] - 2026-09-08
 
 ### Corrigé

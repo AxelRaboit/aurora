@@ -456,6 +456,7 @@ backend:
         stack: Pile
       zone_form: "Formulaire"
       zone_form_hint: "Le formulaire s'affiche dans la page, et s'envoie au même endroit que sur sa propre page."
+      zone_form_none: "Choisir un formulaire…"
       text_size: Mise en forme
       text_size_hint: "Le chapô grossit le premier paragraphe ; les mentions sont plus petites et plus discrètes."
       text_sizes:
@@ -464,6 +465,7 @@ backend:
         small: Mentions
       full_bleed: Pleine largeur
       full_bleed_hint: "La zone sort de la colonne et traverse l'écran. Les mots restent centrés à la largeur de la page ; une image, elle, va d'un bord à l'autre."
+      full_bleed_width_note: "La largeur et le décalage sont fixés à la ligne entière : une bande qui traverse l'écran se centre sur son conteneur, et elle ne tombe au milieu que si ce conteneur est la ligne."
       surface: Fond
       surface_hint: "Ce sur quoi la zone est posée. C'est ce qui fait lire une suite de zones comme des sections."
       surfaces:

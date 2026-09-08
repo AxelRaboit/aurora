@@ -29,10 +29,10 @@
  */
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { FileText, Film, GripVertical, Image, Layers, Newspaper, Plus } from "lucide-vue-next";
+import { GripVertical, Plus } from "lucide-vue-next";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppIconButton from "@/shared/components/action/AppIconButton.vue";
-import { COLUMNS, zoneImage, zoneLabel } from "../composables/usePostGrid.js";
+import { COLUMNS, ZONE_ICONS, zoneImage, zoneLabel } from "../composables/usePostGrid.js";
 import { usePostGridPlacement } from "../composables/usePostGridPlacement.js";
 import { usePostGridResize } from "../composables/usePostGridResize.js";
 import { usePostGridDrop } from "../composables/usePostGridDrop.js";
@@ -55,14 +55,6 @@ const props = defineProps({
 const emit = defineEmits(["update:selectedIndex", "resize", "resizeStart", "add", "addAt", "fillGap", "swap", "move", "moveInto", "moveOut"]);
 
 const { t } = useI18n();
-
-const ZONE_ICONS = {
-    text: FileText,
-    media: Image,
-    post: Newspaper,
-    video: Film,
-    stack: Layers,
-};
 
 const gridEl = ref(null);
 

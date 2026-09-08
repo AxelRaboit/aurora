@@ -13,12 +13,18 @@
 {% endblock %}
 
 {% block body %}
+{# `forms` is the list of forms a grid zone may pose. `editView` has always
+   computed it and this template did not carry it, so the picker showed nothing
+   but its own placeholder - and a zone that already named a form displayed as
+   if it named none, because a browser falls back to the first option when the
+   selected value matches no other. #}
 <div {{ vue_component('editorial/backend/posts/PostEditorApp', {
     post: post,
     postTypes: postTypes,
     taxonomies: taxonomies,
     locales: locales,
     statusOptions: statusOptions,
+    forms: forms,
     createPath: path('backend_editorial_posts_create'),
     updatePathTemplate: path_template('backend_editorial_posts_update', {id: '__id__'}),
     editPathTemplate: path_template('backend_editorial_posts_edit', {id: '__id__'}),

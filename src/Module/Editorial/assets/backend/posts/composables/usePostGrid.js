@@ -1,5 +1,19 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import {
+    ClipboardList,
+    Code,
+    FileText,
+    Film,
+    Image,
+    Layers,
+    LayoutList,
+    ListFilter,
+    ListTree,
+    MousePointerClick,
+    Newspaper,
+    SeparatorHorizontal,
+} from "lucide-vue-next";
 
 /**
  * Drives the content-grid panel of the post editor.
@@ -37,6 +51,33 @@ export const LEAF_ZONE_TYPES = [
 
 /** Mirrors GridNormalizer::ZONE_TYPES - a stack is top level only. */
 export const ZONE_TYPES = [...LEAF_ZONE_TYPES, "stack"];
+
+/**
+ * One picture per zone type, for the palette and for the boxes on the canvas.
+ *
+ * Here rather than in the two components that draw it. The map lived in both,
+ * and both stopped at the five types that existed when it was written: every
+ * zone added since - a button, a form, a summary - arrived in the palette as a
+ * word with a gap where the others have a glyph.
+ *
+ * Every type has one, and ZoneIconCoverageTest fails if a new one does not.
+ */
+export const ZONE_ICONS = {
+    text: FileText,
+    media: Image,
+    post: Newspaper,
+    video: Film,
+    button: MousePointerClick,
+    separator: SeparatorHorizontal,
+    items: LayoutList,
+    // A list that asks a question rather than naming its answers.
+    postList: ListFilter,
+    form: ClipboardList,
+    code: Code,
+    // Headings, indented under one another - which is what a summary is.
+    toc: ListTree,
+    stack: Layers,
+};
 
 /** Mirrors GridNormalizer::BUTTON_VARIANTS. */
 export const BUTTON_VARIANTS = ["solid", "outline", "ghost"];
