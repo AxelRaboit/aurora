@@ -1,4 +1,15 @@
 const PALETTE = [
+    // The theme's own accent rather than the hex it happens to resolve to
+    // today. A title coloured "accent" follows the palette when the theme
+    // changes, and follows the reader between the light and the dark one -
+    // `--th-accent` is accent-500 on one and accent-400 on the other, which is
+    // the difference between a heading that reads and a heading that glares.
+    //
+    // `--th-accent` and not `--color-accent`: the theme block is declared
+    // inline, so Tailwind resolves `--color-*` at build time and never emits
+    // it as a custom property. The `--th-*` layer is the one that exists at
+    // runtime.
+    { label: "Accent", value: "var(--th-accent)" },
     { label: "Black", value: "#000000" },
     { label: "Dark gray", value: "#374151" },
     { label: "Gray", value: "#6b7280" },

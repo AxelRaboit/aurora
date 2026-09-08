@@ -5,6 +5,28 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Ajouté
+
+#### La couleur du thème dans la palette de l'éditeur
+L'outil de couleur de texte proposait douze teintes fixes. Le vert de la liste
+était un vert quelconque, pas celui de l'application : un titre mis en couleur
+depuis l'éditeur ne pouvait donc jamais tomber juste, et il restait figé sur sa
+valeur le jour où le thème changeait.
+
+La palette s'ouvre maintenant sur **Accent**, qui est la couleur du thème
+elle-même et non la teinte qu'elle vaut aujourd'hui. Un titre coloré ainsi suit
+le thème quand on en change, et suit le lecteur entre le thème clair et le
+thème sombre, où l'accent n'a pas la même intensité.
+
+Le nettoyeur de contenu accepte cette valeur par son nom, et uniquement
+celle-là : la fonction `var()` prend une valeur de repli, et laisser passer la
+forme générale reviendrait à laisser écrire n'importe quoi dans un attribut de
+style. Un test lit la palette de l'éditeur et vérifie que chacune de ses
+couleurs survit au nettoyage, parce que les deux moitiés sont écrites dans deux
+langages et qu'aucune n'importe l'autre.
+
 ## [0.9.77] - 2026-09-08
 
 ### Ajouté

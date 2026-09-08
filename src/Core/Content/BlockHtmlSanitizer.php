@@ -76,6 +76,16 @@ final readonly class BlockHtmlSanitizer
 
     private const string HEX_COLOR = '/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i';
 
+    /**
+     * Theme colours an author may pick by name instead of by value.
+     *
+     * A closed list rather than a pattern for `var()`: the function takes a
+     * fallback, and `var(--x, url(evil))` in a style attribute is exactly the
+     * kind of thing this class exists to refuse. One entry today, and adding a
+     * second is adding a line.
+     */
+    private const array THEME_COLORS = ['var(--th-accent)'];
+
     /** Relative units only - what the font-size tool offers. */
     private const string FONT_SIZE = '/^\d+(?:\.\d+)?(?:em|rem|%)$/';
 
@@ -268,7 +278,7 @@ final readonly class BlockHtmlSanitizer
             $candidate = mb_trim($parts[1]);
             $valid = 'font-size' === $property
                 ? 1 === preg_match(self::FONT_SIZE, $candidate)
-                : 1 === preg_match(self::HEX_COLOR, $candidate);
+                : $this->isColor($candidate);
 
             if ($valid) {
                 return sprintf('%s: %s', $property, mb_strtolower($candidate));
@@ -276,5 +286,12 @@ final readonly class BlockHtmlSanitizer
         }
 
         return null;
+    }
+
+    /** A hex, or one of the theme's colours named rather than spelled out. */
+    private function isColor(string $candidate): bool
+    {
+        return in_array(mb_strtolower($candidate), self::THEME_COLORS, true)
+            || 1 === preg_match(self::HEX_COLOR, $candidate);
     }
 }
