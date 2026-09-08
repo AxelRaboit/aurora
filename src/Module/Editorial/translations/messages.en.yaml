@@ -101,7 +101,7 @@ backend:
     editorial_backend: Editorial
     editorial_backend_description: 'Enables the Editorial section in the admin.'
     editorial_frontend: Editorial public site
-    editorial_frontend_description: 'Serves the posts, archives and taxonomy pages to readers.'
+    editorial_frontend_description: 'Serves the posts, listing pages and taxonomy pages to readers.'
   editorial:
     bootstrap:
       post_types:
@@ -162,12 +162,14 @@ backend:
     slug_locked: 'A built-in type keeps its slug: routes and existing content point at it.'
     label: Label
     icon: Icon
-    has_archive: Has an archive page
+    has_archive: Has a listing page
     has_archive_hint: "Publishes a listing page for this type on the public site."
     archive_title: Listing page title
     archive_title_hint: "The label names one publication; the page listing them all is called something else. Left empty, it takes the label."
     archive_title_placeholder: "Services"
     archive_post: Borrowed header
+    archive_shows_list: "List the publications under the content"
+    archive_shows_list_hint: "The listing page also takes this publication's grid. Untick when that grid already places every publication: otherwise each appears twice, once arranged and once as a card."
     archive_post_hint: "The listing page takes this publication's banner, with its settings and its words in every language. That publication keeps an address of its own: tick 'Do not index' on it."
     archive_post_placeholder: "Pick a publication"
     supports: Capabilities
@@ -465,6 +467,10 @@ backend:
         small: Fine print
       full_bleed: Full width
       full_bleed_hint: "The zone leaves the column and spans the screen. Words stay centred at the page's width; a picture goes edge to edge."
+      anchor: "Anchor"
+      anchor_placeholder: "find-me"
+      anchor_hint: "A name a link can point straight at. Left empty, the zone has no address."
+      anchor_hint_set: "A link to this page followed by #{anchor} scrolls down to here."
       full_bleed_width_note: "Width and offset are set to the whole row: a band spanning the screen centres on its container, and it only lands in the middle when that container is the row."
       surface: Background
       surface_hint: "What the zone sits on. It is what makes a run of zones read as sections."
@@ -626,7 +632,7 @@ backend:
     related_posts_hint: "Other posts this one can point to, for instance to offer them in a 'Publication' zone of its grid."
     related_posts_empty: No related post yet.
     thumbnail: Thumbnail
-    thumbnail_hint: "The picture that stands for this publication wherever it is listed: an archive card, a grid zone linking to it, the preview of a shared link."
+    thumbnail_hint: "The picture that stands for this publication wherever it is listed: a listing card, a grid zone linking to it, the preview of a shared link."
     thumbnail_image: Image
     thumbnail_fit: Fit
     thumbnail_fits:
@@ -905,7 +911,7 @@ backend:
     target_types:
       post: Post
       term: Term
-      post_type_archive: Content type archive
+      post_type_archive: Content type listing
       home: Home
       custom_url: Custom URL
       frontend_login: Sign in

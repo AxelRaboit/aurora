@@ -86,6 +86,18 @@ abstract class AbstractPostType implements PostTypeInterface
     protected ?int $archivePostId = null;
 
     /**
+     * Whether the listing page still lists, once it has content of its own.
+     *
+     * True is the answer for an archive of articles: the composed part is an
+     * introduction and the list is the point. False is the answer for a page
+     * like Services, where the designated publication already places each
+     * entry beside the words that sell it - leaving the list on would show
+     * every one of them a second time, as a card nobody arranged.
+     */
+    #[ORM\Column(options: ['default' => true])]
+    protected bool $archiveShowsList = true;
+
+    /**
      * Set on the types the bootstrap creates (page, article). Built-in
      * types cannot be deleted and keep their slug, since routes and
      * content already point at them.
@@ -202,6 +214,18 @@ abstract class AbstractPostType implements PostTypeInterface
     public function setArchivePostId(?int $archivePostId): static
     {
         $this->archivePostId = $archivePostId;
+
+        return $this;
+    }
+
+    public function archiveShowsList(): bool
+    {
+        return $this->archiveShowsList;
+    }
+
+    public function setArchiveShowsList(bool $archiveShowsList): static
+    {
+        $this->archiveShowsList = $archiveShowsList;
 
         return $this;
     }

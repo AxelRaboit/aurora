@@ -30,6 +30,7 @@ class PostTypeInput implements PostTypeInputInterface
         #[Assert\Length(max: 150)]
         public readonly ?string $archiveTitle = null,
         public readonly ?int $archivePostId = null,
+        public readonly bool $archiveShowsList = true,
     ) {}
 
     public function getSlug(): string
@@ -70,5 +71,10 @@ class PostTypeInput implements PostTypeInputInterface
     public function getArchivePostId(): ?int
     {
         return $this->archivePostId;
+    }
+
+    public function archiveShowsList(): bool
+    {
+        return $this->archiveShowsList;
     }
 }

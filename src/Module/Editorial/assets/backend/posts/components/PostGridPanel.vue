@@ -130,6 +130,20 @@ const {
     moveOutOfStack,
 } = useGridSelection(grid);
 
+/**
+ * What the anchor is worth once it is on the page: the address to paste into a
+ * link. The server slugs the name on save, so what is shown here is the shape
+ * of the answer rather than the answer itself - which is why it is a hint and
+ * not a read-only field.
+ */
+function anchorHint(index) {
+    const anchor = zoneFields(index).anchor.value;
+
+    return anchor
+        ? t("backend.posts.grid.anchor_hint_set", { anchor })
+        : t("backend.posts.grid.anchor_hint");
+}
+
 /** The canvas hands back an unrounded width; the one clamp lives downstream. */
 function resizeZone(index, columns) {
     zoneFields(index).width.value = columns;
@@ -353,6 +367,19 @@ function resizeZone(index, columns) {
                         {{ t("backend.posts.grid.full_bleed_width_note") }}
                     </p>
                 </div>
+
+                <!-- A name a link can jump to. Kept with the arrangement
+                     rather than with the fields of one type, because every
+                     zone can be a destination and none of them is one by
+                     default. The hint shows the address the name produces,
+                     which is the thing the author is actually going to paste
+                     into a button. -->
+                <AppInput
+                    v-model="zoneFields(index).anchor.value"
+                    :label="t('backend.posts.grid.anchor')"
+                    :placeholder="t('backend.posts.grid.anchor_placeholder')"
+                    :hint="anchorHint(index)"
+                />
 
                 <!-- A stack holds zones instead of content, so it shows them
                      here: same fields, one level down. The share row is the

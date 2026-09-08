@@ -5,7 +5,7 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
-## [0.9.82] - 2026-09-08
+## [0.9.86] - 2026-09-08
 
 ### Ajouté
 
@@ -94,6 +94,106 @@ php bin/console doctrine:migrations:migrate
 **4. Vérifier les droits sur `var/uploads/`.** Les PDF signés sont écrits sous
 `var/uploads/contracts/{année}/`, servis par une route gatée du back-office et
 jamais par le catch-all des uploads.
+
+## [0.9.85] - 2026-09-08
+
+### Modifié
+
+#### « Archive » ne veut plus dire deux choses
+Le mot servait à deux notions sans rapport : le **statut** d'une publication
+retirée du site, et la **page qui liste** les publications d'un type. Héritage
+de WordPress, où toute page de liste automatique s'appelle une archive.
+
+En français c'est franchement trompeur, « archive » disant plutôt « rangé,
+plus d'actualité », alors que la page en question est la vitrine d'un type de
+contenu. L'interface disait d'ailleurs déjà « page de liste » presque partout,
+sauf à l'endroit qui compte le plus : la case qui la crée.
+
+Le mot est désormais réservé au statut. Partout ailleurs on lit « page de
+liste ». Les clés de traduction, les colonnes et les routes ne bougent pas :
+renommer ce que le lecteur lit ne coûte rien, renommer ce sur quoi le code
+s'appuie casserait les projets clients pour un synonyme.
+
+## [0.9.84] - 2026-09-08
+
+### Ajouté
+
+#### Une page de liste peut être composée
+Une page de liste dessinait un en-tête et une rangée de cartes, et on ne
+pouvait rien poser d'autre dessus. Impossible d'y mettre une carte à gauche et
+le texte qui la vend à droite : la mise en page appartenait au thème, pas à
+l'auteur.
+
+Elle emprunte déjà sa bannière et son résumé à une publication qu'elle désigne.
+Elle emprunte maintenant aussi la grille de cette publication, rendue par le
+même gabarit que sur la page de la publication elle-même : une zone se comporte
+pareil des deux côtés.
+
+Avec ça vient une case, **Lister les publications sous le contenu**, cochée par
+défaut. Sur une archive d'articles la liste est le sujet et la grille n'est
+qu'une introduction. Sur une page comme Services, où la grille place déjà
+chaque publication, il faut la décocher : sinon chaque entrée s'affiche deux
+fois, une fois arrangée et une fois en carte que personne n'a placée.
+
+La case n'apparaît qu'une fois une publication désignée. Décocher sans rien
+avoir composé au-dessus laisserait une page vide.
+
+### Dans aurora-client
+Une migration ajoute la colonne. `make deploy-prod` la joue.
+
+Un thème qui a son propre gabarit d'archive ne dessinera ni la grille ni la
+case tant qu'il ne lit pas `postType.grid` et `postType.showsList`. Attention
+au test : `postType.showsList|default(true)` répond toujours vrai, le filtre
+`default` de Twig se déclenche sur le vide et non sur l'absence. C'est
+`postType.showsList is not defined or postType.showsList`.
+
+## [0.9.83] - 2026-09-08
+
+### Corrigé
+
+#### Les tests pouvaient passer au vert en testant un autre dossier
+Composer déduit l'emplacement du code du `__FILE__` de son propre autoloader,
+et PHP résout ça à travers les liens symboliques. Un `vendor/` lié depuis un
+autre checkout - le raccourci évident quand on monte un worktree git - fait
+donc charger le `src/` de l'autre dossier. La suite tourne, elle est verte, et
+elle a testé du code que personne n'a modifié.
+
+C'est la pire réponse qu'un lancement de tests puisse donner : une mauvaise qui
+a l'air bonne. Le démarrage de la suite vérifie maintenant que l'autoloader
+pointe bien à l'intérieur du dossier depuis lequel on l'a lancée, et s'arrête
+en le disant sinon.
+
+Rien à changer dans un projet client : sur une installation normale la
+vérification ne se voit pas.
+
+## [0.9.82] - 2026-09-08
+
+### Ajouté
+
+#### Une zone peut porter un point d'ancrage
+Un lien menait à une page, jamais à un endroit dans la page. Sur une page
+longue, envoyer quelqu'un « voir la section Tarifs » voulait dire le déposer en
+haut et le laisser chercher.
+
+Chaque zone de la grille accepte maintenant un nom. La zone porte ce nom comme
+identifiant, et n'importe quel lien du site suivi de `#ce-nom` descend
+directement dessus : un bouton, une entrée de menu, une adresse écrite dans un
+texte, un lien envoyé par mail.
+
+Le nom est transformé en adresse à l'enregistrement, parce qu'il finit dans un
+attribut puis dans une URL : « Où me trouver ? » devient `ou-me-trouver`, un
+accent devient sa lettre simple plutôt que de se percenter dans chaque lien qui
+pointe dessus. Il est unique dans la page, y compris à l'intérieur d'une pile :
+deux zones répondant au même nom, c'est une page qui se comporte autrement
+après qu'on ait déplacé l'une des deux, donc la seconde est numérotée.
+
+Vide par défaut, et ça reste le cas normal : une zone n'a d'adresse que si
+quelqu'un compte lui en donner une. L'éditeur montre sous le champ l'adresse
+que le nom produit, puisque c'est ce qu'on va coller dans un bouton.
+
+L'en-tête du site est fixe, donc la zone visée réserve la place de la barre :
+sans ça la fonctionnalité marche et a l'air cassée, le bloc atterrissant sous
+le bandeau.
 
 ## [0.9.81] - 2026-09-08
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Aurora\Core\Content;
 
+use Symfony\Component\String\Slugger\AsciiSlugger;
+
 /**
  * The value guards every layout normaliser needs.
  *
@@ -26,6 +28,14 @@ final readonly class ContentValueNormalizer
      * all land on whole numbers.
      */
     public const int COLUMNS = 48;
+
+    /**
+     * Longest anchor a zone may answer to.
+     *
+     * Long enough for a sentence turned into a slug, short enough that a link
+     * stays readable in the address bar.
+     */
+    public const int ANCHOR_LENGTH = 60;
 
     /** Smallest first - an absent step inherits the one below it. */
     public const array BREAKPOINTS = ['base', 'md', 'lg'];
@@ -138,6 +148,49 @@ final readonly class ContentValueNormalizer
         }
 
         return 'i'.$next;
+    }
+
+    /**
+     * A name a link can jump to, written by the author.
+     *
+     * Slugged rather than taken as typed, because it lands in an `id`
+     * attribute and then in a URL: "Me retrouver" becomes `me-retrouver`, and
+     * an accent becomes its plain letter rather than percent-encoding in every
+     * link that points at it.
+     *
+     * Unique across the grid, resolved like an item id - the second claimant
+     * gets a number. Two zones answering to one name means a link that lands
+     * on whichever the browser met first, which is a page that behaves
+     * differently after a zone is moved.
+     *
+     * Empty when there is nothing usable left, and empty is the normal case: a
+     * zone gets an id in the page only when someone means to link to it.
+     *
+     * @param array<string, bool> $used
+     */
+    public function anchor(mixed $value, array $used): string
+    {
+        if (!is_string($value)) {
+            return '';
+        }
+
+        $slug = mb_strtolower(new AsciiSlugger()->slug($value, '-')->toString());
+        $slug = mb_substr(mb_trim($slug, '-'), 0, self::ANCHOR_LENGTH);
+
+        if ('' === $slug) {
+            return '';
+        }
+
+        if (!isset($used[$slug])) {
+            return $slug;
+        }
+
+        $next = 2;
+        while (isset($used[$slug.'-'.$next])) {
+            ++$next;
+        }
+
+        return $slug.'-'.$next;
     }
 
     /**

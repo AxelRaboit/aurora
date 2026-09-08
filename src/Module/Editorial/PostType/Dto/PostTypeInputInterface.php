@@ -22,4 +22,7 @@ interface PostTypeInputInterface
     public function getArchiveTitle(): ?string;
 
     public function getArchivePostId(): ?int;
+
+    /** Whether the listing page still lists, once it has content of its own. */
+    public function archiveShowsList(): bool;
 }

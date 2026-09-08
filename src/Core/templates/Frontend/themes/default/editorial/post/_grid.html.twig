@@ -29,9 +29,16 @@
 
 {% import 'Frontend/themes/default/editorial/post/_grid_surface.html.twig' as surface %}
 
+{# `scroll-mt-24` only where there is an anchor: the header is fixed, so a
+   browser told to jump to an element puts it under the bar unless the element
+   reserves the room itself. 6rem is the bar plus the breathing space the
+   summary already uses for its own sticky offset. #}
 <div class="aurora-grid aurora-grid-flush gap-y-8">
     {% for zone in grid.zones %}
-        <div style="{{ zone.spanStyle|raw }}{{ zone.startStyle|default('')|raw }}">
+        <div
+            {% if zone.anchor|default('') %}id="{{ zone.anchor }}" class="scroll-mt-24"{% endif %}
+            style="{{ zone.spanStyle|raw }}{{ zone.startStyle|default('')|raw }}"
+        >
             {% if zone.type == 'stack' %}
                 {# Captured and wrapped like a leaf zone, so a stack can sit on
                    a surface too. That is what a call to action is made of - a
@@ -59,7 +66,8 @@
                        imposes its natural height and its neighbours give way. #}
                     {% for child in zone.children %}
                         <div
-                            class="min-w-0{{ child.ratio == 'fill' ? ' lg:min-h-0' : '' }}"
+                            {% if child.anchor|default('') %}id="{{ child.anchor }}"{% endif %}
+                            class="min-w-0{{ child.ratio == 'fill' ? ' lg:min-h-0' : '' }}{{ child.anchor|default('') ? ' scroll-mt-24' : '' }}"
                             style="{{ child.shareStyle|raw }}"
                         >
                             {{ include('Frontend/themes/default/editorial/post/_grid_zone.html.twig', {zone: child, locale: locale}) }}

@@ -101,7 +101,7 @@ backend:
     editorial_backend: Éditorial
     editorial_backend_description: "Active la section Éditorial dans l'administration."
     editorial_frontend: Site public éditorial
-    editorial_frontend_description: "Sert les publications, archives et pages de taxonomie aux lecteurs."
+    editorial_frontend_description: "Sert les publications, pages de liste et pages de taxonomie aux lecteurs."
   editorial:
     bootstrap:
       post_types:
@@ -162,12 +162,14 @@ backend:
     slug_locked: "Un type natif conserve son slug : les routes et les contenus existants pointent dessus."
     label: Libellé
     icon: Icône
-    has_archive: Possède une page d'archive
+    has_archive: Possède une page de liste
     has_archive_hint: "Publie une page de liste pour ce type sur le site public."
     archive_title: Titre de la page de liste
     archive_title_hint: "Le libellé nomme une publication ; la page qui les liste toutes s'appelle autrement. Laissé vide, elle prend le libellé."
     archive_title_placeholder: "Services"
     archive_post: En-tête emprunté
+    archive_shows_list: "Lister les publications sous le contenu"
+    archive_shows_list_hint: "La page de liste reprend aussi la grille de cette publication. Décochez quand cette grille place déjà chaque publication : sinon elles apparaissent deux fois, une fois arrangées et une fois en carte."
     archive_post_hint: "La page de liste reprend la bannière de cette publication, avec ses réglages et ses textes dans chaque langue. Elle garde aussi son adresse à elle : pensez à cocher « Ne pas indexer » sur cette publication."
     archive_post_placeholder: "Choisir une publication"
     supports: Capacités
@@ -465,6 +467,10 @@ backend:
         small: Mentions
       full_bleed: Pleine largeur
       full_bleed_hint: "La zone sort de la colonne et traverse l'écran. Les mots restent centrés à la largeur de la page ; une image, elle, va d'un bord à l'autre."
+      anchor: "Point d'ancrage"
+      anchor_placeholder: "me-retrouver"
+      anchor_hint: "Un nom pour pointer un lien directement sur cette zone. Vide, la zone n'a pas d'adresse."
+      anchor_hint_set: "Un lien vers cette page suivi de #{anchor} descend jusqu'ici."
       full_bleed_width_note: "La largeur et le décalage sont fixés à la ligne entière : une bande qui traverse l'écran se centre sur son conteneur, et elle ne tombe au milieu que si ce conteneur est la ligne."
       surface: Fond
       surface_hint: "Ce sur quoi la zone est posée. C'est ce qui fait lire une suite de zones comme des sections."
@@ -626,7 +632,7 @@ backend:
     related_posts_hint: "D'autres publications que celle-ci peut citer, par exemple pour les proposer dans une zone « Publication » de sa grille."
     related_posts_empty: Aucune publication liée pour le moment.
     thumbnail: Vignette
-    thumbnail_hint: "L'image qui représente cette publication partout où elle est listée : une carte d'archive, une zone de grille qui pointe vers elle, l'aperçu d'un lien partagé."
+    thumbnail_hint: "L'image qui représente cette publication partout où elle est listée : une carte de liste, une zone de grille qui pointe vers elle, l'aperçu d'un lien partagé."
     thumbnail_image: Image
     thumbnail_fit: Cadrage
     thumbnail_fits:
@@ -905,7 +911,7 @@ backend:
     target_types:
       post: Publication
       term: Terme
-      post_type_archive: Archive de type de contenu
+      post_type_archive: Liste d'un type de contenu
       home: Accueil
       custom_url: URL libre
       frontend_login: Connexion
