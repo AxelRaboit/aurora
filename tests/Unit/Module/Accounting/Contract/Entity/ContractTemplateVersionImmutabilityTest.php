@@ -75,6 +75,20 @@ final class ContractTemplateVersionImmutabilityTest extends TestCase
         $version->removeTranslation('fr');
     }
 
+    /**
+     * The clause is part of the wording. Moving which language prevails after
+     * publication would change what a signed contract says without changing a
+     * word of its articles.
+     */
+    public function testAPublishedVersionRefusesMovingTheGoverningLanguage(): void
+    {
+        $version = $this->published();
+
+        $this->expectException(PublishedVersionIsImmutableException::class);
+
+        $version->setGoverningLocale('en');
+    }
+
     public function testAPublishedVersionRefusesBeingRenumbered(): void
     {
         $version = $this->published();
