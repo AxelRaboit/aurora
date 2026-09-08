@@ -5,6 +5,29 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.73] - 2026-09-08
+
+### Modifié
+
+#### Une image seule sur un fond le remplit
+Une zone Image posée sur une carte gardait la marge intérieure du fond, ce qui
+mettait la photo au milieu d'un encadré au lieu de la faire remplir son cadre.
+La marge existe pour que des mots ne touchent pas un bord : une image n'en a
+pas.
+
+Elle est donc retirée quand la zone est une image et qu'elle ne porte ni
+légende ni crédit, et l'image cesse alors d'arrondir ses propres coins, que la
+carte arrondit déjà. Avec une légende, la marge reste : les mots, eux, en ont
+toujours besoin.
+
+### Ajouté
+
+#### Une carte d'offre affiche son pictogramme
+Chaque entrée d'une liste peut porter une image, l'éditeur la propose depuis
+toujours, et le costume « offres » était le seul à ne pas la dessiner : on
+pouvait donc choisir une icône et ne rien voir. Elle s'affiche maintenant
+au-dessus du titre, à une taille qui se lit comme une icône, sans recadrage.
+
 ## [0.9.72] - 2026-09-08
 
 ### Modifié
