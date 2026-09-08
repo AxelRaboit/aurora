@@ -5,6 +5,39 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.84] - 2026-09-08
+
+### Ajouté
+
+#### Une page de liste peut être composée
+Une page de liste dessinait un en-tête et une rangée de cartes, et on ne
+pouvait rien poser d'autre dessus. Impossible d'y mettre une carte à gauche et
+le texte qui la vend à droite : la mise en page appartenait au thème, pas à
+l'auteur.
+
+Elle emprunte déjà sa bannière et son résumé à une publication qu'elle désigne.
+Elle emprunte maintenant aussi la grille de cette publication, rendue par le
+même gabarit que sur la page de la publication elle-même : une zone se comporte
+pareil des deux côtés.
+
+Avec ça vient une case, **Lister les publications sous le contenu**, cochée par
+défaut. Sur une archive d'articles la liste est le sujet et la grille n'est
+qu'une introduction. Sur une page comme Services, où la grille place déjà
+chaque publication, il faut la décocher : sinon chaque entrée s'affiche deux
+fois, une fois arrangée et une fois en carte que personne n'a placée.
+
+La case n'apparaît qu'une fois une publication désignée. Décocher sans rien
+avoir composé au-dessus laisserait une page vide.
+
+### Dans aurora-client
+Une migration ajoute la colonne. `make deploy-prod` la joue.
+
+Un thème qui a son propre gabarit d'archive ne dessinera ni la grille ni la
+case tant qu'il ne lit pas `postType.grid` et `postType.showsList`. Attention
+au test : `postType.showsList|default(true)` répond toujours vrai, le filtre
+`default` de Twig se déclenche sur le vide et non sur l'absence. C'est
+`postType.showsList is not defined or postType.showsList`.
+
 ## [0.9.83] - 2026-09-08
 
 ### Corrigé

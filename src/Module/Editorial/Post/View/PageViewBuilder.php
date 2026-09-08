@@ -9,6 +9,7 @@ use Aurora\Module\Configuration\Theme\Service\ThemeContext;
 use Aurora\Module\Editorial\Post\Banner\BannerViewBuilder;
 use Aurora\Module\Editorial\Post\Entity\PostInterface;
 use Aurora\Module\Editorial\Post\Entity\PostTranslationInterface;
+use Aurora\Module\Editorial\Post\Grid\GridViewBuilder;
 use Aurora\Module\Editorial\Post\Repository\PostRepository;
 use Aurora\Module\Editorial\Post\Serializer\PostSerializerInterface;
 use Aurora\Module\Editorial\PostType\Entity\PostTypeInterface;
@@ -28,6 +29,7 @@ final readonly class PageViewBuilder
         private Context $context,
         private ThemeContext $themeContext,
         private BannerViewBuilder $bannerViewBuilder,
+        private GridViewBuilder $gridViewBuilder,
         private PostRepository $postRepository,
     ) {}
 
@@ -73,9 +75,43 @@ final readonly class PageViewBuilder
                 // page that carries someone else's header and the site's
                 // default description is a page describing itself by accident.
                 'description' => $this->archiveDescription($postType, $locale),
+                // And its content grid, which is what turns a listing page
+                // into a page somebody composed: a card beside the words that
+                // sell it, rather than a row of cards and nothing else.
+                'grid' => $this->archiveGrid($postType, $locale),
+                // Whether the automatic list still follows. It should on an
+                // archive of articles, where the composed part is an
+                // introduction; it should not on one whose composed part
+                // already places every entry, or each would appear twice.
+                'showsList' => $postType->archiveShowsList(),
             ],
             'alternates' => $this->alternatesBuilder->forRoute('editorial_archive', ['postTypeSlug' => $postType->getSlug()]),
         ];
+    }
+
+    /**
+     * The content that publication carries, in this language.
+     *
+     * Null on every "no" the header gets, and one more: a publication with an
+     * empty grid. Built by the same builder the publication's own page uses,
+     * so a zone behaves the same on both.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function archiveGrid(PostTypeInterface $postType, string $locale): ?array
+    {
+        $translation = $this->archivePostTranslation($postType, $locale);
+
+        if (!$translation instanceof PostTranslationInterface) {
+            return null;
+        }
+
+        return $this->gridViewBuilder->build(
+            $translation->getPost()->getGridLayout(),
+            $translation->getGrid(),
+            $locale,
+            $translation->getPost()->getId(),
+        );
     }
 
     /**

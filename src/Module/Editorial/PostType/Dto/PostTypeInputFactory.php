@@ -22,6 +22,9 @@ class PostTypeInputFactory implements PostTypeInputFactoryInterface
             supports: $this->stringList($data['supports'] ?? null),
             archiveTitle: Str::trimOrNull((string) ($data['archiveTitle'] ?? '')),
             archivePostId: $this->id($data['archivePostId'] ?? null),
+            // True unless the browser says otherwise: every archive that
+            // predates the switch lists, and so does a new one.
+            archiveShowsList: (bool) ($data['archiveShowsList'] ?? true),
         );
     }
 

@@ -44,6 +44,11 @@ interface PostTypeInterface
 
     public function setArchivePostId(?int $archivePostId): static;
 
+    /** Whether the listing page still lists, once it has content of its own. */
+    public function archiveShowsList(): bool;
+
+    public function setArchiveShowsList(bool $archiveShowsList): static;
+
     public function isBuiltIn(): bool;
 
     public function setIsBuiltIn(bool $isBuiltIn): static;

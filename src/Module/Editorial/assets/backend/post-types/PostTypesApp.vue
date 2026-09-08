@@ -229,6 +229,16 @@ const fieldTypeOptions = props.fieldTypes.map((type) => ({
                     :options="postOptions"
                     allow-empty
                 />
+                <!-- Only means anything once a publication is designated: what
+                     it switches off is the automatic list, and switching that
+                     off with nothing composed above would leave the page
+                     empty. -->
+                <AppCheckbox
+                    v-if="createForm.archivePostId"
+                    v-model="createForm.archiveShowsList"
+                    :label="t('backend.post_types.archive_shows_list')"
+                    :hint="t('backend.post_types.archive_shows_list_hint')"
+                />
             </template>
             <div class="space-y-2">
                 <label class="block text-xs text-secondary uppercase tracking-wide">{{ t("backend.post_types.supports") }}</label>
@@ -304,6 +314,16 @@ const fieldTypeOptions = props.fieldTypes.map((type) => ({
                     :placeholder="t('backend.post_types.archive_post_placeholder')"
                     :options="postOptions"
                     allow-empty
+                />
+                <!-- Only means anything once a publication is designated: what
+                     it switches off is the automatic list, and switching that
+                     off with nothing composed above would leave the page
+                     empty. -->
+                <AppCheckbox
+                    v-if="editForm.archivePostId"
+                    v-model="editForm.archiveShowsList"
+                    :label="t('backend.post_types.archive_shows_list')"
+                    :hint="t('backend.post_types.archive_shows_list_hint')"
                 />
             </template>
             <div class="space-y-2">

@@ -156,6 +156,7 @@ class PostTypeManager implements PostTypeManagerInterface
         $postType->setHasArchive($input->hasArchive());
         $postType->setSupports($input->getSupports());
         $postType->setArchiveTitle($input->getArchiveTitle());
+        $postType->setArchiveShowsList($input->archiveShowsList());
         // Checked rather than trusted: an id from a browser is a claim about a
         // row, and storing one that names nothing would be storing a header
         // that can never be drawn. What happens to it later - deleted,
