@@ -125,7 +125,11 @@
             outline: 'border border-accent text-accent hover:bg-accent hover:text-white',
             ghost: 'border border-transparent text-accent hover:bg-accent-500/10',
         } %}
-        <div class="not-prose flex {{ zone.align == 'center' ? 'justify-center' : (zone.align == 'end' ? 'justify-end' : 'justify-start') }}">
+        {# `left` and `right`, which is the vocabulary the normaliser keeps and
+           the picture zone beside it already reads. This asked for `end` - a
+           word nothing writes - so a button aligned right came out on the
+           left, and the only alignment that worked was the default. #}
+        <div class="not-prose flex {{ zone.align == 'center' ? 'justify-center' : (zone.align == 'right' ? 'justify-end' : 'justify-start') }}">
             <a
                 href="{{ zone.button.url }}"
                 class="inline-flex items-center gap-2 rounded-lg font-medium no-underline transition {{ buttonSizes[zone.size] }} {{ buttonVariants[zone.variant] }}"
