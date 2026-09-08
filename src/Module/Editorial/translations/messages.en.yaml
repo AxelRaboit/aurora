@@ -101,7 +101,7 @@ backend:
     editorial_backend: Editorial
     editorial_backend_description: 'Enables the Editorial section in the admin.'
     editorial_frontend: Editorial public site
-    editorial_frontend_description: 'Serves the posts, archives and taxonomy pages to readers.'
+    editorial_frontend_description: 'Serves the posts, listing pages and taxonomy pages to readers.'
   editorial:
     bootstrap:
       post_types:
@@ -162,7 +162,7 @@ backend:
     slug_locked: 'A built-in type keeps its slug: routes and existing content point at it.'
     label: Label
     icon: Icon
-    has_archive: Has an archive page
+    has_archive: Has a listing page
     has_archive_hint: "Publishes a listing page for this type on the public site."
     archive_title: Listing page title
     archive_title_hint: "The label names one publication; the page listing them all is called something else. Left empty, it takes the label."
@@ -632,7 +632,7 @@ backend:
     related_posts_hint: "Other posts this one can point to, for instance to offer them in a 'Publication' zone of its grid."
     related_posts_empty: No related post yet.
     thumbnail: Thumbnail
-    thumbnail_hint: "The picture that stands for this publication wherever it is listed: an archive card, a grid zone linking to it, the preview of a shared link."
+    thumbnail_hint: "The picture that stands for this publication wherever it is listed: a listing card, a grid zone linking to it, the preview of a shared link."
     thumbnail_image: Image
     thumbnail_fit: Fit
     thumbnail_fits:
@@ -911,7 +911,7 @@ backend:
     target_types:
       post: Post
       term: Term
-      post_type_archive: Content type archive
+      post_type_archive: Content type listing
       home: Home
       custom_url: Custom URL
       frontend_login: Sign in
