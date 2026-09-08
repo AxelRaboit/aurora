@@ -11,6 +11,8 @@ use Aurora\Core\Locale\Entity\LocaleInterface;
 use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Core\Notification\Entity\NotificationInterface;
+use Aurora\Module\Accounting\Contract\Entity\Contract;
+use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplate;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersion;
@@ -205,6 +207,7 @@ class AuroraBundle extends AbstractBundle
                     TaxonomyTermInterface::class => TaxonomyTerm::class,
                     TaxonomyTermTranslationInterface::class => TaxonomyTermTranslation::class,
                     CustomerInterface::class => Customer::class,
+                    ContractInterface::class => Contract::class,
                     ContractTemplateInterface::class => ContractTemplate::class,
                     ContractTemplateVersionInterface::class => ContractTemplateVersion::class,
                     ContractTemplateVersionTranslationInterface::class => ContractTemplateVersionTranslation::class,

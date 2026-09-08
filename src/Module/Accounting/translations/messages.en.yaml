@@ -27,6 +27,11 @@ backend:
                     updated: Template version edited
                     published: Template version published
                     discarded: Template draft discarded
+                contract:
+                    created: Contract created
+                    updated: Contract edited
+                    frozen: Contract frozen and sealed
+                    deleted: Contract deleted
     permissions:
         names:
             accounting:
@@ -40,7 +45,28 @@ backend:
                     create: Create a contract template
                     edit: Edit a contract template
                     delete: Delete a contract template
+                contracts:
+                    view: View contracts
+                    create: Create a contract
+                    edit: Edit a contract
+                    delete: Delete a contract
     accounting:
+        contracts:
+            title: Contracts
+            status:
+                draft: Draft
+                sent: Sent
+                opened: Opened
+                signed_by_customer: Signed by the customer
+                countersigned: Countersigned
+                refused: Refused
+                expired: Expired
+                revoked: Revoked
+            errors:
+                body_required: A contract needs a contract body.
+                version_not_published: 'Version {number} of "{template}" is not published. A draft cannot be sent.'
+                locale_missing: '"{template}" carries no wording in {locale}.'
+                unknown_tokens: 'These variables stand for nothing and would reach the customer as they are: {tokens}'
         contract_templates:
             title: Contract templates
             kind:

@@ -25,4 +25,5 @@ enum SequencePrefixEnum: string
     case FormField = 'FLD';
     case TaxonomyTerm = 'TRM';
     case GedDocument = 'DOC';
+    case Contract = 'CTR';
 }

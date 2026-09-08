@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Aurora\Module\Accounting\Contract\Service;
 
 /**
- * The placeholders a template may carry, and where each one gets its value.
+ * The placeholders a template may carry, where each one gets its value, and
+ * WHEN it is resolved.
  *
  * Declared in code rather than stored per version, because the set of things
  * that can be filled in is a property of the application, not of a document.
@@ -24,12 +25,26 @@ namespace Aurora\Module\Accounting\Contract\Service;
  * signature: the reference, the amount, the date it takes effect, the city and
  * date of signature.
  *
- * The resolution itself lands with the contract, in the phase that builds one.
- * What this class settles now is which tokens exist, so the editor can offer
- * them instead of leaving them to memory and to typos.
+ * The two moments matter as much as the tokens. Most are known when a contract
+ * is frozen and are substituted then, so the document a signer reads has no
+ * blanks in it. Two are not: the city and the date of signature are stated by
+ * the person signing, which is exactly how the paper contracts work - "fait à
+ * …, le …" is a blank the signer fills. Those stay as tokens inside the frozen
+ * snapshot and are only rendered into the final PDF from the signature.
+ *
+ * Baking them at freeze time would have meant either inventing a date before
+ * anybody signed, or refusing to freeze until somebody did. The first is a lie
+ * in a legal document; the second breaks the whole flow, since freezing is what
+ * has to happen before the link goes out.
  */
 final readonly class ContractVariableCatalogue
 {
+    /** Substituted when the contract is frozen, before the link goes out. */
+    public const string AT_FREEZE = 'freeze';
+
+    /** Left as a token in the snapshot, filled from the signature. */
+    public const string AT_SIGNATURE = 'signature';
+
     /**
      * Every token, grouped by where it comes from.
      *
@@ -40,7 +55,7 @@ final readonly class ContractVariableCatalogue
      * @return list<array{
      *     group: string,
      *     labelKey: string,
-     *     variables: list<array{token: string, labelKey: string, example: string}>
+     *     variables: list<array{token: string, labelKey: string, example: string, resolvedAt: string}>
      * }>
      */
     public function groups(): array
@@ -71,8 +86,8 @@ final readonly class ContractVariableCatalogue
                     $this->variable('contract.reference', 'CM-2026-0001'),
                     $this->variable('contract.amount', '850 €'),
                     $this->variable('contract.effective_date', '01/10/2026'),
-                    $this->variable('contract.signature_city', 'Lyon'),
-                    $this->variable('contract.signature_date', '08/09/2026'),
+                    $this->variable('contract.signature_city', 'Lyon', self::AT_SIGNATURE),
+                    $this->variable('contract.signature_date', '08/09/2026', self::AT_SIGNATURE),
                 ],
             ],
         ];
@@ -102,11 +117,28 @@ final readonly class ContractVariableCatalogue
         return in_array($token, $this->tokens(), true);
     }
 
-    /** @return array{token: string, labelKey: string, example: string} */
-    private function variable(string $token, string $example): array
+    /** @return list<string> */
+    public function signatureTokens(): array
+    {
+        $tokens = [];
+
+        foreach ($this->groups() as $group) {
+            foreach ($group['variables'] as $variable) {
+                if (self::AT_SIGNATURE === $variable['resolvedAt']) {
+                    $tokens[] = $variable['token'];
+                }
+            }
+        }
+
+        return $tokens;
+    }
+
+    /** @return array{token: string, labelKey: string, example: string, resolvedAt: string} */
+    private function variable(string $token, string $example, string $resolvedAt = self::AT_FREEZE): array
     {
         return [
             'token' => $token,
+            'resolvedAt' => $resolvedAt,
             // The label key mirrors the token, so adding a variable is one
             // entry here and one line in each catalogue rather than a mapping
             // table to keep in agreement.

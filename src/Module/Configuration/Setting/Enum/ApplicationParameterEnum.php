@@ -48,6 +48,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     case CoreResetPasswordPrefix = 'core_reset_password_prefix';
     case CoreMediaFolderPrefix = 'core_media_folder_prefix';
     case CoreMenuItemPrefix = 'core_menu_item_prefix';
+    case AccountingContractPrefix = 'accounting_contract_prefix';
     case NavSectionAliases = 'nav_section_aliases';
     case NavItemAliases = 'nav_item_aliases';
     case NavSectionOrder = 'nav_section_order';
@@ -112,6 +113,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreResetPasswordPrefix => 'backend.parameters.core_reset_password_prefix.label',
             self::CoreMediaFolderPrefix => 'backend.parameters.core_media_folder_prefix.label',
             self::CoreMenuItemPrefix => 'backend.parameters.core_menu_item_prefix.label',
+            self::AccountingContractPrefix => 'backend.parameters.accounting_contract_prefix.label',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.label',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.label',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.label',
@@ -161,6 +163,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreResetPasswordPrefix => 'backend.parameters.core_reset_password_prefix.description',
             self::CoreMediaFolderPrefix => 'backend.parameters.core_media_folder_prefix.description',
             self::CoreMenuItemPrefix => 'backend.parameters.core_menu_item_prefix.description',
+            self::AccountingContractPrefix => 'backend.parameters.accounting_contract_prefix.description',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.description',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.description',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.description',
@@ -216,6 +219,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreResetPasswordPrefix => SequencePrefixEnum::ResetPasswordRequest->value,
             self::CoreMediaFolderPrefix => SequencePrefixEnum::MediaFolder->value,
             self::CoreMenuItemPrefix => SequencePrefixEnum::MenuItem->value,
+            self::AccountingContractPrefix => SequencePrefixEnum::Contract->value,
             self::NavSectionAliases => '{}',
             self::NavItemAliases => '{}',
             self::NavSectionOrder => '[]',
@@ -255,7 +259,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::MaintenanceMode, self::AdminRegistrationEnabled, self::AdminAccessRequestEnabled, self::FrontLoginEnabled, self::FrontRegistrationEnabled => 'system',
             self::LogoMediaId, self::FaviconMediaId => 'branding',
             self::SeoTitleTemplate, self::SeoDefaultDescription, self::SeoDefaultOgImage, self::SeoTwitterHandle => 'seo',
-            self::CoreUserPrefix, self::CoreMediaPrefix, self::CoreAccessRequestPrefix, self::CoreAuditLogPrefix, self::CoreResetPasswordPrefix, self::CoreMediaFolderPrefix, self::CoreMenuItemPrefix => 'sequences',
+            self::CoreUserPrefix, self::CoreMediaPrefix, self::CoreAccessRequestPrefix, self::CoreAuditLogPrefix, self::CoreResetPasswordPrefix, self::CoreMediaFolderPrefix, self::CoreMenuItemPrefix, self::AccountingContractPrefix => 'sequences',
             self::EmailLocale => 'email',
             self::NavSectionAliases, self::NavItemAliases, self::NavSectionOrder, self::NavItemOrder => 'navigation',
             self::ColorPickerPresets => 'appearance',

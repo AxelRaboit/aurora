@@ -27,6 +27,11 @@ backend:
                     updated: Version de trame modifiée
                     published: Version de trame publiée
                     discarded: Brouillon de trame abandonné
+                contract:
+                    created: Contrat créé
+                    updated: Contrat modifié
+                    frozen: Contrat gelé et scellé
+                    deleted: Contrat supprimé
     permissions:
         names:
             accounting:
@@ -40,7 +45,28 @@ backend:
                     create: Créer une trame de contrat
                     edit: Modifier une trame de contrat
                     delete: Supprimer une trame de contrat
+                contracts:
+                    view: Consulter les contrats
+                    create: Créer un contrat
+                    edit: Modifier un contrat
+                    delete: Supprimer un contrat
     accounting:
+        contracts:
+            title: Contrats
+            status:
+                draft: Brouillon
+                sent: Envoyé
+                opened: Ouvert
+                signed_by_customer: Signé par le client
+                countersigned: Contresigné
+                refused: Refusé
+                expired: Expiré
+                revoked: Révoqué
+            errors:
+                body_required: Un contrat a besoin d'un corps de contrat.
+                version_not_published: 'La version {number} de « {template} » n''est pas publiée. Un brouillon ne peut pas être envoyé.'
+                locale_missing: '« {template} » n''a pas de texte en {locale}.'
+                unknown_tokens: 'Ces variables ne correspondent à rien et arriveraient telles quelles chez le client : {tokens}'
         contract_templates:
             title: Trames de contrat
             kind:
