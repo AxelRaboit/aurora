@@ -154,6 +154,25 @@
                                    {% if item.descriptionColor %}style="color: {{ item.descriptionColor }};"{% endif %}
                                 >{{ item.description }}</p>
                             {% endif %}
+                            {# A call to action belongs to the sentence that
+                               justifies it. As its own item it lands on the
+                               row below, which in a banner with a tall picture
+                               beside it is half a portrait further down - far
+                               from the words it answers.
+
+                               Both fields already travel with every item and
+                               were simply not drawn here, so a text carrying a
+                               label showed nothing. #}
+                            {% if item.label and item.url %}
+                                <a
+                                    href="{{ item.url }}"
+                                    class="mt-2 inline-flex w-fit items-center justify-center rounded-lg px-6 py-3 font-medium transition-opacity hover:opacity-90 no-underline"
+                                    style="
+                                        background-color: {{ item.buttonColor ?? '#ffffff' }};
+                                        color: {{ item.buttonTextColor ?? '#0f172a' }};
+                                    "
+                                >{{ item.label }}</a>
+                            {% endif %}
                         </div>
                     {% elseif item.type == 'button' and item.label and item.url %}
                         {# Both the label and a link that survived the whitelist are
