@@ -9,6 +9,8 @@ backend:
         accounting_contract_templates_description: The model documents contracts are built from, and their versions.
         accounting_customers: Customers
         accounting_customers_description: The companies you contract with, and their legal identity block.
+        accounting_contracts: Contracts
+        accounting_contracts_description: Contracts prepared, sealed and signed.
     audit:
         actions:
             accounting:
@@ -53,6 +55,55 @@ backend:
     accounting:
         contracts:
             title: Contracts
+            add: Prepare a contract
+            create: New contract
+            edit: 'Edit the contract of {name}'
+            created: Contract created.
+            updated: Contract updated.
+            deleted: Contract deleted.
+            empty: No contracts yet.
+            search_placeholder: Search by reference or customer…
+            draft_title: Contract in preparation
+            in_preparation: In preparation
+            sealed: Sealed
+            customer: Customer
+            customer_placeholder: Pick a customer
+            body: Contract body
+            body_placeholder: Pick a template
+            body_hint: The version published today is pinned to the contract as soon as it is created.
+            annex: Annex
+            annex_none: No annex
+            annex_hint: Optional. This is where what varies between offers lives.
+            amount: Amount
+            amount_placeholder: '850'
+            amount_hint: Both the dot and the comma are accepted.
+            currency: Currency
+            effective_date: Effective date
+            effective_date_placeholder: '2026-10-01'
+            effective_date_hint: Used in the contract through the matching variable.
+            locale: Contract language
+            locale_hint: The language it will be written, read and signed in.
+            version_label: 'version {number}'
+            with_annex: 'With the {name} annex'
+            outdated_version: A newer version of the template has been published since. This contract stays on the one that was chosen.
+            freeze: Seal
+            freeze_confirm: 'Seal the contract of {name}?'
+            freeze_warning: 'The document becomes final: its wording, its amounts and its hash can no longer change. That is what makes the signature defensible, and it cannot be undone.'
+            delete_confirm: 'Delete the contract of {name}?'
+            col_reference: Reference
+            col_customer: Customer
+            col_status: Status
+            col_sealed_at: Sealed on
+            read_document: Read the document
+            not_sealed_yet: This contract is not sealed yet. Its wording is frozen at the moment of sealing.
+            seal_intact: The seal is intact
+            seal_intact_hint: The stored document matches exactly the hash taken when it was sealed.
+            seal_broken: The seal no longer matches
+            seal_broken_hint: 'The document has changed since it was sealed. Do not repair the hash: find out what wrote to it.'
+            seal_hash: Document hash
+            seal_algo: Algorithm and canonical form
+            seal_sealed_at: Sealed on
+            deferred_tokens_hint: 'The city and date of signature stay as variables: the signer states them.'
             status:
                 draft: Draft
                 sent: Sent
@@ -67,6 +118,13 @@ backend:
                 version_not_published: 'Version {number} of "{template}" is not published. A draft cannot be sent.'
                 locale_missing: '"{template}" carries no wording in {locale}.'
                 unknown_tokens: 'These variables stand for nothing and would reach the customer as they are: {tokens}'
+                customer_required: A contract needs a customer.
+                locale_required: The contract language is required.
+                amount_invalid: The amount cannot be negative.
+                effective_date_invalid: This date is not valid.
+                template_not_found: This template does not exist, or is not of the expected kind.
+                template_never_published: '"{template}" has no published version.'
+                already_frozen: 'This contract is sealed: it can no longer be changed.'
         contract_templates:
             title: Contract templates
             kind:

@@ -9,6 +9,8 @@ backend:
         accounting_contract_templates_description: Les documents types dont partent les contrats, et leurs versions.
         accounting_customers: Clients
         accounting_customers_description: Les sociétés avec qui vous contractez, et leur bloc d'identité légale.
+        accounting_contracts: Contrats
+        accounting_contracts_description: Les contrats préparés, scellés et signés.
     audit:
         actions:
             accounting:
@@ -53,6 +55,55 @@ backend:
     accounting:
         contracts:
             title: Contrats
+            add: Préparer un contrat
+            create: Nouveau contrat
+            edit: 'Modifier le contrat de {name}'
+            created: Contrat créé.
+            updated: Contrat mis à jour.
+            deleted: Contrat supprimé.
+            empty: Aucun contrat pour le moment.
+            search_placeholder: Rechercher par référence ou par client…
+            draft_title: Contrat en préparation
+            in_preparation: En préparation
+            sealed: Scellés
+            customer: Client
+            customer_placeholder: Choisir un client
+            body: Corps du contrat
+            body_placeholder: Choisir une trame
+            body_hint: La version publiée du jour est figée sur le contrat dès sa création.
+            annex: Annexe
+            annex_none: Aucune annexe
+            annex_hint: Facultative. C'est elle qui porte ce qui varie d'une offre à l'autre.
+            amount: Montant
+            amount_placeholder: '850'
+            amount_hint: Le point comme la virgule sont acceptés.
+            currency: Devise
+            effective_date: Date de prise d'effet
+            effective_date_placeholder: '2026-10-01'
+            effective_date_hint: Reprise dans le contrat via la variable correspondante.
+            locale: Langue du contrat
+            locale_hint: La langue dans laquelle il sera rédigé, lu et signé.
+            version_label: 'version {number}'
+            with_annex: 'Avec l''annexe {name}'
+            outdated_version: Une version plus récente de la trame a été publiée depuis. Ce contrat reste sur celle qui a été choisie.
+            freeze: Sceller
+            freeze_confirm: 'Sceller le contrat de {name} ?'
+            freeze_warning: 'Le document devient définitif : son texte, ses montants et son hash ne pourront plus changer. C''est ce qui rend la signature défendable, et c''est irréversible.'
+            delete_confirm: 'Supprimer le contrat de {name} ?'
+            col_reference: Référence
+            col_customer: Client
+            col_status: Statut
+            col_sealed_at: Scellé le
+            read_document: Lire le document
+            not_sealed_yet: Ce contrat n'est pas encore scellé. Son texte sera figé au moment du scellement.
+            seal_intact: Le sceau est intact
+            seal_intact_hint: Le document stocké correspond exactement au hash pris lors du scellement.
+            seal_broken: Le sceau ne correspond plus
+            seal_broken_hint: 'Le document a changé depuis son scellement. Ne réparez pas le hash : cherchez ce qui a écrit dessus.'
+            seal_hash: Empreinte du document
+            seal_algo: Algorithme et forme canonique
+            seal_sealed_at: Scellé le
+            deferred_tokens_hint: 'La ville et la date de signature restent des variables : c''est le signataire qui les déclarera.'
             status:
                 draft: Brouillon
                 sent: Envoyé
@@ -67,6 +118,13 @@ backend:
                 version_not_published: 'La version {number} de « {template} » n''est pas publiée. Un brouillon ne peut pas être envoyé.'
                 locale_missing: '« {template} » n''a pas de texte en {locale}.'
                 unknown_tokens: 'Ces variables ne correspondent à rien et arriveraient telles quelles chez le client : {tokens}'
+                customer_required: Un contrat a besoin d'un client.
+                locale_required: La langue du contrat est obligatoire.
+                amount_invalid: Le montant ne peut pas être négatif.
+                effective_date_invalid: Cette date n'est pas valide.
+                template_not_found: Cette trame n'existe pas, ou n'est pas du type attendu.
+                template_never_published: '« {template} » n''a aucune version publiée.'
+                already_frozen: 'Ce contrat est scellé : il ne peut plus être modifié.'
         contract_templates:
             title: Trames de contrat
             kind:

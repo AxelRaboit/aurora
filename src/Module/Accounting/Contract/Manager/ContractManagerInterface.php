@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace Aurora\Module\Accounting\Contract\Manager;
 
 use Aurora\Core\Validation\Exception\FieldException;
+use Aurora\Module\Accounting\Contract\Dto\ContractInputInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 
 interface ContractManagerInterface
 {
-    public function create(ContractInterface $draft): ContractInterface;
+    /** @throws FieldException when a choice names a row that cannot be used */
+    public function create(ContractInputInterface $input): ContractInterface;
 
-    /** @throws FrozenContractIsImmutableException */
-    public function update(ContractInterface $contract): void;
+    /**
+     * @throws FrozenContractIsImmutableException
+     * @throws FieldException
+     */
+    public function update(ContractInterface $contract, ContractInputInterface $input): void;
 
     /** @throws FrozenContractIsImmutableException */
     public function delete(ContractInterface $contract): void;

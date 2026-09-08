@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Accounting\Contract\Manager;
 
+use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Core\Sequence\SequenceGenerator;
 use Aurora\Core\Sequence\SequencePrefixEnum;
 use Aurora\Core\Validation\Exception\FieldException;
+use Aurora\Module\Accounting\Contract\Dto\ContractInputInterface;
 use Aurora\Module\Accounting\Contract\Entity\Contract;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslationInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
 use Aurora\Module\Accounting\Contract\Exception\UnrenderableBlockException;
+use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
 use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
+use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
+use Aurora\Module\Accounting\Customer\Repository\CustomerRepository;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
@@ -55,26 +61,104 @@ class ContractManager implements ContractManagerInterface
         protected readonly ContractSeal $seal,
         protected readonly SequenceGenerator $sequenceGenerator,
         protected readonly SettingRepository $settingRepository,
+        protected readonly CustomerRepository $customerRepository,
+        protected readonly ContractTemplateRepository $templateRepository,
         protected readonly TranslatorInterface $translator,
     ) {}
 
-    public function create(ContractInterface $draft): ContractInterface
+    public function create(ContractInputInterface $input): ContractInterface
     {
-        $this->entityManager->persist($draft);
+        $contract = $this->createContract();
+        $this->applyInput($contract, $input);
+
+        $this->entityManager->persist($contract);
         $this->entityManager->flush();
 
-        $this->auditLogger->log('accounting', 'contract.created', 'Contract', $draft->getId(), $this->auditPayload($draft));
+        $this->auditLogger->log('accounting', 'contract.created', 'Contract', $contract->getId(), $this->auditPayload($contract));
 
-        return $draft;
+        return $contract;
     }
 
-    public function update(ContractInterface $contract): void
+    public function update(ContractInterface $contract, ContractInputInterface $input): void
     {
         $contract->assertEditable();
 
+        $this->applyInput($contract, $input);
         $this->entityManager->flush();
 
         $this->auditLogger->log('accounting', 'contract.updated', 'Contract', $contract->getId(), $this->auditPayload($contract));
+    }
+
+    /**
+     * Turns the choices into the rows a contract pins.
+     *
+     * The version is resolved here, at draft time, and not at freeze. A
+     * template that publishes a new version tomorrow must not silently change
+     * a contract somebody is in the middle of preparing - and the screen can
+     * say "a newer version exists" precisely because the two are different.
+     */
+    protected function applyInput(ContractInterface $contract, ContractInputInterface $input): void
+    {
+        $customer = null === $input->getCustomerId()
+            ? null
+            : $this->customerRepository->find($input->getCustomerId());
+
+        if (!$customer instanceof CustomerInterface) {
+            throw new FieldException('customerId', $this->translator->trans('backend.accounting.contracts.errors.customer_required'));
+        }
+
+        $contract
+            ->setCustomer($customer)
+            ->setLocale($input->getLocale())
+            ->setAmountCents($input->getAmountCents())
+            ->setAmountCurrency(null === $input->getAmountCurrency() ? null : CurrencyEnum::tryFrom($input->getAmountCurrency()))
+            ->setEffectiveDate($this->effectiveDate($input))
+            ->setBodyVersion($this->publishedVersionOf($input->getBodyTemplateId(), ContractTemplateKindEnum::Body, 'bodyTemplateId'))
+            ->setAnnexVersion($this->publishedVersionOf($input->getAnnexTemplateId(), ContractTemplateKindEnum::Annex, 'annexTemplateId'));
+    }
+
+    /**
+     * The version in force of a chosen template.
+     *
+     * A template with nothing published is refused here rather than at freeze,
+     * so the refusal lands on the picker that offered it.
+     */
+    protected function publishedVersionOf(?int $templateId, ContractTemplateKindEnum $kind, string $field): ?ContractTemplateVersionInterface
+    {
+        if (null === $templateId) {
+            return null;
+        }
+
+        $template = $this->templateRepository->find($templateId);
+
+        if (!$template instanceof ContractTemplateInterface || $template->getKind() !== $kind) {
+            throw new FieldException($field, $this->translator->trans('backend.accounting.contracts.errors.template_not_found'));
+        }
+
+        $version = $template->getLatestPublishedVersion();
+
+        if (!$version instanceof ContractTemplateVersionInterface) {
+            throw new FieldException($field, $this->translator->trans('backend.accounting.contracts.errors.template_never_published', ['{template}' => $template->getName()]));
+        }
+
+        return $version;
+    }
+
+    protected function effectiveDate(ContractInputInterface $input): ?DateTimeImmutable
+    {
+        $raw = $input->getEffectiveDate();
+
+        if (null === $raw) {
+            return null;
+        }
+
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $raw);
+
+        if (false === $date) {
+            throw new FieldException('effectiveDate', $this->translator->trans('backend.accounting.contracts.errors.effective_date_invalid'));
+        }
+
+        return $date;
     }
 
     public function delete(ContractInterface $contract): void

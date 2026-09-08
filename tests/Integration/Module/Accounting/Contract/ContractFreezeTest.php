@@ -7,6 +7,7 @@ namespace Aurora\Tests\Integration\Module\Accounting\Contract;
 use Aurora\Core\Content\BlockHtmlSanitizer;
 use Aurora\Core\Sequence\SequenceGenerator;
 use Aurora\Core\Validation\Exception\FieldException;
+use Aurora\Module\Accounting\Contract\Dto\ContractInput;
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateInput;
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateVersionInput;
 use Aurora\Module\Accounting\Contract\Entity\Contract;
@@ -18,6 +19,7 @@ use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Contract\Manager\ContractManager;
 use Aurora\Module\Accounting\Contract\Manager\ContractTemplateManager;
+use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateVersionRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
 use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
@@ -26,10 +28,10 @@ use Aurora\Module\Accounting\Contract\Service\ContractVariableCatalogue;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
 use Aurora\Module\Accounting\Customer\Entity\Customer;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
+use Aurora\Module\Accounting\Customer\Repository\CustomerRepository;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
 use Aurora\Tests\Integration\IntegrationTestCase;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -89,6 +91,8 @@ final class ContractFreezeTest extends IntegrationTestCase
             $this->seal,
             $container->get(SequenceGenerator::class),
             $container->get(SettingRepository::class),
+            $container->get(CustomerRepository::class),
+            $container->get(ContractTemplateRepository::class),
             $container->get(TranslatorInterface::class),
         );
     }
@@ -191,14 +195,15 @@ final class ContractFreezeTest extends IntegrationTestCase
             'fr' => ['title' => 'CONTRAT', 'content' => ['blocks' => []]],
         ]));
 
-        // Deliberately not published.
-        $contract = $this->contractFor($this->customer(), $draftVersion);
-
+        // Deliberately not published. The refusal now lands at draft creation,
+        // on the picker that offered the template, rather than at freeze - the
+        // earlier the better, and the DTO cannot even name a version.
         try {
-            $this->contracts->freeze($contract);
-            self::fail('Sending unpublished wording should have been refused.');
+            $this->contractFor($this->customer(), $draftVersion);
+            self::fail('A template with nothing published should have been refused.');
         } catch (FieldException $exception) {
-            self::assertSame('bodyVersion', $exception->getField());
+            self::assertSame('bodyTemplateId', $exception->getField());
+            self::assertStringContainsString('Contrat mensuel', $exception->getMessage());
         }
     }
 
@@ -308,17 +313,22 @@ final class ContractFreezeTest extends IntegrationTestCase
         return $this->contractFor($this->customer(), $version);
     }
 
+    /**
+     * Through the DTO, like the controller does.
+     *
+     * The template is named rather than the version: the manager resolves the
+     * version published today and pins it, which is the behaviour worth
+     * exercising here.
+     */
     private function contractFor(CustomerInterface $customer, ContractTemplateVersionInterface $version): ContractInterface
     {
-        $contract = new Contract();
-        $contract
-            ->setCustomer($customer)
-            ->setBodyVersion($version)
-            ->setLocale('fr')
-            ->setAmountCents(85000)
-            ->setEffectiveDate(new DateTimeImmutable('2026-10-01'));
-
-        return $this->contracts->create($contract);
+        return $this->contracts->create(new ContractInput(
+            customerId: $customer->getId(),
+            bodyTemplateId: $version->getTemplate()->getId(),
+            locale: 'fr',
+            amountCents: 85000,
+            effectiveDate: '2026-10-01',
+        ));
     }
 
     private function customer(): CustomerInterface

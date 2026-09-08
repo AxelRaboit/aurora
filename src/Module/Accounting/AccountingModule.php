@@ -40,6 +40,10 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
             new NavPermission('accounting.contract_templates.create'),
             new NavPermission('accounting.contract_templates.edit'),
             new NavPermission('accounting.contract_templates.delete'),
+            new NavPermission('accounting.contracts.view'),
+            new NavPermission('accounting.contracts.create'),
+            new NavPermission('accounting.contracts.edit'),
+            new NavPermission('accounting.contracts.delete'),
         ];
     }
 
@@ -56,6 +60,9 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
         }
 
         if ($this->accountingContext->areContractsEnabled()) {
+            // Contracts before the trames they are built from: the list read
+            // every week comes before the documents edited twice a year.
+            $items[] = $this->contractsNavItem();
             $items[] = $this->contractTemplatesNavItem();
         }
 
@@ -70,6 +77,7 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
     {
         return [new NavSection('accounting', [
             $this->customersNavItem(),
+            $this->contractsNavItem(),
             $this->contractTemplatesNavItem(),
         ], priority: 45)];
     }
@@ -81,6 +89,17 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
             ModuleParameterEnum::AccountingCustomers->toToggle(),
             ModuleParameterEnum::AccountingContracts->toToggle(),
         ];
+    }
+
+    private function contractsNavItem(): NavItem
+    {
+        return new NavItem(
+            'backend_accounting_contracts',
+            'backend.nav.accounting_contracts',
+            'file-signature',
+            requiredPrivilege: 'accounting.contracts.view',
+            descriptionKey: 'backend.nav.accounting_contracts_description',
+        );
     }
 
     private function contractTemplatesNavItem(): NavItem

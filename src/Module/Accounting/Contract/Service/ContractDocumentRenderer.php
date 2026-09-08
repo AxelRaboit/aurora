@@ -242,9 +242,11 @@ final readonly class ContractDocumentRenderer
             if (array_key_exists($token, $values)) {
                 continue;
             }
+
             if (in_array($token, $deferred, true)) {
                 continue;
             }
+
             $unknown[$token] = true;
         }
 
