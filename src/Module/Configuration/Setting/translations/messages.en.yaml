@@ -1,5 +1,6 @@
 backend:
   settings:
+    disable_anyway: Turn it off anyway
     tabs:
       general: General
       general_description: 'Site name, admin email, public URL.'
@@ -71,6 +72,7 @@ backend:
   parameters:
     media_credit_visible:
       label: Show photo credits
+      off_warning: "The Pexels API guidelines ask you to credit the photographer and link to Pexels for photos imported with your key. Hiding the credit steps outside those guidelines, on your own account. The photo licence itself does not require attribution."
       description: "Shows the photographer's name and a link to the stock library under the pictures that carry one. The Pexels API guidelines ask for this credit: switching it off is your decision about your own account."
     captcha:
       title: Anti-robot check

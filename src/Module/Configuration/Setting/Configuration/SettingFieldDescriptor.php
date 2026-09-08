@@ -39,5 +39,19 @@ class SettingFieldDescriptor
          * genuinely clearer than the description alone.
          */
         public readonly ?string $placeholderKey = null,
+        /**
+         * Optional translation key for a warning shown before a `bool` field
+         * is switched **off**.
+         *
+         * For the settings whose "off" is a decision rather than a
+         * preference: turning one of those off should say what it costs,
+         * once, in front of the person doing it - not in a changelog they
+         * will read afterwards.
+         *
+         * Null for everything else, which is nearly everything: a
+         * confirmation on an ordinary toggle is a click people learn to
+         * dismiss, and that is how the ones that matter stop being read.
+         */
+        public readonly ?string $offWarningKey = null,
     ) {}
 }

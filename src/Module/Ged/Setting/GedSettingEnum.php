@@ -55,4 +55,9 @@ enum GedSettingEnum: string implements ApplicationParameterEnumInterface
     {
         return null;
     }
+
+    public function getOffWarning(): ?string
+    {
+        return null;
+    }
 }

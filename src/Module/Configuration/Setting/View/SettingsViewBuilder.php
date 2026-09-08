@@ -83,6 +83,11 @@ final readonly class SettingsViewBuilder
                     'value' => $value,
                     'mediaUrl' => 'media' === $field->type ? $this->resolveMediaUrl($value) : null,
                     'options' => $field->options,
+                    // Translated here rather than in the browser: the key is
+                    // a server-side detail, and the modal shows a sentence.
+                    'offWarning' => null === $field->offWarningKey
+                        ? null
+                        : $this->translator->trans($field->offWarningKey),
                 ];
             }
 

@@ -74,4 +74,9 @@ enum MarkdownNoteSettingEnum: string implements ApplicationParameterEnumInterfac
     {
         return null;
     }
+
+    public function getOffWarning(): ?string
+    {
+        return null;
+    }
 }

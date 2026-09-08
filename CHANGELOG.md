@@ -5,6 +5,26 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [Unreleased]
+
+### Modifié
+
+#### Masquer le crédit des photos demande une confirmation
+La case reste cochée par défaut, et la décocher ouvre maintenant une fenêtre
+qui dit ce que ça implique : les conditions d'usage de l'API Pexels demandent
+de créditer le photographe pour les photos importées avec votre clé, alors que
+la licence des photos, elle, n'impose pas l'attribution. Les deux phrases
+comptent, et c'est le moment de les lire.
+
+Le mécanisme est général plutôt que particulier à ce réglage : un champ à
+cocher peut déclarer ce qu'il faut dire avant qu'on l'éteigne, et l'interrupteur
+ne bouge pas tant que la question est ouverte. Une fenêtre qui modifie ce
+qu'elle demande a déjà répondu à votre place. Rallumer retire la question.
+
+Réservé aux réglages dont l'extinction est une décision et non une préférence :
+une confirmation sur un interrupteur ordinaire est un clic qu'on apprend à
+écarter, et c'est comme ça que celles qui comptent cessent d'être lues.
+
 ## [0.9.71] - 2026-09-07
 
 ### Ajouté
