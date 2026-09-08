@@ -1,0 +1,95 @@
+backend:
+    modules:
+        accounting_backend: Accounting
+        accounting_backend_description: Customers, contracts and accounting records. The billing back office.
+    nav:
+        sections:
+            accounting: Accounting
+        accounting_customers: Customers
+        accounting_customers_description: The companies you contract with, and their legal identity block.
+    audit:
+        actions:
+            accounting:
+                customer:
+                    created: Customer created
+                    updated: Customer updated
+                    deleted: Customer deleted
+    permissions:
+        names:
+            accounting:
+                customers:
+                    view: View customers
+                    create: Create a customer
+                    edit: Edit a customer
+                    delete: Delete a customer
+    accounting:
+        customers:
+            title: Customers
+            add: Add a customer
+            create: New customer
+            edit: 'Edit {name}'
+            empty: No customers yet.
+            search_placeholder: Search by company name, registration number, representative…
+            created: Customer created.
+            updated: Customer updated.
+            deleted: Customer deleted.
+            delete_confirm: 'Delete {name}?'
+            delete_warning: Contracts already signed with this customer stay in the database, but will no longer point to their record.
+            linked_account: 'Account: {name}'
+
+            col_company: Company
+            col_representative: Representative
+            col_siret: Registration no.
+            col_contact: Contact
+
+            group_identity: Company identity
+            group_representative: Legal representative
+            group_contact: Contact and access
+
+            legal_name: Company name
+            legal_name_placeholder: Registered company name
+            legal_form: Legal form
+            legal_form_placeholder: Ltd, LLC, sole trader, association…
+            share_capital: Share capital
+            share_capital_placeholder: '10000'
+            share_capital_hint: Both the dot and the comma are accepted.
+            currency: Currency
+            registered_office: Registered office
+            registered_office_placeholder: Full address, as it will appear on the contract
+            siret: Registration number
+            siret_placeholder: 123 456 789 00012
+            siret_hint: Fourteen digits. Spaces are ignored and the checksum is verified.
+            trade_register: Trade register
+            trade_register_placeholder: 'Lyon B 123 456 789'
+            vat_number: VAT number
+            vat_number_placeholder: FR12345678901
+            activity_sector: Line of business
+            activity_sector_placeholder: Catering, real estate, crafts…
+            activity_sector_hint: Used in the contract preamble.
+            representative_first_name: First name
+            representative_last_name: Last name
+            representative_first_name_placeholder: Camille
+            representative_last_name_placeholder: Durand
+            representative_role: Capacity
+            representative_role_placeholder: Manager, President, Director…
+            contractual_email: Contractual email
+            contractual_email_placeholder: contact@company.com
+            contractual_email_hint: This is where the signing link will be sent.
+            phone: Phone
+            phone_placeholder: +33 6 12 34 56 78
+            account: User account
+            account_none: No account linked
+            account_hint: Optional. Only needed if this customer signs in to the site.
+
+            row_actions:
+                edit_description: Edit this customer's record
+                delete_description: Delete this customer
+
+            errors:
+                legal_name_required: The company name is required.
+                legal_name_too_long: The company name cannot exceed 180 characters.
+                contractual_email_required: The contractual email is required.
+                contractual_email_invalid: This email is not valid.
+                share_capital_invalid: Share capital cannot be negative.
+                siret_invalid: 'This registration number is invalid: fourteen digits with a correct checksum are expected.'
+                siret_taken: 'This registration number is already recorded for {name}.'

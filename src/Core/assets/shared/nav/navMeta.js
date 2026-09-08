@@ -141,6 +141,7 @@ export const MODULE_COLOR = {
     editorial: "rose",
     ged: "lime",
     media: "pink",
+    accounting: "emerald",
     dev: "orange",
 };
 

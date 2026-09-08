@@ -1,0 +1,95 @@
+backend:
+    modules:
+        accounting_backend: Comptabilité
+        accounting_backend_description: Clients, contrats et pièces comptables. Le back-office de la facturation.
+    nav:
+        sections:
+            accounting: Comptabilité
+        accounting_customers: Clients
+        accounting_customers_description: Les sociétés avec qui vous contractez, et leur bloc d'identité légale.
+    audit:
+        actions:
+            accounting:
+                customer:
+                    created: Client créé
+                    updated: Client mis à jour
+                    deleted: Client supprimé
+    permissions:
+        names:
+            accounting:
+                customers:
+                    view: Consulter les clients
+                    create: Créer un client
+                    edit: Modifier un client
+                    delete: Supprimer un client
+    accounting:
+        customers:
+            title: Clients
+            add: Ajouter un client
+            create: Nouveau client
+            edit: 'Modifier {name}'
+            empty: Aucun client pour le moment.
+            search_placeholder: Rechercher par raison sociale, SIRET, représentant…
+            created: Client créé.
+            updated: Client mis à jour.
+            deleted: Client supprimé.
+            delete_confirm: 'Supprimer {name} ?'
+            delete_warning: Les contrats déjà signés avec ce client resteront en base, mais ne pointeront plus vers sa fiche.
+            linked_account: 'Compte : {name}'
+
+            col_company: Société
+            col_representative: Représentant
+            col_siret: SIRET
+            col_contact: Contact
+
+            group_identity: Identité de la société
+            group_representative: Représentant légal
+            group_contact: Contact et accès
+
+            legal_name: Raison sociale
+            legal_name_placeholder: Nom de la société
+            legal_form: Forme juridique
+            legal_form_placeholder: SARL, SAS, EI, association…
+            share_capital: Capital social
+            share_capital_placeholder: '10000'
+            share_capital_hint: Le point comme la virgule sont acceptés.
+            currency: Devise
+            registered_office: Siège social
+            registered_office_placeholder: Adresse complète, telle qu'elle apparaîtra au contrat
+            siret: SIRET
+            siret_placeholder: 123 456 789 00012
+            siret_hint: Quatorze chiffres. Les espaces sont ignorés, la clé de contrôle est vérifiée.
+            trade_register: RCS
+            trade_register_placeholder: 'Lyon B 123 456 789'
+            vat_number: TVA intracommunautaire
+            vat_number_placeholder: FR12345678901
+            activity_sector: Secteur d'activité
+            activity_sector_placeholder: Restauration, immobilier, artisanat…
+            activity_sector_hint: Repris dans le préambule du contrat.
+            representative_first_name: Prénom
+            representative_last_name: Nom
+            representative_first_name_placeholder: Camille
+            representative_last_name_placeholder: Durand
+            representative_role: Qualité
+            representative_role_placeholder: Gérant, Président, Directrice…
+            contractual_email: Email contractuel
+            contractual_email_placeholder: contact@societe.fr
+            contractual_email_hint: C'est à cette adresse que partira le lien de signature.
+            phone: Téléphone
+            phone_placeholder: 06 12 34 56 78
+            account: Compte utilisateur
+            account_none: Aucun compte rattaché
+            account_hint: Facultatif. À renseigner seulement si le client se connecte au site.
+
+            row_actions:
+                edit_description: Modifier la fiche de ce client
+                delete_description: Supprimer ce client
+
+            errors:
+                legal_name_required: La raison sociale est obligatoire.
+                legal_name_too_long: La raison sociale ne peut pas dépasser 180 caractères.
+                contractual_email_required: L'email contractuel est obligatoire.
+                contractual_email_invalid: Cet email n'est pas valide.
+                share_capital_invalid: Le capital social ne peut pas être négatif.
+                siret_invalid: 'Ce SIRET est invalide : quatorze chiffres et une clé de contrôle correcte sont attendus.'
+                siret_taken: 'Ce SIRET est déjà enregistré pour {name}.'

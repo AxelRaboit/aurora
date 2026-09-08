@@ -11,6 +11,8 @@ use Aurora\Core\Locale\Entity\LocaleInterface;
 use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Core\Notification\Entity\NotificationInterface;
+use Aurora\Module\Accounting\Customer\Entity\Customer;
+use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Configuration\Setting\Entity\Setting;
 use Aurora\Module\Configuration\Setting\Entity\SettingInterface;
 use Aurora\Module\Configuration\Theme\Entity\Theme;
@@ -196,6 +198,7 @@ class AuroraBundle extends AbstractBundle
                     TaxonomyTranslationInterface::class => TaxonomyTranslation::class,
                     TaxonomyTermInterface::class => TaxonomyTerm::class,
                     TaxonomyTermTranslationInterface::class => TaxonomyTermTranslation::class,
+                    CustomerInterface::class => Customer::class,
                 ],
                 'mappings' => array_merge(
                     [

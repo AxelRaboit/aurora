@@ -143,4 +143,23 @@ class UserRepository extends ResolveTargetEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Site accounts, alphabetically - the pool a customer can be attached to.
+     *
+     * Frontend rather than every account: attaching a company to an
+     * administrator's login says the wrong thing, and the picker that offers
+     * it is how that gets done by accident.
+     *
+     * @return list<CoreUserInterface>
+     */
+    public function findAllFrontUsersAlphabetical(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.type = :type')
+            ->setParameter('type', UserTypeEnum::Frontend->value)
+            ->orderBy('u.name', Order::Ascending->value)
+            ->getQuery()
+            ->getResult();
+    }
 }

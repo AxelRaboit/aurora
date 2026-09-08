@@ -26,6 +26,7 @@ export const aliases = {
     "@": path.resolve(__dirname, "src/Core/assets"),
     "@core": path.resolve(__dirname, "src/Core/assets"),
     "@shared": path.resolve(__dirname, "src/Core/assets/shared"),
+    "@accounting": moduleAlias("Accounting"),
     "@platform": moduleAlias("Platform"),
     "@configuration": moduleAlias("Configuration"),
     "@general": moduleAlias("General"),
