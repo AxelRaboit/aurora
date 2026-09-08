@@ -4,6 +4,8 @@ backend:
       zone_video_file: Elegir un vídeo
       zone_video_file_chosen: Vídeo de la mediateca
       zone_video_file_none: Ningún vídeo elegido
+      zone_form_none: "Elegir un formulario…"
+      full_bleed_width_note: "El ancho y el desplazamiento se fijan a la fila entera: una banda que cruza la pantalla se centra en su contenedor, y solo queda en el medio si ese contenedor es la fila."
   menus:
     section: Sección que encabeza esta entrada
     no_section: Ninguna

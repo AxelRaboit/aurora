@@ -819,4 +819,43 @@ final class GridNormalizerTest extends TestCase
         self::assertSame('Voir les services', $content['zones']['a1']['label']);
         self::assertSame('https://example.test/services', $content['zones']['a1']['url']);
     }
+
+    /**
+     * Full bleed is drawn by pushing a viewport-wide box back by half its own
+     * container, which only lands on the middle of the screen when the
+     * container is the whole row. Left at two thirds, the band centred on the
+     * middle of those two thirds and hung off to one side - which is what a
+     * contact form did the first time one was set that way.
+     */
+    public function testAFullBleedZoneTakesTheWholeRow(): void
+    {
+        $zone = $this->normalizer->normalizeLayout([
+            'zones' => [[
+                'id' => 'a1',
+                'type' => 'form',
+                'fullBleed' => true,
+                'span' => ['base' => 48, 'md' => 24, 'lg' => 32],
+                'offset' => 8,
+            ]],
+        ])['zones'][0];
+
+        self::assertSame(['base' => 48, 'md' => 48, 'lg' => 48], $zone['span']);
+        self::assertSame(0, $zone['offset'], 'there is nothing to be offset from on a full row');
+    }
+
+    /** A zone that has not asked for the whole screen keeps the width it was given. */
+    public function testAnOrdinaryZoneKeepsItsWidth(): void
+    {
+        $zone = $this->normalizer->normalizeLayout([
+            'zones' => [[
+                'id' => 'a1',
+                'type' => 'form',
+                'span' => ['base' => 48, 'md' => 24, 'lg' => 32],
+                'offset' => 8,
+            ]],
+        ])['zones'][0];
+
+        self::assertSame(['base' => 48, 'md' => 24, 'lg' => 32], $zone['span']);
+        self::assertSame(8, $zone['offset']);
+    }
 }

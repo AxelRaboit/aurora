@@ -25,11 +25,11 @@ import AppRange from "@/shared/components/form/toggle/AppRange.vue";
 import AppChoiceRow from "@/shared/components/form/select/AppChoiceRow.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppToggle from "@/shared/components/form/toggle/AppToggle.vue";
-import { ChevronDown, ChevronUp, Eye, FileText, Film, Image, Layers, Newspaper, Plus, Trash2 } from "lucide-vue-next";
+import { ChevronDown, ChevronUp, Eye, Plus, Trash2 } from "lucide-vue-next";
 import AppLoader from "@/shared/components/feedback/AppLoader.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import { useServerPreview } from "@/shared/composables/http/backend/useServerPreview.js";
-import { usePostGrid } from "../composables/usePostGrid.js";
+import { usePostGrid, ZONE_ICONS } from "../composables/usePostGrid.js";
 import { useGridSelection } from "../composables/useGridSelection.js";
 import PostGridCanvas from "./PostGridCanvas.vue";
 import PostGridZoneContent from "./PostGridZoneContent.vue";
@@ -113,7 +113,6 @@ const { html: previewHtml, loading: previewLoading } = useServerPreview(
     { enabled: () => showPreview.value },
 );
 
-const ZONE_ICONS = { text: FileText, media: Image, post: Newspaper, video: Film, stack: Layers };
 
 // Which zone the canvas and the card below it are both pointing at, and what
 // becomes of it when a zone is added, removed, reordered or relocated. Every
@@ -275,7 +274,13 @@ function resizeZone(index, columns) {
                      slider stays behind the disclosure for the widths no
                      fraction names - the summary keeps the exact count in view,
                      so a custom width is legible without opening anything. -->
-                <div class="space-y-1.5">
+                <!-- Both hidden under full width, because the server sets
+                     them: a band that spans the viewport is pushed back by half
+                     its own container, which only lands on the middle of the
+                     screen when the container is the whole row. Offering a
+                     width whose value is then overruled is offering a control
+                     that lies. -->
+                <div v-if="!zoneFields(index).fullBleed.value" class="space-y-1.5">
                     <AppChoiceRow
                         v-model="zoneFields(index).width.value"
                         :label="t('backend.posts.grid.width')"
@@ -305,7 +310,7 @@ function resizeZone(index, columns) {
                      Beneath the width on purpose: an offset is bounded by what
                      the width leaves, so the two read in the order they have to
                      be set in. -->
-                <div class="space-y-1.5">
+                <div v-if="!zoneFields(index).fullBleed.value" class="space-y-1.5">
                     <AppChoiceRow
                         v-model="zoneFields(index).offset.value"
                         :label="t('backend.posts.grid.offset')"
@@ -344,6 +349,9 @@ function resizeZone(index, columns) {
                         :label="t('backend.posts.grid.full_bleed')"
                         :hint="t('backend.posts.grid.full_bleed_hint')"
                     />
+                    <p v-if="zoneFields(index).fullBleed.value" class="text-xs text-muted">
+                        {{ t("backend.posts.grid.full_bleed_width_note") }}
+                    </p>
                 </div>
 
                 <!-- A stack holds zones instead of content, so it shows them

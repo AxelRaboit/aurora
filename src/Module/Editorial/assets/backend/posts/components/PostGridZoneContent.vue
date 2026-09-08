@@ -272,7 +272,7 @@ const descriptionHint = computed(() =>
                 :label="t('backend.posts.grid.zone_form')"
                 :hint="t('backend.posts.grid.zone_form_hint')"
                 :options="formOptions"
-                :placeholder="t('backend.posts.grid.list_any')"
+                :placeholder="t('backend.posts.grid.zone_form_none')"
             />
         </template>
 
