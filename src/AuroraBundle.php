@@ -21,6 +21,10 @@ use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersion;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslation;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslationInterface;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignature;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallenge;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallengeInterface;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureInterface;
 use Aurora\Module\Accounting\Customer\Entity\Customer;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Configuration\Setting\Entity\Setting;
@@ -211,6 +215,8 @@ class AuroraBundle extends AbstractBundle
                     CustomerInterface::class => Customer::class,
                     ContractInterface::class => Contract::class,
                     ContractAccessLinkInterface::class => ContractAccessLink::class,
+                    ContractSignatureInterface::class => ContractSignature::class,
+                    ContractSignatureChallengeInterface::class => ContractSignatureChallenge::class,
                     ContractTemplateInterface::class => ContractTemplate::class,
                     ContractTemplateVersionInterface::class => ContractTemplateVersion::class,
                     ContractTemplateVersionTranslationInterface::class => ContractTemplateVersionTranslation::class,

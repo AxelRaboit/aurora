@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Aurora\Module\Accounting\Contract\Signature\Manager;
+
+use Aurora\Core\Validation\Exception\FieldException;
+use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
+use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallengeInterface;
+use DateTimeImmutable;
+
+interface ContractSignatureChallengeManagerInterface
+{
+    /**
+     * Mints a code and mails it to the address the contract names.
+     *
+     * @throws FieldException when this address has asked for too many
+     */
+    public function issue(ContractAccessLinkInterface $link): ContractSignatureChallengeInterface;
+
+    /**
+     * Checks a typed code and consumes it, returning when it was verified.
+     *
+     * @throws FieldException for every refusal, all worded identically
+     */
+    public function verify(ContractAccessLinkInterface $link, string $code): DateTimeImmutable;
+}

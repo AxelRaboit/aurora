@@ -56,6 +56,10 @@ backend:
                     delete: Delete a contract
                     send: 'Send a contract to the customer'
     accounting:
+        signatures:
+            role:
+                customer: 'The customer'
+                provider: 'The provider'
         contracts:
             title: Contracts
             add: Prepare a contract
@@ -302,10 +306,19 @@ accounting:
             concluded: This contract is signed by both parties.
             hash_notice: 'Document hash: {hash}. It guarantees this wording has not changed since it was sent.'
             footer: This link is personal to you. Please do not forward it.
+        sign:
+            errors:
+                code_invalid: 'This code is not valid. Ask for a new one.'
+                too_many_codes: 'Too many codes requested for this contract. Try again in an hour.'
         unavailable:
             title: This link is no longer valid
             message: The address you opened does not exist, has expired, or has been revoked. If you were expecting a contract, ask your contact for a new link.
     email:
+        signature_code:
+            subject: 'Your signing code'
+            intro: 'Here is your confirmation code to sign the contract.'
+            validity: 'This code is valid for {minutes} minutes.'
+            warning: 'If you did not request this code, ignore this message.'
         contract_link:
             subject: A contract is waiting for your signature
             greeting: 'Hello {name},'

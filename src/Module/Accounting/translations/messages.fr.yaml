@@ -56,6 +56,10 @@ backend:
                     delete: Supprimer un contrat
                     send: 'Envoyer un contrat au client'
     accounting:
+        signatures:
+            role:
+                customer: 'Le client'
+                provider: 'Le prestataire'
         contracts:
             title: Contrats
             add: Préparer un contrat
@@ -302,10 +306,19 @@ accounting:
             concluded: Ce contrat est signé par les deux parties.
             hash_notice: 'Empreinte du document : {hash}. Elle garantit que ce texte n''a pas changé depuis son envoi.'
             footer: Ce lien vous est personnel. Ne le transmettez pas.
+        sign:
+            errors:
+                code_invalid: 'Ce code n''est pas valide. Demandez-en un nouveau.'
+                too_many_codes: 'Trop de codes demandés pour ce contrat. Réessayez dans une heure.'
         unavailable:
             title: Ce lien n'est plus valide
             message: L'adresse que vous avez ouverte n'existe pas, a expiré, ou a été révoquée. Si vous attendiez un contrat, demandez un nouveau lien à votre interlocuteur.
     email:
+        signature_code:
+            subject: 'Votre code de signature'
+            intro: 'Voici votre code de confirmation pour signer le contrat.'
+            validity: 'Ce code est valable {minutes} minutes.'
+            warning: 'Si vous n''avez pas demandé ce code, ignorez ce message.'
         contract_link:
             subject: Un contrat attend votre signature
             greeting: 'Bonjour {name},'
