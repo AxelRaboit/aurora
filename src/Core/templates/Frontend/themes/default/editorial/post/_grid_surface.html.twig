@@ -28,6 +28,21 @@
     } %}
     {% set surface = zone.surface|default('none') %}
 
+    {# A picture alone on a surface is framed by it, so the padding goes: the
+       card *is* the frame, and a photograph inset by two centimetres of
+       background reads as a picture that failed to fill its box.
+
+       A picture with a caption or a credit keeps the padding, because those
+       are words and words must not touch an edge. The zone knows which it is,
+       which is why the question is asked here rather than left to the author. #}
+    {% set framed = zone.type == 'media' and not zone.caption and not (zone.media.credit|default(null)) %}
+    {% set frames = {
+        none: '',
+        card: 'overflow-hidden rounded-xl border border-line bg-surface',
+        soft: 'overflow-hidden rounded-xl bg-surface-2',
+        accent: 'overflow-hidden rounded-xl border border-accent-500/30 bg-accent-500/10',
+    } %}
+
     {% if zone.fullBleed|default(false) %}
         {# Viewport units and a negative margin rather than `100vw`, which
            counts the scrollbar and hands the page a horizontal one.
@@ -43,7 +58,7 @@
             {% endif %}
         </div>
     {% elseif surface != 'none' %}
-        <div class="{{ surfaces[surface] }}">{{ body }}</div>
+        <div class="{{ framed ? frames[surface] : surfaces[surface] }}">{{ body }}</div>
     {% else %}
         {{ body }}
     {% endif %}

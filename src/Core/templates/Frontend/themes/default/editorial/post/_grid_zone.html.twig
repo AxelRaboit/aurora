@@ -71,12 +71,17 @@
                script this is a button that does nothing to a picture that is
                already all there - which is the right way round. #}
             {% set enlargeable = zone.lightboxIndex is defined and zone.lightboxIndex is not null %}
+            {# Rounded by the picture itself, unless a surface is already
+               framing it: two radii on the same corner leave a sliver of the
+               card showing through, which reads as a rendering fault rather
+               than as a frame. #}
+            {% set framed = zone.surface|default('none') != 'none' and not zone.caption and not (zone.media.credit|default(null)) %}
             {% set picture %}
                 <img
                     src="{{ zone.media.url }}"
                     alt="{{ zone.media.alt }}"
                     loading="lazy"
-                    class="w-full h-auto rounded-lg object-cover{{ fills ? ' lg:min-h-0 lg:flex-1' : '' }}"
+                    class="w-full h-auto object-cover{{ framed ? '' : ' rounded-lg' }}{{ fills ? ' lg:min-h-0 lg:flex-1' : '' }}"
                     style="object-position: {{ zone.media.focalPosition }};{{ zone.ratioStyle }}"
                 >
             {% endset %}

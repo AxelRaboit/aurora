@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Aurora\Tests\Integration\Module\Editorial\Post;
 
 use Aurora\Module\Editorial\Post\Grid\GridViewBuilder;
+use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Tests\Integration\IntegrationTestCase;
+use Doctrine\ORM\EntityManagerInterface;
 use Twig\Environment;
 
 /**
@@ -24,11 +26,17 @@ final class GridSurfaceRenderTest extends IntegrationTestCase
 
     private Environment $twig;
 
+    private EntityManagerInterface $entityManager;
+
+    /** @var list<int> */
+    private array $created = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         static::bootKernel();
 
+        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->gridViewBuilder = static::getContainer()->get(GridViewBuilder::class);
         $twig = static::getContainer()->get(Environment::class);
         self::assertInstanceOf(Environment::class, $twig);
@@ -104,6 +112,73 @@ final class GridSurfaceRenderTest extends IntegrationTestCase
         self::assertStringContainsString('w-screen', $html);
         self::assertStringContainsString('bg-accent-500/10', $html);
         self::assertStringContainsString('Parlons-en.', $html);
+    }
+
+    /**
+     * A picture alone on a card is framed by it, so the padding goes: a
+     * photograph inset by two centimetres of background reads as a picture
+     * that failed to fill its box.
+     */
+    public function testAPictureAloneFillsItsCard(): void
+    {
+        $html = $this->render($this->pictureZone(['surface' => 'card']));
+
+        self::assertStringContainsString('overflow-hidden', $html);
+        self::assertStringNotContainsString('p-6', $html);
+        // The card clips the corners, so the picture must not round its own -
+        // two radii on one corner leave a sliver of card showing through.
+        self::assertStringNotContainsString('rounded-lg', $html);
+    }
+
+    /** With words under it the padding stays: a caption must not touch an edge. */
+    public function testAPictureWithACaptionKeepsItsPadding(): void
+    {
+        $html = $this->render($this->pictureZone(['surface' => 'card'], 'Une légende.'));
+
+        self::assertStringContainsString('p-6', $html);
+        self::assertStringContainsString('Une légende.', $html);
+    }
+
+    /** @param array<string, mixed> $overrides */
+    private function pictureZone(array $overrides = [], string $caption = ''): array
+    {
+        $document = new Document();
+        $document->setTitle('Média');
+        $document->setMimeType('image/png');
+        $document->setFilePath('ged/2026/09/photo.png');
+
+        $this->entityManager->persist($document);
+        $this->entityManager->flush();
+        $this->created[] = (int) $document->getId();
+
+        $grid = $this->gridViewBuilder->build(
+            [
+                'enabled' => true,
+                'zones' => [['id' => 'z1', 'type' => 'media', 'mediaId' => $document->getId(), ...$overrides]],
+            ],
+            ['zones' => ['z1' => ['alt' => 'Une image', 'caption' => $caption]]],
+            'fr',
+        );
+
+        self::assertNotNull($grid);
+
+        return $grid['zones'][0];
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->created as $id) {
+            $document = $this->entityManager->find(Document::class, $id);
+
+            if (null !== $document) {
+                $this->entityManager->remove($document);
+            }
+        }
+
+        $this->entityManager->flush();
+        $this->created = [];
+
+        parent::tearDown();
     }
 
     /** @param array<string, mixed> $overrides */

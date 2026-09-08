@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Aurora\Tests\Integration\Module\Editorial\Post;
 
 use Aurora\Module\Editorial\Post\Grid\GridViewBuilder;
+use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Tests\Integration\IntegrationTestCase;
+use Doctrine\ORM\EntityManagerInterface;
 use Twig\Environment;
 
 /**
@@ -22,11 +24,17 @@ final class GridItemDisplaysTest extends IntegrationTestCase
 
     private Environment $twig;
 
+    private EntityManagerInterface $entityManager;
+
+    /** @var list<int> */
+    private array $created = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         static::bootKernel();
 
+        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
         $this->gridViewBuilder = static::getContainer()->get(GridViewBuilder::class);
         $twig = static::getContainer()->get(Environment::class);
         self::assertInstanceOf(Environment::class, $twig);
@@ -73,6 +81,71 @@ final class GridItemDisplaysTest extends IntegrationTestCase
         self::assertStringNotContainsString('border-accent', $plain);
         self::assertStringContainsString('border-accent', $featured);
         self::assertStringContainsString('Recommandé', $featured);
+    }
+
+    /**
+     * An offer with a pictogram draws it. The picture has always been on the
+     * entry - the editor offers one for every item - and this was the one
+     * costume that ignored it, so a card could be given an icon and show
+     * nothing.
+     */
+    public function testAnOfferDrawsThePictureItWasGiven(): void
+    {
+        $mediaId = $this->picture();
+
+        $html = $this->render(
+            'offers',
+            [['id' => 'i1', 'mediaId' => $mediaId]],
+            ['i1' => ['title' => 'Stratégie de contenu']],
+        );
+
+        self::assertStringContainsString('object-contain', $html);
+        self::assertStringContainsString('picto.png', $html);
+        // Above the name it belongs to, which is where an icon is read.
+        self::assertLessThan(
+            (int) mb_strpos($html, 'Stratégie de contenu'),
+            (int) mb_strpos($html, 'picto.png'),
+        );
+    }
+
+    /** And an offer without one is unchanged. */
+    public function testAnOfferWithoutAPictureDrawsNoImage(): void
+    {
+        $html = $this->render('offers', [['id' => 'i1']], ['i1' => ['title' => 'Simple']]);
+
+        self::assertStringNotContainsString('<img', $html);
+    }
+
+    private function picture(): int
+    {
+        $document = new Document();
+        $document->setTitle('Pictogramme');
+        $document->setMimeType('image/png');
+        $document->setFilePath('ged/2026/09/picto.png');
+
+        $this->entityManager->persist($document);
+        $this->entityManager->flush();
+
+        $id = (int) $document->getId();
+        $this->created[] = $id;
+
+        return $id;
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->created as $id) {
+            $document = $this->entityManager->find(Document::class, $id);
+
+            if (null !== $document) {
+                $this->entityManager->remove($document);
+            }
+        }
+
+        $this->entityManager->flush();
+        $this->created = [];
+
+        parent::tearDown();
     }
 
     /**
