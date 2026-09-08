@@ -465,6 +465,10 @@ backend:
         small: Fine print
       full_bleed: Full width
       full_bleed_hint: "The zone leaves the column and spans the screen. Words stay centred at the page's width; a picture goes edge to edge."
+      anchor: "Anchor"
+      anchor_placeholder: "find-me"
+      anchor_hint: "A name a link can point straight at. Left empty, the zone has no address."
+      anchor_hint_set: "A link to this page followed by #{anchor} scrolls down to here."
       full_bleed_width_note: "Width and offset are set to the whole row: a band spanning the screen centres on its container, and it only lands in the middle when that container is the row."
       surface: Background
       surface_hint: "What the zone sits on. It is what makes a run of zones read as sections."

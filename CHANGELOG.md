@@ -5,6 +5,35 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.82] - 2026-09-08
+
+### Ajouté
+
+#### Une zone peut porter un point d'ancrage
+Un lien menait à une page, jamais à un endroit dans la page. Sur une page
+longue, envoyer quelqu'un « voir la section Tarifs » voulait dire le déposer en
+haut et le laisser chercher.
+
+Chaque zone de la grille accepte maintenant un nom. La zone porte ce nom comme
+identifiant, et n'importe quel lien du site suivi de `#ce-nom` descend
+directement dessus : un bouton, une entrée de menu, une adresse écrite dans un
+texte, un lien envoyé par mail.
+
+Le nom est transformé en adresse à l'enregistrement, parce qu'il finit dans un
+attribut puis dans une URL : « Où me trouver ? » devient `ou-me-trouver`, un
+accent devient sa lettre simple plutôt que de se percenter dans chaque lien qui
+pointe dessus. Il est unique dans la page, y compris à l'intérieur d'une pile :
+deux zones répondant au même nom, c'est une page qui se comporte autrement
+après qu'on ait déplacé l'une des deux, donc la seconde est numérotée.
+
+Vide par défaut, et ça reste le cas normal : une zone n'a d'adresse que si
+quelqu'un compte lui en donner une. L'éditeur montre sous le champ l'adresse
+que le nom produit, puisque c'est ce qu'on va coller dans un bouton.
+
+L'en-tête du site est fixe, donc la zone visée réserve la place de la barre :
+sans ça la fonctionnalité marche et a l'air cassée, le bloc atterrissant sous
+le bandeau.
+
 ## [0.9.81] - 2026-09-08
 
 ### Corrigé

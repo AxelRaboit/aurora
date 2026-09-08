@@ -146,7 +146,7 @@ final class GridNormalizerTest extends TestCase
 
         self::assertSame(
             [
-                'id', 'type', 'span', 'offset', 'newRow', 'ratio', 'scale', 'align',
+                'id', 'anchor', 'type', 'span', 'offset', 'newRow', 'ratio', 'scale', 'align',
                 'mediaId', 'mediaUrl', 'postId', 'variant', 'size', 'separatorStyle',
                 'display', 'columns', 'items', 'postTypeId', 'termId', 'limit',
                 'cardVariant', 'formId', 'language', 'textSize', 'lineNumbers', 'surface', 'fullBleed', 'children',
@@ -857,5 +857,66 @@ final class GridNormalizerTest extends TestCase
 
         self::assertSame(['base' => 48, 'md' => 24, 'lg' => 32], $zone['span']);
         self::assertSame(8, $zone['offset']);
+    }
+
+    /**
+     * The name lands in an `id` and then in every link that points at it, so
+     * it is slugged rather than taken as typed: an accent would percent-encode
+     * in the address bar, and a space would end the attribute.
+     */
+    public function testAnAnchorIsSlugged(): void
+    {
+        $zone = $this->normalizer->normalizeLayout([
+            'zones' => [['id' => 'a1', 'type' => 'text', 'anchor' => 'Où me trouver ?']],
+        ])['zones'][0];
+
+        self::assertSame('ou-me-trouver', $zone['anchor']);
+    }
+
+    /**
+     * A link points at one zone. Two zones answering to one name is a page
+     * that behaves differently once a zone is moved, so the second claimant is
+     * numbered - the same resolution an id collision gets.
+     */
+    public function testTwoZonesCannotShareAnAnchor(): void
+    {
+        $zones = $this->normalizer->normalizeLayout([
+            'zones' => [
+                ['id' => 'a1', 'type' => 'text', 'anchor' => 'contact'],
+                ['id' => 'a2', 'type' => 'text', 'anchor' => 'contact'],
+            ],
+        ])['zones'];
+
+        self::assertSame('contact', $zones[0]['anchor']);
+        self::assertSame('contact-2', $zones[1]['anchor']);
+    }
+
+    /** Uniqueness reaches inside a stack: the page is one document of ids. */
+    public function testAStackChildCannotStealAnAnchor(): void
+    {
+        $zones = $this->normalizer->normalizeLayout([
+            'zones' => [
+                ['id' => 'a1', 'type' => 'text', 'anchor' => 'contact'],
+                ['id' => 'a2', 'type' => 'stack', 'children' => [
+                    ['id' => 'a3', 'type' => 'text', 'anchor' => 'contact'],
+                ]],
+            ],
+        ])['zones'];
+
+        self::assertSame('contact-2', $zones[1]['children'][0]['anchor']);
+    }
+
+    /** No anchor is the normal case, and it has to stay empty rather than invented. */
+    public function testAZoneWithNothingUsableHasNoAnchor(): void
+    {
+        $zones = $this->normalizer->normalizeLayout([
+            'zones' => [
+                ['id' => 'a1', 'type' => 'text'],
+                ['id' => 'a2', 'type' => 'text', 'anchor' => '   '],
+                ['id' => 'a3', 'type' => 'text', 'anchor' => '---'],
+            ],
+        ])['zones'];
+
+        self::assertSame(['', '', ''], array_column($zones, 'anchor'));
     }
 }
