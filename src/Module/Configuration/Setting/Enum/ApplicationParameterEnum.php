@@ -283,4 +283,20 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             default => null,
         };
     }
+
+    /**
+     * What to say before this is switched off, for the few where "off" is a
+     * decision rather than a preference.
+     *
+     * Null for nearly everything. A confirmation on an ordinary toggle is a
+     * click people learn to dismiss, and that is exactly how the ones that
+     * matter stop being read.
+     */
+    public function getOffWarning(): ?string
+    {
+        return match ($this) {
+            self::MediaCreditVisible => 'backend.parameters.media_credit_visible.off_warning',
+            default => null,
+        };
+    }
 }

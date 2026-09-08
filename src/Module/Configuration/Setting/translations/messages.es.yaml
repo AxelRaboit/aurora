@@ -1,11 +1,13 @@
 backend:
   settings:
+    disable_anyway: Desactivar de todos modos
     tabs:
       captcha: Antirrobots
       captcha_description: "Verificación del formulario de comentarios: servicio, claves y activación."
   parameters:
     media_credit_visible:
       label: Mostrar el crédito de las fotos
+      off_warning: "Las condiciones de uso de la API de Pexels piden acreditar al fotógrafo y enlazar a Pexels en las fotos importadas con su clave. Al ocultar el crédito, se sale de esas condiciones, en su propia cuenta. La licencia de las fotos, en cambio, no exige la atribución."
       description: "Muestra el nombre del fotógrafo y el enlace al banco de imágenes bajo las fotos que lo llevan. Las condiciones de uso de la API de Pexels piden este crédito: desactivarlo es una decisión suya sobre su propia cuenta."
     captcha:
       title: Verificación antirrobots

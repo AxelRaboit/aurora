@@ -11,7 +11,9 @@ import AppSearchInput from "@/shared/components/form/input/AppSearchInput.vue";
 import AppPagination from "@/shared/components/nav/AppPagination.vue";
 import AppListItemButton from "@/shared/components/action/AppListItemButton.vue";
 import AppTextLinkButton from "@/shared/components/action/AppTextLinkButton.vue";
-import { Search, FileText, Lock, Save } from "lucide-vue-next";
+import AppModal from "@/shared/components/overlay/AppModal.vue";
+import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
+import { Search, FileText, Lock, Save, TriangleAlert, X } from "lucide-vue-next";
 import { ParameterType } from "@core/utils/enums/settings/parameterType.js";
 import { useSettingsForm } from "@configuration/backend/settings/composables/useSettingsForm.js";
 import { useSettingsPostPicker } from "@configuration/backend/settings/composables/useSettingsPostPicker.js";
@@ -56,7 +58,7 @@ const genericGroups = computed(() =>
     customComponent.value ? [] : [props.activeTab],
 );
 
-const { fieldValues, mediaState, isLocked, lockReason, onBoolChange, onMediaChange, savingGroups, saveGroup } =
+const { fieldValues, mediaState, isLocked, lockReason, onBoolChange, pendingOff, confirmOff, cancelOff, onMediaChange, savingGroups, saveGroup } =
     useSettingsForm(props.groups, genericGroups.value, props.updatePath);
 
 const { postPickerLabels, postPickerSearch, postPickerResults, postPickerOpen, resolvePostLabel, searchPosts, selectPost, clearPost, onPostPickerBlur, onPostPickerFocus } =
@@ -251,5 +253,28 @@ const { sequenceSearch, paginatedSequences, sequencePage, sequenceTotalPages, go
                 </div>
             </div>
         </div>
+
+        <!-- Shown on the way down only, and only for the settings that
+             declare something to say. The toggle stays where it was until
+             this is answered, so closing the modal is not a silent yes. -->
+        <AppModal
+            :show="null !== pendingOff"
+            :title="pendingOff?.label ?? ''"
+            :icon="TriangleAlert"
+            v-on:close="cancelOff"
+        >
+            <p class="text-sm text-secondary">{{ pendingOff?.offWarning }}</p>
+
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="cancelOff">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton variant="danger" size="md" v-on:click="confirmOff">
+                        {{ t("backend.settings.disable_anyway") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
     </div>
 </template>

@@ -1,5 +1,6 @@
 backend:
   settings:
+    disable_anyway: Désactiver quand même
     tabs:
       general: Général
       general_description: 'Nom du site, email admin, URL publique.'
@@ -71,6 +72,7 @@ backend:
   parameters:
     media_credit_visible:
       label: Afficher le crédit des photos
+      off_warning: "Les conditions d'usage de l'API Pexels demandent de créditer le photographe et de lier vers Pexels pour les photos importées avec votre clé. En masquant le crédit, vous sortez de ces conditions sur votre propre compte. La licence des photos, elle, n'impose pas l'attribution."
       description: "Affiche le nom du photographe et le lien vers la banque d'images sous les photos qui en portent un. Les conditions d'usage de l'API Pexels demandent ce crédit : le désactiver relève de votre décision sur votre propre compte."
     captcha:
       title: Vérification anti-robots

@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
 import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
@@ -61,7 +61,47 @@ export function useSettingsForm(groups, availableGroups, updatePath) {
             : "";
     }
 
+    /**
+     * The parameter waiting on a confirmation, or null.
+     *
+     * A setting whose "off" is a decision rather than a preference declares
+     * what to say about it, and the toggle stops on the way down until the
+     * person answers. Switching one back on asks nothing: putting something
+     * back the way it was needs no warning.
+     */
+    const pendingOff = ref(null);
+
     function onBoolChange(parameter, enabled) {
+        if (!enabled && parameter.offWarning) {
+            pendingOff.value = parameter;
+
+            return;
+        }
+
+        // Switching the same setting back on withdraws the question: a modal
+        // still asking whether to turn off something that is on again is a
+        // question whose answer no longer means anything.
+        if (pendingOff.value?.key === parameter.key) {
+            pendingOff.value = null;
+        }
+
+        applyBool(parameter, enabled);
+    }
+
+    function confirmOff() {
+        const parameter = pendingOff.value;
+        pendingOff.value = null;
+
+        if (parameter) {
+            applyBool(parameter, false);
+        }
+    }
+
+    function cancelOff() {
+        pendingOff.value = null;
+    }
+
+    function applyBool(parameter, enabled) {
         fieldValues[parameter.key] = enabled ? "1" : "0";
         if (!enabled) {
             for (const child of Object.values(parameterByKey)) {
@@ -69,7 +109,7 @@ export function useSettingsForm(groups, availableGroups, updatePath) {
                     child.requires === parameter.key &&
                     fieldValues[child.key] === "1"
                 ) {
-                    onBoolChange(child, false);
+                    applyBool(child, false);
                 }
             }
         }
@@ -129,6 +169,9 @@ export function useSettingsForm(groups, availableGroups, updatePath) {
         isLocked,
         lockReason,
         onBoolChange,
+        pendingOff,
+        confirmOff,
+        cancelOff,
         onMediaChange,
         savingGroups,
         saveGroup,

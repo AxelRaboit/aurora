@@ -25,4 +25,7 @@ interface ApplicationParameterEnumInterface
      * description below the field is enough.
      */
     public function getPlaceholder(): ?string;
+
+    /** Shown before a bool parameter is switched off, when it needs saying. */
+    public function getOffWarning(): ?string;
 }
