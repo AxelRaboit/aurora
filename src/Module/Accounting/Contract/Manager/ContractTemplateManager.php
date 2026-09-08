@@ -20,6 +20,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function array_key_exists;
+
 /**
  * Templates and their versions.
  *
@@ -130,6 +132,12 @@ class ContractTemplateManager implements ContractTemplateManagerInterface
         // clause does not start from a blank document. A first version has
         // nothing to copy and starts empty.
         if ($source instanceof ContractTemplateVersionInterface) {
+            // The clause travels with the wording it belongs to. A draft opened
+            // to change one article should not silently drop which language
+            // prevails, and re-answering it every time is how it ends up
+            // answered differently.
+            $draft->setGoverningLocale($source->getGoverningLocale());
+
             foreach ($source->getTranslations() as $translation) {
                 $copy = $this->createTranslation();
                 $copy
@@ -161,6 +169,18 @@ class ContractTemplateManager implements ContractTemplateManagerInterface
         $version->assertEditable();
 
         $incoming = $input->getTranslations();
+        $governing = $input->getGoverningLocale();
+
+        // Refused before a single wording is written, so a draft turned down
+        // for this is left exactly as it was. A language that prevails over
+        // the others has to be one of the others: pointing the clause at a
+        // Spanish version this draft does not contain would print a promise
+        // about a document nobody can read.
+        if (null !== $governing && !array_key_exists($governing, $incoming)) {
+            throw new FieldException('governingLocale', $this->translator->trans('backend.accounting.contract_templates.errors.governing_locale_not_written', ['{locale}' => $governing]));
+        }
+
+        $version->setGoverningLocale($governing);
 
         foreach ($incoming as $locale => $wording) {
             $existing = $version->getTranslation($locale);
@@ -203,6 +223,7 @@ class ContractTemplateManager implements ContractTemplateManagerInterface
             'template' => $version->getTemplate()->getName(),
             'number' => $version->getNumber(),
             'locales' => array_keys($incoming),
+            'governingLocale' => $governing,
         ]);
     }
 
@@ -214,6 +235,15 @@ class ContractTemplateManager implements ContractTemplateManagerInterface
             throw new FieldException('translations', $this->translator->trans('backend.accounting.contract_templates.errors.nothing_to_publish'));
         }
 
+        // A multilingual version has to say which language prevails, and
+        // publication is the last moment to ask: from here the wording is
+        // immutable, and a contract sealed against it would carry two
+        // documents with equal authority and no way to settle a divergence.
+        // One language has nothing to arbitrate, so null stays legitimate.
+        if ($version->getTranslations()->count() > 1 && null === $version->getGoverningLocale()) {
+            throw new FieldException('governingLocale', $this->translator->trans('backend.accounting.contract_templates.errors.governing_locale_required'));
+        }
+
         $version->publish(new DateTimeImmutable());
         $this->entityManager->flush();
 
@@ -221,6 +251,7 @@ class ContractTemplateManager implements ContractTemplateManagerInterface
             'template' => $version->getTemplate()->getName(),
             'number' => $version->getNumber(),
             'locales' => array_keys($version->getTranslations()->toArray()),
+            'governingLocale' => $version->getGoverningLocale(),
         ]);
     }
 

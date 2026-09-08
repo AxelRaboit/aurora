@@ -159,6 +159,7 @@ backend:
                 contract_closed: 'This contract is closed and can no longer be signed.'
                 role_already_signed: 'This party has already signed.'
                 customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
+                governing_locale_conflict: 'The body and the annex name different governing languages ({locales}). A document cannot have two authoritative texts.'
         contract_templates:
             title: Contract templates
             kind:
@@ -171,6 +172,9 @@ backend:
                 draft_already_open: 'A draft is already open on this template (version {number}). Finish or discard it before opening another.'
                 nothing_to_publish: This version has no wording to publish.
                 already_published: 'This version is published: its wording can no longer be changed. Open a new version.'
+                governing_locale_unknown: This language is not one the application offers.
+                governing_locale_not_written: 'The governing language ({locale}) is not written in this version.'
+                governing_locale_required: 'This version is written in several languages: say which one prevails before publishing it.'
             name: Template name
             name_placeholder: Service agreement, monthly plan
             kind_label: Type
@@ -202,6 +206,10 @@ backend:
             version_label: 'Version {number}'
             other_versions: Other versions
             locale_written: This language is written
+            governing_locale: Governing language
+            governing_locale_none: A single language
+            governing_locale_hint: 'Should the translations diverge, this is the version that prevails. The clause is written into the document.'
+            governing_locale_needed: 'Several languages are written: choose the one that prevails to publish.'
             document_title: Document title
             document_title_placeholder: SERVICE AGREEMENT
             document_title_hint: What prints at the top of the contract, in this language.
@@ -305,6 +313,17 @@ backend:
                 siret_invalid: 'This registration number is invalid: fourteen digits with a correct checksum are expected.'
                 siret_taken: 'This registration number is already recorded for {name}.'
 accounting:
+    contract:
+        # Written into the document itself, and therefore sealed with it: these
+        # sentences end up in the rendered HTML, not in the page around it.
+        language:
+            fr: French
+            en: English
+            es: Spanish
+        governing_language:
+            heading: Language of the contract
+            body: 'This contract is drawn up in several languages. Should the versions diverge in interpretation, only the {language} version prevails.'
+            translation_notice: 'The {language} version you are reading is a translation provided for your convenience.'
     public:
         contract:
             title: Contract

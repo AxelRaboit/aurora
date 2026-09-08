@@ -17,6 +17,7 @@ class ContractTemplateVersionInputFactory implements ContractTemplateVersionInpu
     {
         return new ContractTemplateVersionInput(
             translations: $this->translations($data['translations'] ?? null),
+            governingLocale: Str::trimOrNull((string) ($data['governingLocale'] ?? '')),
         );
     }
 

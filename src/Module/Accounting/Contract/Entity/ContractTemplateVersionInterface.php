@@ -39,6 +39,15 @@ interface ContractTemplateVersionInterface extends TimestampableInterface
      */
     public function assertEditable(): void;
 
+    public function getGoverningLocale(): ?string;
+
+    /**
+     * Names the language that prevails between translations of this wording.
+     *
+     * Null means the version carries one language and has nothing to arbitrate.
+     */
+    public function setGoverningLocale(?string $locale): static;
+
     /** @return Collection<string, ContractTemplateVersionTranslationInterface> */
     public function getTranslations(): Collection;
 

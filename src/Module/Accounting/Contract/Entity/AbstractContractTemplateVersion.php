@@ -57,6 +57,27 @@ abstract class AbstractContractTemplateVersion implements ContractTemplateVersio
     #[ORM\Column(nullable: true)]
     protected ?DateTimeImmutable $publishedAt = null;
 
+    /**
+     * The language that prevails when two versions of this wording disagree.
+     *
+     * A trame written in three languages is three documents, and a translator
+     * makes choices: "reasonable notice" and "délai raisonnable" are not the
+     * same promise once a judge reads them closely. So the document says which
+     * language is the agreement and which are courtesy translations, which is
+     * what a governing-language clause does and why every multilingual contract
+     * carries one.
+     *
+     * It lives on the version rather than on the template because that is where
+     * the translations live: a version is one coherent set of wordings, frozen
+     * together, and the answer to "which of these prevails" belongs with them.
+     *
+     * Null is legitimate and means "one language only": there is nothing to
+     * diverge from, so a clause would be noise. Publishing a version with
+     * several languages and no answer here is refused by the manager.
+     */
+    #[ORM\Column(length: 5, nullable: true)]
+    protected ?string $governingLocale = null;
+
     /** @var Collection<string, ContractTemplateVersionTranslationInterface> */
     #[ORM\OneToMany(
         targetEntity: ContractTemplateVersionTranslationInterface::class,
@@ -127,6 +148,20 @@ abstract class AbstractContractTemplateVersion implements ContractTemplateVersio
         if ($this->isPublished()) {
             throw PublishedVersionIsImmutableException::forVersion($this->getId(), $this->number);
         }
+    }
+
+    public function getGoverningLocale(): ?string
+    {
+        return $this->governingLocale;
+    }
+
+    public function setGoverningLocale(?string $locale): static
+    {
+        $this->assertEditable();
+
+        $this->governingLocale = $locale;
+
+        return $this;
     }
 
     public function getTranslations(): Collection

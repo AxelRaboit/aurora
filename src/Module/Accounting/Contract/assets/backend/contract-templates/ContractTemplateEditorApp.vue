@@ -6,6 +6,7 @@ import ContractVariablePanel from "./components/ContractVariablePanel.vue";
 import AppBlockEditor from "@/shared/components/editor/AppBlockEditor.vue";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
+import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppMessage from "@/shared/components/feedback/AppMessage.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
@@ -34,6 +35,9 @@ const {
     wording,
     switchLocale,
     writtenLocales,
+    governingLocale,
+    governingOptions,
+    needsGoverningLocale,
     canPublish,
     saving,
     publishing,
@@ -48,6 +52,20 @@ const {
 
 const otherVersions = computed(() =>
     props.versions.filter((each) => each.id !== version.value.id),
+);
+
+const governingSelectOptions = computed(() =>
+    governingOptions.value.map((locale) => ({
+        value: locale.code,
+        label: locale.label,
+    })),
+);
+
+/** The answer, in words, for a published version that can no longer be asked. */
+const governingLabel = computed(
+    () =>
+        props.locales.find((locale) => locale.code === governingLocale.value)
+            ?.label ?? null,
 );
 </script>
 
@@ -197,6 +215,35 @@ const otherVersions = computed(() =>
             </div>
 
             <div class="space-y-4">
+                <!-- Which language prevails. Asked here rather than at
+                     publication time, because it is a decision about the
+                     wording somebody is writing, not a step in a dialog. -->
+                <div class="rounded-lg border border-line bg-surface p-3 space-y-2">
+                    <p class="text-xs font-medium uppercase tracking-wider text-muted">
+                        {{ t("backend.accounting.contract_templates.governing_locale") }}
+                    </p>
+                    <AppSelect
+                        v-if="!isPublished"
+                        :model-value="governingLocale ?? ''"
+                        :options="governingSelectOptions"
+                        :placeholder="t('backend.accounting.contract_templates.governing_locale_none')"
+                        :hint="t('backend.accounting.contract_templates.governing_locale_hint')"
+                        :error="errors.governingLocale"
+                        v-on:update:model-value="governingLocale = $event === '' ? null : $event"
+                    />
+                    <p v-else class="text-sm text-secondary">
+                        {{
+                            governingLabel
+                                ?? t("backend.accounting.contract_templates.governing_locale_none")
+                        }}
+                    </p>
+                    <!-- Said here, next to the field, rather than only by a
+                         disabled publish button on the other side of the page. -->
+                    <p v-if="needsGoverningLocale" class="text-xs text-amber-500">
+                        {{ t("backend.accounting.contract_templates.governing_locale_needed") }}
+                    </p>
+                </div>
+
                 <ContractVariablePanel :groups="variableGroups" />
 
                 <div

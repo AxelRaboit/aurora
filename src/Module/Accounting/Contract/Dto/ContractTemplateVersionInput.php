@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Accounting\Contract\Dto;
 
+use Aurora\Core\Locale\Enum\LocaleEnum;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class ContractTemplateVersionInput implements ContractTemplateVersionInputInterface
@@ -17,10 +18,21 @@ class ContractTemplateVersionInput implements ContractTemplateVersionInputInterf
         // layer's business, not this DTO's.
         #[Assert\Count(min: 1, minMessage: 'backend.accounting.contract_templates.errors.translations_required')]
         public readonly array $translations = [],
+        // Checked against the application's languages here, and against this
+        // version's own translations in the manager: a language nobody wrote
+        // cannot be the one that prevails, and only the manager knows which
+        // ones the draft is about to keep.
+        #[Assert\Choice(callback: [LocaleEnum::class, 'values'], message: 'backend.accounting.contract_templates.errors.governing_locale_unknown')]
+        public readonly ?string $governingLocale = null,
     ) {}
 
     public function getTranslations(): array
     {
         return $this->translations;
+    }
+
+    public function getGoverningLocale(): ?string
+    {
+        return $this->governingLocale;
     }
 }

@@ -57,6 +57,7 @@ class ContractTemplateSerializer implements ContractTemplateSerializerInterface
             'number' => $version->getNumber(),
             'isPublished' => $version->isPublished(),
             'publishedAt' => $version->getPublishedAt()?->format(DATE_ATOM),
+            'governingLocale' => $version->getGoverningLocale(),
             'translations' => $translations,
         ];
     }

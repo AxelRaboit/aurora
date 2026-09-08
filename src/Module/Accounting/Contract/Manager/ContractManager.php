@@ -212,6 +212,14 @@ class ContractManager implements ContractManagerInterface
             $html .= $part['html'];
         }
 
+        // Appended after the last part, which is where a governing-language
+        // clause belongs on paper too: after everything it arbitrates.
+        $governingLocale = $this->governingLocaleOf($contract);
+
+        if (null !== $governingLocale) {
+            $html .= $this->governingLanguageClause($contract->getLocale(), $governingLocale);
+        }
+
         $unknown = $this->renderer->unknownTokens($html, $values, $deferred);
 
         if ([] !== $unknown) {
@@ -224,6 +232,7 @@ class ContractManager implements ContractManagerInterface
         $snapshot = [
             'canonicalVersion' => ContractCanonicalizer::VERSION,
             'locale' => $contract->getLocale(),
+            'governingLocale' => $governingLocale,
             'reference' => $reference,
             'customerId' => $contract->getCustomer()->getId(),
             'values' => $values,
@@ -249,6 +258,67 @@ class ContractManager implements ContractManagerInterface
             'bodyVersion' => $body->getNumber(),
             'annexVersion' => $annex?->getNumber(),
         ]);
+    }
+
+    /**
+     * The language that prevails over the whole document.
+     *
+     * Read from the parts rather than stored on the contract, because it is a
+     * property of the wording: a trame written in three languages answered the
+     * question when it was published, and a contract built from it inherits the
+     * answer.
+     *
+     * Parts that name none are simply single-language wordings and have nothing
+     * to say here. Parts that name two different ones are a contradiction
+     * nobody can resolve at freeze time, and sealing it would produce a
+     * document whose body and annex each claim authority. Refused, named.
+     *
+     * @throws FieldException when the parts disagree
+     */
+    protected function governingLocaleOf(ContractInterface $contract): ?string
+    {
+        $declared = [];
+
+        foreach ($this->partsOf($contract) as $version) {
+            $locale = $version->getGoverningLocale();
+
+            if (null !== $locale) {
+                $declared[$locale] = true;
+            }
+        }
+
+        if (1 < count($declared)) {
+            throw new FieldException('annexVersion', $this->translator->trans('backend.accounting.contracts.errors.governing_locale_conflict', ['{locales}' => implode(', ', array_keys($declared))]));
+        }
+
+        return array_key_first($declared);
+    }
+
+    /**
+     * The clause, written in the language of the document that carries it.
+     *
+     * Two sentences rather than one when the reader is holding a translation:
+     * somebody signing the Spanish version of a French contract is entitled to
+     * be told, in Spanish, that the French text is the one a judge will read.
+     */
+    protected function governingLanguageClause(string $documentLocale, string $governingLocale): string
+    {
+        $language = $this->translator->trans('accounting.contract.language.'.$governingLocale, [], null, $documentLocale);
+
+        $paragraphs = [
+            $this->translator->trans('accounting.contract.governing_language.body', ['{language}' => $language], null, $documentLocale),
+        ];
+
+        if ($documentLocale !== $governingLocale) {
+            $paragraphs[] = $this->translator->trans('accounting.contract.governing_language.translation_notice', [
+                '{language}' => $this->translator->trans('accounting.contract.language.'.$documentLocale, [], null, $documentLocale),
+            ], null, $documentLocale);
+        }
+
+        return $this->renderer->governingLanguageSection(
+            $this->translator->trans('accounting.contract.governing_language.heading', [], null, $documentLocale),
+            $paragraphs,
+        );
     }
 
     /**

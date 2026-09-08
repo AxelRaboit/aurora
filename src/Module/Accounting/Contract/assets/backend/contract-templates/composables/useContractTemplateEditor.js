@@ -53,6 +53,15 @@ export function useContractTemplateEditor(props) {
         ),
     );
 
+    /**
+     * Which language prevails between the translations.
+     *
+     * Null while the version has one language, because there is nothing to
+     * arbitrate. It becomes required at publication as soon as a second
+     * language carries a title, and the button says so before the server does.
+     */
+    const governingLocale = ref(props.version.governingLocale ?? null);
+
     const editors = new Set();
     provide("registerEditor", (handlers) => {
         editors.add(handlers);
@@ -92,7 +101,18 @@ export function useContractTemplateEditor(props) {
             };
         }
 
-        return { translations };
+        return {
+            translations,
+            // Cleared rather than sent when its language stopped being
+            // written: dropping the Spanish document and leaving the clause
+            // pointing at it is a save the server would refuse, and the person
+            // who dropped it did not mean to answer this question again.
+            governingLocale:
+                governingLocale.value !== null &&
+                Object.hasOwn(translations, governingLocale.value)
+                    ? governingLocale.value
+                    : null,
+        };
     }
 
     const { request } = useRequest();
@@ -109,8 +129,24 @@ export function useContractTemplateEditor(props) {
             .map(([locale]) => locale),
     );
 
+    /** Only a language somebody wrote can be the one that prevails. */
+    const governingOptions = computed(() =>
+        locales.value.filter((locale) =>
+            writtenLocales.value.includes(locale.code),
+        ),
+    );
+
+    const needsGoverningLocale = computed(
+        () =>
+            writtenLocales.value.length > 1 &&
+            !writtenLocales.value.includes(governingLocale.value),
+    );
+
     const canPublish = computed(
-        () => !isPublished.value && writtenLocales.value.length > 0,
+        () =>
+            !isPublished.value &&
+            writtenLocales.value.length > 0 &&
+            !needsGoverningLocale.value,
     );
 
     async function save() {
@@ -203,6 +239,9 @@ export function useContractTemplateEditor(props) {
         wording,
         switchLocale,
         writtenLocales,
+        governingLocale,
+        governingOptions,
+        needsGoverningLocale,
         canPublish,
         saving,
         publishing,

@@ -78,6 +78,36 @@ final readonly class ContractDocumentRenderer
     }
 
     /**
+     * The governing-language clause, as a section of the document itself.
+     *
+     * Inside the rendered HTML rather than around it, and that is the point:
+     * the clause is part of what the hash covers and part of what the signer
+     * reads. Printed by the page template instead, it would be chrome - right
+     * today, missing from the PDF somebody keeps for ten years, and outside the
+     * seal, which is the one place a clause about authority must not be.
+     *
+     * Its text comes from the catalogues rather than from the trame, so a
+     * template author cannot forget it and cannot get it wrong. Escaped all the
+     * same: a translation is still text arriving from a file.
+     *
+     * @param list<string> $paragraphs
+     */
+    public function governingLanguageSection(string $heading, array $paragraphs): string
+    {
+        $body = '';
+
+        foreach ($paragraphs as $paragraph) {
+            $body .= sprintf('<p>%s</p>', $this->escape($paragraph));
+        }
+
+        return sprintf(
+            '<section class="contract-language"><h2>%s</h2>%s</section>',
+            $this->escape($heading),
+            $body,
+        );
+    }
+
+    /**
      * @param array<string, mixed>  $block
      * @param array<string, string> $values
      */

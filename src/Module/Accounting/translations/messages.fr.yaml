@@ -159,6 +159,7 @@ backend:
                 contract_closed: 'Ce contrat est clos et ne peut plus être signé.'
                 role_already_signed: 'Cette partie a déjà signé.'
                 customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
+                governing_locale_conflict: 'Le corps et l''annexe ne désignent pas la même langue faisant foi ({locales}). Un document ne peut pas avoir deux textes de référence.'
         contract_templates:
             title: Trames de contrat
             kind:
@@ -171,6 +172,9 @@ backend:
                 draft_already_open: 'Un brouillon est déjà ouvert sur cette trame (version {number}). Terminez-le ou abandonnez-le avant d''en ouvrir un autre.'
                 nothing_to_publish: Cette version n'a aucun texte à publier.
                 already_published: 'Cette version est publiée : son texte ne peut plus être modifié. Ouvrez une nouvelle version.'
+                governing_locale_unknown: Cette langue n'est pas gérée par l'application.
+                governing_locale_not_written: 'La langue faisant foi ({locale}) n''est pas rédigée dans cette version.'
+                governing_locale_required: 'Cette version est rédigée en plusieurs langues : indiquez laquelle fait foi avant de publier.'
             name: Nom de la trame
             name_placeholder: Contrat de prestation de services, formule mensuelle
             kind_label: Type
@@ -202,6 +206,10 @@ backend:
             version_label: 'Version {number}'
             other_versions: Autres versions
             locale_written: Cette langue est rédigée
+            governing_locale: Langue faisant foi
+            governing_locale_none: Une seule langue
+            governing_locale_hint: 'En cas de divergence entre les traductions, c''est cette version qui fait foi. La clause est écrite dans le document.'
+            governing_locale_needed: 'Plusieurs langues sont rédigées : choisissez celle qui fait foi pour pouvoir publier.'
             document_title: Titre du document
             document_title_placeholder: CONTRAT DE PRESTATION DE SERVICES
             document_title_hint: Ce qui s'imprime en tête du contrat, dans cette langue.
@@ -305,6 +313,17 @@ backend:
                 siret_invalid: 'Ce SIRET est invalide : quatorze chiffres et une clé de contrôle correcte sont attendus.'
                 siret_taken: 'Ce SIRET est déjà enregistré pour {name}.'
 accounting:
+    contract:
+        # Écrit dans le document lui-même, donc scellé avec lui : ces phrases
+        # partent dans le HTML rendu, pas dans l'habillage de la page.
+        language:
+            fr: française
+            en: anglaise
+            es: espagnole
+        governing_language:
+            heading: Langue du contrat
+            body: 'Le présent contrat est établi en plusieurs langues. En cas de divergence d''interprétation entre les versions, seule la version {language} fait foi.'
+            translation_notice: 'La version {language} que vous lisez est une traduction fournie pour votre commodité.'
     public:
         contract:
             title: Contrat
