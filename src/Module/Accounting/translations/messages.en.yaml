@@ -106,6 +106,7 @@ backend:
             col_sealed_at: Sealed on
             col_link: Link
             read_document: Read the document
+            download_pdf: 'Download the signed PDF'
             countersign: 'Countersign'
             countersign_intro: 'Your countersignature concludes the contract. The customer is notified by email.'
             countersigned: 'Contract countersigned and concluded.'
@@ -365,6 +366,21 @@ accounting:
         unavailable:
             title: This link is no longer valid
             message: The address you opened does not exist, has expired, or has been revoked. If you were expecting a contract, ask your contact for a new link.
+    pdf:
+        footer: 'Contract {reference} - electronically signed document'
+        signed_at: 'Signed at {place}, on {date}'
+        role:
+            customer: 'The Customer'
+            provider: 'The Provider'
+        seal:
+            title: 'Electronic signature evidence'
+            reference: 'Reference'
+            sealed_at: 'Document sealed on'
+            hash: 'Document hash'
+            observed: 'Signed on {at}, from {ip}'
+            code_verified: 'Confirmation code verified on {at}, sent to {email}'
+            authenticated: 'Signed from an authenticated back office account'
+            notice: 'This hash identifies the signed wording. Any change to the document would produce a different one.'
     email:
         customer_signed:
             subject: 'Contract {reference} signed by the customer'

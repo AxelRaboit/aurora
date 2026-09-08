@@ -106,6 +106,7 @@ backend:
             col_sealed_at: Scellé le
             col_link: Lien
             read_document: Lire le document
+            download_pdf: 'Télécharger le PDF signé'
             countersign: 'Contresigner'
             countersign_intro: 'Votre contresignature conclut le contrat. Le client en sera informé par email.'
             countersigned: 'Contrat contresigné et conclu.'
@@ -365,6 +366,21 @@ accounting:
         unavailable:
             title: Ce lien n'est plus valide
             message: L'adresse que vous avez ouverte n'existe pas, a expiré, ou a été révoquée. Si vous attendiez un contrat, demandez un nouveau lien à votre interlocuteur.
+    pdf:
+        footer: 'Contrat {reference} - document signé électroniquement'
+        signed_at: 'Fait à {place}, le {date}'
+        role:
+            customer: 'Le Client'
+            provider: 'Le Prestataire'
+        seal:
+            title: 'Preuve de signature électronique'
+            reference: 'Référence'
+            sealed_at: 'Document scellé le'
+            hash: 'Empreinte du document'
+            observed: 'Signé le {at}, depuis {ip}'
+            code_verified: 'Code de confirmation vérifié le {at}, envoyé à {email}'
+            authenticated: 'Signé depuis un compte authentifié du back-office'
+            notice: 'Cette empreinte identifie le texte signé. Toute modification du document produirait une empreinte différente.'
     email:
         customer_signed:
             subject: 'Contrat {reference} signé par le client'

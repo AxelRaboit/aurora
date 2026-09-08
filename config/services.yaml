@@ -147,6 +147,10 @@ services:
         arguments:
             $providers: !tagged_iterator aurora.configuration_tab_provider
 
+    Aurora\Module\Accounting\Contract\Service\ContractPdfGenerator:
+        arguments:
+            $uploadDir: '%app.upload_dir%'
+
     Aurora\Core\Mail\Service\MailService:
         arguments:
             $mailerFrom: '%app.mailer_from%'

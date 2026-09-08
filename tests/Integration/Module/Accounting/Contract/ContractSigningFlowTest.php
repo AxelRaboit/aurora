@@ -72,6 +72,14 @@ final class ContractSigningFlowTest extends IntegrationTestCase
             ->findOneBy(['email' => 'dev@aurora.app', 'type' => 'backend']);
         $this->login();
 
+        // The signing endpoints are rate limited by IP, and every test in this
+        // class comes from the same one. The limiter state lives in a shared
+        // cache pool that outlives a test, so a class exercising the flow
+        // several times trips a limit that is doing exactly its job. Cleared
+        // here rather than raised in config: the limit is deliberate, and this
+        // class is not what tests it.
+        $container->get('cache.rate_limiter')->clear();
+
         $this->entityManager = $container->get(EntityManagerInterface::class);
         $this->links = $container->get(ContractAccessLinkRepository::class);
         $this->signatures = $container->get(ContractSignatureRepository::class);

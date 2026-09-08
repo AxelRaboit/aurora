@@ -9,6 +9,7 @@ use Aurora\Core\Validation\Exception\FieldException;
 use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Service\ContractPdfGenerator;
 use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputInterface;
 use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignature;
 use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureInterface;
@@ -54,6 +55,7 @@ class ContractSignatureManager implements ContractSignatureManagerInterface
         protected readonly ContractSignatureRepository $signatures,
         protected readonly ContractSignatureChallengeManagerInterface $challenges,
         protected readonly MailService $mail,
+        protected readonly ContractPdfGenerator $pdf,
         protected readonly TranslatorInterface $translator,
     ) {}
 
@@ -117,7 +119,19 @@ class ContractSignatureManager implements ContractSignatureManagerInterface
         $contract->setStatus(ContractStatusEnum::Countersigned);
         $this->entityManager->flush();
 
-        $this->auditLogger->log('accounting', 'contract.countersigned', 'Contract', $contract->getId(), $this->auditPayload($signature));
+        // The PDF is written here and nowhere else: the countersignature is
+        // what concludes, so it is the first and only moment the document is
+        // complete. Generating it earlier would produce a file missing a
+        // signature; generating it later would mean regenerating it.
+        $pdf = $this->pdf->generate($contract, $this->signatures->findForContract($contract));
+        $contract->attachPdf($pdf['path'], $pdf['hash'], new DateTimeImmutable());
+        $this->entityManager->flush();
+
+        $this->auditLogger->log('accounting', 'contract.countersigned', 'Contract', $contract->getId(), [
+            ...$this->auditPayload($signature),
+            'pdfPath' => $pdf['path'],
+            'pdfHash' => $pdf['hash'],
+        ]);
 
         $this->notifyBothParties($signature);
 
@@ -238,6 +252,15 @@ class ContractSignatureManager implements ContractSignatureManagerInterface
     {
         $contract = $signature->getContract();
 
+        // The signed copy, attached. This is the mail the customer keeps, and a
+        // link they would have to be logged in to follow is not a copy.
+        $attachments = $contract->hasPdf()
+            ? [[
+                'path' => $this->pdf->absolutePathFor($contract),
+                'name' => sprintf('%s.pdf', (string) $contract->getReference()),
+            ]]
+            : [];
+
         $this->mail->send(
             to: $contract->getCustomer()->getContractualEmail(),
             subjectKey: 'accounting.email.concluded.subject',
@@ -245,6 +268,7 @@ class ContractSignatureManager implements ContractSignatureManagerInterface
             context: ['contract' => $contract],
             locale: $contract->getLocale(),
             subjectParams: ['{reference}' => (string) $contract->getReference()],
+            attachments: $attachments,
         );
 
         $this->mail->sendToAdmin(

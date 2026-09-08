@@ -7,6 +7,7 @@ namespace Aurora\Module\Accounting\Contract\Entity;
 use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Core\Timestampable\TimestampableInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Exception\ContractPdfAlreadyGeneratedException;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use DateTimeImmutable;
@@ -88,6 +89,21 @@ interface ContractInterface extends TimestampableInterface
         string $hashAlgo,
         int $canonicalVersion,
     ): static;
+
+    public function getPdfPath(): ?string;
+
+    public function getPdfHash(): ?string;
+
+    public function getPdfGeneratedAt(): ?DateTimeImmutable;
+
+    public function hasPdf(): bool;
+
+    /**
+     * Records the generated file, once.
+     *
+     * @throws ContractPdfAlreadyGeneratedException when one is already attached
+     */
+    public function attachPdf(string $path, string $hash, DateTimeImmutable $at): static;
 
     /** @throws FrozenContractIsImmutableException */
     public function assertEditable(): void;

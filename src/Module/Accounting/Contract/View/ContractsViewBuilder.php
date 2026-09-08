@@ -46,6 +46,7 @@ final readonly class ContractsViewBuilder
             'sendPath' => $this->urlGenerator->generate('backend_accounting_contracts_send', ['id' => '__id__']),
             'revokeLinkPath' => $this->urlGenerator->generate('backend_accounting_contracts_revoke_link', ['id' => '__id__']),
             'countersignPath' => $this->urlGenerator->generate('backend_accounting_contracts_countersign', ['id' => '__id__']),
+            'pdfPath' => $this->urlGenerator->generate('backend_accounting_contracts_pdf', ['id' => '__id__']),
             'showPath' => $this->urlGenerator->generate('backend_accounting_contracts_show', ['id' => '__id__']),
         ];
     }
@@ -60,6 +61,7 @@ final readonly class ContractsViewBuilder
             'sendPath' => $this->urlGenerator->generate('backend_accounting_contracts_send', ['id' => $contract->getId()]),
             'revokeLinkPath' => $this->urlGenerator->generate('backend_accounting_contracts_revoke_link', ['id' => $contract->getId()]),
             'countersignPath' => $this->urlGenerator->generate('backend_accounting_contracts_countersign', ['id' => $contract->getId()]),
+            'pdfPath' => $this->urlGenerator->generate('backend_accounting_contracts_pdf', ['id' => $contract->getId()]),
         ];
     }
 

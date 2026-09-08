@@ -22,6 +22,7 @@ import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import {
     ArrowLeft,
     Check,
+    FileDown,
     Lock,
     PenLine,
     ShieldAlert,
@@ -36,6 +37,7 @@ const props = defineProps({
     indexPath: { type: String, required: true },
     freezePath: { type: String, required: true },
     countersignPath: { type: String, required: true },
+    pdfPath: { type: String, required: true },
 });
 
 const { can } = usePrivileges();
@@ -177,6 +179,17 @@ const documentHtml = computed(() =>
                 <AppButton variant="ghost" size="md" :href="indexPath">
                     <ArrowLeft class="w-3.5 h-3.5" :stroke-width="2" />
                     {{ t("shared.common.back") }}
+                </AppButton>
+                <!-- Only once there is a file. The row says whether one
+                     exists, so the button never leads to a 404. -->
+                <AppButton
+                    v-if="contract.hasPdf"
+                    variant="secondary"
+                    size="md"
+                    :href="pdfPath"
+                >
+                    <FileDown class="w-3.5 h-3.5" :stroke-width="2" />
+                    {{ t("backend.accounting.contracts.download_pdf") }}
                 </AppButton>
                 <AppButton
                     v-if="canCountersign"

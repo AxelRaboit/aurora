@@ -7,6 +7,7 @@ namespace Aurora\Module\Accounting\Contract\Controller\Backend;
 use Aurora\Core\Enum\HttpMethodEnum;
 use Aurora\Core\Http\JsonRequestTrait;
 use Aurora\Core\Http\JsonResponseTrait;
+use Aurora\Core\Storage\BinaryFileServer;
 use Aurora\Core\Validation\Exception\FieldException;
 use Aurora\Core\Validation\Service\PayloadValidator;
 use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
@@ -18,10 +19,12 @@ use Aurora\Module\Accounting\Contract\Entity\Contract;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Contract\Manager\ContractManagerInterface;
 use Aurora\Module\Accounting\Contract\Serializer\ContractSerializerInterface;
+use Aurora\Module\Accounting\Contract\Service\ContractPdfGenerator;
 use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManagerInterface;
 use Aurora\Module\Accounting\Contract\View\ContractsViewBuilder;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,6 +50,8 @@ class ContractsController extends AbstractController
         protected readonly ContractAccessLinkRepository $accessLinkRepository,
         protected readonly ContractSignatureManagerInterface $signatures,
         protected readonly ContractSignatureInputFactoryInterface $signatureInputFactory,
+        protected readonly ContractPdfGenerator $pdfGenerator,
+        protected readonly BinaryFileServer $fileServer,
         protected readonly TranslatorInterface $translator,
     ) {}
 
@@ -180,6 +185,37 @@ class ContractsController extends AbstractController
             'contract' => $this->serializer->serialize($contract),
             'contracts' => $this->viewBuilder->contracts(),
         ]);
+    }
+
+    /**
+     * The signed PDF.
+     *
+     * Its own route under `/backend`, never the catch-all `/uploads/{path}`:
+     * that one serves anything under the upload directory to anybody who is
+     * logged in, and a signed contract is not that kind of file. This one
+     * checks the contract permission first and hands the bytes to the file
+     * server, which refuses any path that escapes the upload root.
+     */
+    #[Route('/{id}/pdf', name: '_pdf', requirements: ['id' => '\d+'], methods: [HttpMethodEnum::Get->value])]
+    #[IsGranted('accounting.contracts.view')]
+    public function pdf(Contract $contract): Response
+    {
+        if (!$contract->hasPdf()) {
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            return $this->fileServer->serve(
+                $this->pdfGenerator->absolutePathFor($contract),
+                $this->pdfGenerator->root(),
+                downloadName: sprintf('%s.pdf', (string) $contract->getReference()),
+            );
+        } catch (RuntimeException) {
+            // A row that names a file the disk does not have. A 404 rather than
+            // a 500: the contract exists, its copy does not, and the page that
+            // linked here is what needs to say so.
+            throw $this->createNotFoundException();
+        }
     }
 
     /**

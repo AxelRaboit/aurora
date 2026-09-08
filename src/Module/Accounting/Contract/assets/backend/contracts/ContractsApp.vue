@@ -39,6 +39,8 @@ const props = defineProps({
     freezePath: { type: String, required: true },
     sendPath: { type: String, required: true },
     revokeLinkPath: { type: String, required: true },
+    countersignPath: { type: String, required: true },
+    pdfPath: { type: String, required: true },
     showPath: { type: String, required: true },
 });
 

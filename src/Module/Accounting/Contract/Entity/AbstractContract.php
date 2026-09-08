@@ -7,6 +7,7 @@ namespace Aurora\Module\Accounting\Contract\Entity;
 use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Core\Timestampable\TimestampableTrait;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Exception\ContractPdfAlreadyGeneratedException;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use DateTimeImmutable;
@@ -130,6 +131,28 @@ abstract class AbstractContract implements ContractInterface
 
     #[ORM\Column(length: 16, nullable: true)]
     protected ?string $hashAlgo = null;
+
+    /**
+     * Where the signed PDF lives, relative to the upload directory.
+     *
+     * Null until the countersignature. Its presence is what says a PDF exists,
+     * and what makes a second generation refuse rather than overwrite.
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    protected ?string $pdfPath = null;
+
+    /**
+     * SHA-256 of the file itself.
+     *
+     * A different thing from `contentHash`, which covers the document. This one
+     * covers the bytes on disk, so a PDF replaced on the filesystem is
+     * detectable even though the contract it belongs to still verifies.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    protected ?string $pdfHash = null;
+
+    #[ORM\Column(nullable: true)]
+    protected ?DateTimeImmutable $pdfGeneratedAt = null;
 
     /**
      * Which canonicalisation produced the hash.
@@ -353,6 +376,46 @@ abstract class AbstractContract implements ContractInterface
         // Sealed, not sent: the link has not gone out yet, and claiming it
         // had would be a statement nobody could verify.
         $this->status = ContractStatusEnum::Sealed;
+
+        return $this;
+    }
+
+    public function getPdfPath(): ?string
+    {
+        return $this->pdfPath;
+    }
+
+    public function getPdfHash(): ?string
+    {
+        return $this->pdfHash;
+    }
+
+    public function getPdfGeneratedAt(): ?DateTimeImmutable
+    {
+        return $this->pdfGeneratedAt;
+    }
+
+    public function hasPdf(): bool
+    {
+        return null !== $this->pdfPath;
+    }
+
+    /**
+     * Records the file, once.
+     *
+     * Not guarded by `assertEditable()` - the contract is frozen by the time
+     * this runs, which is the point - but guarded against itself: a second call
+     * would mean two files claim to be the same contract.
+     */
+    public function attachPdf(string $path, string $hash, DateTimeImmutable $at): static
+    {
+        if (null !== $this->pdfPath) {
+            throw ContractPdfAlreadyGeneratedException::forContract($this->reference, $this->pdfPath);
+        }
+
+        $this->pdfPath = $path;
+        $this->pdfHash = $hash;
+        $this->pdfGeneratedAt = $at;
 
         return $this;
     }

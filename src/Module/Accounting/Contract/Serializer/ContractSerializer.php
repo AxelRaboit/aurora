@@ -44,6 +44,8 @@ class ContractSerializer implements ContractSerializerInterface
             'body' => $this->part($contract->getBodyVersion()),
             'annex' => $this->part($contract->getAnnexVersion()),
             'link' => $this->link($contract),
+            'hasPdf' => $contract->hasPdf(),
+            'pdfHash' => $contract->getPdfHash(),
         ];
     }
 
