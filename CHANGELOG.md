@@ -9,6 +9,13 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ### Corrigé
 
+#### Un bouton aligné à droite sortait à gauche
+Le gabarit testait l'alignement contre le mot `end`, que rien n'écrit : le
+vocabulaire du produit est `center`, `left` et `right`, celui-là même que la
+zone Image lit correctement juste à côté. Un bouton aligné à droite retombait
+donc sur la valeur par défaut, et le seul alignement qui fonctionnait était
+celui qu'on n'a pas à choisir.
+
 #### L'image de partage pesait le poids du fichier d'origine
 La balise `og:image` pointait sur le fichier tel qu'il a été envoyé. Sur une
 publication dont l'image à la une est un PNG de 1744 × 2700, cela fait 2,8 Mo

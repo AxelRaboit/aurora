@@ -139,6 +139,37 @@ final class GridSurfaceRenderTest extends IntegrationTestCase
         self::assertStringContainsString('Une légende.', $html);
     }
 
+    /**
+     * The three alignments a button offers, each landing where it says.
+     *
+     * The template used to test for `end`, a word the normaliser never
+     * writes: it keeps `center`, `left` and `right`. So a button aligned
+     * right came out on the left, and the only setting that worked was the
+     * one nobody had to choose.
+     */
+    public function testAButtonLandsOnTheSideItAsksFor(): void
+    {
+        self::assertStringContainsString('justify-center', $this->render($this->buttonZone('center')));
+        self::assertStringContainsString('justify-start', $this->render($this->buttonZone('left')));
+        self::assertStringContainsString('justify-end', $this->render($this->buttonZone('right')));
+    }
+
+    private function buttonZone(string $align): array
+    {
+        $grid = $this->gridViewBuilder->build(
+            [
+                'enabled' => true,
+                'zones' => [['id' => 'b1', 'type' => 'button', 'align' => $align]],
+            ],
+            ['zones' => ['b1' => ['label' => 'En savoir plus', 'url' => 'https://example.test']]],
+            'fr',
+        );
+
+        self::assertNotNull($grid);
+
+        return $grid['zones'][0];
+    }
+
     /** @param array<string, mixed> $overrides */
     private function pictureZone(array $overrides = [], string $caption = ''): array
     {
