@@ -5,6 +5,8 @@ backend:
     nav:
         sections:
             accounting: Comptabilité
+        accounting_contract_templates: Trames de contrat
+        accounting_contract_templates_description: Les documents types dont partent les contrats, et leurs versions.
         accounting_customers: Clients
         accounting_customers_description: Les sociétés avec qui vous contractez, et leur bloc d'identité légale.
     audit:
@@ -33,6 +35,11 @@ backend:
                     create: Créer un client
                     edit: Modifier un client
                     delete: Supprimer un client
+                contract_templates:
+                    view: Consulter les trames de contrat
+                    create: Créer une trame de contrat
+                    edit: Modifier une trame de contrat
+                    delete: Supprimer une trame de contrat
     accounting:
         contract_templates:
             title: Trames de contrat
@@ -45,6 +52,70 @@ backend:
                 translations_required: Une version doit contenir au moins une langue.
                 draft_already_open: 'Un brouillon est déjà ouvert sur cette trame (version {number}). Terminez-le ou abandonnez-le avant d''en ouvrir un autre.'
                 nothing_to_publish: Cette version n'a aucun texte à publier.
+                already_published: 'Cette version est publiée : son texte ne peut plus être modifié. Ouvrez une nouvelle version.'
+            name: Nom de la trame
+            name_placeholder: Contrat de prestation de services, formule mensuelle
+            kind_label: Type
+            kind_hint: Un corps se signe seul. Une annexe complète un corps.
+            add: Ajouter une trame
+            create: Nouvelle trame
+            edit: 'Modifier {name}'
+            updated: Trame mise à jour.
+            archived: Trame archivée.
+            restored: Trame réactivée.
+            deleted: Trame supprimée.
+            saved: Brouillon enregistré.
+            published: Version publiée.
+            empty: Aucune trame de contrat pour le moment.
+            search_placeholder: Rechercher une trame…
+            delete_confirm: 'Supprimer {name} ?'
+            delete_warning: Les contrats déjà signés depuis cette trame gardent leur propre copie du texte et ne sont pas touchés. Ce qui disparaît est le lien vers la trame d'origine.
+            in_force: En vigueur
+            never_published: Jamais publiée
+            no_draft: Aucun brouillon
+            open_draft: Ouvrir un brouillon
+            archive: Archiver
+            restore: Réactiver
+            show_archived: 'Afficher les archivées ({count})'
+            hide_archived: Masquer les archivées
+            state_published: Publiée
+            state_draft: Brouillon
+            state_archived: Archivée
+            version_label: 'Version {number}'
+            other_versions: Autres versions
+            locale_written: Cette langue est rédigée
+            document_title: Titre du document
+            document_title_placeholder: CONTRAT DE PRESTATION DE SERVICES
+            document_title_hint: Ce qui s'imprime en tête du contrat, dans cette langue.
+            content_placeholder: Rédigez les articles du contrat…
+            publish: Publier
+            publish_confirm: 'Publier la version {number} ?'
+            publish_warning: 'Une version publiée devient définitive : son texte ne pourra plus être modifié. Pour le changer ensuite, il faudra ouvrir une nouvelle version.'
+            published_notice: 'La version {number} est publiée. Son texte est définitif et ne peut plus être modifié.'
+            discard: Abandonner
+            discard_confirm: 'Abandonner le brouillon de la version {number} ? Son texte sera perdu.'
+            variables:
+                title: Variables disponibles
+                hint: Copiez un jeton et collez-le dans le texte. Il sera remplacé à la construction du contrat.
+                customer: Le client
+                contract: Le contrat
+                customer_legal_name: Raison sociale
+                customer_legal_form: Forme juridique
+                customer_share_capital: Capital social
+                customer_registered_office: Siège social
+                customer_siret: SIRET
+                customer_trade_register: RCS
+                customer_vat_number: TVA intracommunautaire
+                customer_activity_sector: Secteur d'activité
+                customer_representative_full_name: Représentant
+                customer_representative_role: Qualité du représentant
+                customer_contractual_email: Email contractuel
+                customer_phone: Téléphone
+                contract_reference: Référence du contrat
+                contract_amount: Montant
+                contract_effective_date: Date de prise d'effet
+                contract_signature_city: Ville de signature
+                contract_signature_date: Date de signature
         customers:
             title: Clients
             add: Ajouter un client

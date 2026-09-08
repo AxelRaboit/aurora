@@ -25,4 +25,9 @@ final readonly class AccountingContext
     {
         return $this->moduleAccessChecker->isEnabled(ModuleParameterEnum::AccountingCustomers);
     }
+
+    public function areContractsEnabled(): bool
+    {
+        return $this->moduleAccessChecker->isEnabled(ModuleParameterEnum::AccountingContracts);
+    }
 }

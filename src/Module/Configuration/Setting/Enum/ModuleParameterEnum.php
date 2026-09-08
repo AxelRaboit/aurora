@@ -56,6 +56,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
 
     // Sub-modules - Accounting
     case AccountingCustomers = 'modules_accounting_customers';
+    case AccountingContracts = 'modules_accounting_contracts';
 
     public function getKey(): string
     {
@@ -95,6 +96,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::NotesMarkdown => 'backend.nav.notes_markdown',
             self::AccountingBackend => 'backend.modules.accounting_backend',
             self::AccountingCustomers => 'backend.nav.accounting_customers',
+            self::AccountingContracts => 'backend.nav.accounting_contract_templates',
         };
     }
 
@@ -131,6 +133,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::NotesMarkdown => 'backend.nav.notes_markdown_description',
             self::AccountingBackend => 'backend.modules.accounting_backend_description',
             self::AccountingCustomers => 'backend.nav.accounting_customers_description',
+            self::AccountingContracts => 'backend.nav.accounting_contract_templates_description',
         };
     }
 
@@ -162,7 +165,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::EditorialFrontend, self::EditorialPosts, self::EditorialPostTypes, self::EditorialTaxonomies, self::EditorialMenus, self::EditorialSeo, self::EditorialComments, self::EditorialForms => self::EditorialBackend,
             self::GedDocuments, self::GedCategories, self::GedTags, self::GedFolders, self::GedFrontend => self::GedBackend,
             self::NotesMarkdown => self::NotesBackend,
-            self::AccountingCustomers => self::AccountingBackend,
+            self::AccountingCustomers, self::AccountingContracts => self::AccountingBackend,
             default => null,
         };
     }
@@ -211,6 +214,10 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::NotesMarkdown => self::NotesBackend->value,
             // Accounting sub-modules
             self::AccountingCustomers => self::AccountingBackend->value,
+            // A contract is signed with somebody, and that somebody is a
+            // customer. Templates without the customer screen would build
+            // documents with nobody to address them to.
+            self::AccountingContracts => self::AccountingCustomers->value,
             default => null,
         };
     }

@@ -5,6 +5,8 @@ backend:
     nav:
         sections:
             accounting: Accounting
+        accounting_contract_templates: Contract templates
+        accounting_contract_templates_description: The model documents contracts are built from, and their versions.
         accounting_customers: Customers
         accounting_customers_description: The companies you contract with, and their legal identity block.
     audit:
@@ -33,6 +35,11 @@ backend:
                     create: Create a customer
                     edit: Edit a customer
                     delete: Delete a customer
+                contract_templates:
+                    view: View contract templates
+                    create: Create a contract template
+                    edit: Edit a contract template
+                    delete: Delete a contract template
     accounting:
         contract_templates:
             title: Contract templates
@@ -45,6 +52,70 @@ backend:
                 translations_required: A version must carry at least one language.
                 draft_already_open: 'A draft is already open on this template (version {number}). Finish or discard it before opening another.'
                 nothing_to_publish: This version has no wording to publish.
+                already_published: 'This version is published: its wording can no longer be changed. Open a new version.'
+            name: Template name
+            name_placeholder: Service agreement, monthly plan
+            kind_label: Type
+            kind_hint: A body is signed on its own. An annex completes a body.
+            add: Add a template
+            create: New template
+            edit: 'Edit {name}'
+            updated: Template updated.
+            archived: Template archived.
+            restored: Template restored.
+            deleted: Template deleted.
+            saved: Draft saved.
+            published: Version published.
+            empty: No contract templates yet.
+            search_placeholder: Search a template…
+            delete_confirm: 'Delete {name}?'
+            delete_warning: Contracts already signed from this template keep their own copy of the wording and are untouched. What disappears is the trail back to the template.
+            in_force: In force
+            never_published: Never published
+            no_draft: No draft
+            open_draft: Open a draft
+            archive: Archive
+            restore: Restore
+            show_archived: 'Show archived ({count})'
+            hide_archived: Hide archived
+            state_published: Published
+            state_draft: Draft
+            state_archived: Archived
+            version_label: 'Version {number}'
+            other_versions: Other versions
+            locale_written: This language is written
+            document_title: Document title
+            document_title_placeholder: SERVICE AGREEMENT
+            document_title_hint: What prints at the top of the contract, in this language.
+            content_placeholder: Write the articles of the contract…
+            publish: Publish
+            publish_confirm: 'Publish version {number}?'
+            publish_warning: 'A published version is final: its wording can no longer be changed. To change it afterwards, open a new version.'
+            published_notice: 'Version {number} is published. Its wording is final and can no longer be changed.'
+            discard: Discard
+            discard_confirm: 'Discard the draft of version {number}? Its wording will be lost.'
+            variables:
+                title: Available variables
+                hint: Copy a token and paste it into the wording. It is replaced when the contract is built.
+                customer: The customer
+                contract: The contract
+                customer_legal_name: Company name
+                customer_legal_form: Legal form
+                customer_share_capital: Share capital
+                customer_registered_office: Registered office
+                customer_siret: Registration number
+                customer_trade_register: Trade register
+                customer_vat_number: VAT number
+                customer_activity_sector: Line of business
+                customer_representative_full_name: Representative
+                customer_representative_role: Representative capacity
+                customer_contractual_email: Contractual email
+                customer_phone: Phone
+                contract_reference: Contract reference
+                contract_amount: Amount
+                contract_effective_date: Effective date
+                contract_signature_city: City of signature
+                contract_signature_date: Date of signature
         customers:
             title: Customers
             add: Add a customer

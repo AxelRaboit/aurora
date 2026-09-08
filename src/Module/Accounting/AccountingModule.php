@@ -36,6 +36,10 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
             new NavPermission('accounting.customers.create'),
             new NavPermission('accounting.customers.edit'),
             new NavPermission('accounting.customers.delete'),
+            new NavPermission('accounting.contract_templates.view'),
+            new NavPermission('accounting.contract_templates.create'),
+            new NavPermission('accounting.contract_templates.edit'),
+            new NavPermission('accounting.contract_templates.delete'),
         ];
     }
 
@@ -51,6 +55,10 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
             $items[] = $this->customersNavItem();
         }
 
+        if ($this->accountingContext->areContractsEnabled()) {
+            $items[] = $this->contractTemplatesNavItem();
+        }
+
         if ([] === $items) {
             return [];
         }
@@ -60,7 +68,10 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
 
     public function getCatalogNavSections(): array
     {
-        return [new NavSection('accounting', [$this->customersNavItem()], priority: 45)];
+        return [new NavSection('accounting', [
+            $this->customersNavItem(),
+            $this->contractTemplatesNavItem(),
+        ], priority: 45)];
     }
 
     public function getToggles(): array
@@ -68,7 +79,19 @@ final readonly class AccountingModule implements ModuleInterface, ModuleTogglePr
         return [
             ModuleParameterEnum::AccountingBackend->toToggle(),
             ModuleParameterEnum::AccountingCustomers->toToggle(),
+            ModuleParameterEnum::AccountingContracts->toToggle(),
         ];
+    }
+
+    private function contractTemplatesNavItem(): NavItem
+    {
+        return new NavItem(
+            'backend_accounting_contract_templates',
+            'backend.nav.accounting_contract_templates',
+            'scroll-text',
+            requiredPrivilege: 'accounting.contract_templates.view',
+            descriptionKey: 'backend.nav.accounting_contract_templates_description',
+        );
     }
 
     private function customersNavItem(): NavItem
