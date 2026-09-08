@@ -1,0 +1,7 @@
+frontend:
+  theme:
+    title: Artículos
+    no_posts: Todavía no hay ningún artículo publicado.
+    no_content: Sin contenido.
+    search_placeholder: Buscar un artículo…
+    no_results: Ningún artículo coincide con su búsqueda.
