@@ -43,6 +43,10 @@ final class BlockHtmlSanitizerTest extends TestCase
         yield 'an unknown class carrying a style' => ['<span class="evil" style="color:#ff0000">x</span>', 'style'];
         yield 'a colour that is not a hex' => ['<span class="cdx-text-color" style="color: red">x</span>', 'red'];
         yield 'a font size in absolute units' => ['<span class="cdx-font-size" style="font-size: 900px">x</span>', '900px'];
+        // The accent is allowed by name, and that is the whole opening: a
+        // pattern for `var()` would also take its fallback argument.
+        yield 'a theme colour that is not the accent' => ['<span class="cdx-text-color" style="color: var(--th-bg)">x</span>', '--th-bg'];
+        yield 'an accent with a fallback smuggled in' => ['<span class="cdx-text-color" style="color: var(--th-accent, url(http://evil))">x</span>', 'evil'];
     }
 
     #[DataProvider('hostileMarkup')]
@@ -99,6 +103,13 @@ final class BlockHtmlSanitizerTest extends TestCase
         yield 'a short hex' => [
             '<span class="cdx-text-color" style="color:#f00">rouge</span>',
             'color: #f00',
+        ];
+        // Picked as "the accent" and stored as the accent, so the heading
+        // moves with the theme instead of being pinned to the green it was
+        // when the author clicked.
+        yield 'the theme accent' => [
+            '<span class="cdx-text-color" style="color: var(--th-accent)">titre</span>',
+            'color: var(--th-accent)',
         ];
     }
 
