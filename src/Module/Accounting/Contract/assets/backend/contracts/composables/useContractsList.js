@@ -133,6 +133,8 @@ export function useContractsList(props) {
 
     const pendingDelete = ref(null);
     const pendingFreeze = ref(null);
+    const pendingSend = ref(null);
+    const pendingRevoke = ref(null);
     const busy = ref(false);
 
     async function confirmDelete() {
@@ -199,6 +201,68 @@ export function useContractsList(props) {
         }
     }
 
+    /**
+     * Sending, which is the act that reaches somebody outside.
+     *
+     * Kept apart from sealing on purpose: sealing makes the document final,
+     * sending hands out an address. A day can pass between the two.
+     */
+    async function confirmSend() {
+        const contract = pendingSend.value;
+
+        if (!contract || busy.value) return;
+        busy.value = true;
+
+        try {
+            const data = await request(
+                buildPath(props.sendPath, { id: contract.id }),
+                {},
+            );
+
+            if (data?.errors) {
+                toast.error(Object.values(data.errors)[0]);
+
+                return;
+            }
+
+            applyList(data);
+            toast.success(
+                t("backend.accounting.contracts.sent_to", {
+                    email: data?.sentTo ?? "",
+                }),
+            );
+        } finally {
+            pendingSend.value = null;
+            busy.value = false;
+        }
+    }
+
+    async function confirmRevoke() {
+        const contract = pendingRevoke.value;
+
+        if (!contract || busy.value) return;
+        busy.value = true;
+
+        try {
+            const data = await request(
+                buildPath(props.revokeLinkPath, { id: contract.id }),
+                {},
+            );
+
+            if (data?.errors) {
+                toast.error(Object.values(data.errors)[0]);
+
+                return;
+            }
+
+            applyList(data);
+            toast.success(t("backend.accounting.contracts.revoke_link"));
+        } finally {
+            pendingRevoke.value = null;
+            busy.value = false;
+        }
+    }
+
     function documentPath(contract) {
         return buildPath(props.showPath, { id: contract.id });
     }
@@ -238,9 +302,13 @@ export function useContractsList(props) {
         submitEdit,
         pendingDelete,
         pendingFreeze,
+        pendingSend,
+        pendingRevoke,
         busy,
         confirmDelete,
         confirmFreeze,
+        confirmSend,
+        confirmRevoke,
         documentPath,
         formatAmount,
     };

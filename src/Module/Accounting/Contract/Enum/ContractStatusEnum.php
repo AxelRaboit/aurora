@@ -21,7 +21,17 @@ enum ContractStatusEnum: string
     /** Being prepared. The wording is still whatever the templates say today. */
     case Draft = 'draft';
 
-    /** Frozen and mailed. The document can no longer change. */
+    /**
+     * Sealed. The document is final and has not gone out yet.
+     *
+     * Its own state rather than folded into `Sent`, because sealing and
+     * sending are two acts a day apart: one makes the document final, the
+     * other reaches somebody outside. Saying "sent" before the mail left
+     * would be a claim nobody could check.
+     */
+    case Sealed = 'sealed';
+
+    /** Mailed. Somebody outside now holds an address that opens it. */
     case Sent = 'sent';
 
     /** The link was opened at least once. */
@@ -56,6 +66,12 @@ enum ContractStatusEnum: string
     public function isEditable(): bool
     {
         return self::Draft === $this;
+    }
+
+    /** Whether the document is final, whether or not it has gone out. */
+    public function isSealed(): bool
+    {
+        return self::Draft !== $this;
     }
 
     /** Whether somebody has committed and the contract can no longer be withdrawn. */

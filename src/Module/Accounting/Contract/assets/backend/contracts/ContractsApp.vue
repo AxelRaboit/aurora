@@ -11,8 +11,11 @@ import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppNoData from "@/shared/components/feedback/AppNoData.vue";
 import {
     AlertTriangle,
+    Ban,
     FileSignature,
     Lock,
+    Mail,
+    MailCheck,
     Pencil,
     Plus,
     Save,
@@ -34,6 +37,8 @@ const props = defineProps({
     updatePath: { type: String, required: true },
     deletePath: { type: String, required: true },
     freezePath: { type: String, required: true },
+    sendPath: { type: String, required: true },
+    revokeLinkPath: { type: String, required: true },
     showPath: { type: String, required: true },
 });
 
@@ -56,9 +61,13 @@ const {
     submitEdit,
     pendingDelete,
     pendingFreeze,
+    pendingSend,
+    pendingRevoke,
     busy,
     confirmDelete,
     confirmFreeze,
+    confirmSend,
+    confirmRevoke,
     documentPath,
     formatAmount,
 } = useContractsList(props);
@@ -216,15 +225,70 @@ const {
                                         : "-"
                                 }}
                             </td>
-                            <td class="px-6 py-3 text-right">
-                                <AppButton
-                                    variant="ghost"
-                                    size="sm"
-                                    :href="documentPath(contract)"
-                                >
-                                    <FileSignature class="w-3.5 h-3.5" :stroke-width="2" />
-                                    {{ t("backend.accounting.contracts.read_document") }}
-                                </AppButton>
+                            <!-- The one thing a link answers that nothing else
+                                 can: whether the customer ever opened it. -->
+                            <td class="px-6 py-3 text-xs hidden xl:table-cell">
+                                <template v-if="contract.link">
+                                    <div class="text-primary truncate max-w-[14rem]">
+                                        {{ contract.link.recipientEmail }}
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-1"
+                                        :class="
+                                            contract.link.firstOpenedAt
+                                                ? 'text-emerald-500'
+                                                : 'text-muted'
+                                        "
+                                    >
+                                        <MailCheck
+                                            v-if="contract.link.firstOpenedAt"
+                                            class="w-3 h-3 shrink-0"
+                                            :stroke-width="2"
+                                        />
+                                        {{
+                                            contract.link.firstOpenedAt
+                                                ? t("backend.accounting.contracts.link_opened_at", {
+                                                    date: new Date(
+                                                        contract.link.firstOpenedAt,
+                                                    ).toLocaleDateString(),
+                                                })
+                                                : t("backend.accounting.contracts.link_never_opened")
+                                        }}
+                                    </div>
+                                </template>
+                                <span v-else class="text-muted">
+                                    {{ t("backend.accounting.contracts.no_link") }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-3">
+                                <div class="flex flex-wrap items-center justify-end gap-1">
+                                    <AppButton
+                                        v-if="!contract.link && can('accounting.contracts.send')"
+                                        variant="secondary"
+                                        size="sm"
+                                        v-on:click="pendingSend = contract"
+                                    >
+                                        <Mail class="w-3.5 h-3.5" :stroke-width="2" />
+                                        {{ t("backend.accounting.contracts.send") }}
+                                    </AppButton>
+                                    <AppButton
+                                        v-if="contract.link && can('accounting.contracts.send')"
+                                        variant="ghost"
+                                        size="sm"
+                                        v-on:click="pendingRevoke = contract"
+                                    >
+                                        <Ban class="w-3.5 h-3.5" :stroke-width="2" />
+                                        {{ t("backend.accounting.contracts.revoke_link") }}
+                                    </AppButton>
+                                    <AppButton
+                                        variant="ghost"
+                                        size="sm"
+                                        :href="documentPath(contract)"
+                                    >
+                                        <FileSignature class="w-3.5 h-3.5" :stroke-width="2" />
+                                        {{ t("backend.accounting.contracts.read_document") }}
+                                    </AppButton>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -342,6 +406,77 @@ const {
                     >
                         <Lock class="w-3.5 h-3.5" :stroke-width="2" />
                         {{ t("backend.accounting.contracts.freeze") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <AppModal
+            :show="!!pendingSend"
+            max-width="md"
+            :closeable="false"
+            :title="t('backend.accounting.contracts.send')"
+            :icon="Mail"
+            v-on:close="pendingSend = null"
+        >
+            <p class="text-sm text-primary">
+                {{
+                    t("backend.accounting.contracts.send_confirm", {
+                        email: pendingSend?.link?.recipientEmail ?? "",
+                    })
+                }}
+            </p>
+            <p class="text-sm text-secondary">
+                {{ t("backend.accounting.contracts.send_warning") }}
+            </p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="pendingSend = null">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="primary"
+                        size="md"
+                        :loading="busy"
+                        v-on:click="confirmSend"
+                    >
+                        <Mail class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contracts.send") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <AppModal
+            :show="!!pendingRevoke"
+            max-width="md"
+            :closeable="false"
+            :title="t('backend.accounting.contracts.revoke_link')"
+            :icon="Ban"
+            v-on:close="pendingRevoke = null"
+        >
+            <p class="text-sm text-primary">
+                {{
+                    t("backend.accounting.contracts.revoke_link_confirm", {
+                        email: pendingRevoke?.link?.recipientEmail ?? "",
+                    })
+                }}
+            </p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="pendingRevoke = null">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="danger"
+                        size="md"
+                        :loading="busy"
+                        v-on:click="confirmRevoke"
+                    >
+                        <Ban class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contracts.revoke_link") }}
                     </AppButton>
                 </AppModalFooter>
             </template>

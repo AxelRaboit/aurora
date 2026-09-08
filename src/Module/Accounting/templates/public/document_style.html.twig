@@ -1,0 +1,90 @@
+{# The contract's typography, as a plain stylesheet.
+
+   Its own partial rather than Tailwind classes on the markup, and shared with
+   the PDF template that comes later: the sealed HTML carries no classes at all
+   because it has to survive a PDF engine and a decade of storage, so the
+   styling has to live outside it. dompdf understands none of Tailwind, and it
+   understands all of this.
+
+   Colours are declared in `currentColor` and inherited values so the page
+   works in either theme without a second copy. #}
+<style>
+    .contract-document {
+        line-height: 1.65;
+    }
+
+    .contract-document h1 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        text-align: center;
+        letter-spacing: 0.02em;
+        margin: 0 0 1.75rem;
+    }
+
+    .contract-document h2 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 1.75rem 0 0.5rem;
+    }
+
+    .contract-document h3,
+    .contract-document h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 1.25rem 0 0.35rem;
+    }
+
+    .contract-document p {
+        margin: 0 0 0.75rem;
+        text-align: justify;
+    }
+
+    .contract-document ul,
+    .contract-document ol {
+        margin: 0 0 0.75rem 1.25rem;
+        padding: 0;
+    }
+
+    .contract-document li {
+        margin: 0 0 0.25rem;
+    }
+
+    .contract-document blockquote {
+        margin: 0 0 0.75rem;
+        padding-left: 0.75rem;
+        border-left: 2px solid currentColor;
+        opacity: 0.85;
+    }
+
+    .contract-document table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 0 1rem;
+        font-size: 0.9em;
+    }
+
+    .contract-document th,
+    .contract-document td {
+        border: 1px solid currentColor;
+        padding: 0.35rem 0.5rem;
+        text-align: left;
+    }
+
+    .contract-document th {
+        font-weight: 600;
+    }
+
+    .contract-document hr {
+        margin: 1.5rem 0;
+        border: 0;
+        border-top: 1px solid currentColor;
+        opacity: 0.25;
+    }
+
+    /* An annex is a document of its own, and the break says so. */
+    .contract-document section + section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid currentColor;
+    }
+</style>

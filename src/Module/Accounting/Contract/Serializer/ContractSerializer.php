@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Accounting\Contract\Serializer;
 
+use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
+use Aurora\Module\Accounting\Contract\Access\Repository\ContractAccessLinkRepository;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
@@ -14,7 +16,10 @@ use const DATE_ATOM;
 #[AsAlias(ContractSerializerInterface::class)]
 class ContractSerializer implements ContractSerializerInterface
 {
-    public function __construct(protected readonly ContractSeal $seal) {}
+    public function __construct(
+        protected readonly ContractSeal $seal,
+        protected readonly ContractAccessLinkRepository $links,
+    ) {}
 
     /** @return array<string, mixed> */
     public function serialize(ContractInterface $contract): array
@@ -38,6 +43,7 @@ class ContractSerializer implements ContractSerializerInterface
             'createdAt' => $contract->getCreatedAt()->format(DATE_ATOM),
             'body' => $this->part($contract->getBodyVersion()),
             'annex' => $this->part($contract->getAnnexVersion()),
+            'link' => $this->link($contract),
         ];
     }
 
@@ -60,6 +66,35 @@ class ContractSerializer implements ContractSerializerInterface
                 // answer has to be current, not stored.
                 'verified' => $contract->isFrozen() && $this->seal->verify($contract),
             ],
+        ];
+    }
+
+    /**
+     * What the back office can say about the address that was handed out.
+     *
+     * Never the secret. It exists for one request, the one that minted it, and
+     * by the time anything is serialized it is gone - which is the whole point
+     * of storing a hash. A reader who needs to reach the document opens it from
+     * here, not from the customer's link.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function link(ContractInterface $contract): ?array
+    {
+        $link = $this->links->findActiveFor($contract);
+
+        if (!$link instanceof ContractAccessLinkInterface) {
+            return null;
+        }
+
+        return [
+            'recipientEmail' => $link->getRecipientEmail(),
+            'sentAt' => $link->getSentAt()?->format(DATE_ATOM),
+            'expiresAt' => $link->getExpiresAt()->format(DATE_ATOM),
+            // The one thing a link answers that nothing else can: whether the
+            // customer ever opened the document.
+            'firstOpenedAt' => $link->getFirstOpenedAt()?->format(DATE_ATOM),
+            'lastUsedAt' => $link->getLastUsedAt()?->format(DATE_ATOM),
         ];
     }
 

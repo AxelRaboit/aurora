@@ -9,6 +9,9 @@ use Aurora\Core\Http\JsonRequestTrait;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Core\Validation\Exception\FieldException;
 use Aurora\Core\Validation\Service\PayloadValidator;
+use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
+use Aurora\Module\Accounting\Contract\Access\Manager\ContractAccessLinkManagerInterface;
+use Aurora\Module\Accounting\Contract\Access\Repository\ContractAccessLinkRepository;
 use Aurora\Module\Accounting\Contract\Dto\ContractInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Dto\ContractInputInterface;
 use Aurora\Module\Accounting\Contract\Entity\Contract;
@@ -37,6 +40,8 @@ class ContractsController extends AbstractController
         protected readonly ContractSerializerInterface $serializer,
         protected readonly ContractsViewBuilder $viewBuilder,
         protected readonly PayloadValidator $payloadValidator,
+        protected readonly ContractAccessLinkManagerInterface $accessLinks,
+        protected readonly ContractAccessLinkRepository $accessLinkRepository,
         protected readonly TranslatorInterface $translator,
     ) {}
 
@@ -119,6 +124,56 @@ class ContractsController extends AbstractController
             'contract' => $this->serializer->serialize($contract),
             'contracts' => $this->viewBuilder->contracts(),
             'showPath' => $this->generateUrl('backend_accounting_contracts_show', ['id' => $contract->getId()]),
+        ]);
+    }
+
+    /**
+     * Mints an address and mails it.
+     *
+     * Its own permission, unlike sealing: this is the act that reaches somebody
+     * outside the application, and the person allowed to prepare a contract is
+     * not necessarily the person allowed to send one.
+     */
+    #[Route('/{id}/send', name: '_send', requirements: ['id' => '\d+'], methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('accounting.contracts.send')]
+    public function send(Contract $contract): JsonResponse
+    {
+        try {
+            $link = $this->accessLinks->send($contract);
+        } catch (FieldException $fieldException) {
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
+        }
+
+        return $this->jsonSuccess([
+            'contract' => $this->serializer->serialize($contract),
+            'contracts' => $this->viewBuilder->contracts(),
+            'sentTo' => $link->getRecipientEmail(),
+        ]);
+    }
+
+    /**
+     * Closes the address without touching the document.
+     *
+     * Under `send` rather than `delete`: revoking is undoing a send, and
+     * whoever may open a door may close it.
+     */
+    #[Route('/{id}/revoke-link', name: '_revoke_link', requirements: ['id' => '\d+'], methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('accounting.contracts.send')]
+    public function revokeLink(Contract $contract): JsonResponse
+    {
+        $link = $this->accessLinkRepository->findActiveFor($contract);
+
+        if (!$link instanceof ContractAccessLinkInterface) {
+            return $this->jsonInvalidInput([
+                'status' => $this->translator->trans('backend.accounting.contracts.errors.no_active_link'),
+            ]);
+        }
+
+        $this->accessLinks->revoke($link);
+
+        return $this->jsonSuccess([
+            'contract' => $this->serializer->serialize($contract),
+            'contracts' => $this->viewBuilder->contracts(),
         ]);
     }
 

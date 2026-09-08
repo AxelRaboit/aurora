@@ -88,7 +88,9 @@ final class ContractsControllerTest extends IntegrationTestCase
 
         self::assertTrue($sealed['contract']['isFrozen']);
         self::assertNotNull($sealed['contract']['reference']);
-        self::assertSame('sent', $sealed['contract']['status']);
+        // Sealed, not sent: the link has not gone out yet, and the two are
+        // separate acts a day apart.
+        self::assertSame('sealed', $sealed['contract']['status']);
         // The page to go to next is handed back: what somebody wants right
         // after sealing is to see what was sealed.
         self::assertStringContainsString((string) $id, (string) $sealed['showPath']);

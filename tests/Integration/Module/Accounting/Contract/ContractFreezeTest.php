@@ -121,7 +121,9 @@ final class ContractFreezeTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', (string) $contract->getContentHash());
         self::assertSame('sha256', $contract->getHashAlgo());
         self::assertSame(ContractCanonicalizer::VERSION, $contract->getCanonicalVersion());
-        self::assertSame(ContractStatusEnum::Sent, $contract->getStatus());
+        // Sealed, not sent. Sealing makes the document final; sending is the
+        // separate act that hands out an address.
+        self::assertSame(ContractStatusEnum::Sealed, $contract->getStatus());
         self::assertTrue($this->seal->verify($contract));
     }
 

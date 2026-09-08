@@ -350,7 +350,9 @@ abstract class AbstractContract implements ContractInterface
         $this->hashAlgo = $hashAlgo;
         $this->canonicalVersion = $canonicalVersion;
         $this->frozenAt = $at;
-        $this->status = ContractStatusEnum::Sent;
+        // Sealed, not sent: the link has not gone out yet, and claiming it
+        // had would be a statement nobody could verify.
+        $this->status = ContractStatusEnum::Sealed;
 
         return $this;
     }

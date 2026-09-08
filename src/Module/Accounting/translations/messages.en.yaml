@@ -33,6 +33,8 @@ backend:
                     created: Contract created
                     updated: Contract edited
                     frozen: Contract frozen and sealed
+                    link_sent: Signing link sent
+                    link_revoked: Signing link revoked
                     deleted: Contract deleted
     permissions:
         names:
@@ -52,6 +54,7 @@ backend:
                     create: Create a contract
                     edit: Edit a contract
                     delete: Delete a contract
+                    send: 'Send a contract to the customer'
     accounting:
         contracts:
             title: Contracts
@@ -94,7 +97,18 @@ backend:
             col_customer: Customer
             col_status: Status
             col_sealed_at: Sealed on
+            col_link: Link
             read_document: Read the document
+            send: Send to the customer
+            send_confirm: 'Send the contract to {email}?'
+            send_warning: 'A secret link goes out by email. Any link sent before is revoked: there is never more than one valid address.'
+            sent_to: 'Sent to {email}'
+            revoke_link: Revoke the link
+            revoke_link_confirm: 'Revoke the link sent to {email}? The address stops working immediately.'
+            link_expires: 'Valid until {date}'
+            link_never_opened: Never opened
+            link_opened_at: 'Opened on {date}'
+            no_link: No active link
             not_sealed_yet: This contract is not sealed yet. Its wording is frozen at the moment of sealing.
             seal_intact: The seal is intact
             seal_intact_hint: The stored document matches exactly the hash taken when it was sealed.
@@ -106,6 +120,7 @@ backend:
             deferred_tokens_hint: 'The city and date of signature stay as variables: the signer states them.'
             status:
                 draft: Draft
+                sealed: Sealed
                 sent: Sent
                 opened: Opened
                 signed_by_customer: Signed by the customer
@@ -125,6 +140,9 @@ backend:
                 template_not_found: This template does not exist, or is not of the expected kind.
                 template_never_published: '"{template}" has no published version.'
                 already_frozen: 'This contract is sealed: it can no longer be changed.'
+                seal_before_sending: Seal the contract before sending it.
+                already_engaged: This contract is already signed. It cannot be sent again.
+                no_active_link: No active link to revoke.
         contract_templates:
             title: Contract templates
             kind:
@@ -270,3 +288,29 @@ backend:
                 share_capital_invalid: Share capital cannot be negative.
                 siret_invalid: 'This registration number is invalid: fourteen digits with a correct checksum are expected.'
                 siret_taken: 'This registration number is already recorded for {name}.'
+accounting:
+    public:
+        contract:
+            title: Contract
+            heading: Service agreement
+            intro: 'This document is addressed to you on behalf of {company}. Take the time to read it in full.'
+            to_sign: This contract is waiting for your signature.
+            to_sign_hint: You will be asked for your first and last name, your email, the place and the date, then your signature. A confirmation code will be sent to your email address.
+            valid_until: 'This link is valid until {date}.'
+            signed: You have signed this contract.
+            signed_hint: Nothing more is asked of you. You will receive the countersigned document by email.
+            concluded: This contract is signed by both parties.
+            hash_notice: 'Document hash: {hash}. It guarantees this wording has not changed since it was sent.'
+            footer: This link is personal to you. Please do not forward it.
+        unavailable:
+            title: This link is no longer valid
+            message: The address you opened does not exist, has expired, or has been revoked. If you were expecting a contract, ask your contact for a new link.
+    email:
+        contract_link:
+            subject: A contract is waiting for your signature
+            greeting: 'Hello {name},'
+            body: 'Contract {reference} is ready and waiting for your signature. You can read and sign it online.'
+            action: Read and sign the contract
+            expiry: 'This link is valid until {date}.'
+            warning: This link is personal to you. Please do not forward it.
+            signature: '{company}'

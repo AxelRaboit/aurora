@@ -33,6 +33,8 @@ backend:
                     created: Contrat créé
                     updated: Contrat modifié
                     frozen: Contrat gelé et scellé
+                    link_sent: Lien de signature envoyé
+                    link_revoked: Lien de signature révoqué
                     deleted: Contrat supprimé
     permissions:
         names:
@@ -52,6 +54,7 @@ backend:
                     create: Créer un contrat
                     edit: Modifier un contrat
                     delete: Supprimer un contrat
+                    send: 'Envoyer un contrat au client'
     accounting:
         contracts:
             title: Contrats
@@ -94,7 +97,18 @@ backend:
             col_customer: Client
             col_status: Statut
             col_sealed_at: Scellé le
+            col_link: Lien
             read_document: Lire le document
+            send: Envoyer au client
+            send_confirm: 'Envoyer le contrat à {email} ?'
+            send_warning: 'Un lien secret part par email. Tout lien envoyé auparavant est révoqué : il n''y a jamais qu''une seule adresse valide.'
+            sent_to: 'Envoyé à {email}'
+            revoke_link: Révoquer le lien
+            revoke_link_confirm: 'Révoquer le lien envoyé à {email} ? L''adresse cessera de fonctionner immédiatement.'
+            link_expires: 'Valide jusqu''au {date}'
+            link_never_opened: Jamais ouvert
+            link_opened_at: 'Ouvert le {date}'
+            no_link: Aucun lien actif
             not_sealed_yet: Ce contrat n'est pas encore scellé. Son texte sera figé au moment du scellement.
             seal_intact: Le sceau est intact
             seal_intact_hint: Le document stocké correspond exactement au hash pris lors du scellement.
@@ -106,6 +120,7 @@ backend:
             deferred_tokens_hint: 'La ville et la date de signature restent des variables : c''est le signataire qui les déclarera.'
             status:
                 draft: Brouillon
+                sealed: Scellé
                 sent: Envoyé
                 opened: Ouvert
                 signed_by_customer: Signé par le client
@@ -125,6 +140,9 @@ backend:
                 template_not_found: Cette trame n'existe pas, ou n'est pas du type attendu.
                 template_never_published: '« {template} » n''a aucune version publiée.'
                 already_frozen: 'Ce contrat est scellé : il ne peut plus être modifié.'
+                seal_before_sending: Scellez le contrat avant de l'envoyer.
+                already_engaged: Ce contrat est déjà signé. Il ne peut plus être renvoyé.
+                no_active_link: Aucun lien actif à révoquer.
         contract_templates:
             title: Trames de contrat
             kind:
@@ -270,3 +288,29 @@ backend:
                 share_capital_invalid: Le capital social ne peut pas être négatif.
                 siret_invalid: 'Ce SIRET est invalide : quatorze chiffres et une clé de contrôle correcte sont attendus.'
                 siret_taken: 'Ce SIRET est déjà enregistré pour {name}.'
+accounting:
+    public:
+        contract:
+            title: Contrat
+            heading: Contrat de prestation de services
+            intro: 'Ce document vous est adressé au nom de {company}. Prenez le temps de le lire entièrement.'
+            to_sign: Ce contrat attend votre signature.
+            to_sign_hint: Il vous sera demandé vos nom et prénom, votre email, le lieu et la date, puis votre signature. Un code de confirmation sera envoyé à votre adresse email.
+            valid_until: 'Ce lien est valide jusqu''au {date}.'
+            signed: Vous avez signé ce contrat.
+            signed_hint: Il ne vous est plus rien demandé. Vous recevrez le document contresigné par email.
+            concluded: Ce contrat est signé par les deux parties.
+            hash_notice: 'Empreinte du document : {hash}. Elle garantit que ce texte n''a pas changé depuis son envoi.'
+            footer: Ce lien vous est personnel. Ne le transmettez pas.
+        unavailable:
+            title: Ce lien n'est plus valide
+            message: L'adresse que vous avez ouverte n'existe pas, a expiré, ou a été révoquée. Si vous attendiez un contrat, demandez un nouveau lien à votre interlocuteur.
+    email:
+        contract_link:
+            subject: Un contrat attend votre signature
+            greeting: 'Bonjour {name},'
+            body: 'Le contrat {reference} est prêt et attend votre signature. Vous pouvez le lire et le signer en ligne.'
+            action: Lire et signer le contrat
+            expiry: 'Ce lien est valide jusqu''au {date}.'
+            warning: Ce lien vous est personnel. Ne le transmettez pas.
+            signature: '{company}'
