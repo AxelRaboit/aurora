@@ -114,6 +114,19 @@ class PageController extends AbstractController
             ? $this->postRepository->findPublishedBySlug($slug, $locale, $postType->getId())
             : null;
 
+        // `/{locale}/{a}/{b}` is a post under a type and equally a term under a
+        // taxonomy. This route wins on priority, so the term route is never
+        // reached on its own and the fall-through below is what answers it.
+        //
+        // It has to come before the unscoped look-up, not after: an address
+        // that names a real taxonomy and a real term of it is that term's
+        // page. Letting a publication of some unrelated type answer it on the
+        // strength of a shared slug sent the reader off on a **permanent**
+        // redirect to a page they never asked for, and browsers cache that.
+        if (!$post instanceof PostInterface && $this->termPageExists($postTypeSlug, $slug, $locale)) {
+            return $this->term($locale, $postTypeSlug, $slug, $request);
+        }
+
         $post ??= $this->postRepository->findPublishedBySlug($slug, $locale);
 
         if (!$post instanceof PostInterface) {
@@ -122,12 +135,9 @@ class PageController extends AbstractController
                 return $redirect;
             }
 
-            // `/{locale}/{a}/{b}` is a post under a type and equally a term
-            // under a taxonomy. This route wins on priority, so the term
-            // route was simply never reached - every taxonomy page answered
-            // 404. Falling through in code keeps both readable, and a post
-            // still wins a slug collision, which is the right way round: it
-            // is the more specific page.
+            // Neither a publication nor a term: `term()` answers the 404, so
+            // that an address which names a taxonomy but no term of it fails
+            // the same way whichever branch got there.
             return $this->term($locale, $postTypeSlug, $slug, $request);
         }
 
@@ -244,6 +254,20 @@ class PageController extends AbstractController
             'postTypeSlug' => $entry->getPost()->getPostType()->getSlug(),
             'slug' => $current,
         ], HttpStatusEnum::MovedPermanently->value);
+    }
+
+    /**
+     * Whether the two segments of the address name a taxonomy and a term of it.
+     *
+     * Asked before the widest post look-up rather than after, so the answer
+     * cannot be a redirect to something else that happens to share the slug.
+     */
+    private function termPageExists(string $taxonomySlug, string $termSlug, string $locale): bool
+    {
+        $taxonomy = $this->taxonomyRepository->findOneBySlug($taxonomySlug);
+
+        return $taxonomy instanceof TaxonomyInterface
+            && $this->findTermBySlug($taxonomy, $termSlug, $locale) instanceof TaxonomyTermInterface;
     }
 
     private function findTermBySlug(TaxonomyInterface $taxonomy, string $slug, string $locale): ?TaxonomyTermInterface
