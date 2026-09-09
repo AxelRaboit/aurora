@@ -104,7 +104,17 @@ class PageController extends AbstractController
         $this->assertActiveLocale($locale);
         $request->setLocale($locale);
 
-        $post = $this->postRepository->findPublishedBySlug($slug, $locale);
+        // Asked inside the type the address names, first. An address is only
+        // unique inside its type, and answering with a publication of another
+        // one sends the reader off on a permanent redirect to a page they did
+        // not ask for - which is what the fall-back below is for, and only
+        // when nothing here matched.
+        $postType = $this->postTypeRepository->findOneBySlug($postTypeSlug);
+        $post = $postType instanceof PostTypeInterface
+            ? $this->postRepository->findPublishedBySlug($slug, $locale, $postType->getId())
+            : null;
+
+        $post ??= $this->postRepository->findPublishedBySlug($slug, $locale);
 
         if (!$post instanceof PostInterface) {
             $redirect = $this->redirectFromSlugHistory($locale, $slug);
