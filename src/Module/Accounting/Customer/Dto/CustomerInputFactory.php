@@ -80,7 +80,7 @@ class CustomerInputFactory implements CustomerInputFactoryInterface
     /**
      * The digits of a SIRET, however it was typed.
      *
-     * A SIRET is read off a document in groups ("107 071 508 00017") and typed
+     * A SIRET is read off a document in groups ("904 512 336 00010") and typed
      * that way. Stripping the separators here means the stored form is always
      * the fourteen digits, so a lookup by number finds the row whatever the
      * spacing was.
