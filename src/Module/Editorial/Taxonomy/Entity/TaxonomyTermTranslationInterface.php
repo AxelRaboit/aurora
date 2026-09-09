@@ -26,5 +26,7 @@ interface TaxonomyTermTranslationInterface
 
     public function getTerm(): TaxonomyTermInterface;
 
+    public function getTaxonomy(): TaxonomyInterface;
+
     public function setTerm(TaxonomyTermInterface $term): static;
 }

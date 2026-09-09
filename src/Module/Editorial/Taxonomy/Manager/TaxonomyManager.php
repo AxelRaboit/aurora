@@ -207,9 +207,41 @@ class TaxonomyManager implements TaxonomyManagerInterface
 
         foreach ($input->getTranslations() as $locale => $payload) {
             $translation = $term->translate((string) $locale);
+            $slug = $this->slugFor($payload['name'], $payload['slug'] ?? null);
+
+            $this->assertTermSlugIsFree($term, (string) $locale, $slug);
+
             $translation->setName($payload['name']);
-            $translation->setSlug($this->slugFor($payload['name'], $payload['slug'] ?? null));
+            $translation->setSlug($slug);
             $translation->setDescription($payload['description'] ?? null);
+        }
+    }
+
+    /**
+     * The address of a term, inside its taxonomy.
+     *
+     * The database says the same thing, and said it alone until now: a
+     * duplicate arrived as a constraint violation from the depths, with no
+     * sentence for whoever typed the name. Checked here so the screen can
+     * answer, and still checked there so a race cannot slip through.
+     */
+    private function assertTermSlugIsFree(TaxonomyTermInterface $term, string $locale, string $slug): void
+    {
+        foreach ($term->getTaxonomy()->getTerms() as $sibling) {
+            if ($sibling === $term) {
+                continue;
+            }
+
+            $translation = $sibling->getTranslation($locale);
+            if (null === $translation) {
+                continue;
+            }
+
+            if ($translation->getSlug() !== $slug) {
+                continue;
+            }
+
+            throw new InvalidArgumentException($this->translator->trans('backend.taxonomies.errors.term_slug_taken', ['{slug}' => $slug, '{term}' => $translation->getName()]));
         }
     }
 
