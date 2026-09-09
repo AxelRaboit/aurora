@@ -13,6 +13,7 @@ use Aurora\Module\Editorial\Post\Entity\PostInterface;
 use Aurora\Module\Editorial\Post\Entity\PostTranslationInterface;
 use Aurora\Module\Editorial\Post\Gallery\GalleryViewBuilder;
 use Aurora\Module\Editorial\Post\Grid\GridViewBuilder;
+use Aurora\Module\Editorial\Post\Sequence\PostSequenceBuilder;
 use Aurora\Module\Editorial\Seo\Service\AlternatesBuilder;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Service\DocumentUrlGenerator;
@@ -41,6 +42,7 @@ final readonly class PostPageRenderer
         private BannerViewBuilder $bannerViewBuilder,
         private GridViewBuilder $gridViewBuilder,
         private GalleryViewBuilder $galleryViewBuilder,
+        private PostSequenceBuilder $sequenceBuilder,
     ) {}
 
     public function render(PostInterface $post, string $locale): Response
@@ -73,6 +75,10 @@ final readonly class PostPageRenderer
             // template leaves the section out rather than printing an empty one.
             'gallery' => $this->galleryViewBuilder->build($post->getGalleryLayout(), $translation->getGallery()),
             'terms' => $this->postTerms($post, $locale),
+            // Null for every type that is not read in sequence, which is all
+            // of them but a documentation: the summary and the two neighbours
+            // are what a page read in order needs and an article does not.
+            'sequence' => $this->sequenceBuilder->build($post, $locale),
             'alternates' => $this->alternatesBuilder->forPost($post),
             // The thread itself is fetched by the browser rather than
             // rendered here: comments are the one part of the page that

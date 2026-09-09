@@ -175,6 +175,7 @@ backend:
     supports: Capabilities
     supports_blocks: Block content
     supports_thumbnail: Featured image
+    supports_sequence: Read in sequence
     fields:
       row_actions:
         edit_description: Label, type, required or not, options.
@@ -943,6 +944,11 @@ backend:
     css_class_placeholder: "menu-item--featured"
     label_placeholder: "Home"
 frontend:
+  sequence:
+    summary: Contents
+    pagination: Previous and next page
+    previous: Previous page
+    next: Next page
   gallery:
     enlarge: "Enlarge the picture"
     open: "Enlarge picture %position% of %total%"
