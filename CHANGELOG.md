@@ -5,6 +5,58 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.88] - 2026-09-09
+
+### Ajouté
+
+#### Vue liste ou vue cartes, sur les trames et les contrats
+Les deux écrans du module offrent le même choix que le reste de l'application,
+avec le même composant et le choix gardé dans l'URL : une vue envoyée dans un
+lien s'ouvre comme celle qu'on a quittée. **La liste est la vue par défaut** :
+elle répond en une ligne par trame à ce pour quoi l'écran est ouvert.
+
+En liste, aucune couleur hors la pastille de type. Un tableau gagne à être
+parcourable, et une ligne teintée entrerait en concurrence avec les deux états
+qui changent vraiment, publiée et brouillon.
+
+#### Duplication d'une trame
+La copie reprend le texte en vigueur dans un brouillon, sous un nom suffixé, et
+n'hérite ni de la publication ni des numéros de version : une trame qui se
+publierait elle-même serait utilisable pour un contrat que personne n'a relu.
+Dupliquer une trame archivée la ravive, donc la copie démarre active.
+
+#### L'identité du prestataire vient des réglages
+Un onglet Comptabilité porte les douze champs que chaque contrat imprime :
+dénomination, représentant, adresse, SIRET, code APE, mention de TVA,
+coordonnées, et les coordonnées bancaires. Les trames les demandent par les
+jetons `{{provider.*}}`.
+
+Le bloc était tapé une fois par trame, donc cinq endroits à oublier le jour où
+une banque ou une adresse change. Un réglage vide dont la trame a besoin refuse
+le scellement, avant que la référence soit tirée, et le message parle des
+réglages plutôt que d'un jeton inconnu : la personne qui le lit doit savoir où
+aller.
+
+### Modifié
+
+#### Les cartes suivent la couleur du thème
+Le corps de contrat porte la couleur d'accent du thème choisi, l'annexe reste
+neutre. Deux teintes importées auraient été les seules couleurs de l'écran à
+ignorer ce choix, et la paire dit quelque chose de vrai : un corps est le
+contrat, une annexe s'y attache. Le type reste nommé dans la pastille, donc la
+lecture ne dépend pas de la distinction des teintes.
+
+#### Les dates du back-office passent sur AppDatePicker
+Les deux champs date du module utilisaient l'entrée native. Celui de la page
+publique de signature la garde, et c'est écrit dans le fichier : la roue du
+téléphone bat n'importe quel sélecteur pour un inconnu qui signe.
+
+### Dans aurora-client
+
+Rien à répercuter : une migration, jouée par `make aurora-update`. Les douze
+réglages du prestataire arrivent vides et se remplissent dans *Configuration >
+Comptabilité*.
+
 ## [0.9.87] - 2026-09-09
 
 ### Ajouté
