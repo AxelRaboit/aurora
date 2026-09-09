@@ -24,6 +24,7 @@ use Aurora\Module\Accounting\Contract\Repository\ContractTemplateVersionReposito
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
 use Aurora\Module\Accounting\Contract\Service\ContractCustomFieldScanner;
 use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
+use Aurora\Module\Accounting\Contract\Service\ContractRetentionPolicy;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableCatalogue;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
@@ -96,6 +97,7 @@ final class ContractFreezeTest extends IntegrationTestCase
             $container->get(ContractTemplateRepository::class),
             $container->get(TranslatorInterface::class),
             new ContractCustomFieldScanner(),
+            new ContractRetentionPolicy($container->get(SettingRepository::class)),
         );
     }
 

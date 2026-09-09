@@ -256,6 +256,18 @@ backend:
     accounting_provider_bank_name:
       label: Bank
       description: 'The bank''s name, and its address if you print it.'
+    accounting_contract_retention_years:
+      label: Retention (years)
+      description: 'How many years a sealed contract is kept before it can be deleted. Five years is the legal floor, ten are advised for a service provider; under five, the value is raised back to five.'
+    accounting_contract_reminder_enabled:
+      label: Chase automatically
+      description: 'Emails a reminder for contracts sent and not signed. Every reminder mints a new signing address and invalidates the previous one, exactly like a manual resend.'
+    accounting_contract_reminder_days:
+      label: Days between reminders
+      description: 'Days without an answer before a reminder goes out. Counted from the last send, not from the seal.'
+    accounting_contract_reminder_max:
+      label: Maximum number of reminders
+      description: 'Past that, the contract is left alone. Silence is an answer too.'
     nav_section_aliases:
       label: Navigation section aliases
       description: JSON map of section aliases (managed via the UI).

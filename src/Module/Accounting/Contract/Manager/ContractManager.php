@@ -20,6 +20,7 @@ use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
 use Aurora\Module\Accounting\Contract\Service\ContractCustomFieldScanner;
 use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
+use Aurora\Module\Accounting\Contract\Service\ContractRetentionPolicy;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
@@ -66,6 +67,7 @@ class ContractManager implements ContractManagerInterface
         protected readonly ContractTemplateRepository $templateRepository,
         protected readonly TranslatorInterface $translator,
         protected readonly ContractCustomFieldScanner $customFields,
+        protected readonly ContractRetentionPolicy $retention,
     ) {}
 
     public function create(ContractInputInterface $input): ContractInterface
@@ -166,15 +168,46 @@ class ContractManager implements ContractManagerInterface
 
     public function delete(ContractInterface $contract): void
     {
-        // Only a draft. A frozen contract went out to somebody, and deleting
-        // the record of what they were sent is not an editing operation - it is
-        // the destruction of the only copy that proves what was agreed.
-        $contract->assertEditable();
+        // A draft, freely. A frozen contract went out to somebody, and
+        // deleting the record of what they were sent is not an editing
+        // operation - it is the destruction of the only copy that proves what
+        // was agreed. It becomes possible when the retention has run out, and
+        // not one day before.
+        if ($contract->isFrozen()) {
+            $this->assertRetentionElapsed($contract);
+        }
 
-        $this->auditLogger->log('accounting', 'contract.deleted', 'Contract', $contract->getId(), $this->auditPayload($contract));
+        $this->auditLogger->log('accounting', 'contract.deleted', 'Contract', $contract->getId(), [
+            ...$this->auditPayload($contract),
+            'wasFrozen' => $contract->isFrozen(),
+            'frozenAt' => $contract->getFrozenAt()?->format(DATE_ATOM),
+        ]);
 
         $this->entityManager->remove($contract);
         $this->entityManager->flush();
+    }
+
+    public function retentionYears(): int
+    {
+        return $this->retention->years();
+    }
+
+    /**
+     * Refuses to destroy evidence the retention still covers.
+     *
+     * The date is in the message, because "not yet" without a date leaves the
+     * reader guessing whether they are a day or a decade early. This is the
+     * only guard that stands between a signed contract and its own deletion,
+     * so it belongs in the manager and not in a controller that a second entry
+     * point could bypass.
+     */
+    protected function assertRetentionElapsed(ContractInterface $contract): void
+    {
+        if (!$this->retention->hasElapsed($contract)) {
+            $until = $this->retention->until($contract);
+
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.retention_not_elapsed', ['{date}' => $until?->format('d/m/Y') ?? '-']));
+        }
     }
 
     public function freeze(ContractInterface $contract): void

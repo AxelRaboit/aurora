@@ -20,8 +20,16 @@ interface ContractManagerInterface
      */
     public function update(ContractInterface $contract, ContractInputInterface $input): void;
 
-    /** @throws FrozenContractIsImmutableException */
+    /**
+     * Deletes a draft freely, and a sealed contract only once its retention
+     * has run out.
+     *
+     * @throws FieldException when the retention still covers the document
+     */
     public function delete(ContractInterface $contract): void;
+
+    /** How long a sealed contract must be kept, in years, floor included. */
+    public function retentionYears(): int;
 
     /**
      * Seals the document: reference, snapshot, rendered HTML and hash, in one

@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Aurora\Module\Accounting\Contract\Scheduler;
+
+use Aurora\Core\Scheduler\RecurringMessageProviderInterface;
+use Aurora\Module\Accounting\Contract\Message\RemindUnsignedContractsMessage;
+use Symfony\Component\Scheduler\RecurringMessage;
+
+/**
+ * Accounting's recurring job, contributed to core's main schedule.
+ *
+ * Once a day, and in the morning: a reminder is a piece of mail a person will
+ * read, so it goes out at an hour when that is plausible. Every minute would
+ * be pointless - nothing about "three days without an answer" changes between
+ * 08:15 and 08:16 - and hourly would only multiply the chances of sending two
+ * in one day after a clock change.
+ *
+ * The handler decides whether to send anything at all: the feature is off
+ * until somebody turns it on in the settings.
+ */
+final class AccountingRecurringMessageProvider implements RecurringMessageProviderInterface
+{
+    public function getRecurringMessages(): iterable
+    {
+        yield RecurringMessage::cron('15 7 * * *', new RemindUnsignedContractsMessage());
+    }
+}
