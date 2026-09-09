@@ -20,7 +20,15 @@ abstract class AbstractPostType implements PostTypeInterface
      * something behind them belong here - an entry nothing reads is a
      * checkbox that lies to the editor.
      */
-    public const array SUPPORTS = ['blocks', 'thumbnail'];
+    /**
+     * What a type of content can carry, and what the editor offers for it.
+     *
+     * `sequence` is the odd one out: it changes nothing in the editor and
+     * everything on the public page. A type read in sequence - a
+     * documentation, a course, a guide - shows its table of contents beside
+     * each page and a way to the next one, which a blog has no use for.
+     */
+    public const array SUPPORTS = ['blocks', 'thumbnail', 'sequence'];
 
     #[ORM\Column(length: 100, unique: true)]
     protected string $slug;

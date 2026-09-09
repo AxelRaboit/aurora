@@ -18,6 +18,11 @@ backend:
     no_section: Ninguna
     section_hint: "La entrada sigue resaltada en las publicaciones de ese tipo, aunque sus direcciones no estén bajo la suya."
 frontend:
+  sequence:
+    summary: Sumario
+    pagination: Página anterior y siguiente
+    previous: Página anterior
+    next: Página siguiente
   gallery:
     enlarge: "Ampliar la imagen"
     open: "Ampliar la imagen %position% de %total%"

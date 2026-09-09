@@ -175,6 +175,7 @@ backend:
     supports: Capacités
     supports_blocks: Contenu en blocs
     supports_thumbnail: Image à la une
+    supports_sequence: Lecture en séquence
     fields:
       row_actions:
         edit_description: Libellé, type, obligatoire ou non, options.
@@ -943,6 +944,11 @@ backend:
     css_class_placeholder: "menu-item--mis-en-avant"
     label_placeholder: "Accueil"
 frontend:
+  sequence:
+    summary: Sommaire
+    pagination: Page précédente et page suivante
+    previous: Page précédente
+    next: Page suivante
   gallery:
     enlarge: "Agrandir l'image"
     open: "Agrandir l'image %position% sur %total%"
