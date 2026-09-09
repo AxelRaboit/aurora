@@ -221,6 +221,7 @@ backend:
             hide_archived: Masquer les archivées
             row_actions:
                 open_draft_description: Ouvre une nouvelle version modifiable, à partir du texte en vigueur.
+                discard_description: Supprime le brouillon et laisse la trame telle qu'elle est publiée.
                 duplicate_description: Crée une autre trame, en brouillon, avec le même texte.
                 rename_description: Change le nom et le type de la trame, sans toucher au texte.
                 archive_description: La retire des listes de choix. Les contrats déjà signés ne bougent pas.
@@ -246,6 +247,10 @@ backend:
             published_notice: 'La version {number} est publiée. Son texte est définitif et ne peut plus être modifié.'
             discard: Abandonner
             discard_confirm: 'Abandonner le brouillon de la version {number} ? Son texte sera perdu.'
+            discard_hint: 'La version en vigueur ne change pas et aucun contrat n''est touché. Le numéro {number} reste consommé : le prochain brouillon sera la version {next}.'
+            discarded: Brouillon abandonné.
+            filter_all_kinds: Tous
+            no_match: Aucune trame ne correspond.
             variables:
                 custom: Un champ propre à un contrat
                 custom_hint: 'Écrivez ce jeton avec votre propre clé (minuscules, chiffres, tirets bas). Il sera demandé à la préparation de chaque contrat, et le scellement refuse de le laisser vide.'

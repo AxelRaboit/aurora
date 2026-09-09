@@ -5,6 +5,7 @@ import { buildPath } from "@/shared/utils/http/buildPath.js";
 import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import { useFormAction } from "@/shared/composables/form/useFormAction.js";
 import { useClientFilteredList } from "@/shared/composables/list/useClientFilteredList.js";
+import { useQueryState } from "@/shared/composables/useQueryState.js";
 import { required } from "@/shared/utils/validation/validators.js";
 
 function emptyForm() {
@@ -30,15 +31,54 @@ export function useContractTemplatesList(props) {
      */
     const showArchived = ref(false);
 
+    /**
+     * The type filter, in the query string like the view mode beside it.
+     *
+     * An empty value means every type and is left out of the URL, so an
+     * untouched list keeps a clean address and a filtered one is a link
+     * somebody can send. Only the types the application declares are
+     * accepted, so a hand-edited parameter cannot empty the list.
+     */
+    const kindValues = props.kinds.map((kind) => kind.value);
+    const { value: kind, set: setKind } = useQueryState("kind", {
+        defaultValue: "",
+        valid: ["", ...kindValues],
+    });
+
     const visibleItems = computed(() =>
         filteredItems.value.filter(
-            (template) => showArchived.value || !template.isArchived,
+            (template) =>
+                (showArchived.value || !template.isArchived) &&
+                ("" === kind.value || template.kind === kind.value),
         ),
     );
 
     const archivedCount = computed(
         () => items.value.filter((template) => template.isArchived).length,
     );
+
+    /**
+     * How many trames each type holds, for the filter's own labels.
+     *
+     * Counted on what the filter would show rather than on everything: a
+     * count that ignores the search or the archived toggle promises rows the
+     * next click does not deliver.
+     */
+    const kindCounts = computed(() => {
+        const counts = { "": 0 };
+
+        for (const value of kindValues) counts[value] = 0;
+
+        for (const template of filteredItems.value) {
+            if (!showArchived.value && template.isArchived) continue;
+
+            counts[""] += 1;
+
+            if (undefined !== counts[template.kind]) counts[template.kind] += 1;
+        }
+
+        return counts;
+    });
 
     function applyList(data) {
         if (Array.isArray(data?.templates)) items.value = data.templates;
@@ -118,6 +158,7 @@ export function useContractTemplatesList(props) {
 
     const pendingDelete = ref(null);
     const pendingDuplicate = ref(null);
+    const pendingDiscard = ref(null);
     const busy = ref(false);
 
     async function act(path, template, successKey) {
@@ -199,6 +240,46 @@ export function useContractTemplatesList(props) {
     }
 
     /**
+     * Abandons the open draft and leaves the trame as it was published.
+     *
+     * Almost as if the draft had never been opened: the version in force does
+     * not move, no contract is touched, and the trame offers to open a draft
+     * again. What does not come back is the number the draft claimed - the
+     * counter never reissues one, so the next draft is the one after it. That
+     * gap is the point of the counter, not a defect: a version number that
+     * once existed must never name a different text.
+     */
+    async function confirmDiscard() {
+        const template = pendingDiscard.value;
+        pendingDiscard.value = null;
+
+        if (!template?.draftId || busy.value) return;
+
+        busy.value = true;
+
+        try {
+            const data = await request(
+                buildPath(props.discardDraftPath, {
+                    id: template.id,
+                    versionId: template.draftId,
+                }),
+                {},
+            );
+
+            if (data?.errors) {
+                toast.error(Object.values(data.errors)[0]);
+
+                return;
+            }
+
+            applyList(data);
+            toast.success(t("backend.accounting.contract_templates.discarded"));
+        } finally {
+            busy.value = false;
+        }
+    }
+
+    /**
      * Duplicates a trame and opens the copy's draft.
      *
      * Straight to the editor rather than back to the list: somebody who
@@ -250,6 +331,9 @@ export function useContractTemplatesList(props) {
         visibleItems,
         showArchived,
         archivedCount,
+        kind,
+        setKind,
+        kindCounts,
         showCreate,
         newTemplate,
         createErrors,
@@ -265,11 +349,13 @@ export function useContractTemplatesList(props) {
         submitRename,
         pendingDelete,
         pendingDuplicate,
+        pendingDiscard,
         busy,
         archive,
         restore,
         confirmDelete,
         confirmDuplicate,
+        confirmDiscard,
         openDraft,
         editorPath,
     };
