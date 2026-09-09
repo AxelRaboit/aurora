@@ -5,7 +5,36 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
-## [0.9.100] - 2026-09-12
+## [0.9.101] - 2026-09-09
+
+### Corrigé
+
+#### La page d'un terme n'est pas une publication qui partage son adresse
+`/{locale}/{a}/{b}` se lit d'abord comme une publication, et ne retombe sur
+la page de terme que si aucune publication ne répond. La recherche la plus
+large des deux, celle qui ignore le type et qui existe pour qu'une adresse
+partagée avant un changement de type mène encore quelque part, s'exécutait
+avant cette retombée : n'importe quelle publication, de n'importe quel type,
+portant l'adresse du terme capturait sa page et répondait une redirection
+**permanente** vers elle-même. La page du terme devenait inatteignable, et
+les navigateurs gardaient le détour en cache.
+
+Sorti en vérifiant la documentation : la rubrique « site-public » et une
+carte du tour à cette adresse sont toutes deux légitimes, et aucune n'est
+l'autre.
+
+L'adresse qui nomme une taxonomie existante et un terme existant de
+celle-ci répond maintenant la page de ce terme, avant tout élargissement de
+la recherche. Une publication du type que l'adresse nomme continue de
+gagner : c'est la page la plus précise.
+
+Troisième défaut de la même famille après la 0.9.98 et la 0.9.100, et
+toujours la même cause : une identité pensée plus large que l'URL qui la
+porte.
+
+---
+
+## [0.9.100] - 2026-09-09
 
 ### Corrigé
 
@@ -31,7 +60,7 @@ la même cause : une identité pensée plus large que l'URL qui la porte.
 
 ---
 
-## [0.9.99] - 2026-09-12
+## [0.9.99] - 2026-09-09
 
 ### Ajouté
 
@@ -63,7 +92,7 @@ ne grandit pas avec le nombre de rubriques.
 
 ---
 
-## [0.9.98] - 2026-09-12
+## [0.9.98] - 2026-09-09
 
 ### Corrigé
 
@@ -108,7 +137,7 @@ façon, sinon personne ne peut raisonner sur ce que le champ expose.
 
 ---
 
-## [0.9.97] - 2026-09-12
+## [0.9.97] - 2026-09-09
 
 ### Ajouté
 

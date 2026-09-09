@@ -7,6 +7,8 @@ namespace Aurora\Tests\Integration\Module\Editorial\Post;
 use Aurora\Module\Editorial\Post\Entity\Post;
 use Aurora\Module\Editorial\Post\Enum\PostStatusEnum;
 use Aurora\Module\Editorial\PostType\Entity\PostType;
+use Aurora\Module\Editorial\Taxonomy\Entity\Taxonomy;
+use Aurora\Module\Editorial\Taxonomy\Entity\TaxonomyTerm;
 use Aurora\Tests\Integration\IntegrationTestCase;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -106,6 +108,56 @@ final class PostSlugScopeTest extends IntegrationTestCase
         $this->client->request('GET', sprintf('/fr/%s/%s', $this->second->getSlug(), $this->slug));
 
         self::assertResponseRedirects(sprintf('/fr/%s/%s', $this->first->getSlug(), $this->slug), 301);
+    }
+
+    /**
+     * A taxonomy page is not a publication that shares its address.
+     *
+     * `/{locale}/{a}/{b}` is read as a publication first, and only falls
+     * through to the term page when no publication answers. The wider of the
+     * two look-ups - the one ignoring the type, kept so an address shared
+     * before a publication changed type still leads somewhere - ran before
+     * that fall-through, so any publication anywhere carrying the term's slug
+     * captured the term's page and answered a **permanent** redirect to
+     * itself. The term page became unreachable, and browsers cached the
+     * detour.
+     *
+     * Found on the documentation: the rubric `site-public` and a card of the
+     * tour with that address are both legitimate, and neither is the other.
+     */
+    public function testATermPageIsNotCapturedByAPublicationSharingItsSlug(): void
+    {
+        $suffix = bin2hex(random_bytes(4));
+        $taxonomySlug = 'section-'.$suffix;
+
+        $taxonomy = new Taxonomy();
+        $taxonomy->setSlug($taxonomySlug)->setHierarchical(true)->addPostType($this->first);
+        $taxonomy->translate('fr')->setLabel('Rubriques');
+
+        $term = new TaxonomyTerm();
+        $term->setTaxonomy($taxonomy)->setPosition(1);
+        $term->translate('fr')->setName('Le site public')->setSlug($this->slug);
+
+        $this->entityManager->persist($taxonomy);
+        $this->entityManager->persist($term);
+        $this->entityManager->flush();
+
+        $this->created[] = [$term::class, (int) $term->getId()];
+        $this->created[] = [$taxonomy::class, (int) $taxonomy->getId()];
+
+        // The collision: a publication of an unrelated type, carrying the
+        // address the term also answers to.
+        $this->publish($this->second, 'La carte du tour');
+
+        // The controller walks the taxonomy's terms; a manager still holding
+        // the ones written above would answer from memory, and the collection
+        // it holds was never told about the term.
+        $this->entityManager->clear();
+
+        $this->client->request('GET', sprintf('/fr/%s/%s', $taxonomySlug, $this->slug));
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Le site public', (string) $this->client->getResponse()->getContent());
     }
 
     private function type(string $slug): PostType
