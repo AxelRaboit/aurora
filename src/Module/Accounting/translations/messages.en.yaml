@@ -387,6 +387,21 @@ accounting:
             footer: This link is personal to you. Please do not forward it.
             refused: You have declined to sign this contract.
             refused_hint: 'Refusal recorded on {date}. If that was a mistake, tell the provider: they can send the contract again.'
+        privacy:
+            title: 'Your data: what is collected and why'
+            controller: 'Data controller: {controller}.'
+            collected_title: 'What this page records'
+            collected_declared: 'What you type: name, first name, email address, place and date of signature, and the drawing of your signature.'
+            collected_observed: 'What the server observes as you sign: the date and time, your IP address, your browser, and the verification of the code sent by email.'
+            collected_refusal: 'If you decline to sign: the date, your IP address, your browser, and the reason if you give one.'
+            basis_title: 'Why, and on what basis'
+            basis_contract: 'Your identity and your signature are used to conclude and perform the contract (art. 6.1.b GDPR).'
+            basis_proof: 'The observed items are used to prove that the signature is yours and that the document has not changed. That is the provider''s legitimate interest in being able to defend the contract (art. 6.1.f), and what the law expects of an electronic signature.'
+            retention: 'This data is kept for {years} years from the sealing of the contract, because a contract has to stay provable for as long as it can be disputed. After that, it can be deleted.'
+            no_transfer: 'Nothing is passed to a third party for commercial purposes, and nothing is used to profile you. The contract and its evidence stay with the provider.'
+            rights: 'You may request access to your data, its rectification, its erasure and its portability, and object to its processing. Erasure cannot cover what proves a contract that is still enforceable, for as long as the period above runs.'
+            rights_contact: 'To do so, write to {email}.'
+            complaint: 'If an answer does not satisfy you, you may lodge a complaint with the CNIL.'
         refuse:
             trigger: 'I am not signing'
             heading: 'Decline this contract'
@@ -424,6 +439,7 @@ accounting:
             code_sent: 'Code sent to {email}.'
             resend_code: 'Send another code'
             consent: 'I have read the contract above and accept its terms. My electronic signature has the same value as a handwritten one.'
+            privacy_pointer: 'What is recorded, why and for how long: see "Your data" at the bottom of this page.'
             submit: 'Sign the contract'
             read_first: 'Scroll through the contract to the end before signing.'
             code_first: 'Request the confirmation code to continue.'

@@ -27,6 +27,7 @@ use Aurora\Module\Accounting\Contract\Repository\ContractTemplateVersionReposito
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
 use Aurora\Module\Accounting\Contract\Service\ContractCustomFieldScanner;
 use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
+use Aurora\Module\Accounting\Contract\Service\ContractPrivacyNotice;
 use Aurora\Module\Accounting\Contract\Service\ContractRetentionPolicy;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableCatalogue;
@@ -354,6 +355,55 @@ final class ContractAnswerAndRetentionTest extends IntegrationTestCase
         $this->contracts->delete($reloaded);
 
         self::assertNull($this->repository->find($id));
+    }
+
+    /**
+     * The notice cannot quote a retention nobody applies.
+     *
+     * This is the whole point of building it from the settings: a written
+     * promise contradicted by the code beside it is worse than no notice at
+     * all, and prose drifts silently where a shared read cannot.
+     */
+    public function testThePrivacyNoticeStatesTheRetentionThatIsEnforced(): void
+    {
+        $this->settings->set(ApplicationParameterEnum::AccountingContractRetentionYears->value, '7');
+
+        $notice = new ContractPrivacyNotice($this->settings, new ContractRetentionPolicy($this->settings));
+        $contract = $this->draftContract();
+
+        self::assertSame(7, $notice->forContract($contract)['retentionYears']);
+        self::assertSame(
+            $notice->forContract($contract)['retentionYears'],
+            (new ContractRetentionPolicy($this->settings))->years(),
+        );
+    }
+
+    /** It is read by the person the document was addressed to, in its language. */
+    public function testThePrivacyNoticeCarriesTheContractLocale(): void
+    {
+        $notice = new ContractPrivacyNotice($this->settings, new ContractRetentionPolicy($this->settings));
+
+        self::assertSame('fr', $notice->forContract($this->draftContract())['locale']);
+    }
+
+    /** An unfilled setting is skipped, not printed as a blank line. */
+    public function testAnUnsetProviderSettingLeavesTheNoticeReadable(): void
+    {
+        foreach ([
+            ApplicationParameterEnum::AccountingProviderName,
+            ApplicationParameterEnum::AccountingProviderAddress,
+            ApplicationParameterEnum::AccountingProviderEmail,
+        ] as $parameter) {
+            $this->settings->set($parameter->value, '');
+        }
+
+        $notice = new ContractPrivacyNotice($this->settings, new ContractRetentionPolicy($this->settings));
+        $built = $notice->forContract($this->draftContract());
+
+        self::assertSame([], $built['controller']);
+        self::assertSame('', $built['email']);
+        // The part that does not depend on the settings still stands.
+        self::assertGreaterThanOrEqual(ContractRetentionPolicy::MINIMUM_YEARS, $built['retentionYears']);
     }
 
     private function requestFrom(string $ip = '198.51.100.4', string $userAgent = 'Test'): Request

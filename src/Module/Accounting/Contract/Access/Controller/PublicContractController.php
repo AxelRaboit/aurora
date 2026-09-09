@@ -15,6 +15,7 @@ use Aurora\Module\Accounting\Contract\Access\Manager\ContractAccessLinkManagerIn
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
 use Aurora\Module\Accounting\Contract\Refusal\Dto\ContractRefusalInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Refusal\Manager\ContractRefusalManagerInterface;
+use Aurora\Module\Accounting\Contract\Service\ContractPrivacyNotice;
 use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureChallengeManagerInterface;
 use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManagerInterface;
@@ -59,6 +60,7 @@ final class PublicContractController extends AbstractController
         private readonly ContractSignatureInputFactoryInterface $inputFactory,
         private readonly ContractRefusalManagerInterface $refusals,
         private readonly ContractRefusalInputFactoryInterface $refusalInputFactory,
+        private readonly ContractPrivacyNotice $privacyNotice,
         private readonly PayloadValidator $payloadValidator,
         // Autowired by parameter name: `$contractSignatureLimiter` resolves to
         // the `contract_signature` limiter declared in config, the same way the
@@ -103,6 +105,9 @@ final class PublicContractController extends AbstractController
             'refusePath' => $this->generateUrl('public_contract_refuse', ['selector' => $selector, 'token' => $token]),
             'isConcluded' => ContractStatusEnum::Countersigned === $contract->getStatus(),
             'isRefused' => $contract->isRefused(),
+            // Article 13, at the moment of collection, which is this page: the
+            // form below asks for a name and an email and records an IP.
+            'privacy' => $this->privacyNotice->forContract($contract),
         ]));
     }
 

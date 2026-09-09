@@ -81,6 +81,10 @@
         }) }}></div>
     {% endif %}
 
+    {# After the form, before the fingerprint: the reader has seen what is
+       asked of them, and this says what happens to it. #}
+    {{ include('@Accounting/public/_privacy.html.twig') }}
+
     <p class="text-xs text-muted">
         {{ 'accounting.public.contract.hash_notice'|trans({'{hash}': contract.contentHash|slice(0, 16)}, null, contract.locale) }}
     </p>
