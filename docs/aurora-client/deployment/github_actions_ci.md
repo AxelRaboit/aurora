@@ -133,7 +133,7 @@ n'a **pas** accès à d'autres repos privés du même propriétaire (frontière
 de sécurité par défaut). Si vous décidez de forker aurora-core et de
 garder le fork privé :
 
-### Setup en 2 étapes
+### Setup en 3 étapes
 
 #### Étape A - Créer un fine-grained PAT
 
