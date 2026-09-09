@@ -103,13 +103,13 @@ final class ContractProviderSettingsTest extends IntegrationTestCase
 
     public function testTheSettingIsWrittenIntoTheSealedDocument(): void
     {
-        $this->setProviderSiret('107 071 508 00017');
+        $this->setProviderSiret('904 512 336 00010');
 
         $contract = $this->contractAskingForSiret();
 
         $this->contracts->freeze($contract);
 
-        self::assertStringContainsString('SIRET du prestataire : 107 071 508 00017', (string) $contract->getRenderedHtml());
+        self::assertStringContainsString('SIRET du prestataire : 904 512 336 00010', (string) $contract->getRenderedHtml());
     }
 
     /**

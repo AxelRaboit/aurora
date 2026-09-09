@@ -265,7 +265,7 @@ final class ContractPdfTest extends IntegrationTestCase
             'firstName' => 'Axel',
             'lastName' => 'Raboit',
             'email' => 'axel@example.test',
-            'place' => 'Pont-de-Chéruy',
+            'place' => 'Grenoble',
             'date' => '2026-09-09',
             'signatureImage' => self::PNG,
             'consent' => true,
