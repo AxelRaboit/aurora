@@ -226,7 +226,13 @@ class ContractTemplatesController extends AbstractController
             return $this->publishedRefusal();
         }
 
-        return $this->jsonSuccess(['indexPath' => $this->generateUrl('backend_accounting_contract_templates')]);
+        // Both callers answered at once: the editor navigates to `indexPath`,
+        // the list refreshes in place from the payload. One route, because
+        // abandoning a draft is the same act from either screen.
+        return $this->jsonSuccess([
+            'indexPath' => $this->generateUrl('backend_accounting_contract_templates'),
+            ...$this->viewBuilder->listPayload(),
+        ]);
     }
 
     /**

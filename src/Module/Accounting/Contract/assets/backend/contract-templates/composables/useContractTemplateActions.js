@@ -4,6 +4,7 @@ import {
     ArchiveRestore,
     Copy,
     FilePlus2,
+    FileX2,
     Pencil,
     Trash2,
 } from "lucide-vue-next";
@@ -50,6 +51,21 @@ export function useContractTemplateActions() {
                 title: t(`${prefix}.open_draft`),
                 description: t(`${prefix}.row_actions.open_draft_description`),
                 onSelect: () => handlers.openDraft(template),
+            });
+        }
+
+        // The way back out of a draft opened by mistake. Offered here rather
+        // than only inside the editor, and under the delete permission: it
+        // destroys a text nobody has published, which is exactly what the
+        // editor's own Abandon button does.
+        if (template.draftId && can("accounting.contract_templates.delete")) {
+            actions.push({
+                key: "discard",
+                color: "amber",
+                icon: FileX2,
+                title: t(`${prefix}.discard`),
+                description: t(`${prefix}.row_actions.discard_description`),
+                onSelect: () => handlers.discard(template),
             });
         }
 

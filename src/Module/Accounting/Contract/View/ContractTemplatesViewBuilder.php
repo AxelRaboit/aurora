@@ -36,6 +36,10 @@ final readonly class ContractTemplatesViewBuilder
             'deletePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_delete', ['id' => '__id__']),
             'openDraftPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_open_draft', ['id' => '__id__']),
             'duplicatePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_duplicate', ['id' => '__id__']),
+            // Abandoning a draft is offered from the list too, not only from
+            // inside the editor: somebody who opened one by mistake should not
+            // have to walk into it to walk back out.
+            'discardDraftPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_discard', ['id' => '__id__', 'versionId' => '__versionId__']),
             'editorPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_editor', ['id' => '__id__', 'versionId' => '__versionId__']),
         ];
     }

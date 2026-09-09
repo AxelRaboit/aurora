@@ -13,10 +13,13 @@ import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppNoData from "@/shared/components/feedback/AppNoData.vue";
 import AppIconButton from "@/shared/components/action/AppIconButton.vue";
+import AppBadge from "@/shared/components/feedback/AppBadge.vue";
+import AppTab from "@/shared/components/nav/AppTab.vue";
 import { useListViewMode } from "@/shared/composables/list/useListViewMode.js";
 import {
     Archive,
     Copy,
+    FileX2,
     LayoutGrid,
     List,
     Pencil,
@@ -40,14 +43,19 @@ const props = defineProps({
     deletePath: { type: String, required: true },
     openDraftPath: { type: String, required: true },
     duplicatePath: { type: String, required: true },
+    discardDraftPath: { type: String, required: true },
     editorPath: { type: String, required: true },
 });
 
 const {
+    items,
     search,
     visibleItems,
     showArchived,
     archivedCount,
+    kind,
+    setKind,
+    kindCounts,
     showCreate,
     newTemplate,
     createErrors,
@@ -63,11 +71,13 @@ const {
     submitRename,
     pendingDelete,
     pendingDuplicate,
+    pendingDiscard,
     busy,
     archive,
     restore,
     confirmDelete,
     confirmDuplicate,
+    confirmDiscard,
     openDraft,
     editorPath,
 } = useContractTemplatesList(props);
@@ -143,6 +153,7 @@ const actionsFor = useContractTemplateActions();
 
 const handlers = {
     openDraft,
+    discard: (template) => (pendingDiscard.value = template),
     duplicate: (template) => (pendingDuplicate.value = template),
     rename: openRename,
     archive,
@@ -215,9 +226,49 @@ function rowActions(template) {
             </template>
         </AppListToolbar>
 
+        <!-- The type filter, in the pill group the rest of the app uses for
+             filters. Two values and an "all", so a choice that reads at a
+             glance rather than a panel of checkboxes - that panel earns its
+             keep on the posts list, which filters on three dimensions at
+             once. The count sits next to the label because a filter leading
+             to an empty list is better seen before the click than after. -->
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex p-1 bg-surface-2 border border-line rounded-lg gap-1">
+                <AppTab
+                    size="sm"
+                    :active="kind === ''"
+                    active-class="bg-surface text-primary shadow-sm"
+                    inactive-class="text-secondary hover:text-primary"
+                    v-on:click="setKind('')"
+                >
+                    {{ t("backend.accounting.contract_templates.filter_all_kinds") }}
+                    <span class="ml-1 text-xs text-muted">{{ kindCounts[""] ?? 0 }}</span>
+                </AppTab>
+                <AppTab
+                    v-for="option in kindOptions"
+                    :key="option.value"
+                    size="sm"
+                    :active="kind === option.value"
+                    active-class="bg-surface text-primary shadow-sm"
+                    inactive-class="text-secondary hover:text-primary"
+                    v-on:click="setKind(option.value)"
+                >
+                    {{ option.label }}
+                    <span class="ml-1 text-xs text-muted">{{ kindCounts[option.value] ?? 0 }}</span>
+                </AppTab>
+            </div>
+        </div>
+
+        <!-- Two different absences: nothing exists yet, or nothing matches
+             what is being asked. The second is the one where somebody should
+             clear a filter rather than create a trame. -->
         <AppNoData
             v-if="!visibleItems.length"
-            :message="t('backend.accounting.contract_templates.empty')"
+            :message="
+                items.length
+                    ? t('backend.accounting.contract_templates.no_match')
+                    : t('backend.accounting.contract_templates.empty')
+            "
         />
 
         <!-- The list view. No colour but the type pill: a table earns its
@@ -280,33 +331,53 @@ function rowActions(template) {
                                 {{ kindLabel(template.kind) }}
                             </span>
                         </td>
-                        <td class="px-6 py-3 text-muted text-xs hidden lg:table-cell whitespace-nowrap">
-                            {{ template.locales.length ? template.locales.join(", ") : "-" }}
+                        <!-- One badge per language rather than a comma list:
+                             the question asked here is whether a given
+                             language is written, and a badge answers it
+                             without reading the line. -->
+                        <td class="px-6 py-3 hidden lg:table-cell">
+                            <span v-if="template.locales.length" class="flex flex-wrap gap-1">
+                                <AppBadge
+                                    v-for="locale in template.locales"
+                                    :key="locale"
+                                    color="slate"
+                                >
+                                    {{ locale }}
+                                </AppBadge>
+                            </span>
+                            <span v-else class="text-muted text-xs">-</span>
                         </td>
+                        <!-- The version in force reads as a state, so it gets
+                             the colour the app gives a published thing. An
+                             absence stays plain text: "never published" is a
+                             sentence, not a state to spot. -->
                         <td class="px-6 py-3 whitespace-nowrap">
-                            <span v-if="template.publishedVersion" class="text-primary">
+                            <AppBadge v-if="template.publishedVersion" color="emerald">
                                 {{
                                     t("backend.accounting.contract_templates.version_label", {
                                         number: template.publishedVersion,
                                     })
                                 }}
-                            </span>
+                            </AppBadge>
                             <span v-else class="text-muted text-xs">
                                 {{ t("backend.accounting.contract_templates.never_published") }}
                             </span>
                         </td>
+                        <!-- The draft is amber and clickable: on this screen it
+                             is the one state somebody is meant to act on, and
+                             the badge is the way into the editor. -->
                         <td class="px-6 py-3 hidden md:table-cell whitespace-nowrap">
-                            <a
+                            <AppBadge
                                 v-if="template.draftId"
+                                color="amber"
                                 :href="editorPath(template.id, template.draftId)"
-                                class="text-accent-500 hover:underline"
                             >
                                 {{
                                     t("backend.accounting.contract_templates.version_label", {
                                         number: template.draftVersion,
                                     })
                                 }}
-                            </a>
+                            </AppBadge>
                             <span v-else class="text-muted text-xs">
                                 {{ t("backend.accounting.contract_templates.no_draft") }}
                             </span>
@@ -358,9 +429,13 @@ function rowActions(template) {
                             >
                                 {{ kindLabel(template.kind) }}
                             </span>
-                            <span v-if="template.locales.length">
-                                {{ template.locales.join(", ") }}
-                            </span>
+                            <AppBadge
+                                v-for="locale in template.locales"
+                                :key="locale"
+                                color="slate"
+                            >
+                                {{ locale }}
+                            </AppBadge>
                         </p>
                     </div>
                     <span
@@ -379,13 +454,13 @@ function rowActions(template) {
                             {{ t("backend.accounting.contract_templates.in_force") }}
                         </dt>
                         <dd class="text-primary">
-                            <template v-if="template.publishedVersion">
+                            <AppBadge v-if="template.publishedVersion" color="emerald">
                                 {{
                                     t("backend.accounting.contract_templates.version_label", {
                                         number: template.publishedVersion,
                                     })
                                 }}
-                            </template>
+                            </AppBadge>
                             <span v-else class="text-muted">
                                 {{ t("backend.accounting.contract_templates.never_published") }}
                             </span>
@@ -396,17 +471,17 @@ function rowActions(template) {
                             {{ t("backend.accounting.contract_templates.state_draft") }}
                         </dt>
                         <dd class="text-primary">
-                            <a
+                            <AppBadge
                                 v-if="template.draftId"
+                                color="amber"
                                 :href="editorPath(template.id, template.draftId)"
-                                class="text-accent-500 hover:underline"
                             >
                                 {{
                                     t("backend.accounting.contract_templates.version_label", {
                                         number: template.draftVersion,
                                     })
                                 }}
-                            </a>
+                            </AppBadge>
                             <span v-else class="text-muted">
                                 {{ t("backend.accounting.contract_templates.no_draft") }}
                             </span>
@@ -551,6 +626,53 @@ function rowActions(template) {
                     >
                         <Copy class="w-3.5 h-3.5" :stroke-width="2" />
                         {{ t("backend.accounting.contract_templates.duplicate") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <!-- What comes back and what does not, said before the click: the
+             version in force is untouched, and the number the draft claimed
+             is spent for good. Somebody who reads "as if I had never opened
+             it" and then sees version 4 where they expected 3 would think
+             something broke. -->
+        <AppModal
+            :show="!!pendingDiscard"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.accounting.contract_templates.discard')"
+            :icon="FileX2"
+            v-on:close="pendingDiscard = null"
+        >
+            <p class="text-sm text-primary">
+                {{
+                    t("backend.accounting.contract_templates.discard_confirm", {
+                        number: pendingDiscard?.draftVersion ?? "",
+                    })
+                }}
+            </p>
+            <p class="text-sm text-secondary">
+                {{
+                    t("backend.accounting.contract_templates.discard_hint", {
+                        number: pendingDiscard?.draftVersion ?? "",
+                        next: (pendingDiscard?.draftVersion ?? 0) + 1,
+                    })
+                }}
+            </p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="pendingDiscard = null">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="danger"
+                        size="md"
+                        :loading="busy"
+                        v-on:click="confirmDiscard"
+                    >
+                        <FileX2 class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contract_templates.discard") }}
                     </AppButton>
                 </AppModalFooter>
             </template>
