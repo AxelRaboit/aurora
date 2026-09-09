@@ -5,6 +5,34 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.102] - 2026-09-09
+
+### Corrigé
+
+#### La page d'une rubrique liste ce que ses sous-rubriques contiennent
+Une publication est rangée sous une feuille de la taxonomie, jamais sous la
+branche au-dessus. La page d'une rubrique qui ne contient que des
+sous-rubriques répondait donc 200 et ne listait rien : une adresse qu'un
+lecteur atteint légitimement, et une page vide qui se lit comme une panne
+plutôt que comme un vide.
+
+Sorti sur la documentation, dont les trois parties sont des termes sans
+publication propre.
+
+La page d'un terme liste maintenant le terme et tout ce qui est classé
+dessous. Une taxonomie à plat n'a pas de descendant, donc rien ne change pour
+les étiquettes.
+
+L'appartenance est demandée en `EXISTS` et non en jointure, et ce n'est pas
+un choix de style : une publication portant deux termes de la même branche
+correspond deux fois à la jointure, donc serait affichée deux fois et comptée
+deux fois dans la pagination. `DISTINCT` serait la réponse habituelle, et
+PostgreSQL la refuse ici puisque la ligne porte la grille, une colonne `json`,
+et que `json` n'a pas d'opérateur d'égalité. Ne pas joindre du tout règle les
+deux.
+
+---
+
 ## [0.9.101] - 2026-09-09
 
 ### Corrigé

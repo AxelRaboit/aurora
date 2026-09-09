@@ -51,5 +51,16 @@ interface TaxonomyTermInterface
     /** @return list<TaxonomyTermInterface> */
     public function getAncestors(): array;
 
+    /**
+     * This term and everything filed under it, the term first.
+     *
+     * The counterpart of {@see getAncestors()}, and what a listing needs: a
+     * publication is filed under a leaf, so a section that only holds
+     * sub-sections holds no publication of its own and would list nothing.
+     *
+     * @return list<TaxonomyTermInterface>
+     */
+    public function getSelfAndDescendants(): array;
+
     public function isDescendantOf(TaxonomyTermInterface $candidate): bool;
 }
