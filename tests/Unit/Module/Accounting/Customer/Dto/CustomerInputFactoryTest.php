@@ -84,9 +84,9 @@ final class CustomerInputFactoryTest extends TestCase
 
     public function testTheSiretKeepsOnlyItsDigits(): void
     {
-        $input = $this->factory->fromArray(['siret' => '107 071 508 00017']);
+        $input = $this->factory->fromArray(['siret' => '904 512 336 00010']);
 
-        self::assertSame('10707150800017', $input->getSiret());
+        self::assertSame('90451233600010', $input->getSiret());
     }
 
     /**
