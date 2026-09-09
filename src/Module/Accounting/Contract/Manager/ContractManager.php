@@ -18,6 +18,7 @@ use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
 use Aurora\Module\Accounting\Contract\Exception\UnrenderableBlockException;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
+use Aurora\Module\Accounting\Contract\Service\ContractCustomFieldScanner;
 use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
@@ -64,6 +65,7 @@ class ContractManager implements ContractManagerInterface
         protected readonly CustomerRepository $customerRepository,
         protected readonly ContractTemplateRepository $templateRepository,
         protected readonly TranslatorInterface $translator,
+        protected readonly ContractCustomFieldScanner $customFields,
     ) {}
 
     public function create(ContractInputInterface $input): ContractInterface
@@ -109,6 +111,7 @@ class ContractManager implements ContractManagerInterface
 
         $contract
             ->setCustomer($customer)
+            ->setCustomFields($input->getCustomFields())
             ->setLocale($input->getLocale())
             ->setAmountCents($input->getAmountCents())
             ->setAmountCurrency(null === $input->getAmountCurrency() ? null : CurrencyEnum::tryFrom($input->getAmountCurrency()))
@@ -195,6 +198,14 @@ class ContractManager implements ContractManagerInterface
             $this->assertPublished($annex, 'annexVersion');
         }
 
+        // Checked before a reference is minted: a contract refused here has
+        // consumed nothing, and the sequence has no gap to explain.
+        $missing = $this->missingCustomFields($contract);
+
+        if ([] !== $missing) {
+            throw new FieldException('customFields', $this->translator->trans('backend.accounting.contracts.errors.custom_fields_missing', ['{fields}' => implode(', ', $missing)]));
+        }
+
         // Minted before the rendering, because the reference is printed inside
         // the document and therefore has to be part of what the hash covers.
         $reference = $this->nextReference();
@@ -236,6 +247,7 @@ class ContractManager implements ContractManagerInterface
             'reference' => $reference,
             'customerId' => $contract->getCustomer()->getId(),
             'values' => $values,
+            'customFields' => $contract->getCustomFields(),
             'deferredTokens' => $deferred,
             'parts' => $parts,
         ];
@@ -258,6 +270,42 @@ class ContractManager implements ContractManagerInterface
             'bodyVersion' => $body->getNumber(),
             'annexVersion' => $annex?->getNumber(),
         ]);
+    }
+
+    /**
+     * The blanks the chosen trames ask for and this contract has not filled.
+     *
+     * Read from the wording, which is where the question is asked: a version
+     * using `{{contract.custom.acompte}}` makes `acompte` mandatory, and no
+     * list kept elsewhere can drift away from it.
+     *
+     * An empty string counts as missing. A trame asks for a value because the
+     * sentence around it needs one, and sealing "un acompte de  % à la
+     * signature" would produce a signed document with a hole in it.
+     *
+     * @return list<string>
+     */
+    protected function missingCustomFields(ContractInterface $contract): array
+    {
+        $filled = [];
+
+        foreach ($contract->getCustomFields() as $key => $value) {
+            if ('' !== $value) {
+                $filled[$key] = true;
+            }
+        }
+
+        $missing = [];
+
+        foreach ($this->partsOf($contract) as $version) {
+            foreach ($this->customFields->keysOf($version) as $key) {
+                if (!isset($filled[$key])) {
+                    $missing[$key] = true;
+                }
+            }
+        }
+
+        return array_keys($missing);
     }
 
     /**

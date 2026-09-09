@@ -16,6 +16,10 @@ function emptyForm(locales) {
         amount: "",
         amountCurrency: "EUR",
         effectiveDate: "",
+        // Keyed by the token the trame writes, without its prefix. Empty until
+        // a trame is chosen: which blanks exist is the wording's answer, not
+        // this form's.
+        customFields: {},
     };
 }
 
@@ -126,6 +130,7 @@ export function useContractsList(props) {
                     : String(contract.amountCents / 100),
             amountCurrency: contract.amountCurrency ?? "EUR",
             effectiveDate: contract.effectiveDate ?? "",
+            customFields: { ...(contract.customFields ?? {}) },
         };
         clearEdit();
         showEdit.value = true;

@@ -8,8 +8,12 @@ use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Core\Support\Str;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 
+use function is_array;
 use function is_numeric;
+use function is_scalar;
+use function is_string;
 use function mb_trim;
+use function preg_match;
 use function preg_replace;
 use function round;
 use function str_replace;
@@ -33,7 +37,45 @@ class ContractInputFactory implements ContractInputFactoryInterface
             // printed into a contract.
             amountCurrency: null === $amount ? null : $this->currency($data),
             effectiveDate: $this->rawOrNull($data, 'effectiveDate'),
+            customFields: $this->customFields($data['customFields'] ?? null),
         );
+    }
+
+    /**
+     * The map, trimmed, with anything unusable dropped.
+     *
+     * A key is kept only when it could appear in a trame - lowercase, digits
+     * and underscores. An empty value is kept rather than dropped: the freeze
+     * is the place that refuses a blank, and it can only name a missing field
+     * if it sees the key.
+     *
+     * @return array<string, string>
+     */
+    private function customFields(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $fields = [];
+
+        foreach ($raw as $key => $value) {
+            if (!is_string($key)) {
+                continue;
+            }
+
+            if (1 !== preg_match('/^[a-z0-9_]{1,40}$/', $key)) {
+                continue;
+            }
+
+            if (!is_scalar($value)) {
+                continue;
+            }
+
+            $fields[$key] = mb_trim((string) $value);
+        }
+
+        return $fields;
     }
 
     /** @param array<string, mixed> $data */

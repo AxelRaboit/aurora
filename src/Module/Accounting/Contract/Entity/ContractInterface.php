@@ -46,6 +46,17 @@ interface ContractInterface extends TimestampableInterface
     /** @param array<string, string> $variables */
     public function setVariables(array $variables): static;
 
+    /**
+     * The blanks this one contract fills, keyed without the
+     * `contract.custom.` prefix.
+     *
+     * @return array<string, string>
+     */
+    public function getCustomFields(): array;
+
+    /** @param array<string, string> $customFields */
+    public function setCustomFields(array $customFields): static;
+
     public function getAmountCents(): ?int;
 
     public function setAmountCents(?int $amountCents): static;

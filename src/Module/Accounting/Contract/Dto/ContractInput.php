@@ -37,6 +37,16 @@ class ContractInput implements ContractInputInterface
         // type error thrown out of a constructor.
         #[Assert\Regex(pattern: '/^\d{4}-\d{2}-\d{2}$/', message: 'backend.accounting.contracts.errors.effective_date_invalid')]
         public readonly ?string $effectiveDate = null,
+        // The blanks the chosen trames ask for, keyed without the
+        // `contract.custom.` prefix. Which ones are required is the wording's
+        // business, checked at the freeze; what is checked here is only that a
+        // key looks like a token, because a key that cannot appear in a trame
+        // can only be a mistake.
+        #[Assert\All([
+            new Assert\Type('string'),
+            new Assert\Length(max: 500, maxMessage: 'backend.accounting.contracts.errors.custom_field_too_long'),
+        ])]
+        public readonly array $customFields = [],
     ) {}
 
     public function getCustomerId(): ?int
@@ -67,6 +77,11 @@ class ContractInput implements ContractInputInterface
     public function getAmountCurrency(): ?string
     {
         return $this->amountCurrency;
+    }
+
+    public function getCustomFields(): array
+    {
+        return $this->customFields;
     }
 
     public function getEffectiveDate(): ?string
