@@ -44,6 +44,8 @@ shared:
   chart:
     share: "{count} of {total} ({percent}%)"
   common:
+    list_view: List view
+    grid_view: Card view
     search: Search
     selected: selected
     pagination: 'Page {page} of {totalPages}'

@@ -164,6 +164,7 @@ backend:
                 customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
                 governing_locale_conflict: 'Le corps et l''annexe ne désignent pas la même langue faisant foi ({locales}). Un document ne peut pas avoir deux textes de référence.'
                 custom_fields_missing: 'Ces compléments sont demandés par les trames choisies et ne sont pas renseignés : {fields}'
+                provider_settings_missing: 'Ces informations du prestataire ne sont pas renseignées dans les réglages, et la trame les imprime : {fields}'
                 custom_field_too_long: Un complément ne peut pas dépasser 500 caractères.
         contract_templates:
             title: Trames de contrat
@@ -201,6 +202,12 @@ backend:
             never_published: Jamais publiée
             no_draft: Aucun brouillon
             open_draft: Ouvrir un brouillon
+            duplicate: Dupliquer
+            duplicate_suffix: (copie)
+            duplicate_confirm: 'Dupliquer {name} ?'
+            duplicate_hint: La copie reprend le texte en vigueur dans un brouillon, sous un nouveau nom. Rien n'est publié.
+            duplicated: Trame dupliquée.
+            col_locales: Langues
             archive: Archiver
             restore: Réactiver
             show_archived: 'Afficher les archivées ({count})'
@@ -231,6 +238,7 @@ backend:
                 title: Variables disponibles
                 hint: Copiez un jeton et collez-le dans le texte. Il sera remplacé à la construction du contrat.
                 customer: Le client
+                provider: Le prestataire
                 contract: Le contrat
                 customer_legal_name: Raison sociale
                 customer_legal_form: Forme juridique

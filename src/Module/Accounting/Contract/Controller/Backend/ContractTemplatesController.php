@@ -11,8 +11,10 @@ use Aurora\Core\Validation\Exception\FieldException;
 use Aurora\Core\Validation\Service\PayloadValidator;
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateVersionInputFactoryInterface;
+use Aurora\Module\Accounting\Contract\Duplicate\ContractTemplateDuplicator;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplate;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersion;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Exception\PublishedVersionIsImmutableException;
 use Aurora\Module\Accounting\Contract\Manager\ContractTemplateManagerInterface;
 use Aurora\Module\Accounting\Contract\Serializer\ContractTemplateSerializerInterface;
@@ -34,6 +36,7 @@ class ContractTemplatesController extends AbstractController
 
     public function __construct(
         protected readonly ContractTemplateManagerInterface $templateManager,
+        protected readonly ContractTemplateDuplicator $duplicator,
         protected readonly ContractTemplateInputFactoryInterface $templateInputFactory,
         protected readonly ContractTemplateVersionInputFactoryInterface $versionInputFactory,
         protected readonly ContractTemplateSerializerInterface $serializer,
@@ -129,6 +132,32 @@ class ContractTemplatesController extends AbstractController
         $this->templateManager->delete($template);
 
         return $this->jsonSuccess($this->viewBuilder->listPayload());
+    }
+
+    /**
+     * Copies a trame, wording included, into a new one whose first version is
+     * a draft.
+     *
+     * Guarded by `create` rather than by `edit`: duplicating makes a new trame,
+     * and somebody allowed to write trames should be able to start from one
+     * they may not modify. The copy is theirs to publish.
+     */
+    #[Route('/{id}/duplicate', name: '_duplicate', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('accounting.contract_templates.create')]
+    public function duplicate(ContractTemplate $template): JsonResponse
+    {
+        $copy = $this->duplicator->duplicate($template);
+
+        return $this->jsonSuccess([
+            ...$this->viewBuilder->listPayload(),
+            'draftId' => $copy->getDraft()?->getId(),
+            'editorPath' => $copy->getDraft() instanceof ContractTemplateVersionInterface
+                ? $this->generateUrl('backend_accounting_contract_templates_editor', [
+                    'id' => $copy->getId(),
+                    'versionId' => $copy->getDraft()->getId(),
+                ])
+                : null,
+        ]);
     }
 
     #[Route('/{id}/open-draft', name: '_open_draft', methods: [HttpMethodEnum::Post->value])]

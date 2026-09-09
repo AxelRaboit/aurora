@@ -16,6 +16,7 @@ import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import AppSignaturePad from "@/shared/components/form/input/AppSignaturePad.vue";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
+import AppDatePicker from "@/shared/components/form/picker/AppDatePicker.vue";
 import AppMessage from "@/shared/components/feedback/AppMessage.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
@@ -346,12 +347,11 @@ const documentHtml = computed(() =>
                         :error="countersignErrors.place"
                         required
                     />
-                    <AppInput
+                    <AppDatePicker
                         v-model="countersignForm.date"
                         :label="t('accounting.public.sign.date')"
                         :placeholder="t('accounting.public.sign.date_placeholder')"
                         :error="countersignErrors.date"
-                        type="date"
                         required
                     />
                 </div>

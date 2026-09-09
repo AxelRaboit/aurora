@@ -206,6 +206,16 @@ class ContractManager implements ContractManagerInterface
             throw new FieldException('customFields', $this->translator->trans('backend.accounting.contracts.errors.custom_fields_missing', ['{fields}' => implode(', ', $missing)]));
         }
 
+        // The provider's own identity comes from the settings, so a blank
+        // there is not something this screen can fix. Named as a settings
+        // problem rather than as an unknown token, which is what it looks like
+        // from the renderer's side.
+        $unsetProvider = $this->unsetProviderSettings($contract, $this->variables->providerValues());
+
+        if ([] !== $unsetProvider) {
+            throw new FieldException('bodyVersion', $this->translator->trans('backend.accounting.contracts.errors.provider_settings_missing', ['{fields}' => implode(', ', $unsetProvider)]));
+        }
+
         // Minted before the rendering, because the reference is printed inside
         // the document and therefore has to be part of what the hash covers.
         $reference = $this->nextReference();
@@ -301,6 +311,34 @@ class ContractManager implements ContractManagerInterface
             foreach ($this->customFields->keysOf($version) as $key) {
                 if (!isset($filled[$key])) {
                     $missing[$key] = true;
+                }
+            }
+        }
+
+        return array_keys($missing);
+    }
+
+    /**
+     * The provider tokens a trame asks for and the settings do not hold.
+     *
+     * Read from the resolved values rather than from the settings directly:
+     * the resolver already decided what counts as set, and asking twice is how
+     * two answers appear.
+     *
+     * @param array<string, string> $values
+     *
+     * @return list<string>
+     */
+    protected function unsetProviderSettings(ContractInterface $contract, array $values): array
+    {
+        $missing = [];
+
+        foreach ($this->partsOf($contract) as $version) {
+            foreach ($this->customFields->keysOf($version, ContractCustomFieldScanner::PROVIDER_PREFIX) as $key) {
+                $token = ContractCustomFieldScanner::PROVIDER_PREFIX.$key;
+
+                if (!isset($values[$token])) {
+                    $missing[$token] = true;
                 }
             }
         }

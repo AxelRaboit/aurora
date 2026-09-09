@@ -49,6 +49,22 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     case CoreMediaFolderPrefix = 'core_media_folder_prefix';
     case CoreMenuItemPrefix = 'core_menu_item_prefix';
     case AccountingContractPrefix = 'accounting_contract_prefix';
+
+    // The provider's own identity, printed into every contract. Settings
+    // rather than trame wording: it is the same block in every document, and
+    // a bank change should not mean editing every trame.
+    case AccountingProviderName = 'accounting_provider_name';
+    case AccountingProviderRepresentative = 'accounting_provider_representative';
+    case AccountingProviderAddress = 'accounting_provider_address';
+    case AccountingProviderSiret = 'accounting_provider_siret';
+    case AccountingProviderApeCode = 'accounting_provider_ape_code';
+    case AccountingProviderVatMention = 'accounting_provider_vat_mention';
+    case AccountingProviderEmail = 'accounting_provider_email';
+    case AccountingProviderPhone = 'accounting_provider_phone';
+    case AccountingProviderBankHolder = 'accounting_provider_bank_holder';
+    case AccountingProviderBankIban = 'accounting_provider_bank_iban';
+    case AccountingProviderBankBic = 'accounting_provider_bank_bic';
+    case AccountingProviderBankName = 'accounting_provider_bank_name';
     case NavSectionAliases = 'nav_section_aliases';
     case NavItemAliases = 'nav_item_aliases';
     case NavSectionOrder = 'nav_section_order';
@@ -114,6 +130,18 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreMediaFolderPrefix => 'backend.parameters.core_media_folder_prefix.label',
             self::CoreMenuItemPrefix => 'backend.parameters.core_menu_item_prefix.label',
             self::AccountingContractPrefix => 'backend.parameters.accounting_contract_prefix.label',
+            self::AccountingProviderName => 'backend.parameters.accounting_provider_name.label',
+            self::AccountingProviderRepresentative => 'backend.parameters.accounting_provider_representative.label',
+            self::AccountingProviderAddress => 'backend.parameters.accounting_provider_address.label',
+            self::AccountingProviderSiret => 'backend.parameters.accounting_provider_siret.label',
+            self::AccountingProviderApeCode => 'backend.parameters.accounting_provider_ape_code.label',
+            self::AccountingProviderVatMention => 'backend.parameters.accounting_provider_vat_mention.label',
+            self::AccountingProviderEmail => 'backend.parameters.accounting_provider_email.label',
+            self::AccountingProviderPhone => 'backend.parameters.accounting_provider_phone.label',
+            self::AccountingProviderBankHolder => 'backend.parameters.accounting_provider_bank_holder.label',
+            self::AccountingProviderBankIban => 'backend.parameters.accounting_provider_bank_iban.label',
+            self::AccountingProviderBankBic => 'backend.parameters.accounting_provider_bank_bic.label',
+            self::AccountingProviderBankName => 'backend.parameters.accounting_provider_bank_name.label',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.label',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.label',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.label',
@@ -164,6 +192,18 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreMediaFolderPrefix => 'backend.parameters.core_media_folder_prefix.description',
             self::CoreMenuItemPrefix => 'backend.parameters.core_menu_item_prefix.description',
             self::AccountingContractPrefix => 'backend.parameters.accounting_contract_prefix.description',
+            self::AccountingProviderName => 'backend.parameters.accounting_provider_name.description',
+            self::AccountingProviderRepresentative => 'backend.parameters.accounting_provider_representative.description',
+            self::AccountingProviderAddress => 'backend.parameters.accounting_provider_address.description',
+            self::AccountingProviderSiret => 'backend.parameters.accounting_provider_siret.description',
+            self::AccountingProviderApeCode => 'backend.parameters.accounting_provider_ape_code.description',
+            self::AccountingProviderVatMention => 'backend.parameters.accounting_provider_vat_mention.description',
+            self::AccountingProviderEmail => 'backend.parameters.accounting_provider_email.description',
+            self::AccountingProviderPhone => 'backend.parameters.accounting_provider_phone.description',
+            self::AccountingProviderBankHolder => 'backend.parameters.accounting_provider_bank_holder.description',
+            self::AccountingProviderBankIban => 'backend.parameters.accounting_provider_bank_iban.description',
+            self::AccountingProviderBankBic => 'backend.parameters.accounting_provider_bank_bic.description',
+            self::AccountingProviderBankName => 'backend.parameters.accounting_provider_bank_name.description',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.description',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.description',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.description',
@@ -220,6 +260,18 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreMediaFolderPrefix => SequencePrefixEnum::MediaFolder->value,
             self::CoreMenuItemPrefix => SequencePrefixEnum::MenuItem->value,
             self::AccountingContractPrefix => SequencePrefixEnum::Contract->value,
+            self::AccountingProviderName => '',
+            self::AccountingProviderRepresentative => '',
+            self::AccountingProviderAddress => '',
+            self::AccountingProviderSiret => '',
+            self::AccountingProviderApeCode => '',
+            self::AccountingProviderVatMention => '',
+            self::AccountingProviderEmail => '',
+            self::AccountingProviderPhone => '',
+            self::AccountingProviderBankHolder => '',
+            self::AccountingProviderBankIban => '',
+            self::AccountingProviderBankBic => '',
+            self::AccountingProviderBankName => '',
             self::NavSectionAliases => '{}',
             self::NavItemAliases => '{}',
             self::NavSectionOrder => '[]',
@@ -244,7 +296,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     public function isAdminAccessible(): bool
     {
         return match ($this->getGroup()) {
-            'general', 'reading', 'localization', 'branding', 'seo', 'system', 'email', 'sequences', 'media', 'navigation', 'appearance' => true,
+            'general', 'reading', 'localization', 'branding', 'seo', 'system', 'email', 'sequences', 'media', 'navigation', 'appearance', 'accounting' => true,
             default => false,
         };
     }
@@ -260,6 +312,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::LogoMediaId, self::FaviconMediaId => 'branding',
             self::SeoTitleTemplate, self::SeoDefaultDescription, self::SeoDefaultOgImage, self::SeoTwitterHandle => 'seo',
             self::CoreUserPrefix, self::CoreMediaPrefix, self::CoreAccessRequestPrefix, self::CoreAuditLogPrefix, self::CoreResetPasswordPrefix, self::CoreMediaFolderPrefix, self::CoreMenuItemPrefix, self::AccountingContractPrefix => 'sequences',
+            self::AccountingProviderName, self::AccountingProviderRepresentative, self::AccountingProviderAddress, self::AccountingProviderSiret, self::AccountingProviderApeCode, self::AccountingProviderVatMention, self::AccountingProviderEmail, self::AccountingProviderPhone, self::AccountingProviderBankHolder, self::AccountingProviderBankIban, self::AccountingProviderBankBic, self::AccountingProviderBankName => 'accounting',
             self::EmailLocale => 'email',
             self::NavSectionAliases, self::NavItemAliases, self::NavSectionOrder, self::NavItemOrder => 'navigation',
             self::ColorPickerPresets => 'appearance',

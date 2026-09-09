@@ -117,6 +117,7 @@ export function useContractTemplatesList(props) {
     }
 
     const pendingDelete = ref(null);
+    const pendingDuplicate = ref(null);
     const busy = ref(false);
 
     async function act(path, template, successKey) {
@@ -197,6 +198,45 @@ export function useContractTemplatesList(props) {
         }
     }
 
+    /**
+     * Duplicates a trame and opens the copy's draft.
+     *
+     * Straight to the editor rather than back to the list: somebody who
+     * duplicates a trame does it to change something in it, and a copy sitting
+     * in the list is one click short of the intent.
+     */
+    async function confirmDuplicate() {
+        const template = pendingDuplicate.value;
+        pendingDuplicate.value = null;
+
+        if (!template || busy.value) return;
+
+        busy.value = true;
+
+        try {
+            const data = await request(
+                buildPath(props.duplicatePath, { id: template.id }),
+                {},
+            );
+
+            if (data?.errors) {
+                toast.error(Object.values(data.errors)[0]);
+
+                return;
+            }
+
+            applyList(data);
+
+            toast.success(
+                t("backend.accounting.contract_templates.duplicated"),
+            );
+
+            if (data?.editorPath) window.location.assign(data.editorPath);
+        } finally {
+            busy.value = false;
+        }
+    }
+
     function editorPath(templateId, versionId) {
         return buildPath(props.editorPath, {
             id: templateId,
@@ -224,10 +264,12 @@ export function useContractTemplatesList(props) {
         openRename,
         submitRename,
         pendingDelete,
+        pendingDuplicate,
         busy,
         archive,
         restore,
         confirmDelete,
+        confirmDuplicate,
         openDraft,
         editorPath,
     };

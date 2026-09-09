@@ -44,6 +44,8 @@ shared:
   chart:
     share: "{count} sur {total} ({percent} %)"
   common:
+    list_view: Vue liste
+    grid_view: Vue cartes
     search: Rechercher
     selected: sélectionnés
     pagination: 'Page {page} sur {totalPages}'
