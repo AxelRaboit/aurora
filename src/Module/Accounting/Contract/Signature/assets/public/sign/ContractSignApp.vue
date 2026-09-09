@@ -352,6 +352,13 @@ async function sign() {
         </label>
         <p v-if="errors.consent" class="text-xs text-red-500">{{ errors.consent }}</p>
 
+        <!-- Points at the notice rather than repeating it: the information has
+             to be within reach when the box is ticked, and a second copy of it
+             here would be a second copy to keep true. -->
+        <p class="text-xs text-muted">
+            {{ t("accounting.public.sign.privacy_pointer") }}
+        </p>
+
         <div class="space-y-2">
             <AppButton
                 variant="primary"

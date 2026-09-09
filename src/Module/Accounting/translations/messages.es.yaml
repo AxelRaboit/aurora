@@ -30,6 +30,21 @@ accounting:
             footer: Este enlace es personal. No lo transmita.
             refused: Ha indicado que no firma este contrato.
             refused_hint: 'Rechazo registrado el {date}. Si es un error, dígalo al prestador: podrá volver a enviarle el contrato.'
+        privacy:
+            title: 'Sus datos: qué se recoge y por qué'
+            controller: 'Responsable del tratamiento: {controller}.'
+            collected_title: 'Lo que registra esta página'
+            collected_declared: 'Lo que usted escribe: nombre, apellidos, dirección de correo, lugar y fecha de firma, y el trazo de su firma.'
+            collected_observed: 'Lo que el servidor observa en el momento de firmar: la fecha y la hora, su dirección IP, su navegador y la verificación del código enviado por correo.'
+            collected_refusal: 'Si indica que no firma: la fecha, su dirección IP, su navegador y el motivo si lo indica.'
+            basis_title: 'Por qué, y sobre qué base'
+            basis_contract: 'Su identidad y su firma sirven para celebrar y ejecutar el contrato (art. 6.1.b del RGPD).'
+            basis_proof: 'Los elementos observados sirven para probar que la firma es suya y que el documento no ha cambiado. Es el interés legítimo del prestador en poder defender el contrato (art. 6.1.f), y lo que la ley espera de una firma electrónica.'
+            retention: 'Estos datos se conservan {years} años desde el sellado del contrato, porque un contrato debe seguir siendo demostrable durante todo el tiempo en que pueda ser impugnado. Pasado ese plazo, pueden suprimirse.'
+            no_transfer: 'Nada se transmite a terceros con fines comerciales, y nada se utiliza para elaborar perfiles. El contrato y su prueba permanecen en poder del prestador.'
+            rights: 'Puede solicitar el acceso a sus datos, su rectificación, su supresión y su portabilidad, y oponerse a su tratamiento. La supresión no puede alcanzar lo que prueba un contrato aún exigible, mientras corra el plazo indicado.'
+            rights_contact: 'Para ello, escriba a {email}.'
+            complaint: 'Si una respuesta no le satisface, puede presentar una reclamación ante la autoridad de control competente.'
         refuse:
             trigger: 'No firmo'
             heading: 'No firmar este contrato'
@@ -67,6 +82,7 @@ accounting:
             code_sent: 'Código enviado a {email}.'
             resend_code: 'Enviar otro código'
             consent: 'He leído el contrato anterior y acepto sus términos. Mi firma electrónica tiene el mismo valor que una firma manuscrita.'
+            privacy_pointer: 'Lo que se registra, por qué y durante cuánto tiempo: véase «Sus datos» al final de esta página.'
             submit: 'Firmar el contrato'
             read_first: 'Desplace el contrato hasta el final antes de firmar.'
             code_first: 'Solicite el código de confirmación para continuar.'

@@ -181,6 +181,37 @@ final class ContractSigningFlowTest extends IntegrationTestCase
         self::assertNull($provider->getChallengeVerifiedAt());
     }
 
+    /**
+     * Article 13 is satisfied on the page that collects, or nowhere.
+     *
+     * Asserted on the served HTML rather than on the service that builds it:
+     * a notice that exists in a class and never reaches the reader is the
+     * failure this is guarding against, and it is invisible in a unit test.
+     * The retention figure is checked too, because the whole point of reading
+     * it from the settings is that the page cannot promise one number while
+     * the deletion guard enforces another.
+     */
+    public function testThePublicPageTellsTheSignerWhatIsCollected(): void
+    {
+        $url = $this->sentContractUrl();
+
+        $guest = $this->asGuest();
+        $guest->request('GET', $url);
+
+        self::assertSame(200, $guest->getResponse()->getStatusCode());
+
+        $html = (string) $guest->getResponse()->getContent();
+
+        self::assertStringContainsString('Vos données', $html);
+        // What is recorded without being typed is the part somebody would not
+        // guess, so it is the part that has to be there.
+        self::assertStringContainsString('adresse IP', $html);
+        self::assertStringContainsString('6.1.b', $html);
+        self::assertStringContainsString('6.1.f', $html);
+        self::assertStringContainsString('10 ans', $html);
+        self::assertStringContainsString('CNIL', $html);
+    }
+
     public function testTheCodeIsSpentOnlyOnceAValidPayloadArrives(): void
     {
         $url = $this->sentContractUrl();
