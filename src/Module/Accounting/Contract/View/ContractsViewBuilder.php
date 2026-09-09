@@ -6,6 +6,7 @@ namespace Aurora\Module\Accounting\Contract\View;
 
 use Aurora\Core\Locale\Service\LocaleOptionsProviderInterface;
 use Aurora\Core\Money\Enum\CurrencyEnum;
+use Aurora\Core\Routing\PathTemplateGenerator;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
@@ -27,6 +28,7 @@ final readonly class ContractsViewBuilder
         private CustomerRepository $customerRepository,
         private ContractSerializerInterface $serializer,
         private LocaleOptionsProviderInterface $localeOptions,
+        private PathTemplateGenerator $pathTemplates,
         private UrlGeneratorInterface $urlGenerator,
         private ContractCustomFieldScanner $customFields,
     ) {}
@@ -44,15 +46,15 @@ final readonly class ContractsViewBuilder
             'locales' => $this->localeOptions->getActiveOptions(),
             'currencies' => $this->currencyOptions(),
             'createPath' => $this->urlGenerator->generate('backend_accounting_contracts_create'),
-            'updatePath' => $this->urlGenerator->generate('backend_accounting_contracts_update', ['id' => '__id__']),
-            'deletePath' => $this->urlGenerator->generate('backend_accounting_contracts_delete', ['id' => '__id__']),
-            'freezePath' => $this->urlGenerator->generate('backend_accounting_contracts_freeze', ['id' => '__id__']),
-            'sendPath' => $this->urlGenerator->generate('backend_accounting_contracts_send', ['id' => '__id__']),
-            'revokeLinkPath' => $this->urlGenerator->generate('backend_accounting_contracts_revoke_link', ['id' => '__id__']),
-            'countersignPath' => $this->urlGenerator->generate('backend_accounting_contracts_countersign', ['id' => '__id__']),
-            'pdfPath' => $this->urlGenerator->generate('backend_accounting_contracts_pdf', ['id' => '__id__']),
-            'showPath' => $this->urlGenerator->generate('backend_accounting_contracts_show', ['id' => '__id__']),
-            'terminatePath' => $this->urlGenerator->generate('backend_accounting_contracts_terminate', ['id' => '__id__']),
+            'updatePath' => $this->pathTemplates->generate('backend_accounting_contracts_update', ['id' => '__id__']),
+            'deletePath' => $this->pathTemplates->generate('backend_accounting_contracts_delete', ['id' => '__id__']),
+            'freezePath' => $this->pathTemplates->generate('backend_accounting_contracts_freeze', ['id' => '__id__']),
+            'sendPath' => $this->pathTemplates->generate('backend_accounting_contracts_send', ['id' => '__id__']),
+            'revokeLinkPath' => $this->pathTemplates->generate('backend_accounting_contracts_revoke_link', ['id' => '__id__']),
+            'countersignPath' => $this->pathTemplates->generate('backend_accounting_contracts_countersign', ['id' => '__id__']),
+            'pdfPath' => $this->pathTemplates->generate('backend_accounting_contracts_pdf', ['id' => '__id__']),
+            'showPath' => $this->pathTemplates->generate('backend_accounting_contracts_show', ['id' => '__id__']),
+            'terminatePath' => $this->pathTemplates->generate('backend_accounting_contracts_terminate', ['id' => '__id__']),
             'terminationOrigins' => $this->terminationOrigins(),
             // What an amendment may be attached to. Only concluded, running,
             // non-amendment contracts, so the picker cannot offer a choice the

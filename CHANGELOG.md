@@ -5,6 +5,67 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.96] - 2026-09-09
+
+### Corrigé
+
+#### Les trois écrans du module Comptabilité s'ouvrent enfin en local
+Les listes des clients, des trames et des contrats répondaient 500 partout
+sauf en production, et depuis la 0.9.86. Leurs constructeurs de vue
+fabriquaient `/contracts/__id__/update` en appelant directement le générateur
+d'URL, sur une route dont le `id` est déclaré `\d+` : le générateur refuse, et
+il refuse pendant le rendu de la page.
+
+La production ne le montrait pas. `strict_requirements: null` y perce le trou
+sans rien dire, alors qu'en dev et en test la même génération lève. Un défaut
+qui n'existe que là où sont les développeurs, ce qui explique qu'il ait tenu
+onze versions et que le module n'ait jamais eu la moindre capture d'écran.
+
+Le mécanisme qui règle ça existait déjà, mais seulement pour Twig. Il devient
+un service, `PathTemplateGenerator`, que les constructeurs de vue peuvent
+appeler comme les gabarits appelaient `path_template()`. Les routes gardent
+leur `\d+` honnête : ce qui est relâché, c'est la génération, et seulement pour
+l'appel qui veut laisser un trou.
+
+Un test demande maintenant les trois écrans et vérifie qu'ils répondent. C'est
+le test le plus ennuyeux du module et celui qui manquait le plus : les autres
+pilotent les endpoints, aucun ne demandait une liste.
+
+#### Deux étiquettes de module illisibles dans le journal d'audit
+La colonne Module affichait `backend.modules.accounting` et
+`backend.modules.notes_markdown` en clair. L'écran lit `backend.modules.<module>`
+avec la chaîne que porte la ligne d'audit, qui n'est pas la clé du réglage
+d'activation du module. Les deux traductions manquaient.
+
+### Ajouté
+
+#### Un jeu de démonstration pour la comptabilité
+`fixtures/Accounting/` : trois sociétés fictives dont les SIRET passent la
+somme de contrôle, quatre trames au texte inventé, et un contrat dans chaque
+état que la liste sait dessiner - brouillon, envoyé avec une relance, conclu,
+avenant de ce conclu, refusé avec son motif, et résilié avec un préavis en
+cours.
+
+Le module était le seul sans jeu d'essai, donc le seul dont les écrans ne
+montraient rien en local. Les douze réglages d'identité du prestataire sont
+écrasés et pas seulement remplis quand ils sont vides : sur une base locale
+recopiée de la production, ils portaient une vraie identité, et le scellement
+l'avait figée dans le document. Un instantané ne se corrige pas après coup,
+c'est tout son intérêt.
+
+#### Les captures du tour, reproductibles
+`tools/screenshots/capture-tour.mjs` : un script Playwright qui régénère les
+images des cartes de `/fr/page/aurora` sur une instance locale chargée en
+`make demo`, toutes à la même taille et dans le même thème. Les vingt-huit
+existantes avaient été prises à la main une par une, ce qui explique les deux
+doublons.
+
+Local et jeu factice uniquement, et c'est la raison d'être du script : une
+capture prise en production mettrait le nom et le SIRET d'un vrai client sur
+une page publique.
+
+---
+
 ## [0.9.95] - 2026-09-09
 
 ### Ajouté
