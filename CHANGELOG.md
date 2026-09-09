@@ -5,6 +5,44 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.89] - 2026-09-09
+
+### Modifié
+
+#### La barre d'outils des listes tient sur une ligne
+Le sélecteur de vue quitte le bloc d'actions et reste collé au champ de
+recherche, téléphone compris. Empilé sous le champ il se lisait comme un
+second filtre et coûtait une ligne entière ; c'est un contrôle de la
+recherche, pas une action de la page. Le bouton primaire garde la sienne,
+avec son texte : c'est lui qu'on cherche quand on ouvre l'écran.
+
+`AppListToolbar` porte un slot `inline` pour ça, donc les autres listes
+peuvent l'adopter sans réinventer la grille. Sans ce slot, la mise en page
+est celle d'avant : rien à changer dans les écrans qui ne s'en servent pas.
+
+#### Les actions des trames et des contrats passent en modal
+Les deux écrans du module prennent la colonne *Actions* nommée, alignée à
+droite, et le regroupement derrière un seul bouton déjà en place sur les
+utilisateurs et sur les clients. Une bande d'icônes ne parle qu'à qui les
+connaît déjà, elle serre la ligne sur un écran étroit, et l'action
+destructrice y finit à quelques pixels des inoffensives.
+
+La liste d'actions est définie une fois par écran et rendue deux fois : les
+cartes la déplient, la ligne la replie. Écrite dans les deux gabarits, une
+permission ajoutée d'un côté et oubliée de l'autre est un bouton que
+quelqu'un possède et ne devrait pas.
+
+### Corrigé
+
+#### L'en-tête des contrats scellés était d'une colonne trop court
+La colonne du lien de signature n'avait pas de titre, alors que sa
+traduction existait depuis le début : cinq en-têtes pour six cellules, donc
+un décalage silencieux sur les écrans larges.
+
+### Dans aurora-client
+
+Rien à répercuter, aucune migration.
+
 ## [0.9.88] - 2026-09-09
 
 ### Ajouté
