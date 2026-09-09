@@ -31,6 +31,20 @@ abstract class AbstractTaxonomyTermTranslation implements TaxonomyTermTranslatio
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     protected TaxonomyTermInterface $term;
 
+    /**
+     * The taxonomy of the term above, carried here as well.
+     *
+     * Denormalised so that a unique index can say what the product means: an
+     * address is unique inside its taxonomy, not across all of them. That
+     * uniqueness spans two tables otherwise, and no index can span two tables.
+     *
+     * Never set by a caller - {@see self::setTerm()} writes it - so the two
+     * columns cannot come to disagree.
+     */
+    #[ORM\ManyToOne(targetEntity: TaxonomyInterface::class)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    protected TaxonomyInterface $taxonomy;
+
     public function getLocale(): string
     {
         return $this->locale;
@@ -87,7 +101,13 @@ abstract class AbstractTaxonomyTermTranslation implements TaxonomyTermTranslatio
     public function setTerm(TaxonomyTermInterface $term): static
     {
         $this->term = $term;
+        $this->taxonomy = $term->getTaxonomy();
 
         return $this;
+    }
+
+    public function getTaxonomy(): TaxonomyInterface
+    {
+        return $this->taxonomy;
     }
 }

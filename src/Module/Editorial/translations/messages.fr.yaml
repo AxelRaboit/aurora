@@ -756,6 +756,7 @@ backend:
       translations_required: Au moins une langue doit être renseignée.
       builtin_protected: Une taxonomie native ne peut pas être supprimée.
       term_self_nested: Un terme ne peut pas être placé sous lui-même ni sous l'un de ses enfants.
+      term_slug_taken: "L'adresse « {slug} » est déjà prise par le terme « {term} » de cette taxonomie."
       parent_wrong_taxonomy: "Le terme {parentId} n'appartient pas à la taxonomie « {taxonomy} »."
       reorder_cycle: 'Ce déplacement placerait le terme {id} dans sa propre descendance.'
     label_placeholder: "Catégories"
