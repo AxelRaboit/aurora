@@ -5,6 +5,30 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.92] - 2026-09-09
+
+### Corrigé
+
+#### Une action prise dans la liste des trames répond dans la liste
+Ouvrir un brouillon et dupliquer sautaient dans l'éditeur. Chacun se
+défendait isolément, mais la règle qui compte est plus simple : ce qu'on
+déclenche depuis une ligne s'affiche sur cette ligne. Le badge ambre du
+brouillon est désormais le chemin vers l'éditeur, et c'est le lecteur qui
+décide d'y aller.
+
+Le saut avait aussi un défaut concret : quelqu'un qui ouvrait un brouillon sur
+la mauvaise trame se retrouvait dans l'éditeur, avec le bouton Retour du
+navigateur pour seule sortie et un brouillon dont il ne voulait pas.
+
+Un test couvre les trois actions plutôt que de le confier à la relecture : un
+`location.assign` égaré se lit comme une commodité jusqu'au jour où quelqu'un
+perd sa place dans une liste de trente trames. Il couvre aussi le filtre par
+type, dont le refus d'une valeur que l'application ne déclare pas.
+
+### Dans aurora-client
+
+Rien à répercuter, aucune migration.
+
 ## [0.9.91] - 2026-09-09
 
 ### Ajouté

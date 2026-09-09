@@ -215,6 +215,15 @@ export function useContractTemplatesList(props) {
         }
     }
 
+    /**
+     * Opens a draft and stays on the list.
+     *
+     * An action taken on a row answers on that row: the draft badge appears,
+     * amber and clickable, and going in is the reader's next click rather
+     * than something the list decides for them. Jumping straight into the
+     * editor also stranded whoever opened a draft on the wrong trame - the way
+     * back was the browser's Back button and a draft nobody wanted.
+     */
     async function openDraft(template) {
         if (busy.value) return;
         busy.value = true;
@@ -231,9 +240,10 @@ export function useContractTemplatesList(props) {
                 return;
             }
 
-            if (data?.draftId) {
-                window.location.assign(editorPath(template.id, data.draftId));
-            }
+            applyList(data);
+            toast.success(
+                t("backend.accounting.contract_templates.draft_opened"),
+            );
         } finally {
             busy.value = false;
         }
@@ -280,11 +290,11 @@ export function useContractTemplatesList(props) {
     }
 
     /**
-     * Duplicates a trame and opens the copy's draft.
+     * Duplicates a trame, and stays on the list like every other row action.
      *
-     * Straight to the editor rather than back to the list: somebody who
-     * duplicates a trame does it to change something in it, and a copy sitting
-     * in the list is one click short of the intent.
+     * The copy arrives as a row with its own draft badge, which is where it
+     * belongs: the list is what the reader was looking at, and the copy is
+     * one click from being opened.
      */
     async function confirmDuplicate() {
         const template = pendingDuplicate.value;
@@ -311,8 +321,6 @@ export function useContractTemplatesList(props) {
             toast.success(
                 t("backend.accounting.contract_templates.duplicated"),
             );
-
-            if (data?.editorPath) window.location.assign(data.editorPath);
         } finally {
             busy.value = false;
         }
