@@ -387,6 +387,21 @@ accounting:
             footer: Ce lien vous est personnel. Ne le transmettez pas.
             refused: Vous avez indiqué ne pas signer ce contrat.
             refused_hint: 'Refus enregistré le {date}. Si c''est une erreur, dites-le au prestataire : il pourra vous renvoyer le contrat.'
+        privacy:
+            title: 'Vos données : ce qui est collecté et pourquoi'
+            controller: 'Responsable du traitement : {controller}.'
+            collected_title: 'Ce que cette page enregistre'
+            collected_declared: 'Ce que vous saisissez : nom, prénom, adresse email, lieu et date de signature, et le tracé de votre signature.'
+            collected_observed: 'Ce que le serveur observe au moment où vous signez : la date et l''heure, votre adresse IP, votre navigateur, et la vérification du code envoyé par email.'
+            collected_refusal: 'Si vous indiquez ne pas signer : la date, votre adresse IP, votre navigateur, et le motif si vous en donnez un.'
+            basis_title: 'Pourquoi, et sur quelle base'
+            basis_contract: 'Votre identité et votre signature servent à conclure et exécuter le contrat (art. 6.1.b du RGPD).'
+            basis_proof: 'Les éléments observés servent à prouver que la signature est bien la vôtre et que le document n''a pas changé. C''est l''intérêt légitime du prestataire à pouvoir défendre le contrat (art. 6.1.f), et ce que la loi attend d''une signature électronique.'
+            retention: 'Ces données sont conservées {years} ans à compter du scellement du contrat, parce qu''un contrat doit rester prouvable pendant toute la durée où il peut être contesté. Passé ce délai, elles peuvent être supprimées.'
+            no_transfer: 'Rien n''est transmis à un tiers à des fins commerciales, et rien n''est utilisé pour vous profiler. Le contrat et sa preuve restent chez le prestataire.'
+            rights: 'Vous pouvez demander l''accès à vos données, leur rectification, leur effacement et leur portabilité, et vous opposer à leur traitement. L''effacement ne peut pas porter sur ce qui prouve un contrat encore opposable, tant que la durée ci-dessus court.'
+            rights_contact: 'Pour cela, écrivez à {email}.'
+            complaint: 'Si une réponse ne vous satisfait pas, vous pouvez saisir la CNIL.'
         refuse:
             trigger: 'Je ne signe pas'
             heading: 'Ne pas signer ce contrat'
@@ -424,6 +439,7 @@ accounting:
             code_sent: 'Code envoyé à {email}.'
             resend_code: 'Renvoyer un code'
             consent: 'J''ai lu le contrat ci-dessus et j''en accepte les termes. Ma signature électronique a la même valeur qu''une signature manuscrite.'
+            privacy_pointer: 'Ce qui est enregistré, pourquoi et pendant combien de temps : voir « Vos données » en bas de cette page.'
             submit: 'Signer le contrat'
             read_first: 'Faites défiler le contrat jusqu''en bas avant de signer.'
             code_first: 'Demandez le code de confirmation pour continuer.'
