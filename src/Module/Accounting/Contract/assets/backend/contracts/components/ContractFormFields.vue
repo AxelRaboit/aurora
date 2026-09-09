@@ -32,6 +32,39 @@ function set(field, value) {
 const localeOptions = computed(() =>
     props.locales.map((locale) => ({ value: locale.code, label: locale.label })),
 );
+
+/**
+ * The blanks the chosen trames ask this contract to fill.
+ *
+ * Read off the picked options rather than declared here: the wording is what
+ * asks, so a clause edited tomorrow changes this list without touching the
+ * form. Body and annex are merged, since a document is both.
+ */
+const requiredCustomFields = computed(() => {
+    const keys = new Set();
+
+    for (const [options, chosen] of [
+        [props.bodies, form.value.bodyTemplateId],
+        [props.annexes, form.value.annexTemplateId],
+    ]) {
+        const option = options.find((each) => each.value === String(chosen));
+
+        for (const key of option?.customFields ?? []) keys.add(key);
+    }
+
+    return [...keys];
+});
+
+/** `interlocuteur_nom` reads as "Interlocuteur nom" rather than as a token. */
+function labelFor(key) {
+    const words = key.replace(/_/g, " ");
+
+    return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+function setCustomField(key, value) {
+    set("customFields", { ...(props.modelValue.customFields ?? {}), [key]: value });
+}
 </script>
 
 <template>
@@ -103,6 +136,35 @@ const localeOptions = computed(() =>
                 :hint="t('backend.accounting.contracts.locale_hint')"
                 v-on:update:model-value="set('locale', $event)"
             />
+        </div>
+
+        <!-- The blanks the chosen trames leave to this contract. Shown only
+             when a trame asks for some, so a form for a trame that asks for
+             none looks exactly as it did before. -->
+        <div
+            v-if="requiredCustomFields.length"
+            class="space-y-3 rounded-lg border border-line bg-surface-2/40 p-4"
+        >
+            <div class="space-y-1">
+                <p class="text-sm font-medium text-primary">
+                    {{ t("backend.accounting.contracts.custom_fields") }}
+                </p>
+                <p class="text-xs text-muted">
+                    {{ t("backend.accounting.contracts.custom_fields_hint") }}
+                </p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <AppInput
+                    v-for="key in requiredCustomFields"
+                    :key="key"
+                    :model-value="form.customFields?.[key] ?? ''"
+                    :label="labelFor(key)"
+                    :placeholder="t('backend.accounting.contracts.custom_field_placeholder')"
+                    :error="errors.customFields"
+                    required
+                    v-on:update:model-value="setCustomField(key, $event)"
+                />
+            </div>
         </div>
     </div>
 </template>

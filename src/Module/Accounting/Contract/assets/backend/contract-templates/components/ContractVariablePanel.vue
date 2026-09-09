@@ -35,6 +35,9 @@ function tokenText(token) {
     return `{{${token}}}`;
 }
 
+/** Same reason as `tokenText`: the braces cannot be typed in the template. */
+const customExample = tokenText("contract.custom.ma_cle");
+
 async function copy(token) {
     try {
         await navigator.clipboard.writeText(tokenText(token));
@@ -95,6 +98,21 @@ async function copy(token) {
                     </span>
                 </li>
             </ul>
+        </div>
+
+        <!-- The escape hatch, documented where somebody writing a clause will
+             look for it: a blank that varies per contract has no catalogue
+             variable and does not need one. -->
+        <div class="rounded-lg border border-dashed border-line bg-surface p-3 space-y-1">
+            <p class="text-2xs font-medium uppercase tracking-wider text-muted">
+                {{ t("backend.accounting.contract_templates.variables.custom") }}
+            </p>
+            <code class="block text-2xs font-mono text-primary break-all">
+                {{ customExample }}
+            </code>
+            <p class="text-2xs text-muted">
+                {{ t("backend.accounting.contract_templates.variables.custom_hint") }}
+            </p>
         </div>
     </div>
 </template>

@@ -8,10 +8,12 @@ use Aurora\Core\Locale\Service\LocaleOptionsProviderInterface;
 use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
 use Aurora\Module\Accounting\Contract\Repository\ContractRepository;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Serializer\ContractSerializerInterface;
+use Aurora\Module\Accounting\Contract\Service\ContractCustomFieldScanner;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Accounting\Customer\Repository\CustomerRepository;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -25,6 +27,7 @@ final readonly class ContractsViewBuilder
         private ContractSerializerInterface $serializer,
         private LocaleOptionsProviderInterface $localeOptions,
         private UrlGeneratorInterface $urlGenerator,
+        private ContractCustomFieldScanner $customFields,
     ) {}
 
     /** @return array<string, mixed> */
@@ -93,12 +96,24 @@ final readonly class ContractsViewBuilder
     private function templateOptions(ContractTemplateKindEnum $kind): array
     {
         return array_map(
-            static fn (ContractTemplateInterface $template): array => [
+            fn (ContractTemplateInterface $template): array => [
                 'value' => (string) $template->getId(),
                 'label' => $template->getName(),
+                // The blanks this trame will ask for, so the form can put them
+                // on screen the moment it is chosen rather than at the freeze,
+                // where a refusal means going back and starting again.
+                'customFields' => $this->customFieldsOf($template),
             ],
             $this->templateRepository->findSelectable($kind),
         );
+    }
+
+    /** @return list<string> */
+    private function customFieldsOf(ContractTemplateInterface $template): array
+    {
+        $version = $template->getLatestPublishedVersion();
+
+        return $version instanceof ContractTemplateVersionInterface ? $this->customFields->keysOf($version) : [];
     }
 
     /** @return list<array{value: string, label: string}> */

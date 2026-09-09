@@ -5,6 +5,50 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.87] - 2026-09-09
+
+### Ajouté
+
+#### Les blancs qu'une trame laisse à un contrat
+Les trames réelles portent une poignée de champs qui ne sont ni l'identité du
+client ni du texte de trame : la personne habilitée à valider, un seuil
+kilométrique, un taux d'acompte. Ils varient d'un contrat à l'autre, donc ils
+n'ont leur place ni dans le gabarit ni sur la fiche client, et jusqu'ici ils
+n'en avaient nulle part.
+
+La trame les déclare en les utilisant. Écrire `{{contract.custom.acompte}}` dans
+un article suffit : l'écran de préparation demande le champ dès que la trame est
+choisie, et le scellement refuse de le laisser vide. Il n'y a pas de seconde
+liste des champs attendus, qui divergerait de la rédaction dès la première
+clause modifiée.
+
+Le refus arrive avant que la référence soit tirée : un contrat refusé n'a rien
+consommé, et la séquence n'a pas de trou à expliquer. Une chaîne vide compte
+comme manquante, parce que sceller « un acompte de  % à la signature » ne
+produit pas une erreur mais un document signé avec un trou dedans. La valeur est
+insérée en texte, comme les autres, pour qu'un champ saisi à la main ne puisse
+pas porter de balise dans un document à signer.
+
+### Modifié
+
+#### Une couleur par type de trame
+L'écran des trames de contrat affichait des cartes identiques, le type écrit en
+gris parmi le reste. Un corps de contrat porte maintenant un liseré et une
+pastille bleus, une annexe des violets, et le type est nommé dans la pastille :
+la couleur ne sert à rien si elle n'est pas légendée juste à côté.
+
+Deux familles délibérément inutilisées ailleurs sur ces cartes : le vert et
+l'ambre y disent déjà « publiée » et « brouillon », et les réemployer ferait
+passer le type d'une trame pour un état.
+
+#### Plus de tiret cadratin dans l'interface
+L'écran des clients séparait le représentant de sa fonction par un cadratin. Il
+est remplacé par un tiret simple, comme partout ailleurs.
+
+### Dans aurora-client
+
+Rien à répercuter : une migration, jouée par `make aurora-update`.
+
 ## [0.9.86] - 2026-09-08
 
 ### Ajouté

@@ -90,6 +90,9 @@ backend:
             currency: Devise
             effective_date: Date de prise d'effet
             effective_date_placeholder: '2026-10-01'
+            custom_fields: Compléments du contrat
+            custom_fields_hint: 'Les champs que les trames choisies laissent à ce contrat. Ils sont écrits dans le document au moment du scellement, donc obligatoires.'
+            custom_field_placeholder: 'Par exemple 40 %, 30 km, ou Camille Durand'
             effective_date_hint: Reprise dans le contrat via la variable correspondante.
             locale: Langue du contrat
             locale_hint: La langue dans laquelle il sera rédigé, lu et signé.
@@ -160,6 +163,8 @@ backend:
                 role_already_signed: 'Cette partie a déjà signé.'
                 customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
                 governing_locale_conflict: 'Le corps et l''annexe ne désignent pas la même langue faisant foi ({locales}). Un document ne peut pas avoir deux textes de référence.'
+                custom_fields_missing: 'Ces compléments sont demandés par les trames choisies et ne sont pas renseignés : {fields}'
+                custom_field_too_long: Un complément ne peut pas dépasser 500 caractères.
         contract_templates:
             title: Trames de contrat
             kind:
@@ -221,6 +226,8 @@ backend:
             discard: Abandonner
             discard_confirm: 'Abandonner le brouillon de la version {number} ? Son texte sera perdu.'
             variables:
+                custom: Un champ propre à un contrat
+                custom_hint: 'Écrivez ce jeton avec votre propre clé (minuscules, chiffres, tirets bas). Il sera demandé à la préparation de chaque contrat, et le scellement refuse de le laisser vide.'
                 title: Variables disponibles
                 hint: Copiez un jeton et collez-le dans le texte. Il sera remplacé à la construction du contrat.
                 customer: Le client

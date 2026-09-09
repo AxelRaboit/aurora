@@ -39,6 +39,7 @@ class ContractSerializer implements ContractSerializerInterface
             'amountCents' => $contract->getAmountCents(),
             'amountCurrency' => $contract->getAmountCurrency()?->value,
             'effectiveDate' => $contract->getEffectiveDate()?->format('Y-m-d'),
+            'customFields' => $contract->getCustomFields(),
             'frozenAt' => $contract->getFrozenAt()?->format(DATE_ATOM),
             'createdAt' => $contract->getCreatedAt()->format(DATE_ATOM),
             'body' => $this->part($contract->getBodyVersion()),

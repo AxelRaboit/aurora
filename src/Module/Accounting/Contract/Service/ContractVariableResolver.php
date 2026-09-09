@@ -63,7 +63,34 @@ final readonly class ContractVariableResolver
             'contract.reference' => $contract->getReference() ?? '',
             'contract.amount' => $this->amount($contract, $locale),
             'contract.effective_date' => $this->date($contract, $locale),
+            // The blanks this contract carries, last so a trame cannot shadow
+            // a catalogue variable with a custom field of the same name.
+            ...$this->custom($contract),
         ];
+    }
+
+    /**
+     * The per-contract blanks, prefixed the way a trame writes them.
+     *
+     * Only what the contract actually carries: a key the wording asks for and
+     * the contract does not have stays unresolved on purpose, so the freeze
+     * refuses it by name instead of printing an empty space.
+     *
+     * @return array<string, string>
+     */
+    private function custom(ContractInterface $contract): array
+    {
+        $values = [];
+
+        foreach ($contract->getCustomFields() as $key => $value) {
+            if ('' === $value) {
+                continue;
+            }
+
+            $values[ContractCustomFieldScanner::PREFIX.$key] = $value;
+        }
+
+        return $values;
     }
 
     /**
