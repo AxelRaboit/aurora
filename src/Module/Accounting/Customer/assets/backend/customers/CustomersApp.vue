@@ -138,7 +138,7 @@ function formatCapital(customer) {
                     <p v-if="customer.representativeFullName" class="text-xs text-secondary">
                         {{ customer.representativeFullName }}
                         <span v-if="customer.representativeRole">
-                            — {{ customer.representativeRole }}
+                            - {{ customer.representativeRole }}
                         </span>
                     </p>
                     <p class="text-xs text-muted">{{ customer.contractualEmail }}</p>

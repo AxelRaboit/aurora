@@ -19,4 +19,11 @@ interface ContractInputInterface
     public function getAmountCurrency(): ?string;
 
     public function getEffectiveDate(): ?string;
+
+    /**
+     * The blanks the chosen trames ask this contract to fill.
+     *
+     * @return array<string, string>
+     */
+    public function getCustomFields(): array;
 }

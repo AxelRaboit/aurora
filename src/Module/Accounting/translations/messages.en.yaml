@@ -90,6 +90,9 @@ backend:
             currency: Currency
             effective_date: Effective date
             effective_date_placeholder: '2026-10-01'
+            custom_fields: Contract complements
+            custom_fields_hint: 'The fields the chosen trames leave to this contract. They are written into the document when it is sealed, so they are required.'
+            custom_field_placeholder: 'For instance 40 %, 30 km, or Camille Durand'
             effective_date_hint: Used in the contract through the matching variable.
             locale: Contract language
             locale_hint: The language it will be written, read and signed in.
@@ -160,6 +163,8 @@ backend:
                 role_already_signed: 'This party has already signed.'
                 customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
                 governing_locale_conflict: 'The body and the annex name different governing languages ({locales}). A document cannot have two authoritative texts.'
+                custom_fields_missing: 'The chosen trames ask for these complements and they are empty: {fields}'
+                custom_field_too_long: A complement cannot exceed 500 characters.
         contract_templates:
             title: Contract templates
             kind:
@@ -221,6 +226,8 @@ backend:
             discard: Discard
             discard_confirm: 'Discard the draft of version {number}? Its wording will be lost.'
             variables:
+                custom: A field of one contract's own
+                custom_hint: 'Write this token with your own key (lowercase, digits, underscores). It is asked for when each contract is prepared, and sealing refuses to leave it empty.'
                 title: Available variables
                 hint: Copy a token and paste it into the wording. It is replaced when the contract is built.
                 customer: The customer

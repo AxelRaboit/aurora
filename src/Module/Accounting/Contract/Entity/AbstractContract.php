@@ -95,6 +95,25 @@ abstract class AbstractContract implements ContractInterface
     #[ORM\Column(type: Types::JSON, options: ['default' => '{}'])]
     protected array $variables = [];
 
+    /**
+     * What this one contract fills in that no template can know.
+     *
+     * The trames a business actually signs carry a handful of blanks that are
+     * neither the customer's identity nor the module's own fields: the person
+     * habilitated to validate, a kilometric threshold, a deposit rate. They
+     * vary per contract, so they cannot live in the wording, and they are not
+     * customer data, so they cannot live on the Customer.
+     *
+     * The wording declares them by using them: `{{contract.custom.acompte}}`
+     * in a published version makes `acompte` a key this contract has to carry,
+     * non-empty, before it can be sealed. A blank in a signed document is the
+     * one outcome this must never produce.
+     *
+     * @var array<string, string>
+     */
+    #[ORM\Column(type: Types::JSON, options: ['default' => '{}'])]
+    protected array $customFields = [];
+
     #[ORM\Column(nullable: true)]
     protected ?int $amountCents = null;
 
@@ -265,6 +284,22 @@ abstract class AbstractContract implements ContractInterface
         $this->assertEditable();
 
         $this->variables = $variables;
+
+        return $this;
+    }
+
+    /** @return array<string, string> */
+    public function getCustomFields(): array
+    {
+        return $this->customFields;
+    }
+
+    /** @param array<string, string> $customFields */
+    public function setCustomFields(array $customFields): static
+    {
+        $this->assertEditable();
+
+        $this->customFields = $customFields;
 
         return $this;
     }
