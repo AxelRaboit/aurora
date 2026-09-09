@@ -64,6 +64,7 @@ class PostSerializer implements PostSerializerInterface
             'trashed' => $post->isTrashed(),
             'commentsEnabled' => $post->isCommentsEnabled(),
             'titleVisible' => $post->isTitleVisible(),
+            'position' => $post->getPosition(),
             'createdAt' => $post->getCreatedAt()->format(DateTimeInterface::ATOM),
             'updatedAt' => $post->getUpdatedAt()->format(DateTimeInterface::ATOM),
             // Which languages this actually exists in. A post published with one of

@@ -109,8 +109,8 @@ class PostRepository extends ResolveTargetEntityRepository
             ->addSelect('t')
             ->andWhere('p.postType = :postType')
             ->setParameter('postType', $postTypeId)
-            ->orderBy('p.publishedAt', Order::Descending->value)
             ->addOrderBy('p.id', Order::Descending->value);
+        $this->readingOrder($items);
 
         $count = $this->publishedQueryBuilder($locale)
             ->select('COUNT(p.id)')
@@ -145,8 +145,8 @@ class PostRepository extends ResolveTargetEntityRepository
             ->innerJoin('p.terms', 'term')
             ->andWhere('term.id = :termId')
             ->setParameter('termId', $termId)
-            ->orderBy('p.publishedAt', Order::Descending->value)
             ->addOrderBy('p.id', Order::Descending->value);
+        $this->readingOrder($items);
 
         $count = $this->publishedQueryBuilder($locale)
             ->select('COUNT(p.id)')
@@ -182,9 +182,10 @@ class PostRepository extends ResolveTargetEntityRepository
     ): array {
         $query = $this->publishedQueryBuilder($locale)
             ->addSelect('t')
-            ->orderBy('p.publishedAt', Order::Descending->value)
             ->addOrderBy('p.id', Order::Descending->value)
             ->setMaxResults(max(1, $limit));
+
+        $this->readingOrder($query);
 
         if (null !== $postTypeId) {
             $query->andWhere('p.postType = :postType')->setParameter('postType', $postTypeId);
@@ -553,6 +554,29 @@ class PostRepository extends ResolveTargetEntityRepository
      *
      * @return list<int>|null
      */
+    /**
+     * The order a listing is read in: numbered first, then newest.
+     *
+     * A publication carries an optional position, and null means "no opinion".
+     * The clause replaces whatever ordering the caller set, and a listing where
+     * nobody numbered anything sorts exactly as it did before this existed -
+     * every position being null, the date decides.
+     *
+     * **It leans on PostgreSQL sorting nulls last in ascending order**, which
+     * is what makes an unnumbered publication fall in behind a numbered one
+     * rather than ahead of it. That is a default, not a guarantee of the
+     * standard, and the database is PostgreSQL everywhere this runs - so the
+     * behaviour is pinned by a test rather than by a `COALESCE` nobody would
+     * understand two years from now.
+     */
+    private function readingOrder(QueryBuilder $queryBuilder): void
+    {
+        $queryBuilder
+            ->orderBy('p.position', Order::Ascending->value)
+            ->addOrderBy('p.publishedAt', Order::Descending->value)
+            ->addOrderBy('p.id', Order::Descending->value);
+    }
+
     private function applySearch(QueryBuilder $items, QueryBuilder $count, string $search): ?array
     {
         $ranked = $this->fullTextPostIds($search);

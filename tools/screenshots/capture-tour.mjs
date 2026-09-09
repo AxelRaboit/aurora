@@ -79,6 +79,31 @@ const SHOTS = [
     },
     { name: "audit", path: "/dev/dashboard/audit" },
     {
+        name: "calendar-week",
+        // The week view rather than the month one the card already shows: it
+        // is the view where an event has an hour, and where overlapping
+        // appointments have to be drawn side by side rather than on top of
+        // each other.
+        path: "/backend/planning/calendar",
+        async prepare(page) {
+            await page.getByRole("button", { name: /^Semaine$/ }).click();
+            await page.waitForTimeout(1_000);
+
+            // The grid opens on the current hour, so a capture taken in the
+            // evening shows an empty afternoon while every demo event sits in
+            // the morning. The wheel over the grid is what the component
+            // listens to; setting scrollTop on a guessed element is not.
+            // Wound to the top first, then down by a fixed amount: the grid
+            // opens on the current hour, so scrolling by a delta alone lands
+            // somewhere different depending on when the capture is taken.
+            await page.mouse.move(1000, 600);
+            await page.mouse.wheel(0, -2_000);
+            await page.waitForTimeout(300);
+            await page.mouse.wheel(0, 530);
+            await page.waitForTimeout(600);
+        },
+    },
+    {
         name: "search",
         path: "/backend",
         async prepare(page) {

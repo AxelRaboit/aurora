@@ -44,6 +44,10 @@ class PostInput implements PostInputInterface
         public readonly ?string $headerColor = null,
         public readonly ?string $footerColor = null,
         public readonly ?string $backgroundColor = null,
+        // Where this publication sits in a deliberate reading order. Null is
+        // the answer for almost everything, and means the date decides.
+        #[Assert\Positive(message: 'backend.posts.errors.position_invalid')]
+        public readonly ?int $position = null,
     ) {}
 
     public function withStatus(string $status): PostInputInterface
@@ -70,6 +74,7 @@ class PostInput implements PostInputInterface
             headerColor: $this->headerColor,
             footerColor: $this->footerColor,
             backgroundColor: $this->backgroundColor,
+            position: $this->position,
         );
     }
 
@@ -146,6 +151,11 @@ class PostInput implements PostInputInterface
     public function isTitleVisible(): bool
     {
         return $this->titleVisible;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->position;
     }
 
     public function getBannerLayout(): array

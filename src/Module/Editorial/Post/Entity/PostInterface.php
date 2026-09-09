@@ -56,6 +56,10 @@ interface PostInterface
 
     public function setTitleVisible(bool $titleVisible): static;
 
+    public function getPosition(): ?int;
+
+    public function setPosition(?int $position): static;
+
     /**
      * The banner's design, shared by every language. Its words live on each
      * translation and join back by item id.

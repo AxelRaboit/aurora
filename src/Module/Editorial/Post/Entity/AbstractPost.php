@@ -127,6 +127,22 @@ abstract class AbstractPost implements PostInterface
     protected array $galleryLayout = [];
 
     /**
+     * Where this publication sits in a deliberate reading order.
+     *
+     * Null means "no opinion", and that is the answer for almost everything: a
+     * blog is read newest first, and the listings fall back to the publication
+     * date. A numbered publication comes before every unnumbered one, in
+     * ascending order - which is what a documentation needs, and what pinning
+     * an article to the top of an archive needs too.
+     *
+     * A number rather than a link to a neighbour: reordering by relinking a
+     * chain means a broken link loses the tail of the list, and inserting in
+     * the middle touches three rows instead of one.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?int $position = null;
+
+    /**
      * Header/topbar color override for this post. Null means inherit from theme.
      */
     #[ORM\Column(length: 7, nullable: true)]
@@ -563,6 +579,25 @@ abstract class AbstractPost implements PostInterface
     public function removeRelatedPost(PostInterface $post): static
     {
         $this->relatedPosts->removeElement($post);
+
+        return $this;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->position;
+    }
+
+    /**
+     * Zero and the negatives are refused rather than stored.
+     *
+     * A reading order starts at one, and a zero would sort before it while
+     * reading as "unset" to whoever typed it - two meanings for one value is
+     * how a list ends up in an order nobody chose.
+     */
+    public function setPosition(?int $position): static
+    {
+        $this->position = null === $position || $position < 1 ? null : $position;
 
         return $this;
     }
