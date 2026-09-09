@@ -311,9 +311,22 @@ du confort.
 **Inspiré de :** Dolibarr - Module Contrats  
 **Pourquoi :** Génère des factures récurrentes automatiquement. Indispensable pour les modèles SaaS, maintenance, abonnements.
 
-**Fait (0.9.82, module `Accounting`) :** la moitié « contrat » est livrée -
-clients, trames versionnées, contrat scellé, lien public, signature électronique
-simple avec OTP email, contresignature et PDF signé. Décisions et invariants :
+**Fait (0.9.86 à 0.9.95, module `Accounting`) :** la moitié « contrat » est
+livrée, et le cycle de vie complet avec.
+
+- clients, trames versionnées, contrat scellé avec forme canonique et hash ;
+- lien public à usage unique, signature électronique simple avec code par
+  email, contresignature et PDF signé ;
+- trois langues, avec la clause de langue faisant foi scellée dans le document ;
+- les blancs par contrat (`{{contract.custom.*}}`) et l'identité du prestataire
+  lue dans les réglages (`{{provider.*}}`) ;
+- refus explicite du client, relances automatiques par le Scheduler, durée de
+  conservation qui tient la suppression ;
+- mention d'information RGPD sur la page qui collecte ;
+- avenants (un document de plus, jamais une édition du scellé) et résiliation
+  (un fait daté, jamais un parcours de signature).
+
+Décisions et invariants :
 [`.claude/memory/aurora-core/architecture/project_accounting_contract_seal.md`](../../../.claude/memory/aurora-core/architecture/project_accounting_contract_seal.md).
 
 **Reste à faire :** la moitié « abonnements ».
@@ -321,6 +334,11 @@ simple avec OTP email, contresignature et PDF signé. Décisions et invariants :
 - Génération automatique de factures récurrentes
 - Alertes d'échéance
 - Lien vers tiers (Billing)
+
+**Volontairement hors périmètre pour l'instant :** horodatage qualifié RFC 3161
+par un tiers, et archivage à valeur probante au sens strict (dépôt chez un
+tiers). Disproportionnés à l'enjeu des contrats visés ; à rouvrir si un contrat
+à fort enjeu le justifie.
 
 ---
 
