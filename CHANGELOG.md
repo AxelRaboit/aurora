@@ -5,6 +5,27 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.90] - 2026-09-09
+
+### Corrigé
+
+#### Des exemples inventés à la place d'une identité réelle
+Le groupe `provider` du catalogue de variables portait le vrai nom et le vrai
+SIRET du prestataire, et trois tests les reprenaient. Les deux dépôts sont
+publics, et le groupe `customer` juste au-dessus montrait la bonne façon de
+faire depuis le début : une société inventée, au format juste.
+
+Le SIRET d'exemple passe la clé de Luhn, comme un vrai, pour qu'il reste
+utilisable là où la contrainte est vérifiée. Le lieu de signature des tests
+devient une ville quelconque : ce qu'ils prouvent est qu'un lieu déclaré
+arrive dans la preuve, pas lequel.
+
+### Dans aurora-client
+
+Rien à répercuter, aucune migration. Les exemples ne servent qu'à peupler la
+liste des jetons dans l'éditeur de trame ; les valeurs qui s'impriment
+viennent des réglages.
+
 ## [0.9.89] - 2026-09-09
 
 ### Modifié
