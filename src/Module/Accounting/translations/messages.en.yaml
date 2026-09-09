@@ -123,6 +123,13 @@ backend:
             link_never_opened: Never opened
             link_opened_at: 'Opened on {date}'
             no_link: No active link
+            row_actions:
+                edit_description: Edits the draft. Nothing is sealed until you ask for it.
+                freeze_description: Freezes the text, mints the reference and makes it sendable. Permanent.
+                delete_description: Deletes the draft. Nothing has been sent to the customer yet.
+                send_description: Sends the customer a single-use signing link.
+                revoke_description: Kills the current link. Its verification codes go with it.
+                document_description: Opens the sealed document and its proof block.
             not_sealed_yet: This contract is not sealed yet. Its wording is frozen at the moment of sealing.
             seal_intact: The seal is intact
             seal_intact_hint: The stored document matches exactly the hash taken when it was sealed.
@@ -212,6 +219,13 @@ backend:
             restore: Restore
             show_archived: 'Show archived ({count})'
             hide_archived: Hide archived
+            row_actions:
+                open_draft_description: Opens a new editable version, from the text in force.
+                duplicate_description: Creates another trame, as a draft, with the same text.
+                rename_description: Changes the name and the kind, leaving the text alone.
+                archive_description: Takes it out of the pickers. Signed contracts are untouched.
+                restore_description: Puts it back in the pickers.
+                delete_description: Permanent. Signed contracts keep their own copy of the text.
             state_published: Published
             state_draft: Draft
             state_archived: Archived

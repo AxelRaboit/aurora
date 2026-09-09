@@ -2,11 +2,13 @@
 import { useI18n } from "vue-i18n";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
 import { useContractsList } from "./composables/useContractsList.js";
+import { useContractActions } from "./composables/useContractActions.js";
 import ContractFormFields from "./components/ContractFormFields.vue";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppSearchInput from "@/shared/components/form/input/AppSearchInput.vue";
 import AppListToolbar from "@/shared/components/list/AppListToolbar.vue";
 import AppIconButton from "@/shared/components/action/AppIconButton.vue";
+import AppRowActions from "@/shared/components/action/AppRowActions.vue";
 import { useListViewMode } from "@/shared/composables/list/useListViewMode.js";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
@@ -84,6 +86,34 @@ const {
  * than cards above rows.
  */
 const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
+
+/**
+ * One list of actions per half of the page, two presentations for the drafts.
+ *
+ * The rows fold them behind a single button, like every other list in the app;
+ * the draft cards keep them laid out. Defined once so the two cannot drift.
+ */
+const { draftActions, sealedActions } = useContractActions();
+
+const draftHandlers = {
+    edit: openEdit,
+    freeze: (contract) => (pendingFreeze.value = contract),
+    remove: (contract) => (pendingDelete.value = contract),
+};
+
+const sealedHandlers = {
+    send: (contract) => (pendingSend.value = contract),
+    revoke: (contract) => (pendingRevoke.value = contract),
+    documentPath,
+};
+
+function draftRowActions(contract) {
+    return draftActions(contract, draftHandlers);
+}
+
+function sealedRowActions(contract) {
+    return sealedActions(contract, sealedHandlers);
+}
 </script>
 
 <template>
@@ -93,10 +123,12 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                 v-model="search"
                 :placeholder="t('backend.accounting.contracts.search_placeholder')"
             />
-            <template #actions>
-                <!-- The toggle drives the drafts: sealed contracts are already
-                     a table, so list mode makes the whole page one list. -->
-                <div class="flex border border-line/60 rounded-lg p-0.5">
+            <!-- The toggle drives the drafts: sealed contracts are already a
+                 table, so list mode makes the whole page one list. It stays
+                 beside the search on a phone, where stacked under the field it
+                 read as a second filter. -->
+            <template #inline>
+                <div class="flex shrink-0 border border-line/60 rounded-lg p-0.5">
                     <AppIconButton
                         :title="t('shared.common.list_view')"
                         :class="viewMode === 'list' ? 'bg-surface-3 text-primary' : 'text-muted hover:text-primary'"
@@ -112,6 +144,8 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                         <LayoutGrid class="w-4 h-4" :stroke-width="2" />
                     </AppIconButton>
                 </div>
+            </template>
+            <template #actions>
                 <AppButton
                     v-if="can('accounting.contracts.create')"
                     variant="primary"
@@ -176,33 +210,19 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                         {{ t("backend.accounting.contracts.outdated_version") }}
                     </p>
 
+                    <!-- The same actions as the row, laid out rather than
+                         folded: a card has the room, and sealing keeps the
+                         weight it has, being the one that cannot be undone. -->
                     <div class="flex flex-wrap gap-2 pt-1 border-t border-line/40">
                         <AppButton
-                            v-if="can('accounting.contracts.edit')"
-                            variant="ghost"
+                            v-for="action in draftRowActions(contract)"
+                            :key="action.key"
+                            :variant="action.key === 'freeze' ? 'secondary' : 'ghost'"
                             size="sm"
-                            v-on:click="openEdit(contract)"
+                            v-on:click="action.onSelect()"
                         >
-                            <Pencil class="w-3.5 h-3.5" :stroke-width="2" />
-                            {{ t("shared.common.edit") }}
-                        </AppButton>
-                        <AppButton
-                            v-if="can('accounting.contracts.edit')"
-                            variant="secondary"
-                            size="sm"
-                            v-on:click="pendingFreeze = contract"
-                        >
-                            <Lock class="w-3.5 h-3.5" :stroke-width="2" />
-                            {{ t("backend.accounting.contracts.freeze") }}
-                        </AppButton>
-                        <AppButton
-                            v-if="can('accounting.contracts.delete')"
-                            variant="ghost"
-                            size="sm"
-                            v-on:click="pendingDelete = contract"
-                        >
-                            <Trash2 class="w-3.5 h-3.5" :stroke-width="2" />
-                            {{ t("shared.common.delete") }}
+                            <component :is="action.icon" class="w-3.5 h-3.5" :stroke-width="2" />
+                            {{ action.title }}
                         </AppButton>
                     </div>
                 </article>
@@ -233,7 +253,12 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden xl:table-cell">
                                 {{ t("backend.accounting.contracts.effective_date") }}
                             </th>
-                            <th class="px-6 py-3" />
+                            <!-- Named, and the only column aligned right: it is
+                                 where the hand goes, not something to read
+                                 across with the rest. -->
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                                {{ t("shared.common.actions") }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-line/40">
@@ -278,30 +303,10 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                                 }}
                             </td>
                             <td class="px-6 py-3">
-                                <div class="flex items-center justify-end gap-1">
-                                    <AppIconButton
-                                        v-if="can('accounting.contracts.edit')"
-                                        :title="t('shared.common.edit')"
-                                        v-on:click="openEdit(contract)"
-                                    >
-                                        <Pencil class="w-4 h-4" :stroke-width="2" />
-                                    </AppIconButton>
-                                    <AppIconButton
-                                        v-if="can('accounting.contracts.edit')"
-                                        :title="t('backend.accounting.contracts.freeze')"
-                                        v-on:click="pendingFreeze = contract"
-                                    >
-                                        <Lock class="w-4 h-4" :stroke-width="2" />
-                                    </AppIconButton>
-                                    <AppIconButton
-                                        v-if="can('accounting.contracts.delete')"
-                                        color="rose"
-                                        :title="t('shared.common.delete')"
-                                        v-on:click="pendingDelete = contract"
-                                    >
-                                        <Trash2 class="w-4 h-4" :stroke-width="2" />
-                                    </AppIconButton>
-                                </div>
+                                <AppRowActions
+                                    :actions="draftRowActions(contract)"
+                                    :label="contract.customerName ?? ''"
+                                />
                             </td>
                         </tr>
                     </tbody>
@@ -331,7 +336,12 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">
                                 {{ t("backend.accounting.contracts.col_sealed_at") }}
                             </th>
-                            <th class="px-6 py-3" />
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden xl:table-cell">
+                                {{ t("backend.accounting.contracts.col_link") }}
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                                {{ t("shared.common.actions") }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-line/40">
@@ -392,34 +402,10 @@ const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
                                 </span>
                             </td>
                             <td class="px-6 py-3">
-                                <div class="flex flex-wrap items-center justify-end gap-1">
-                                    <AppButton
-                                        v-if="!contract.link && can('accounting.contracts.send')"
-                                        variant="secondary"
-                                        size="sm"
-                                        v-on:click="pendingSend = contract"
-                                    >
-                                        <Mail class="w-3.5 h-3.5" :stroke-width="2" />
-                                        {{ t("backend.accounting.contracts.send") }}
-                                    </AppButton>
-                                    <AppButton
-                                        v-if="contract.link && can('accounting.contracts.send')"
-                                        variant="ghost"
-                                        size="sm"
-                                        v-on:click="pendingRevoke = contract"
-                                    >
-                                        <Ban class="w-3.5 h-3.5" :stroke-width="2" />
-                                        {{ t("backend.accounting.contracts.revoke_link") }}
-                                    </AppButton>
-                                    <AppButton
-                                        variant="ghost"
-                                        size="sm"
-                                        :href="documentPath(contract)"
-                                    >
-                                        <FileSignature class="w-3.5 h-3.5" :stroke-width="2" />
-                                        {{ t("backend.accounting.contracts.read_document") }}
-                                    </AppButton>
-                                </div>
+                                <AppRowActions
+                                    :actions="sealedRowActions(contract)"
+                                    :label="contract.reference ?? ''"
+                                />
                             </td>
                         </tr>
                     </tbody>

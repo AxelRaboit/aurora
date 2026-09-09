@@ -123,6 +123,13 @@ backend:
             link_never_opened: Jamais ouvert
             link_opened_at: 'Ouvert le {date}'
             no_link: Aucun lien actif
+            row_actions:
+                edit_description: Modifie le brouillon. Rien n'est scellé tant qu'on ne le demande pas.
+                freeze_description: Fige le texte, tire la référence et rend le contrat envoyable. Définitif.
+                delete_description: Supprime le brouillon. Rien n'a encore été envoyé au client.
+                send_description: Envoie au client un lien de signature à usage unique.
+                revoke_description: Coupe le lien en cours. Ses codes de vérification tombent avec lui.
+                document_description: Ouvre le document scellé et son bloc de preuve.
             not_sealed_yet: Ce contrat n'est pas encore scellé. Son texte sera figé au moment du scellement.
             seal_intact: Le sceau est intact
             seal_intact_hint: Le document stocké correspond exactement au hash pris lors du scellement.
@@ -212,6 +219,13 @@ backend:
             restore: Réactiver
             show_archived: 'Afficher les archivées ({count})'
             hide_archived: Masquer les archivées
+            row_actions:
+                open_draft_description: Ouvre une nouvelle version modifiable, à partir du texte en vigueur.
+                duplicate_description: Crée une autre trame, en brouillon, avec le même texte.
+                rename_description: Change le nom et le type de la trame, sans toucher au texte.
+                archive_description: La retire des listes de choix. Les contrats déjà signés ne bougent pas.
+                restore_description: La remet dans les listes de choix.
+                delete_description: Définitif. Les contrats signés gardent leur propre copie du texte.
             state_published: Publiée
             state_draft: Brouillon
             state_archived: Archivée
