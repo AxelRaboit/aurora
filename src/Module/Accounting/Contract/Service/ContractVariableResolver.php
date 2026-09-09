@@ -7,6 +7,8 @@ namespace Aurora\Module\Accounting\Contract\Service;
 use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
+use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
+use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use DateTimeImmutable;
 use IntlDateFormatter;
 use NumberFormatter;
@@ -30,7 +32,34 @@ use function sprintf;
  */
 final readonly class ContractVariableResolver
 {
-    public function __construct(private ContractVariableCatalogue $catalogue) {}
+    /**
+     * The provider tokens and the settings behind them.
+     *
+     * Written out rather than derived from the key, so the pairing is
+     * greppable from both ends: a token in a trame leads to a setting, and a
+     * setting leads to the token that prints it.
+     *
+     * @var array<string, ApplicationParameterEnum>
+     */
+    private const array PROVIDER = [
+        'provider.name' => ApplicationParameterEnum::AccountingProviderName,
+        'provider.representative' => ApplicationParameterEnum::AccountingProviderRepresentative,
+        'provider.address' => ApplicationParameterEnum::AccountingProviderAddress,
+        'provider.siret' => ApplicationParameterEnum::AccountingProviderSiret,
+        'provider.ape_code' => ApplicationParameterEnum::AccountingProviderApeCode,
+        'provider.vat_mention' => ApplicationParameterEnum::AccountingProviderVatMention,
+        'provider.email' => ApplicationParameterEnum::AccountingProviderEmail,
+        'provider.phone' => ApplicationParameterEnum::AccountingProviderPhone,
+        'provider.bank_holder' => ApplicationParameterEnum::AccountingProviderBankHolder,
+        'provider.bank_iban' => ApplicationParameterEnum::AccountingProviderBankIban,
+        'provider.bank_bic' => ApplicationParameterEnum::AccountingProviderBankBic,
+        'provider.bank_name' => ApplicationParameterEnum::AccountingProviderBankName,
+    ];
+
+    public function __construct(
+        private ContractVariableCatalogue $catalogue,
+        private SettingRepository $settings,
+    ) {}
 
     /**
      * Every token this contract can fill in today, keyed without braces.
@@ -63,10 +92,40 @@ final readonly class ContractVariableResolver
             'contract.reference' => $contract->getReference() ?? '',
             'contract.amount' => $this->amount($contract, $locale),
             'contract.effective_date' => $this->date($contract, $locale),
+            ...$this->providerValues(),
             // The blanks this contract carries, last so a trame cannot shadow
             // a catalogue variable with a custom field of the same name.
             ...$this->custom($contract),
         ];
+    }
+
+    /**
+     * The provider's own identity, read from the settings.
+     *
+     * An unset setting is skipped rather than resolved to an empty string, so
+     * a trame printing `{{provider.siret}}` against a blank setting is refused
+     * at the freeze instead of sealing a document with a hole where the SIRET
+     * should be.
+     *
+     * Public because the freeze checks these before it mints a reference: a
+     * contract refused for a missing setting should not have consumed a number
+     * from the sequence.
+     *
+     * @return array<string, string>
+     */
+    public function providerValues(): array
+    {
+        $values = [];
+
+        foreach (self::PROVIDER as $token => $parameter) {
+            $value = mb_trim($this->settings->get($parameter->value, '') ?? '');
+
+            if ('' !== $value) {
+                $values[$token] = $value;
+            }
+        }
+
+        return $values;
     }
 
     /**

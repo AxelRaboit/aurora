@@ -28,6 +28,7 @@ use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
 use Aurora\Module\Accounting\Customer\Entity\Customer;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Accounting\Customer\Repository\CustomerRepository;
+use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
 use Aurora\Tests\Integration\IntegrationTestCase;
@@ -37,19 +38,18 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use function sprintf;
 
 /**
- * The blanks a trame leaves to one contract.
+ * The provider's own identity, read from the settings.
  *
- * The real trames this was built for carry a handful of them: the person
- * habilitated to validate, a kilometric threshold, a deposit rate. They are
- * neither customer data nor template wording, and before this they had nowhere
- * to go - so the paper trame kept `[À COMPLÉTER]` and the sealed document would
- * have kept it too.
+ * The block is the same in every document, and it was typed into all five
+ * trames. Five copies is five places to forget when a bank changes, so the
+ * wording now asks for `{{provider.*}}` and the settings answer.
  *
- * What the tests below pin down is the guarantee that makes the feature safe:
- * **a document is never sealed with one of them empty.** Everything else is
- * convenience.
+ * What the tests pin down is the refusal: a trame that prints a setting nobody
+ * filled in must not seal a document with a hole where the SIRET should be,
+ * and the message has to say "settings", not "unknown token" - the person
+ * reading it has to know where to go.
  */
-final class ContractCustomFieldsTest extends IntegrationTestCase
+final class ContractProviderSettingsTest extends IntegrationTestCase
 {
     private ContractManager $contracts;
 
@@ -57,12 +57,15 @@ final class ContractCustomFieldsTest extends IntegrationTestCase
 
     private EntityManagerInterface $entityManager;
 
+    private SettingRepository $settings;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $container = static::getContainer();
         $this->entityManager = $container->get(EntityManagerInterface::class);
+        $this->settings = $container->get(SettingRepository::class);
 
         $canonicalizer = new ContractCanonicalizer();
 
@@ -76,12 +79,12 @@ final class ContractCustomFieldsTest extends IntegrationTestCase
         $this->contracts = new ContractManager(
             $this->entityManager,
             $container->get(AuditLogger::class),
-            new ContractVariableResolver(new ContractVariableCatalogue(), $container->get(SettingRepository::class)),
+            new ContractVariableResolver(new ContractVariableCatalogue(), $this->settings),
             new ContractDocumentRenderer(new BlockHtmlSanitizer()),
             $canonicalizer,
             new ContractSeal($canonicalizer),
             $container->get(SequenceGenerator::class),
-            $container->get(SettingRepository::class),
+            $this->settings,
             $container->get(CustomerRepository::class),
             $container->get(ContractTemplateRepository::class),
             $container->get(TranslatorInterface::class),
@@ -98,37 +101,34 @@ final class ContractCustomFieldsTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testAFilledFieldIsWrittenIntoTheSealedDocument(): void
+    public function testTheSettingIsWrittenIntoTheSealedDocument(): void
     {
-        $version = $this->publishedVersionAsking();
-        $contract = $this->contractFor($version, ['acompte' => '40 %']);
+        $this->setProviderSiret('107 071 508 00017');
+
+        $contract = $this->contractAskingForSiret();
 
         $this->contracts->freeze($contract);
 
-        self::assertStringContainsString('Un acompte de 40 % est dû à la signature.', (string) $contract->getRenderedHtml());
-        // Recorded in the snapshot too: a later reader has to see the values
-        // the document was sealed with, not just their trace in the HTML.
-        self::assertSame(['acompte' => '40 %'], $contract->getContentSnapshot()['customFields']);
+        self::assertStringContainsString('SIRET du prestataire : 107 071 508 00017', (string) $contract->getRenderedHtml());
     }
 
     /**
-     * The one that matters. A trame asks for a value because the sentence
-     * around it needs one, and sealing "un acompte de  est dû" would produce a
-     * signed document with a hole in it.
+     * The refusal, and the wording of it. "Unknown token" would send somebody
+     * hunting through the trame for a typo that is not there.
      */
-    public function testAMissingFieldRefusesTheFreezeAndNamesIt(): void
+    public function testAnUnsetSettingRefusesTheFreezeAndNamesTheToken(): void
     {
-        $version = $this->publishedVersionAsking();
-        $contract = $this->contractFor($version, []);
+        $this->setProviderSiret('');
+
+        $contract = $this->contractAskingForSiret();
 
         $this->expectException(FieldException::class);
 
         try {
             $this->contracts->freeze($contract);
         } catch (FieldException $fieldException) {
-            self::assertSame('customFields', $fieldException->getField());
-            self::assertStringContainsString('acompte', $fieldException->getMessage());
-            // Nothing was consumed: no reference minted, no snapshot written.
+            self::assertStringContainsString('provider.siret', $fieldException->getMessage());
+            // Nothing consumed: no reference, no snapshot.
             self::assertFalse($contract->isFrozen());
             self::assertNull($contract->getReference());
 
@@ -136,62 +136,37 @@ final class ContractCustomFieldsTest extends IntegrationTestCase
         }
     }
 
-    /** An empty string is a blank, and a blank is the thing being prevented. */
-    public function testAnEmptyFieldCountsAsMissing(): void
+    /** A trame that asks for nothing from the settings is unaffected. */
+    public function testATrameThatPrintsNoProviderTokenFreezes(): void
     {
-        $version = $this->publishedVersionAsking();
-        $contract = $this->contractFor($version, ['acompte' => '']);
+        $this->setProviderSiret('');
 
-        $this->expectException(FieldException::class);
-
-        $this->contracts->freeze($contract);
-    }
-
-    /**
-     * A value is a person's free text, so it is inserted as text. Without this
-     * a company name could carry markup into a document about to be signed.
-     */
-    public function testAValueCannotCarryMarkupIntoTheDocument(): void
-    {
-        $version = $this->publishedVersionAsking();
-        $contract = $this->contractFor($version, ['acompte' => '<b>40 %</b>']);
-
-        $this->contracts->freeze($contract);
-
-        $html = (string) $contract->getRenderedHtml();
-
-        self::assertStringContainsString('&lt;b&gt;40 %&lt;/b&gt;', $html);
-        self::assertStringNotContainsString('<b>40 %</b>', $html);
-    }
-
-    /** A trame that asks for nothing is unaffected: no field, no refusal. */
-    public function testATrameThatAsksForNothingFreezesWithNoFields(): void
-    {
-        $version = $this->publishedVersionAsking(false);
-        $contract = $this->contractFor($version, []);
+        $version = $this->publishedVersion('Le forfait est payable d\'avance.');
+        $contract = $this->contractFor($version);
 
         $this->contracts->freeze($contract);
 
         self::assertTrue($contract->isFrozen());
-        self::assertSame([], $contract->getContentSnapshot()['customFields']);
     }
 
-    private function publishedVersionAsking(bool $asking = true): ContractTemplateVersionInterface
+    private function contractAskingForSiret(): ContractInterface
+    {
+        return $this->contractFor(
+            $this->publishedVersion('SIRET du prestataire : {{provider.siret}}'),
+        );
+    }
+
+    private function publishedVersion(string $text): ContractTemplateVersionInterface
     {
         $template = $this->templates->create(new ContractTemplateInput('Contrat mensuel', ContractTemplateKindEnum::Body));
         $version = $template->getDraft();
 
         self::assertInstanceOf(ContractTemplateVersionInterface::class, $version);
 
-        $text = $asking
-            ? 'Un acompte de {{contract.custom.acompte}} est dû à la signature.'
-            : 'Le forfait est payable d\'avance.';
-
         $this->templates->updateDraft($version, new ContractTemplateVersionInput([
             'fr' => [
                 'title' => 'CONTRAT DE PRESTATION DE SERVICES',
                 'content' => ['blocks' => [
-                    ['type' => 'header', 'data' => ['text' => 'ARTICLE 5', 'level' => 2]],
                     ['type' => 'paragraph', 'data' => ['text' => $text]],
                 ]],
             ],
@@ -202,15 +177,20 @@ final class ContractCustomFieldsTest extends IntegrationTestCase
         return $version;
     }
 
-    /** @param array<string, string> $customFields */
-    private function contractFor(ContractTemplateVersionInterface $version, array $customFields): ContractInterface
+    private function contractFor(ContractTemplateVersionInterface $version): ContractInterface
     {
         return $this->contracts->create(new ContractInput(
             customerId: $this->customer()->getId(),
             bodyTemplateId: $version->getTemplate()->getId(),
             locale: 'fr',
-            customFields: $customFields,
         ));
+    }
+
+    private function setProviderSiret(string $value): void
+    {
+        // Written through the repository, which is what the settings screen
+        // writes through too, and which owns the cache the resolver reads.
+        $this->settings->set(ApplicationParameterEnum::AccountingProviderSiret->value, $value);
     }
 
     private function customer(): CustomerInterface

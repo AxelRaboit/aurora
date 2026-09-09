@@ -10,6 +10,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
+import AppDatePicker from "@/shared/components/form/picker/AppDatePicker.vue";
 
 const props = defineProps({
     modelValue: { type: Object, required: true },
@@ -120,13 +121,12 @@ function setCustomField(key, value) {
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
-            <AppInput
+            <AppDatePicker
                 :model-value="form.effectiveDate"
                 :label="t('backend.accounting.contracts.effective_date')"
                 :placeholder="t('backend.accounting.contracts.effective_date_placeholder')"
                 :hint="t('backend.accounting.contracts.effective_date_hint')"
                 :error="errors.effectiveDate"
-                type="date"
                 v-on:update:model-value="set('effectiveDate', $event)"
             />
             <AppSelect

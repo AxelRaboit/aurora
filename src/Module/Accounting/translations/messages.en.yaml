@@ -164,6 +164,7 @@ backend:
                 customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
                 governing_locale_conflict: 'The body and the annex name different governing languages ({locales}). A document cannot have two authoritative texts.'
                 custom_fields_missing: 'The chosen trames ask for these complements and they are empty: {fields}'
+                provider_settings_missing: 'These provider details are not set in the settings, and the trame prints them: {fields}'
                 custom_field_too_long: A complement cannot exceed 500 characters.
         contract_templates:
             title: Contract templates
@@ -201,6 +202,12 @@ backend:
             never_published: Never published
             no_draft: No draft
             open_draft: Open a draft
+            duplicate: Duplicate
+            duplicate_suffix: (copy)
+            duplicate_confirm: 'Duplicate {name}?'
+            duplicate_hint: The copy takes the wording in force into a draft, under a new name. Nothing is published.
+            duplicated: Trame duplicated.
+            col_locales: Languages
             archive: Archive
             restore: Restore
             show_archived: 'Show archived ({count})'
@@ -231,6 +238,7 @@ backend:
                 title: Available variables
                 hint: Copy a token and paste it into the wording. It is replaced when the contract is built.
                 customer: The customer
+                provider: The provider
                 contract: The contract
                 customer_legal_name: Company name
                 customer_legal_form: Legal form
