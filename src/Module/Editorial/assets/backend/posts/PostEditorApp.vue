@@ -554,6 +554,17 @@ function termLabel(term) {
                             :label="t('backend.posts.title_visible')"
                             :hint="t('backend.posts.title_visible_hint')"
                         />
+
+                        <!-- Shared across languages too: a documentation read
+                             in one order in French and another in English
+                             would be two different documentations. -->
+                        <AppInput
+                            v-model="form.position"
+                            type="number"
+                            :placeholder="t('backend.posts.position_placeholder')"
+                            :label="t('backend.posts.position')"
+                            :hint="t('backend.posts.position_hint')"
+                        />
                     </div>
 
                     <div class="bg-surface border border-line rounded-xl p-5 space-y-4">

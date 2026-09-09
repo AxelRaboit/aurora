@@ -43,6 +43,8 @@ interface PostInputInterface
 
     public function isTitleVisible(): bool;
 
+    public function getPosition(): ?int;
+
     /**
      * The banner's design, shared by every language. Raw as it left the
      * editor; the manager normalises it.

@@ -5,6 +5,40 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.97] - 2026-09-12
+
+### Ajouté
+
+#### Un ordre de lecture explicite sur une publication
+Tout ce qu'un visiteur voit était trié par date de publication, ce qui est
+juste pour un blog et faux pour ce qui se lit dans un ordre. Le tour du
+produit sur `/fr/page/aurora` simulait déjà son ordre en espaçant ses
+vingt-trois cartes d'une minute dans `published_at` : insérer une carte
+entre deux autres oblige à recalculer tous les horodatages suivants. Une
+documentation de cent trente-quatre pages ne tient pas comme ça.
+
+Une publication porte maintenant un **rang de lecture** facultatif, saisi
+dans l'onglet Paramétrage. Vide, il ne change rien : la liste retombe sur la
+date, exactement comme avant. Renseigné à partir de 1, il place la
+publication en tête, dans l'ordre des rangs. Les archives, les pages de
+terme et les zones « liste automatique » le respectent toutes les trois.
+
+Ce n'est pas une bascule « manuel ou chronologique » par type de contenu,
+qui était l'autre option et la plus élaborée : il faudrait la poser avant de
+pouvoir numéroter, elle peut contredire les rangs réellement enregistrés, et
+elle répond à une question que personne ne pose. Un auteur numérote ce qu'il
+veut voir dans un ordre et laisse le reste tranquille.
+
+Le tri s'appuie sur le fait que PostgreSQL classe les valeurs nulles en
+dernier en ordre croissant. C'est un défaut, pas une garantie de la norme,
+donc c'est un test qui le tient plutôt qu'un `COALESCE` que personne ne
+comprendrait dans deux ans.
+
+Une copie ne reprend pas le rang de l'originale : à rang égal la date
+départage, et la copie passerait devant.
+
+---
+
 ## [0.9.96] - 2026-09-09
 
 ### Corrigé
