@@ -5,6 +5,67 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.93] - 2026-09-09
+
+### Ajouté
+
+#### Refuser explicitement
+Ne pas signer, c'était ne pas cliquer : un contrat que personne n'a ouvert
+ressemblait exactement à un contrat que le client a refusé, et le prestataire
+ne pouvait pas distinguer « en attente » de « non ». La page publique porte
+maintenant un lien discret sous le bouton de signature, avec un motif
+facultatif.
+
+Aucun code par email n'est demandé, et c'est une décision. Un code prouve une
+boîte aux lettres, ce dont une signature a besoin parce qu'elle engage ; un
+refus n'engage personne et se défait d'un renvoi. L'exiger reviendrait à
+laisser un problème de messagerie s'interposer entre quelqu'un et le mot non.
+Le motif est facultatif pour la même raison : demander de justifier un refus
+est une petite contrainte de trop dans un document dont le sujet est le
+consentement.
+
+Le refus garde la trace qu'une signature garde - quand, depuis où, avec quel
+agent - refuse de toucher un contrat déjà signé, et laisse l'adresse ouverte
+exprès : la personne qui vient de répondre doit voir ce qui a été enregistré,
+pas le 404 d'un inconnu. Renvoyer le contrat efface le refus courant, l'audit
+en garde l'histoire.
+
+#### Relancer un contrat envoyé et non signé
+Une relance est un renvoi, pas un mail à côté. L'application ne garde qu'un
+hash du jeton qu'elle a distribué : elle est donc incapable de reconstruire
+l'adresse envoyée la semaine dernière, et un rappel qui pointerait dessus
+serait un lien que ce code ne sait pas produire. Elle en crée une nouvelle,
+révoque la précédente et le dit dans le mail.
+
+Éteint par défaut, parce qu'un mail qui part tout seul chez le client de
+quelqu'un d'autre est une décision. Un plafond de relances, un délai compté
+depuis le dernier envoi et non depuis le scellement, et rien d'envoyé à un
+contrat qui a déjà répondu : signé, conclu, refusé, expiré et révoqué sont des
+réponses, et relancer une réponse est ce qui rend le mail automatique odieux.
+
+#### Une durée de conservation, et une suppression qui l'attend
+Un contrat scellé ne pouvait pas être supprimé du tout, ce qui protégeait la
+preuve et gardait indéfiniment des données personnelles. Il peut l'être
+maintenant, mais seulement quand la conservation est échue, et le refus donne
+la date : « pas encore » sans date laisse le lecteur se demander s'il est en
+avance d'un jour ou d'une décennie.
+
+Dix ans par défaut, cinq en plancher que le réglage ne peut pas franchir : un
+champ vidé ou mal tapé ne doit pas pouvoir dire « supprimez librement les
+contrats signés ». `aurora:contracts:retention` rapporte ce que l'archive
+contient et ce qui en est sorti, et ne supprime jamais : une conservation
+échue est une permission, pas une instruction.
+
+### Dans aurora-client
+
+Une migration, jouée par `make aurora-update` : six colonnes ajoutées à
+`core_contracts`, toutes nullables ou avec un défaut, donc rien à reprendre.
+
+Les relances passent par le Scheduler déjà en place, donc par le worker
+`aurora-worker` : rien à configurer, mais un worker arrêté est une relance qui
+ne part pas. Les quatre réglages arrivent dans *Configuration >
+Comptabilité*, relances éteintes.
+
 ## [0.9.92] - 2026-09-09
 
 ### Corrigé
