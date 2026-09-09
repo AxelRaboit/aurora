@@ -221,6 +221,7 @@ backend:
             hide_archived: Hide archived
             row_actions:
                 open_draft_description: Opens a new editable version, from the text in force.
+                discard_description: Deletes the draft and leaves the trame as it is published.
                 duplicate_description: Creates another trame, as a draft, with the same text.
                 rename_description: Changes the name and the kind, leaving the text alone.
                 archive_description: Takes it out of the pickers. Signed contracts are untouched.
@@ -246,6 +247,10 @@ backend:
             published_notice: 'Version {number} is published. Its wording is final and can no longer be changed.'
             discard: Discard
             discard_confirm: 'Discard the draft of version {number}? Its wording will be lost.'
+            discard_hint: 'The version in force does not move and no contract is touched. Number {number} stays spent: the next draft will be version {next}.'
+            discarded: Draft abandoned.
+            filter_all_kinds: All
+            no_match: No trame matches.
             variables:
                 custom: A field of one contract's own
                 custom_hint: 'Write this token with your own key (lowercase, digits, underscores). It is asked for when each contract is prepared, and sealing refuses to leave it empty.'
