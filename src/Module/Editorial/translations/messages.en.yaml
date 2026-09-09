@@ -618,6 +618,9 @@ backend:
       remove_zone: Remove zone
     title_visible: Show the title and summary on the page
     title_visible_hint: "Unchecked, the page shows neither : for pages whose header or first zone already says what they are. The title stays in the document for screen readers and search engines."
+    position: Reading order
+    position_placeholder: "3"
+    position_hint: "Leave it empty to order by date, newest first. A rank from 1 puts the publication at the head of the listings, in rank order. That is what holds a documentation in the order it is read in."
     identity_hint: "Used to find this publication in the list and on any card that presents it. They also head the page itself, but only when the custom header carries no title."
     seo: Search engines
     tabs:
@@ -684,6 +687,7 @@ backend:
       published: Published
       archived: Archived
     errors:
+      position_invalid: The reading order must be a whole number above zero. Leave it empty to order by date.
       post_type_required: A content type is required.
       post_type_not_found: 'Content type {id} does not exist.'
       status_required: A status is required.

@@ -31,6 +31,10 @@ class PostInputFactory implements PostInputFactoryInterface
             force: (bool) ($data['force'] ?? false),
             commentsEnabled: (bool) ($data['commentsEnabled'] ?? true),
             titleVisible: (bool) ($data['titleVisible'] ?? true),
+            // Un champ vidé arrive en chaîne vide, et vide veut dire "aucune
+            // position" - pas la position zéro, que l'entité refuse de toute
+            // façon.
+            position: '' === ($data['position'] ?? '') ? null : (int) $data['position'],
             // On the post, not the translation: one design for every language.
             bannerLayout: is_array($data['bannerLayout'] ?? null) ? $data['bannerLayout'] : [],
             gridLayout: is_array($data['gridLayout'] ?? null) ? $data['gridLayout'] : [],

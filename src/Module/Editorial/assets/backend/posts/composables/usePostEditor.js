@@ -165,6 +165,10 @@ export function usePostEditor(props) {
         // Whether the page prints its own title and summary. On the post like
         // the banner below, for the same reason: it is design, written once.
         titleVisible: props.post?.titleVisible ?? true,
+        // A string, because the field is one: an emptied box has to reach the
+        // server as "" so it can mean "no position" rather than zero.
+        position:
+            props.post?.position == null ? "" : String(props.post.position),
         // On the post, beside status and terms, rather than inside a
         // translation: one design, shared by every language.
         bannerLayout: {

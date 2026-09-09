@@ -75,6 +75,9 @@ final readonly class PostDuplicator
             'thumbnailFocalY' => $source->getThumbnailFocalY(),
             'commentsEnabled' => $source->isCommentsEnabled(),
             'titleVisible' => $source->isTitleVisible(),
+            // Pas la position de l'originale : deux publications au même rang
+            // se départagent par la date, et la copie passerait devant.
+            'position' => null,
             'bannerLayout' => $source->getBannerLayout(),
             'gridLayout' => $source->getGridLayout(),
             'galleryLayout' => $source->getGalleryLayout(),

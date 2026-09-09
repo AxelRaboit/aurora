@@ -327,6 +327,7 @@ class PostManager implements PostManagerInterface
         $post->setThumbnailFocal($input->getThumbnailFocalX(), $input->getThumbnailFocalY());
         $post->setCommentsEnabled($input->isCommentsEnabled());
         $post->setTitleVisible($input->isTitleVisible());
+        $post->setPosition($input->getPosition());
 
         // Color overrides for this post. Null means inherit from theme.
         $post->setHeaderColor($input->getHeaderColor());
