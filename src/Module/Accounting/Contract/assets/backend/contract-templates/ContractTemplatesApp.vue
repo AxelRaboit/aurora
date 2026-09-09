@@ -2,7 +2,9 @@
 import { useI18n } from "vue-i18n";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
 import { useContractTemplatesList } from "./composables/useContractTemplatesList.js";
+import { useContractTemplateActions } from "./composables/useContractTemplateActions.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
+import AppRowActions from "@/shared/components/action/AppRowActions.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppSearchInput from "@/shared/components/form/input/AppSearchInput.vue";
@@ -14,9 +16,7 @@ import AppIconButton from "@/shared/components/action/AppIconButton.vue";
 import { useListViewMode } from "@/shared/composables/list/useListViewMode.js";
 import {
     Archive,
-    ArchiveRestore,
     Copy,
-    FilePlus2,
     LayoutGrid,
     List,
     Pencil,
@@ -131,6 +131,28 @@ function kindStyle(kind) {
         }
     );
 }
+
+/**
+ * One list of actions, two presentations.
+ *
+ * The table shows them behind a single button, like every other list in the
+ * app; the cards keep them laid out, because a card has the room and losing
+ * them would make the wider view the poorer one.
+ */
+const actionsFor = useContractTemplateActions();
+
+const handlers = {
+    openDraft,
+    duplicate: (template) => (pendingDuplicate.value = template),
+    rename: openRename,
+    archive,
+    restore,
+    remove: (template) => (pendingDelete.value = template),
+};
+
+function rowActions(template) {
+    return actionsFor(template, handlers);
+}
 </script>
 
 <template>
@@ -140,10 +162,12 @@ function kindStyle(kind) {
                 v-model="search"
                 :placeholder="t('backend.accounting.contract_templates.search_placeholder')"
             />
-            <template #actions>
-                <!-- Same toggle as every other list in the app, so the gesture
-                     is learned once. -->
-                <div class="flex border border-line/60 rounded-lg p-0.5">
+            <!-- The toggle belongs to the search, not beside it: stacked under
+                 the field on a phone it read as a second filter and cost a row.
+                 Same control as every other list, so the gesture is learned
+                 once. -->
+            <template #inline>
+                <div class="flex shrink-0 border border-line/60 rounded-lg p-0.5">
                     <AppIconButton
                         :title="t('shared.common.list_view')"
                         :class="viewMode === 'list' ? 'bg-surface-3 text-primary' : 'text-muted hover:text-primary'"
@@ -159,31 +183,35 @@ function kindStyle(kind) {
                         <LayoutGrid class="w-4 h-4" :stroke-width="2" />
                     </AppIconButton>
                 </div>
-                <AppButton
-                    v-if="archivedCount"
-                    variant="ghost"
-                    size="md"
-                    v-on:click="showArchived = !showArchived"
-                >
-                    <Archive class="w-4 h-4" :stroke-width="2" />
-                    {{
-                        showArchived
-                            ? t("backend.accounting.contract_templates.hide_archived")
-                            : t("backend.accounting.contract_templates.show_archived", {
-                                count: archivedCount,
-                            })
-                    }}
-                </AppButton>
-                <AppButton
-                    v-if="can('accounting.contract_templates.create')"
-                    variant="primary"
-                    size="md"
-                    class="w-full sm:w-auto"
-                    v-on:click="openCreate"
-                >
-                    <Plus class="w-4 h-4" :stroke-width="2" />
-                    {{ t("backend.accounting.contract_templates.add") }}
-                </AppButton>
+            </template>
+            <template #actions>
+                <div class="flex items-center gap-2">
+                    <AppButton
+                        v-if="archivedCount"
+                        variant="ghost"
+                        size="md"
+                        v-on:click="showArchived = !showArchived"
+                    >
+                        <Archive class="w-4 h-4" :stroke-width="2" />
+                        {{
+                            showArchived
+                                ? t("backend.accounting.contract_templates.hide_archived")
+                                : t("backend.accounting.contract_templates.show_archived", {
+                                    count: archivedCount,
+                                })
+                        }}
+                    </AppButton>
+                    <AppButton
+                        v-if="can('accounting.contract_templates.create')"
+                        variant="primary"
+                        size="md"
+                        class="flex-1 sm:flex-none"
+                        v-on:click="openCreate"
+                    >
+                        <Plus class="w-4 h-4" :stroke-width="2" />
+                        {{ t("backend.accounting.contract_templates.add") }}
+                    </AppButton>
+                </div>
             </template>
         </AppListToolbar>
 
@@ -217,7 +245,12 @@ function kindStyle(kind) {
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden md:table-cell">
                             {{ t("backend.accounting.contract_templates.state_draft") }}
                         </th>
-                        <th class="px-6 py-3" />
+                        <!-- Named, and the only column aligned right: it is
+                             where the hand goes, not something to read across
+                             with the rest. -->
+                        <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+                            {{ t("shared.common.actions") }}
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-line/40">
@@ -279,51 +312,10 @@ function kindStyle(kind) {
                             </span>
                         </td>
                         <td class="px-6 py-3">
-                            <div class="flex items-center justify-end gap-1">
-                                <AppIconButton
-                                    v-if="!template.draftId && !template.isArchived && can('accounting.contract_templates.edit')"
-                                    :title="t('backend.accounting.contract_templates.open_draft')"
-                                    v-on:click="openDraft(template)"
-                                >
-                                    <FilePlus2 class="w-4 h-4" :stroke-width="2" />
-                                </AppIconButton>
-                                <AppIconButton
-                                    v-if="can('accounting.contract_templates.create')"
-                                    :title="t('backend.accounting.contract_templates.duplicate')"
-                                    v-on:click="pendingDuplicate = template"
-                                >
-                                    <Copy class="w-4 h-4" :stroke-width="2" />
-                                </AppIconButton>
-                                <AppIconButton
-                                    v-if="can('accounting.contract_templates.edit')"
-                                    :title="t('shared.common.edit')"
-                                    v-on:click="openRename(template)"
-                                >
-                                    <Pencil class="w-4 h-4" :stroke-width="2" />
-                                </AppIconButton>
-                                <AppIconButton
-                                    v-if="!template.isArchived && can('accounting.contract_templates.edit')"
-                                    :title="t('backend.accounting.contract_templates.archive')"
-                                    v-on:click="archive(template)"
-                                >
-                                    <Archive class="w-4 h-4" :stroke-width="2" />
-                                </AppIconButton>
-                                <AppIconButton
-                                    v-if="template.isArchived && can('accounting.contract_templates.edit')"
-                                    :title="t('backend.accounting.contract_templates.restore')"
-                                    v-on:click="restore(template)"
-                                >
-                                    <ArchiveRestore class="w-4 h-4" :stroke-width="2" />
-                                </AppIconButton>
-                                <AppIconButton
-                                    v-if="can('accounting.contract_templates.delete')"
-                                    color="rose"
-                                    :title="t('shared.common.delete')"
-                                    v-on:click="pendingDelete = template"
-                                >
-                                    <Trash2 class="w-4 h-4" :stroke-width="2" />
-                                </AppIconButton>
-                            </div>
+                            <AppRowActions
+                                :actions="rowActions(template)"
+                                :label="template.name"
+                            />
                         </td>
                     </tr>
                 </tbody>
@@ -422,61 +414,20 @@ function kindStyle(kind) {
                     </div>
                 </dl>
 
+                <!-- The same actions as the row, laid out rather than folded:
+                     a card has the room, and the list is defined once so the
+                     two views cannot drift apart. -->
                 <div class="flex flex-wrap gap-2 pt-1 border-t border-line/40">
                     <AppButton
-                        v-if="!template.draftId && !template.isArchived && can('accounting.contract_templates.edit')"
+                        v-for="action in rowActions(template)"
+                        :key="action.key"
                         variant="ghost"
                         size="sm"
-                        :loading="busy"
-                        v-on:click="openDraft(template)"
+                        :loading="action.key === 'openDraft' && busy"
+                        v-on:click="action.onSelect()"
                     >
-                        <FilePlus2 class="w-3.5 h-3.5" :stroke-width="2" />
-                        {{ t("backend.accounting.contract_templates.open_draft") }}
-                    </AppButton>
-                    <AppButton
-                        v-if="can('accounting.contract_templates.create')"
-                        variant="ghost"
-                        size="sm"
-                        v-on:click="pendingDuplicate = template"
-                    >
-                        <Copy class="w-3.5 h-3.5" :stroke-width="2" />
-                        {{ t("backend.accounting.contract_templates.duplicate") }}
-                    </AppButton>
-                    <AppButton
-                        v-if="can('accounting.contract_templates.edit')"
-                        variant="ghost"
-                        size="sm"
-                        v-on:click="openRename(template)"
-                    >
-                        <Pencil class="w-3.5 h-3.5" :stroke-width="2" />
-                        {{ t("shared.common.edit") }}
-                    </AppButton>
-                    <AppButton
-                        v-if="!template.isArchived && can('accounting.contract_templates.edit')"
-                        variant="ghost"
-                        size="sm"
-                        v-on:click="archive(template)"
-                    >
-                        <Archive class="w-3.5 h-3.5" :stroke-width="2" />
-                        {{ t("backend.accounting.contract_templates.archive") }}
-                    </AppButton>
-                    <AppButton
-                        v-if="template.isArchived && can('accounting.contract_templates.edit')"
-                        variant="ghost"
-                        size="sm"
-                        v-on:click="restore(template)"
-                    >
-                        <ArchiveRestore class="w-3.5 h-3.5" :stroke-width="2" />
-                        {{ t("backend.accounting.contract_templates.restore") }}
-                    </AppButton>
-                    <AppButton
-                        v-if="can('accounting.contract_templates.delete')"
-                        variant="ghost"
-                        size="sm"
-                        v-on:click="pendingDelete = template"
-                    >
-                        <Trash2 class="w-3.5 h-3.5" :stroke-width="2" />
-                        {{ t("shared.common.delete") }}
+                        <component :is="action.icon" class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ action.title }}
                     </AppButton>
                 </div>
             </article>
