@@ -80,9 +80,22 @@ class PostRepository extends ResolveTargetEntityRepository
         return $result;
     }
 
-    public function findPublishedBySlug(string $slug, string $locale): ?PostInterface
+    /**
+     * A published publication at this address.
+     *
+     * The type narrows it when the caller knows which one the address named,
+     * and it always does on the public route - `/{locale}/{type}/{slug}`. An
+     * address is only unique inside its type: a documentation page and a card
+     * of the tour may both be called "tableau-de-bord", and looking one up by
+     * slug alone answers with whichever the database returns first.
+     *
+     * Left optional because the same lookup, without the type, is what tells
+     * the controller that a publication has changed type since the address was
+     * shared - which is the one case that must still redirect rather than 404.
+     */
+    public function findPublishedBySlug(string $slug, string $locale, ?int $postTypeId = null): ?PostInterface
     {
-        return $this->createQueryBuilder('p')
+        $query = $this->createQueryBuilder('p')
             ->innerJoin('p.translations', 't')
             ->andWhere('t.locale = :locale')
             ->andWhere('t.slug = :slug')
@@ -91,9 +104,13 @@ class PostRepository extends ResolveTargetEntityRepository
             ->setParameter('locale', $locale)
             ->setParameter('slug', $slug)
             ->setParameter('status', PostStatusEnum::Published)
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+            ->setMaxResults(1);
+
+        if (null !== $postTypeId) {
+            $query->andWhere('p.postType = :postType')->setParameter('postType', $postTypeId);
+        }
+
+        return $query->getQuery()->getOneOrNullResult();
     }
 
     /**
