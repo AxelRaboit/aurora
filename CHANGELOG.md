@@ -53,8 +53,8 @@ téléphone bat n'importe quel sélecteur pour un inconnu qui signe.
 
 ### Dans aurora-client
 
-Rien à répercuter : une migration, jouée par `make aurora-update`. Les douze
-réglages du prestataire arrivent vides et se remplissent dans *Configuration >
+Rien à répercuter, et aucune migration cette fois. Les douze réglages du
+prestataire arrivent vides et se remplissent dans *Configuration >
 Comptabilité*.
 
 ## [0.9.87] - 2026-09-09
