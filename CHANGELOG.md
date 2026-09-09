@@ -5,6 +5,48 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.94] - 2026-09-09
+
+### Ajouté
+
+#### La mention d'information sur la page de signature
+La page demandait à un inconnu son nom, son email, un lieu et une date,
+enregistrait son adresse IP et son navigateur, et stockait le tracé de sa
+signature. Elle n'en disait rien. L'article 13 le demande **au moment de la
+collecte**, c'est-à-dire sur cette page et pas ailleurs : une politique de
+confidentialité sur un site qu'on n'atteint pas d'ici ne satisfait rien.
+
+Elle est repliée dans un bloc dépliable en bas de page, présente aussi quand
+le contrat est signé ou refusé - les données ont été collectées dans les deux
+cas, et cette page est le seul endroit où cette personne peut revenir. Un
+renvoi discret sous la case d'acceptation la signale, pour que la case ne se
+coche pas avec l'information hors de portée.
+
+Elle nomme les deux bases séparément, parce qu'elles ne couvrent pas la même
+chose : l'identité et la signature relèvent de l'exécution du contrat
+(art. 6.1.b), les éléments observés de l'intérêt légitime à pouvoir défendre
+ce contrat (art. 6.1.f). Et elle dit que le refus est enregistré lui aussi,
+avec sa date, son IP et son motif.
+
+**Tout ce qu'elle affirme, elle le lit.** Le responsable du traitement vient
+des réglages que le document imprime déjà ; la durée de conservation vient de
+la valeur que la garde de suppression applique. Une mention qui citerait ses
+propres chiffres finirait par promettre une conservation que personne
+n'applique, ce qui est pire que le silence : une affirmation écrite contredite
+par le code d'à côté. Un test le vérifie sur le HTML servi, pas sur le service
+qui le construit.
+
+Elle n'est pas dans le document scellé, contrairement à la clause de langue
+faisant foi : celle-là est contractuelle, celle-ci non, et l'ajouter au HTML
+scellé changerait toutes les empreintes déjà prises.
+
+### Dans aurora-client
+
+Rien à répercuter, aucune migration. La mention se remplit d'elle-même à
+partir de *Configuration > Comptabilité* : la dénomination, l'adresse et
+l'email du prestataire y nomment le responsable du traitement, et un réglage
+vide est omis plutôt qu'imprimé en blanc.
+
 ## [0.9.93] - 2026-09-09
 
 ### Ajouté
