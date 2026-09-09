@@ -6,6 +6,8 @@ import ContractFormFields from "./components/ContractFormFields.vue";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppSearchInput from "@/shared/components/form/input/AppSearchInput.vue";
 import AppListToolbar from "@/shared/components/list/AppListToolbar.vue";
+import AppIconButton from "@/shared/components/action/AppIconButton.vue";
+import { useListViewMode } from "@/shared/composables/list/useListViewMode.js";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppNoData from "@/shared/components/feedback/AppNoData.vue";
@@ -13,6 +15,8 @@ import {
     AlertTriangle,
     Ban,
     FileSignature,
+    LayoutGrid,
+    List,
     Lock,
     Mail,
     MailCheck,
@@ -73,6 +77,13 @@ const {
     documentPath,
     formatAmount,
 } = useContractsList(props);
+
+/**
+ * List first here too, and for the same reason: the sealed half of this page
+ * is already a table, so the list view makes it one continuous list rather
+ * than cards above rows.
+ */
+const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
 </script>
 
 <template>
@@ -83,6 +94,24 @@ const {
                 :placeholder="t('backend.accounting.contracts.search_placeholder')"
             />
             <template #actions>
+                <!-- The toggle drives the drafts: sealed contracts are already
+                     a table, so list mode makes the whole page one list. -->
+                <div class="flex border border-line/60 rounded-lg p-0.5">
+                    <AppIconButton
+                        :title="t('shared.common.list_view')"
+                        :class="viewMode === 'list' ? 'bg-surface-3 text-primary' : 'text-muted hover:text-primary'"
+                        v-on:click="setViewMode('list')"
+                    >
+                        <List class="w-4 h-4" :stroke-width="2" />
+                    </AppIconButton>
+                    <AppIconButton
+                        :title="t('shared.common.grid_view')"
+                        :class="viewMode === 'grid' ? 'bg-surface-3 text-primary' : 'text-muted hover:text-primary'"
+                        v-on:click="setViewMode('grid')"
+                    >
+                        <LayoutGrid class="w-4 h-4" :stroke-width="2" />
+                    </AppIconButton>
+                </div>
                 <AppButton
                     v-if="can('accounting.contracts.create')"
                     variant="primary"
@@ -106,7 +135,7 @@ const {
             <h2 class="text-xs font-medium uppercase tracking-wider text-muted">
                 {{ t("backend.accounting.contracts.in_preparation") }}
             </h2>
-            <div class="grid gap-3 md:grid-cols-2">
+            <div v-if="viewMode === 'grid'" class="grid gap-3 md:grid-cols-2">
                 <article
                     v-for="contract in drafts"
                     :key="contract.id"
@@ -177,6 +206,106 @@ const {
                         </AppButton>
                     </div>
                 </article>
+            </div>
+
+            <!-- The same drafts as rows. No colour: the one thing worth
+                 flagging here is a version left behind, and it says so in
+                 words. -->
+            <div
+                v-else
+                class="bg-surface border border-line rounded-lg overflow-x-auto scrollbar-thin"
+            >
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-surface-2/50 border-b border-line/40">
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                                {{ t("backend.accounting.contracts.col_customer") }}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                                {{ t("backend.accounting.contracts.body") }}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">
+                                {{ t("backend.accounting.contracts.annex") }}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden md:table-cell">
+                                {{ t("backend.accounting.contracts.amount") }}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden xl:table-cell">
+                                {{ t("backend.accounting.contracts.effective_date") }}
+                            </th>
+                            <th class="px-6 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line/40">
+                        <tr
+                            v-for="contract in drafts"
+                            :key="contract.id"
+                            class="hover:bg-surface-2/40 transition-colors"
+                        >
+                            <td class="px-6 py-3 text-primary">
+                                {{ contract.customerName }}
+                            </td>
+                            <td class="px-6 py-3 text-muted">
+                                <span class="text-primary">
+                                    {{ contract.body?.templateName ?? "-" }}
+                                </span>
+                                <span v-if="contract.body" class="text-xs">
+                                    ·
+                                    {{
+                                        t("backend.accounting.contracts.version_label", {
+                                            number: contract.body.versionNumber,
+                                        })
+                                    }}
+                                </span>
+                                <span
+                                    v-if="contract.body?.isOutdated || contract.annex?.isOutdated"
+                                    class="block text-xs text-amber-500"
+                                >
+                                    {{ t("backend.accounting.contracts.outdated_version") }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-3 text-muted hidden lg:table-cell">
+                                {{ contract.annex?.templateName ?? "-" }}
+                            </td>
+                            <td class="px-6 py-3 text-primary hidden md:table-cell whitespace-nowrap">
+                                {{ formatAmount(contract) || "-" }}
+                            </td>
+                            <td class="px-6 py-3 text-muted text-xs hidden xl:table-cell whitespace-nowrap">
+                                {{
+                                    contract.effectiveDate
+                                        ? new Date(contract.effectiveDate).toLocaleDateString()
+                                        : "-"
+                                }}
+                            </td>
+                            <td class="px-6 py-3">
+                                <div class="flex items-center justify-end gap-1">
+                                    <AppIconButton
+                                        v-if="can('accounting.contracts.edit')"
+                                        :title="t('shared.common.edit')"
+                                        v-on:click="openEdit(contract)"
+                                    >
+                                        <Pencil class="w-4 h-4" :stroke-width="2" />
+                                    </AppIconButton>
+                                    <AppIconButton
+                                        v-if="can('accounting.contracts.edit')"
+                                        :title="t('backend.accounting.contracts.freeze')"
+                                        v-on:click="pendingFreeze = contract"
+                                    >
+                                        <Lock class="w-4 h-4" :stroke-width="2" />
+                                    </AppIconButton>
+                                    <AppIconButton
+                                        v-if="can('accounting.contracts.delete')"
+                                        color="rose"
+                                        :title="t('shared.common.delete')"
+                                        v-on:click="pendingDelete = contract"
+                                    >
+                                        <Trash2 class="w-4 h-4" :stroke-width="2" />
+                                    </AppIconButton>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 

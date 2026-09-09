@@ -70,7 +70,7 @@ final class ContractFreezeTest extends IntegrationTestCase
         // exercises exactly the code that will run in production.
         $canonicalizer = new ContractCanonicalizer();
         $this->seal = new ContractSeal($canonicalizer);
-        $resolver = new ContractVariableResolver(new ContractVariableCatalogue());
+        $resolver = new ContractVariableResolver(new ContractVariableCatalogue(), $container->get(SettingRepository::class));
         $renderer = new ContractDocumentRenderer(new BlockHtmlSanitizer());
 
         // Built by hand: neither manager has a controller yet, so the container

@@ -14,16 +14,16 @@ namespace Aurora\Module\Accounting\Contract\Service;
  * token either names something this catalogue knows how to resolve, or it does
  * not, and that answer is the same for every template.
  *
- * Only two groups, and the absence of a third is deliberate. The paper trames
- * carry the provider's own identity as ordinary wording - name, SIRET, APE
- * code, address, all typed once into the body - so there is nothing to
- * substitute for it, and a `provider.*` group would advertise tokens with
- * nothing behind them.
+ * Three groups, and each reads somewhere different. `customer.*` reads the
+ * Customer attached to the contract. `contract.*` reads the contract itself:
+ * the reference, the amount, the date it takes effect, the city and date of
+ * signature. `provider.*` reads the application's settings.
  *
- * `customer.*` reads the Customer attached to the contract. `contract.*` reads
- * the contract itself, and those are the fields somebody fills in per
- * signature: the reference, the amount, the date it takes effect, the city and
- * date of signature.
+ * The provider group was deliberately absent at first, because the paper
+ * trames carried that identity as ordinary wording. It earned its place the
+ * moment there were two bodies and three annexes: the same block, typed five
+ * times, is five places to forget when a bank or an address changes. Settings
+ * rather than a Customer row, because there is exactly one provider.
  *
  * The two moments matter as much as the tokens. Most are known when a contract
  * is frozen and are substituted then, so the document a signer reads has no
@@ -77,6 +77,24 @@ final readonly class ContractVariableCatalogue
                     $this->variable('customer.representative_role', 'Gérante'),
                     $this->variable('customer.contractual_email', 'contact@durand.fr'),
                     $this->variable('customer.phone', '06 12 34 56 78'),
+                ],
+            ],
+            [
+                'group' => 'provider',
+                'labelKey' => 'backend.accounting.contract_templates.variables.provider',
+                'variables' => [
+                    $this->variable('provider.name', 'Axel Raboit'),
+                    $this->variable('provider.representative', 'Axel RABOIT'),
+                    $this->variable('provider.address', '7 rue de la Fontaine, 38000 Grenoble'),
+                    $this->variable('provider.siret', '107 071 508 00017'),
+                    $this->variable('provider.ape_code', '7021Z'),
+                    $this->variable('provider.vat_mention', 'TVA non applicable, art. 293 B du CGI'),
+                    $this->variable('provider.email', 'contact@exemple.fr'),
+                    $this->variable('provider.phone', '06 12 34 56 78'),
+                    $this->variable('provider.bank_holder', 'Axel Raboit EI'),
+                    $this->variable('provider.bank_iban', 'FR76 1234 5678 9012 3456 7890 123'),
+                    $this->variable('provider.bank_bic', 'ABCDFRPP'),
+                    $this->variable('provider.bank_name', 'Banque'),
                 ],
             ],
             [

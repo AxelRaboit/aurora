@@ -10,10 +10,15 @@ import AppListToolbar from "@/shared/components/list/AppListToolbar.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppNoData from "@/shared/components/feedback/AppNoData.vue";
+import AppIconButton from "@/shared/components/action/AppIconButton.vue";
+import { useListViewMode } from "@/shared/composables/list/useListViewMode.js";
 import {
     Archive,
     ArchiveRestore,
+    Copy,
     FilePlus2,
+    LayoutGrid,
+    List,
     Pencil,
     Plus,
     Save,
@@ -34,6 +39,7 @@ const props = defineProps({
     restorePath: { type: String, required: true },
     deletePath: { type: String, required: true },
     openDraftPath: { type: String, required: true },
+    duplicatePath: { type: String, required: true },
     editorPath: { type: String, required: true },
 });
 
@@ -56,13 +62,26 @@ const {
     openRename,
     submitRename,
     pendingDelete,
+    pendingDuplicate,
     busy,
     archive,
     restore,
     confirmDelete,
+    confirmDuplicate,
     openDraft,
     editorPath,
 } = useContractTemplatesList(props);
+
+/**
+ * List first, cards on demand.
+ *
+ * A list answers what this screen is opened for - which trames exist, what is
+ * in force, whether something is open - in one row per trame. The cards say
+ * the same thing with more air, which is worth having and not worth imposing.
+ * Kept in the query string like every other list in the app, so a view is part
+ * of the link somebody sends.
+ */
+const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
 
 const kindOptions = props.kinds.map((kind) => ({
     value: kind.value,
@@ -74,23 +93,31 @@ function kindLabel(value) {
 }
 
 /**
- * A colour per kind, so a body and an annex are told apart at a glance.
+ * The theme's own colour marks the body; an annex stays neutral.
  *
- * Two families that are used nowhere else on these cards: emerald and amber
- * already mean published and draft here, and reusing them would make the type
- * of a trame look like a state. Written out rather than composed from the kind
- * name, because Tailwind only ships the classes it can see in the source.
+ * Not two fixed hues: the accent scale follows the theme somebody chose, so a
+ * palette picked in the settings is the palette these cards use. A second
+ * imported hue would be the one colour on the screen that ignores that choice.
+ *
+ * The pair also says something true. A body is the contract, an annex is
+ * attached to one, and the hierarchy reads even in greyscale or for somebody
+ * who does not separate hues: coloured versus plain rather than blue versus
+ * violet. The type is named in the pill either way, which is what a reader
+ * actually goes by.
+ *
+ * Written out rather than composed from the kind name, because Tailwind only
+ * ships the classes it can see in the source.
  */
 const KIND_STYLES = {
     body: {
-        card: "border-sky-500/40 bg-sky-500/[0.04]",
-        icon: "text-sky-500",
-        pill: "border-sky-500/40 text-sky-600 dark:text-sky-400",
+        card: "border-accent-500/40 bg-accent-500/5",
+        icon: "text-accent-500",
+        pill: "border-accent-500/40 text-accent-600 dark:text-accent-400",
     },
     annex: {
-        card: "border-violet-500/40 bg-violet-500/[0.04]",
-        icon: "text-violet-500",
-        pill: "border-violet-500/40 text-violet-600 dark:text-violet-400",
+        card: "border-line bg-surface-2/30",
+        icon: "text-muted",
+        pill: "border-line text-muted",
     },
 };
 
@@ -114,6 +141,24 @@ function kindStyle(kind) {
                 :placeholder="t('backend.accounting.contract_templates.search_placeholder')"
             />
             <template #actions>
+                <!-- Same toggle as every other list in the app, so the gesture
+                     is learned once. -->
+                <div class="flex border border-line/60 rounded-lg p-0.5">
+                    <AppIconButton
+                        :title="t('shared.common.list_view')"
+                        :class="viewMode === 'list' ? 'bg-surface-3 text-primary' : 'text-muted hover:text-primary'"
+                        v-on:click="setViewMode('list')"
+                    >
+                        <List class="w-4 h-4" :stroke-width="2" />
+                    </AppIconButton>
+                    <AppIconButton
+                        :title="t('shared.common.grid_view')"
+                        :class="viewMode === 'grid' ? 'bg-surface-3 text-primary' : 'text-muted hover:text-primary'"
+                        v-on:click="setViewMode('grid')"
+                    >
+                        <LayoutGrid class="w-4 h-4" :stroke-width="2" />
+                    </AppIconButton>
+                </div>
                 <AppButton
                     v-if="archivedCount"
                     variant="ghost"
@@ -147,10 +192,150 @@ function kindStyle(kind) {
             :message="t('backend.accounting.contract_templates.empty')"
         />
 
-        <!-- Cards rather than a table: what a reader needs per trame is its
-             state across two versions, published and draft, which does not
-             read as a row of cells. -->
-        <div v-else class="grid gap-3 md:grid-cols-2">
+        <!-- The list view. No colour but the type pill: a table earns its
+             keep by being scannable, and a tinted row competes with the two
+             states that actually change - published and draft. -->
+        <div
+            v-else-if="viewMode === 'list'"
+            class="bg-surface border border-line rounded-lg overflow-x-auto scrollbar-thin"
+        >
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-surface-2/50 border-b border-line/40">
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                            {{ t("backend.accounting.contract_templates.name") }}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                            {{ t("backend.accounting.contract_templates.kind_label") }}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">
+                            {{ t("backend.accounting.contract_templates.col_locales") }}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+                            {{ t("backend.accounting.contract_templates.in_force") }}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden md:table-cell">
+                            {{ t("backend.accounting.contract_templates.state_draft") }}
+                        </th>
+                        <th class="px-6 py-3" />
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line/40">
+                    <tr
+                        v-for="template in visibleItems"
+                        :key="template.id"
+                        class="hover:bg-surface-2/40 transition-colors"
+                        :class="{ 'opacity-60': template.isArchived }"
+                    >
+                        <td class="px-6 py-3 text-primary">
+                            <span class="flex items-center gap-2 min-w-0">
+                                <ScrollText class="w-4 h-4 shrink-0 text-muted" :stroke-width="2" />
+                                <span class="truncate">{{ template.name }}</span>
+                                <span
+                                    v-if="template.isArchived"
+                                    class="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-line text-muted shrink-0"
+                                >
+                                    {{ t("backend.accounting.contract_templates.state_archived") }}
+                                </span>
+                            </span>
+                        </td>
+                        <td class="px-6 py-3">
+                            <span
+                                class="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded-full border whitespace-nowrap"
+                                :class="kindStyle(template.kind).pill"
+                            >
+                                {{ kindLabel(template.kind) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-muted text-xs hidden lg:table-cell whitespace-nowrap">
+                            {{ template.locales.length ? template.locales.join(", ") : "-" }}
+                        </td>
+                        <td class="px-6 py-3 whitespace-nowrap">
+                            <span v-if="template.publishedVersion" class="text-primary">
+                                {{
+                                    t("backend.accounting.contract_templates.version_label", {
+                                        number: template.publishedVersion,
+                                    })
+                                }}
+                            </span>
+                            <span v-else class="text-muted text-xs">
+                                {{ t("backend.accounting.contract_templates.never_published") }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 hidden md:table-cell whitespace-nowrap">
+                            <a
+                                v-if="template.draftId"
+                                :href="editorPath(template.id, template.draftId)"
+                                class="text-accent-500 hover:underline"
+                            >
+                                {{
+                                    t("backend.accounting.contract_templates.version_label", {
+                                        number: template.draftVersion,
+                                    })
+                                }}
+                            </a>
+                            <span v-else class="text-muted text-xs">
+                                {{ t("backend.accounting.contract_templates.no_draft") }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3">
+                            <div class="flex items-center justify-end gap-1">
+                                <AppIconButton
+                                    v-if="!template.draftId && !template.isArchived && can('accounting.contract_templates.edit')"
+                                    :title="t('backend.accounting.contract_templates.open_draft')"
+                                    v-on:click="openDraft(template)"
+                                >
+                                    <FilePlus2 class="w-4 h-4" :stroke-width="2" />
+                                </AppIconButton>
+                                <AppIconButton
+                                    v-if="can('accounting.contract_templates.create')"
+                                    :title="t('backend.accounting.contract_templates.duplicate')"
+                                    v-on:click="pendingDuplicate = template"
+                                >
+                                    <Copy class="w-4 h-4" :stroke-width="2" />
+                                </AppIconButton>
+                                <AppIconButton
+                                    v-if="can('accounting.contract_templates.edit')"
+                                    :title="t('shared.common.edit')"
+                                    v-on:click="openRename(template)"
+                                >
+                                    <Pencil class="w-4 h-4" :stroke-width="2" />
+                                </AppIconButton>
+                                <AppIconButton
+                                    v-if="!template.isArchived && can('accounting.contract_templates.edit')"
+                                    :title="t('backend.accounting.contract_templates.archive')"
+                                    v-on:click="archive(template)"
+                                >
+                                    <Archive class="w-4 h-4" :stroke-width="2" />
+                                </AppIconButton>
+                                <AppIconButton
+                                    v-if="template.isArchived && can('accounting.contract_templates.edit')"
+                                    :title="t('backend.accounting.contract_templates.restore')"
+                                    v-on:click="restore(template)"
+                                >
+                                    <ArchiveRestore class="w-4 h-4" :stroke-width="2" />
+                                </AppIconButton>
+                                <AppIconButton
+                                    v-if="can('accounting.contract_templates.delete')"
+                                    color="rose"
+                                    :title="t('shared.common.delete')"
+                                    v-on:click="pendingDelete = template"
+                                >
+                                    <Trash2 class="w-4 h-4" :stroke-width="2" />
+                                </AppIconButton>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- The card view: the same facts with more air, and the type carried
+             by the whole card rather than by one pill. -->
+        <div
+            v-else-if="viewMode === 'grid'"
+            class="grid gap-3 md:grid-cols-2"
+        >
             <article
                 v-for="template in visibleItems"
                 :key="template.id"
@@ -247,6 +432,15 @@ function kindStyle(kind) {
                     >
                         <FilePlus2 class="w-3.5 h-3.5" :stroke-width="2" />
                         {{ t("backend.accounting.contract_templates.open_draft") }}
+                    </AppButton>
+                    <AppButton
+                        v-if="can('accounting.contract_templates.create')"
+                        variant="ghost"
+                        size="sm"
+                        v-on:click="pendingDuplicate = template"
+                    >
+                        <Copy class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contract_templates.duplicate") }}
                     </AppButton>
                     <AppButton
                         v-if="can('accounting.contract_templates.edit')"
@@ -367,6 +561,45 @@ function kindStyle(kind) {
                     >
                         <Save class="w-3.5 h-3.5" :stroke-width="2" />
                         {{ t("shared.common.save") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <AppModal
+            :show="!!pendingDuplicate"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.accounting.contract_templates.duplicate')"
+            :icon="Copy"
+            v-on:close="pendingDuplicate = null"
+        >
+            <p class="text-sm text-primary">
+                {{
+                    t("backend.accounting.contract_templates.duplicate_confirm", {
+                        name: pendingDuplicate?.name ?? "",
+                    })
+                }}
+            </p>
+            <!-- What the copy is and is not, said before the click: it starts
+                 as a draft, so nothing becomes usable by accident. -->
+            <p class="text-sm text-secondary">
+                {{ t("backend.accounting.contract_templates.duplicate_hint") }}
+            </p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="pendingDuplicate = null">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="primary"
+                        size="md"
+                        :loading="busy"
+                        v-on:click="confirmDuplicate"
+                    >
+                        <Copy class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contract_templates.duplicate") }}
                     </AppButton>
                 </AppModalFooter>
             </template>

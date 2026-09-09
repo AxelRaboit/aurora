@@ -229,6 +229,10 @@ async function sign() {
                 :error="errors.place"
                 required
             />
+            <!-- The one date field left native, and it is a decision: this
+                 page is opened by a stranger, often on a phone, and the OS
+                 wheel beats any picker we ship for somebody who has never
+                 seen this interface. Every backend date uses AppDatePicker. -->
             <AppInput
                 v-model="form.date"
                 :label="t('accounting.public.sign.date')"

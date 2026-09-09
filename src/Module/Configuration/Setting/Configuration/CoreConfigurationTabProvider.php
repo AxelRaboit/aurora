@@ -46,6 +46,9 @@ final readonly class CoreConfigurationTabProvider implements ConfigurationTabPro
         'media' => 85,      // upload limits - visible to all admins
         'sequences' => 90,  // internal prefixes - dev only
         'navigation' => 100,
+        // After navigation: it belongs to one module, and only matters to
+        // whoever sends contracts.
+        'accounting' => 110,
     ];
 
     /**
