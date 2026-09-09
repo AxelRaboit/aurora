@@ -18,6 +18,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use function array_fill_keys;
 use function count;
 use function is_array;
+use function sprintf;
 
 /**
  * @extends ResolveTargetEntityRepository<PostInterface>
@@ -157,19 +158,50 @@ class PostRepository extends ResolveTargetEntityRepository
      */
     public function findPublishedByTerm(int $termId, int $page, int $limit, string $locale): array
     {
+        return $this->findPublishedByTerms([$termId], $page, $limit, $locale);
+    }
+
+    /**
+     * The publications of several terms at once, without duplicates.
+     *
+     * What a term page of a hierarchical taxonomy asks for: a publication is
+     * filed under a leaf, so a section holding only sub-sections holds no
+     * publication of its own. Listing the term alone answered an empty page
+     * at an address that is legitimately reachable.
+     *
+     * Membership is asked as an EXISTS rather than as a join, and that is not
+     * a style choice: a publication carrying two terms of the same branch
+     * matches the join twice, so it would be printed twice and counted twice.
+     * `DISTINCT` would be the usual answer and PostgreSQL refuses it here -
+     * the row carries the grid, a `json` column, and json has no equality
+     * operator. Not joining at all settles both.
+     *
+     * @param list<int> $termIds
+     *
+     * @return array{items: list<PostInterface>, total: int, page: int, totalPages: int}
+     */
+    public function findPublishedByTerms(array $termIds, int $page, int $limit, string $locale): array
+    {
+        if ([] === $termIds) {
+            return ['items' => [], 'total' => 0, 'page' => 1, 'totalPages' => 1];
+        }
+
+        $inBranch = sprintf(
+            'SELECT 1 FROM %s branchPost JOIN branchPost.terms branchTerm WHERE branchPost = p AND branchTerm.id IN (:termIds)',
+            $this->getEntityName(),
+        );
+
         $items = $this->publishedQueryBuilder($locale)
             ->addSelect('t')
-            ->innerJoin('p.terms', 'term')
-            ->andWhere('term.id = :termId')
-            ->setParameter('termId', $termId)
+            ->andWhere(sprintf('EXISTS (%s)', $inBranch))
+            ->setParameter('termIds', $termIds)
             ->addOrderBy('p.id', Order::Descending->value);
         $this->readingOrder($items);
 
         $count = $this->publishedQueryBuilder($locale)
             ->select('COUNT(p.id)')
-            ->innerJoin('p.terms', 'term')
-            ->andWhere('term.id = :termId')
-            ->setParameter('termId', $termId);
+            ->andWhere(sprintf('EXISTS (%s)', $inBranch))
+            ->setParameter('termIds', $termIds);
 
         return $this->paginate($items, $count, $page, $limit);
     }

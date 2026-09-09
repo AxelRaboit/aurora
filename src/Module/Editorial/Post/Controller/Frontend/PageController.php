@@ -30,6 +30,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+use function array_map;
+
 /**
  * The public pages.
  *
@@ -180,8 +182,13 @@ class PageController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $result = $this->postRepository->findPublishedByTerm(
-            (int) $term->getId(),
+        // The term and everything under it. A publication is filed under a
+        // leaf, so a section that only holds sub-sections holds none of its
+        // own: `/fr/section/le-back-office` answered 200 and listed nothing,
+        // which reads as a broken page rather than as an empty one. A flat
+        // taxonomy has no descendants, so nothing changes for tags.
+        $result = $this->postRepository->findPublishedByTerms(
+            array_map(static fn (TaxonomyTermInterface $branch): int => (int) $branch->getId(), $term->getSelfAndDescendants()),
             $this->page($request),
             $this->postsPerPage(),
             $locale,

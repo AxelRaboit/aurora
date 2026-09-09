@@ -164,6 +164,28 @@ abstract class AbstractTaxonomyTerm implements TaxonomyTermInterface
     }
 
     /**
+     * Depth first, so the order reads like the tree does.
+     *
+     * A cycle cannot happen - `isDescendantOf` refuses to create one - so the
+     * walk needs no visited set. The recursion is bounded by the depth of the
+     * taxonomy, which a person maintains by hand.
+     *
+     * @return list<TaxonomyTermInterface>
+     */
+    public function getSelfAndDescendants(): array
+    {
+        $terms = [$this];
+
+        foreach ($this->children as $child) {
+            foreach ($child->getSelfAndDescendants() as $descendant) {
+                $terms[] = $descendant;
+            }
+        }
+
+        return $terms;
+    }
+
+    /**
      * Guards the move operation against making a term its own descendant.
      * Compares ids as well as identity: an ancestor walked through a
      * ManyToOne may be a Doctrine proxy while the candidate is the loaded
