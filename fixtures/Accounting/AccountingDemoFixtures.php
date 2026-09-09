@@ -11,6 +11,7 @@ use Aurora\Module\Accounting\Contract\Dto\ContractTemplateInput;
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateVersionInput;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
+use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
 use Aurora\Module\Accounting\Contract\Enum\ContractTerminationOriginEnum;
@@ -164,7 +165,7 @@ class AccountingDemoFixtures extends Fixture implements DependentFixtureInterfac
         // the version badge exists to tell apart. Only when there is not one
         // already: a trame may hold a single draft, guaranteed by a partial
         // index, and a second `make demo` must not go asking for a second.
-        if (null === $oneShot->getDraft()) {
+        if (!$oneShot->getDraft() instanceof ContractTemplateVersionInterface) {
             $this->templates->openDraft($oneShot);
             $this->entityManager->flush();
         }
@@ -323,7 +324,7 @@ class AccountingDemoFixtures extends Fixture implements DependentFixtureInterfac
 
         $version = $template->getDraft();
 
-        if (null === $version) {
+        if (!$version instanceof ContractTemplateVersionInterface) {
             return $template;
         }
 
@@ -331,6 +332,7 @@ class AccountingDemoFixtures extends Fixture implements DependentFixtureInterfac
             translations: ['fr' => ['title' => $name, 'content' => ['blocks' => $blocks]]],
         ));
         $this->templates->publish($version);
+
         $this->entityManager->flush();
 
         return $template;
@@ -352,7 +354,7 @@ class AccountingDemoFixtures extends Fixture implements DependentFixtureInterfac
             locale: 'fr',
             amountCents: $amountCents,
             amountCurrency: CurrencyEnum::EUR->value,
-            effectiveDate: (new DateTimeImmutable($effectiveDate))->format('Y-m-d'),
+            effectiveDate: new DateTimeImmutable($effectiveDate)->format('Y-m-d'),
             customFields: $customFields,
         ));
 
@@ -377,7 +379,7 @@ class AccountingDemoFixtures extends Fixture implements DependentFixtureInterfac
             locale: 'fr',
             amountCents: $amountCents,
             amountCurrency: CurrencyEnum::EUR->value,
-            effectiveDate: (new DateTimeImmutable($effectiveDate))->format('Y-m-d'),
+            effectiveDate: new DateTimeImmutable($effectiveDate)->format('Y-m-d'),
             customFields: $customFields,
             amendsId: $parent->getId(),
         ));
