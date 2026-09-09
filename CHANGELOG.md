@@ -5,6 +5,32 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.100] - 2026-09-12
+
+### Corrigé
+
+#### Une adresse de publication est unique dans son type, pas dans tout le site
+La route publique est `/{locale}/{postTypeSlug}/{slug}` et la recherche
+ignorait le type : la première publication portant cette adresse gagnait,
+quel que soit son type. Là où les deux divergeaient, le contrôleur y voyait
+une publication ayant changé de type et répondait une redirection
+**permanente** vers l'autre. La page demandée devenait inatteignable, et les
+navigateurs gardaient le détour en cache.
+
+Le défaut est sorti en écrivant la documentation : une page « tableau de
+bord » allait s'écrire à côté d'une carte du tour portant exactement cette
+adresse. Les deux sont légitimes, et aucune n'est l'autre.
+
+La recherche demande maintenant d'abord le type que l'adresse nomme. La
+redirection reste, en repli, et seulement quand aucune publication de ce
+type ne répond : une adresse partagée avant qu'une publication change de
+type doit continuer de mener quelque part.
+
+C'est le même défaut que celui des termes de taxonomie corrigé en 0.9.98, et
+la même cause : une identité pensée plus large que l'URL qui la porte.
+
+---
+
 ## [0.9.99] - 2026-09-12
 
 ### Ajouté
