@@ -249,6 +249,7 @@ backend:
             discard_confirm: 'Discard the draft of version {number}? Its wording will be lost.'
             discard_hint: 'The version in force does not move and no contract is touched. Number {number} stays spent: the next draft will be version {next}.'
             discarded: Draft abandoned.
+            draft_opened: Draft opened.
             filter_all_kinds: All
             no_match: No trame matches.
             variables:
