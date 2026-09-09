@@ -1,5 +1,6 @@
 backend:
     modules:
+        accounting: Accounting
         accounting_backend: Accounting
         accounting_backend_description: Customers, contracts and accounting records. The billing back office.
     nav:
