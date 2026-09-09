@@ -116,6 +116,36 @@ interface ContractInterface extends TimestampableInterface
      */
     public function attachPdf(string $path, string $hash, DateTimeImmutable $at): static;
 
+    public function getRefusedAt(): ?DateTimeImmutable;
+
+    public function getRefusalReason(): ?string;
+
+    public function getRefusedFromIp(): ?string;
+
+    public function getRefusedUserAgent(): ?string;
+
+    public function isRefused(): bool;
+
+    /** Records the refusal, its reason and its trace, and moves the status. */
+    public function refuse(
+        DateTimeImmutable $at,
+        ?string $reason = null,
+        ?string $ip = null,
+        ?string $userAgent = null,
+    ): static;
+
+    /** Clears the current refusal, for a contract being sent again. */
+    public function clearRefusal(): static;
+
+    public function getReminderCount(): int;
+
+    public function getLastReminderAt(): ?DateTimeImmutable;
+
+    public function markReminded(DateTimeImmutable $at): static;
+
+    /** The day the evidence stops being required, counted from the freeze. */
+    public function retainedUntil(int $years): ?DateTimeImmutable;
+
     /** @throws FrozenContractIsImmutableException */
     public function assertEditable(): void;
 }

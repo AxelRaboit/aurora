@@ -17,6 +17,12 @@ interface ContractAccessLinkManagerInterface
      */
     public function send(ContractInterface $contract): ContractAccessLinkInterface;
 
+    /**
+     * Chases an unsigned contract: the same hand-out as a resend, with the
+     * reminder's own mail, and the contract's counter moved on.
+     */
+    public function remind(ContractInterface $contract): ContractAccessLinkInterface;
+
     public function revoke(ContractAccessLinkInterface $link): void;
 
     /** The link a selector and a secret name, or null for every kind of failure. */

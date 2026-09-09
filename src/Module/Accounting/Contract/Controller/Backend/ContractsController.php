@@ -106,6 +106,10 @@ class ContractsController extends AbstractController
             $this->contractManager->delete($contract);
         } catch (FrozenContractIsImmutableException) {
             return $this->frozenRefusal();
+        } catch (FieldException $fieldException) {
+            // The retention refusing, and it names the date. A sealed contract
+            // is deletable, but not before the evidence stops being required.
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
         }
 
         return $this->jsonSuccess($this->viewBuilder->listPayload());

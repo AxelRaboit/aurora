@@ -13,6 +13,8 @@ use Aurora\Core\Validation\Service\PayloadValidator;
 use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
 use Aurora\Module\Accounting\Contract\Access\Manager\ContractAccessLinkManagerInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Refusal\Dto\ContractRefusalInputFactoryInterface;
+use Aurora\Module\Accounting\Contract\Refusal\Manager\ContractRefusalManagerInterface;
 use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureChallengeManagerInterface;
 use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManagerInterface;
@@ -55,6 +57,8 @@ final class PublicContractController extends AbstractController
         private readonly ContractSignatureManagerInterface $signatures,
         private readonly ContractSignatureChallengeManagerInterface $challenges,
         private readonly ContractSignatureInputFactoryInterface $inputFactory,
+        private readonly ContractRefusalManagerInterface $refusals,
+        private readonly ContractRefusalInputFactoryInterface $refusalInputFactory,
         private readonly PayloadValidator $payloadValidator,
         // Autowired by parameter name: `$contractSignatureLimiter` resolves to
         // the `contract_signature` limiter declared in config, the same way the
@@ -96,7 +100,9 @@ final class PublicContractController extends AbstractController
             'isSigned' => $contract->getStatus()->isEngaged(),
             'codePath' => $this->generateUrl('public_contract_code', ['selector' => $selector, 'token' => $token]),
             'signPath' => $this->generateUrl('public_contract_sign', ['selector' => $selector, 'token' => $token]),
+            'refusePath' => $this->generateUrl('public_contract_refuse', ['selector' => $selector, 'token' => $token]),
             'isConcluded' => ContractStatusEnum::Countersigned === $contract->getStatus(),
+            'isRefused' => $contract->isRefused(),
         ]));
     }
 
@@ -193,6 +199,55 @@ final class PublicContractController extends AbstractController
 
         return $this->jsonSuccess([
             'signed' => true,
+            'reloadPath' => $this->generateUrl('public_contract_show', [
+                'selector' => $selector,
+                'token' => $token,
+            ]),
+        ]);
+    }
+
+    /**
+     * The other answer, and the only write route on this page that asks for no
+     * code.
+     *
+     * Rate limited on the same limiter as the signature: it is a write from an
+     * unauthenticated stranger, and the wall is the same wall. The reason is
+     * validated for length only - it is prose, and the one thing that matters
+     * is that the column is not a place to paste a document.
+     */
+    #[Route(
+        '/{selector}/{token}/refuse',
+        name: '_refuse',
+        requirements: ['selector' => '[a-f0-9]{32}', 'token' => '[a-f0-9]{64}'],
+        methods: [HttpMethodEnum::Post->value],
+    )]
+    public function refuse(string $selector, string $token, Request $request): JsonResponse
+    {
+        if (!$this->contractSignatureLimiter->create($request->getClientIp())->consume()->isAccepted()) {
+            return $this->jsonFailure('accounting.public.sign.errors.too_many_requests', HttpStatusEnum::TooManyRequests->value);
+        }
+
+        $link = $this->links->resolveUsable($selector, $token);
+
+        if (!$link instanceof ContractAccessLinkInterface) {
+            throw $this->createNotFoundException();
+        }
+
+        $input = $this->refusalInputFactory->fromArray($this->decodeJson($request));
+
+        $errors = $this->payloadValidator->errors($input);
+        if ([] !== $errors) {
+            return $this->jsonInvalidInput($errors);
+        }
+
+        try {
+            $this->refusals->refuseAsCustomer($link, $input, $request);
+        } catch (FieldException $fieldException) {
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
+        }
+
+        return $this->jsonSuccess([
+            'refused' => true,
             'reloadPath' => $this->generateUrl('public_contract_show', [
                 'selector' => $selector,
                 'token' => $token,

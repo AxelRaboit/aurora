@@ -65,6 +65,31 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     case AccountingProviderBankIban = 'accounting_provider_bank_iban';
     case AccountingProviderBankBic = 'accounting_provider_bank_bic';
     case AccountingProviderBankName = 'accounting_provider_bank_name';
+
+    /**
+     * How long a sealed contract has to be kept, and how hard the module
+     * makes it to lose one before then.
+     *
+     * Five years is the floor for a commercial obligation, ten is what a
+     * service provider is usually advised to keep. It is a setting rather
+     * than a constant because the right number depends on the trade, and
+     * whoever answers for the archive is the one who should choose it.
+     */
+    case AccountingContractRetentionYears = 'accounting_contract_retention_years';
+
+    /**
+     * The automatic chasing of a contract sent and not signed.
+     *
+     * Off by default, deliberately: mail leaving on its own to somebody
+     * else's customer is a decision, not a default. A reminder hands out a
+     * fresh address and revokes the previous one, exactly like a manual
+     * resend, because that is the only way the mail can carry the door.
+     */
+    case AccountingContractReminderEnabled = 'accounting_contract_reminder_enabled';
+
+    case AccountingContractReminderDays = 'accounting_contract_reminder_days';
+
+    case AccountingContractReminderMax = 'accounting_contract_reminder_max';
     case NavSectionAliases = 'nav_section_aliases';
     case NavItemAliases = 'nav_item_aliases';
     case NavSectionOrder = 'nav_section_order';
@@ -142,6 +167,10 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::AccountingProviderBankIban => 'backend.parameters.accounting_provider_bank_iban.label',
             self::AccountingProviderBankBic => 'backend.parameters.accounting_provider_bank_bic.label',
             self::AccountingProviderBankName => 'backend.parameters.accounting_provider_bank_name.label',
+            self::AccountingContractRetentionYears => 'backend.parameters.accounting_contract_retention_years.label',
+            self::AccountingContractReminderEnabled => 'backend.parameters.accounting_contract_reminder_enabled.label',
+            self::AccountingContractReminderDays => 'backend.parameters.accounting_contract_reminder_days.label',
+            self::AccountingContractReminderMax => 'backend.parameters.accounting_contract_reminder_max.label',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.label',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.label',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.label',
@@ -204,6 +233,10 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::AccountingProviderBankIban => 'backend.parameters.accounting_provider_bank_iban.description',
             self::AccountingProviderBankBic => 'backend.parameters.accounting_provider_bank_bic.description',
             self::AccountingProviderBankName => 'backend.parameters.accounting_provider_bank_name.description',
+            self::AccountingContractRetentionYears => 'backend.parameters.accounting_contract_retention_years.description',
+            self::AccountingContractReminderEnabled => 'backend.parameters.accounting_contract_reminder_enabled.description',
+            self::AccountingContractReminderDays => 'backend.parameters.accounting_contract_reminder_days.description',
+            self::AccountingContractReminderMax => 'backend.parameters.accounting_contract_reminder_max.description',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.description',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.description',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.description',
@@ -272,6 +305,10 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::AccountingProviderBankIban => '',
             self::AccountingProviderBankBic => '',
             self::AccountingProviderBankName => '',
+            self::AccountingContractRetentionYears => '10',
+            self::AccountingContractReminderEnabled => '0',
+            self::AccountingContractReminderDays => '3',
+            self::AccountingContractReminderMax => '2',
             self::NavSectionAliases => '{}',
             self::NavItemAliases => '{}',
             self::NavSectionOrder => '[]',
@@ -283,10 +320,10 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     public function getType(): string
     {
         return match ($this) {
-            self::PostsPerPage, self::MaxUploadSizeMb, self::PostRevisionsLimit, self::TrashAutoPurgeDays, self::FileVersionsLimit => 'int',
+            self::PostsPerPage, self::MaxUploadSizeMb, self::PostRevisionsLimit, self::TrashAutoPurgeDays, self::FileVersionsLimit, self::AccountingContractRetentionYears, self::AccountingContractReminderDays, self::AccountingContractReminderMax => 'int',
             self::HomepagePostId => 'post',
             self::DefaultFront, self::DefaultLocale, self::EmailLocale, self::Timezone => 'select',
-            self::CommentsEnabled, self::CommentModerationEnabled, self::MaintenanceMode, self::AdminRegistrationEnabled, self::AdminAccessRequestEnabled, self::FrontLoginEnabled, self::FrontRegistrationEnabled, self::SingleLocaleMode, self::MediaCreditVisible => 'bool',
+            self::CommentsEnabled, self::CommentModerationEnabled, self::MaintenanceMode, self::AdminRegistrationEnabled, self::AdminAccessRequestEnabled, self::FrontLoginEnabled, self::FrontRegistrationEnabled, self::SingleLocaleMode, self::MediaCreditVisible, self::AccountingContractReminderEnabled => 'bool',
             self::LogoMediaId, self::FaviconMediaId, self::SeoDefaultOgImage => 'media',
             self::ColorPickerPresets => 'json',
             default => 'string',
@@ -312,7 +349,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::LogoMediaId, self::FaviconMediaId => 'branding',
             self::SeoTitleTemplate, self::SeoDefaultDescription, self::SeoDefaultOgImage, self::SeoTwitterHandle => 'seo',
             self::CoreUserPrefix, self::CoreMediaPrefix, self::CoreAccessRequestPrefix, self::CoreAuditLogPrefix, self::CoreResetPasswordPrefix, self::CoreMediaFolderPrefix, self::CoreMenuItemPrefix, self::AccountingContractPrefix => 'sequences',
-            self::AccountingProviderName, self::AccountingProviderRepresentative, self::AccountingProviderAddress, self::AccountingProviderSiret, self::AccountingProviderApeCode, self::AccountingProviderVatMention, self::AccountingProviderEmail, self::AccountingProviderPhone, self::AccountingProviderBankHolder, self::AccountingProviderBankIban, self::AccountingProviderBankBic, self::AccountingProviderBankName => 'accounting',
+            self::AccountingProviderName, self::AccountingProviderRepresentative, self::AccountingProviderAddress, self::AccountingProviderSiret, self::AccountingProviderApeCode, self::AccountingProviderVatMention, self::AccountingProviderEmail, self::AccountingProviderPhone, self::AccountingProviderBankHolder, self::AccountingProviderBankIban, self::AccountingProviderBankBic, self::AccountingProviderBankName, self::AccountingContractRetentionYears, self::AccountingContractReminderEnabled, self::AccountingContractReminderDays, self::AccountingContractReminderMax => 'accounting',
             self::EmailLocale => 'email',
             self::NavSectionAliases, self::NavItemAliases, self::NavSectionOrder, self::NavItemOrder => 'navigation',
             self::ColorPickerPresets => 'appearance',

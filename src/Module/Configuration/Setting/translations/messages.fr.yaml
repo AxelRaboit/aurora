@@ -256,6 +256,18 @@ backend:
     accounting_provider_bank_name:
       label: Banque
       description: 'Le nom de l''établissement, et son adresse si vous l''imprimez.'
+    accounting_contract_retention_years:
+      label: Durée de conservation (années)
+      description: 'Combien d''années un contrat scellé est conservé avant de pouvoir être supprimé. Cinq ans est le minimum légal, dix sont conseillés pour une prestation de services ; sous cinq, la valeur est ramenée à cinq.'
+    accounting_contract_reminder_enabled:
+      label: Relancer automatiquement
+      description: 'Relance par email les contrats envoyés et non signés. Chaque relance crée une nouvelle adresse de signature et invalide la précédente, comme un renvoi manuel.'
+    accounting_contract_reminder_days:
+      label: Délai entre deux relances (jours)
+      description: 'Nombre de jours sans réponse avant une relance. Compté depuis le dernier envoi, pas depuis le scellement.'
+    accounting_contract_reminder_max:
+      label: Nombre maximum de relances
+      description: 'Au-delà, le contrat est laissé tranquille. Le silence est une réponse aussi.'
     nav_section_aliases:
       label: Alias des sections de navigation
       description: 'Carte JSON des alias de sections (géré via l''interface).'
