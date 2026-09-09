@@ -5,6 +5,51 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.98] - 2026-09-12
+
+### Corrigé
+
+#### L'adresse d'un terme est unique dans sa taxonomie, plus dans toutes à la fois
+L'index `uniq_term_locale_slug` couvrait `(locale, slug)` pour l'ensemble des
+taxonomies, au motif écrit dans le code que « `/fr/theme/boulange` désigne
+exactement un terme ». La route dit le contraire : elle est
+`/{locale}/{taxonomySlug}/{termSlug}`, et le contrôleur cherche le terme
+**dans la taxonomie que l'URL nomme**. L'index large ne servait donc pas à
+lever l'ambiguïté de l'adresse.
+
+Ce qu'il faisait, en revanche, c'était refuser du contenu légitime : deux
+taxonomies ne pouvaient pas avoir chacune un terme « Éditorial », une
+étiquette et une rubrique de documentation par exemple. Et le refus arrivait
+sous forme de violation de contrainte, sans une phrase pour la personne qui
+venait de taper le nom.
+
+L'unicité voulue porte sur deux tables - la taxonomie est sur le terme, le
+slug sur sa traduction - et aucun index ne couvre deux tables. La taxonomie
+est donc portée aussi par la traduction, écrite par l'entité depuis le terme
+et jamais par un appelant, pour que les deux colonnes ne puissent pas se
+contredire.
+
+Le manager vérifie désormais l'adresse avant d'écrire et rend une phrase. La
+base continue de vérifier derrière lui : un contrôle applicatif seul laisse
+passer les courses.
+
+#### La médiathèque répondait à la recherche globale sans rien vérifier
+L'agrégateur derrière le champ de recherche n'exige que
+`general.search.view`, donc chaque fournisseur doit dire lui-même qui a le
+droit de lire ce qu'il renvoie. Celui de la médiathèque ne le faisait pas :
+un compte sans aucun privilège sur la bibliothèque recevait des noms de
+fichiers, et un déploiement où le module est éteint en recevait aussi.
+
+Il est aligné sur ses deux voisins : refus quand le module est éteint, refus
+sans le privilège `ged.documents.view`, et le `try/catch` que le contrat
+impose pour qu'un fournisseur en panne n'emporte pas le champ entier.
+
+Des noms de fichiers sont une fuite modeste, et ce n'est pas le sujet : trois
+fournisseurs qui répondent à la même question doivent y répondre de la même
+façon, sinon personne ne peut raisonner sur ce que le champ expose.
+
+---
+
 ## [0.9.97] - 2026-09-12
 
 ### Ajouté

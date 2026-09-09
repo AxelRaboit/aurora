@@ -756,6 +756,7 @@ backend:
       translations_required: At least one language must be filled in.
       builtin_protected: A built-in taxonomy cannot be deleted.
       term_self_nested: A term cannot be placed inside itself or one of its own children.
+      term_slug_taken: 'The address "{slug}" is already taken by the term "{term}" in this taxonomy.'
       parent_wrong_taxonomy: 'Term {parentId} does not belong to the "{taxonomy}" taxonomy.'
       reorder_cycle: 'That move would put term {id} inside its own subtree.'
     label_placeholder: "Categories"
