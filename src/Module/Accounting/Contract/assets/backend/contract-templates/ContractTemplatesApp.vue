@@ -72,6 +72,38 @@ const kindOptions = props.kinds.map((kind) => ({
 function kindLabel(value) {
     return kindOptions.find((kind) => kind.value === value)?.label ?? value;
 }
+
+/**
+ * A colour per kind, so a body and an annex are told apart at a glance.
+ *
+ * Two families that are used nowhere else on these cards: emerald and amber
+ * already mean published and draft here, and reusing them would make the type
+ * of a trame look like a state. Written out rather than composed from the kind
+ * name, because Tailwind only ships the classes it can see in the source.
+ */
+const KIND_STYLES = {
+    body: {
+        card: "border-sky-500/40 bg-sky-500/[0.04]",
+        icon: "text-sky-500",
+        pill: "border-sky-500/40 text-sky-600 dark:text-sky-400",
+    },
+    annex: {
+        card: "border-violet-500/40 bg-violet-500/[0.04]",
+        icon: "text-violet-500",
+        pill: "border-violet-500/40 text-violet-600 dark:text-violet-400",
+    },
+};
+
+/** An unknown kind keeps the neutral card rather than losing its border. */
+function kindStyle(kind) {
+    return (
+        KIND_STYLES[kind] ?? {
+            card: "border-line",
+            icon: "text-muted",
+            pill: "border-line text-muted",
+        }
+    );
+}
 </script>
 
 <template>
@@ -122,19 +154,35 @@ function kindLabel(value) {
             <article
                 v-for="template in visibleItems"
                 :key="template.id"
-                class="bg-surface border border-line rounded-lg p-4 space-y-3"
-                :class="{ 'opacity-60': template.isArchived }"
+                class="bg-surface border rounded-lg p-4 space-y-3"
+                :class="[
+                    kindStyle(template.kind).card,
+                    { 'opacity-60': template.isArchived },
+                ]"
             >
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0 space-y-1">
                         <h2 class="font-medium text-primary flex items-center gap-2">
-                            <ScrollText class="w-4 h-4 shrink-0 text-muted" :stroke-width="2" />
+                            <ScrollText
+                                class="w-4 h-4 shrink-0"
+                                :class="kindStyle(template.kind).icon"
+                                :stroke-width="2"
+                            />
                             <span class="truncate">{{ template.name }}</span>
                         </h2>
-                        <p class="text-xs text-muted">
-                            {{ kindLabel(template.kind) }}
+                        <p class="text-xs text-muted flex flex-wrap items-center gap-1.5">
+                            <!-- The type as a pill rather than as grey text: it
+                                 is the first thing somebody looks for on this
+                                 screen, and the colour only helps if it is
+                                 named next to it. -->
+                            <span
+                                class="text-2xs uppercase tracking-wider px-1.5 py-0.5 rounded-full border"
+                                :class="kindStyle(template.kind).pill"
+                            >
+                                {{ kindLabel(template.kind) }}
+                            </span>
                             <span v-if="template.locales.length">
-                                · {{ template.locales.join(", ") }}
+                                {{ template.locales.join(", ") }}
                             </span>
                         </p>
                     </div>

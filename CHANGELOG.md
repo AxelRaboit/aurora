@@ -31,6 +31,16 @@ pas porter de balise dans un document à signer.
 
 ### Modifié
 
+#### Une couleur par type de trame
+L'écran des trames de contrat affichait des cartes identiques, le type écrit en
+gris parmi le reste. Un corps de contrat porte maintenant un liseré et une
+pastille bleus, une annexe des violets, et le type est nommé dans la pastille :
+la couleur ne sert à rien si elle n'est pas légendée juste à côté.
+
+Deux familles délibérément inutilisées ailleurs sur ces cartes : le vert et
+l'ambre y disent déjà « publiée » et « brouillon », et les réemployer ferait
+passer le type d'une trame pour un état.
+
 #### Plus de tiret cadratin dans l'interface
 L'écran des clients séparait le représentant de sa fonction par un cadratin. Il
 est remplacé par un tiret simple, comme partout ailleurs.
