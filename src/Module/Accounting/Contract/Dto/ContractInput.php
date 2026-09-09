@@ -47,7 +47,17 @@ class ContractInput implements ContractInputInterface
             new Assert\Length(max: 500, maxMessage: 'backend.accounting.contracts.errors.custom_field_too_long'),
         ])]
         public readonly array $customFields = [],
+        // The contract this one amends, when it is an amendment. Optional, and
+        // the discriminator: a contract with a parent is an amendment, so
+        // there is no second field saying so that could disagree with it.
+        #[Assert\Positive(message: 'backend.accounting.contracts.errors.amends_invalid')]
+        public readonly ?int $amendsId = null,
     ) {}
+
+    public function getAmendsId(): ?int
+    {
+        return $this->amendsId;
+    }
 
     public function getCustomerId(): ?int
     {

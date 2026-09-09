@@ -17,6 +17,7 @@ use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
 use Aurora\Module\Accounting\Contract\Manager\ContractManager;
 use Aurora\Module\Accounting\Contract\Manager\ContractTemplateManager;
+use Aurora\Module\Accounting\Contract\Repository\ContractRepository;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateVersionRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
@@ -91,6 +92,7 @@ final class ContractProviderSettingsTest extends IntegrationTestCase
             $container->get(TranslatorInterface::class),
             new ContractCustomFieldScanner(),
             new ContractRetentionPolicy($container->get(SettingRepository::class)),
+            $container->get(ContractRepository::class),
         );
     }
 

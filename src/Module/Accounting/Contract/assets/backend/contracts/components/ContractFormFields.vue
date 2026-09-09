@@ -20,6 +20,8 @@ const props = defineProps({
     annexes: { type: Array, default: () => [] },
     locales: { type: Array, default: () => [] },
     currencies: { type: Array, default: () => [] },
+    /** Concluded, running, non-amendment contracts this one may amend. */
+    amendable: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -33,6 +35,39 @@ function set(field, value) {
 const localeOptions = computed(() =>
     props.locales.map((locale) => ({ value: locale.code, label: locale.label })),
 );
+
+const amendableOptions = computed(() =>
+    props.amendable.map((contract) => ({
+        value: contract.id,
+        label: `${contract.reference} · ${contract.customerName}`,
+    })),
+);
+
+/**
+ * Choosing a parent decides the customer, rather than the other way round.
+ *
+ * The manager refuses an amendment whose customer is not the parent's, so
+ * picking a parent fills the customer in. It is not locked afterwards -
+ * `AppSelect` has no disabled state and adding one for this alone would be a
+ * shared component changed for one screen - so the hint says where the value
+ * came from, and the manager is what actually holds the rule.
+ */
+const amendedContract = computed(() =>
+    props.amendable.find((contract) => contract.id === form.value.amendsId),
+);
+
+function setAmends(value) {
+    const parent = props.amendable.find((contract) => contract.id === value);
+
+    emit("update:modelValue", {
+        ...props.modelValue,
+        amendsId: value,
+        // Follows the parent when there is one, and is left alone when the
+        // choice is cleared: somebody who picked a customer first should not
+        // lose it by opening and closing this select.
+        customerId: parent ? parent.customerId : props.modelValue.customerId,
+    });
+}
 
 /**
  * The blanks the chosen trames ask this contract to fill.
@@ -70,11 +105,26 @@ function setCustomField(key, value) {
 
 <template>
     <div class="space-y-4">
+        <!-- First, because it is the question that changes the meaning of every
+             field under it: an amendment names the document it modifies, and
+             that document decides the customer. -->
+        <AppSelect
+            v-if="amendable.length"
+            :model-value="form.amendsId"
+            :label="t('backend.accounting.contracts.amends')"
+            :placeholder="t('backend.accounting.contracts.amends_placeholder')"
+            :options="amendableOptions"
+            :hint="t('backend.accounting.contracts.amends_hint')"
+            :error="errors.amendsId"
+            v-on:update:model-value="setAmends($event)"
+        />
+
         <AppSelect
             :model-value="form.customerId"
             :label="t('backend.accounting.contracts.customer')"
             :placeholder="t('backend.accounting.contracts.customer_placeholder')"
             :options="customers"
+            :hint="amendedContract ? t('backend.accounting.contracts.customer_from_amended', { reference: amendedContract.reference }) : ''"
             :error="errors.customerId"
             required
             v-on:update:model-value="set('customerId', $event)"

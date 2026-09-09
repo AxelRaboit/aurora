@@ -104,6 +104,13 @@ final readonly class ContractVariableCatalogue
                     $this->variable('contract.reference', 'CM-2026-0001'),
                     $this->variable('contract.amount', '850 €'),
                     $this->variable('contract.effective_date', '01/10/2026'),
+                    // Only an amendment can fill these, and the freeze refuses
+                    // a wording that asks for them on a contract that amends
+                    // nothing: an avenant sealed as a standalone document
+                    // would name no parent and say so with a blank.
+                    $this->variable('contract.amends_reference', 'CM-2026-0001'),
+                    $this->variable('contract.amends_effective_date', '01/10/2026'),
+                    $this->variable('contract.amends_rank', '1'),
                     $this->variable('contract.signature_city', 'Lyon', self::AT_SIGNATURE),
                     $this->variable('contract.signature_date', '08/09/2026', self::AT_SIGNATURE),
                 ],

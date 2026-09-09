@@ -10,6 +10,7 @@ use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
+use Aurora\Module\Accounting\Contract\Enum\ContractTerminationOriginEnum;
 use Aurora\Module\Accounting\Contract\Repository\ContractRepository;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Serializer\ContractSerializerInterface;
@@ -51,6 +52,12 @@ final readonly class ContractsViewBuilder
             'countersignPath' => $this->urlGenerator->generate('backend_accounting_contracts_countersign', ['id' => '__id__']),
             'pdfPath' => $this->urlGenerator->generate('backend_accounting_contracts_pdf', ['id' => '__id__']),
             'showPath' => $this->urlGenerator->generate('backend_accounting_contracts_show', ['id' => '__id__']),
+            'terminatePath' => $this->urlGenerator->generate('backend_accounting_contracts_terminate', ['id' => '__id__']),
+            'terminationOrigins' => $this->terminationOrigins(),
+            // What an amendment may be attached to. Only concluded, running,
+            // non-amendment contracts, so the picker cannot offer a choice the
+            // manager would refuse a second later.
+            'amendable' => $this->amendable(),
         ];
     }
 
@@ -65,7 +72,63 @@ final readonly class ContractsViewBuilder
             'revokeLinkPath' => $this->urlGenerator->generate('backend_accounting_contracts_revoke_link', ['id' => $contract->getId()]),
             'countersignPath' => $this->urlGenerator->generate('backend_accounting_contracts_countersign', ['id' => $contract->getId()]),
             'pdfPath' => $this->urlGenerator->generate('backend_accounting_contracts_pdf', ['id' => $contract->getId()]),
+            'terminatePath' => $this->urlGenerator->generate('backend_accounting_contracts_terminate', ['id' => $contract->getId()]),
+            'terminationOrigins' => $this->terminationOrigins(),
+            // Where an amendment starts from: the list, with this contract
+            // already chosen. One screen creates contracts, and an amendment
+            // is a contract.
+            'amendPath' => $this->urlGenerator->generate('backend_accounting_contracts', ['amends' => $contract->getId()]),
         ];
+    }
+
+    /**
+     * The contracts an amendment can be attached to.
+     *
+     * The same four rules the manager enforces, applied here so the picker
+     * never offers what the freeze would refuse: concluded, not itself an
+     * amendment, not terminated. The customer travels with each entry, because
+     * choosing a parent decides the customer rather than the other way round.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function amendable(): array
+    {
+        $amendable = [];
+
+        foreach ($this->contractRepository->findAllForIndex() as $contract) {
+            if (!$contract->getStatus()->isConcluded()) {
+                continue;
+            }
+
+            if ($contract->isAmendment()) {
+                continue;
+            }
+
+            if ($contract->isTerminated()) {
+                continue;
+            }
+
+            $amendable[] = [
+                'id' => $contract->getId(),
+                'reference' => $contract->getReference(),
+                'customerId' => $contract->getCustomer()->getId(),
+                'customerName' => $contract->getCustomer()->getLegalName(),
+            ];
+        }
+
+        return $amendable;
+    }
+
+    /** @return list<array{value: string, labelKey: string}> */
+    private function terminationOrigins(): array
+    {
+        return array_map(
+            static fn (ContractTerminationOriginEnum $origin): array => [
+                'value' => $origin->value,
+                'labelKey' => $origin->getLabel(),
+            ],
+            ContractTerminationOriginEnum::cases(),
+        );
     }
 
     /** @return list<array<string, mixed>> */

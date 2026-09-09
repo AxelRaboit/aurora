@@ -9,6 +9,10 @@ import { required } from "@/shared/utils/validation/validators.js";
 
 function emptyForm(locales) {
     return {
+        // Null rather than "" so a contract that amends nothing sends no
+        // parent at all: an empty string would reach the factory as an id to
+        // resolve, and be refused for naming no row.
+        amendsId: null,
         customerId: "",
         bodyTemplateId: "",
         annexTemplateId: "",
@@ -81,8 +85,26 @@ export function useContractsList(props) {
         },
     });
 
-    function openCreate() {
-        newContract.value = emptyForm(props.locales);
+    /**
+     * Opens the form, optionally on an amendment of a given contract.
+     *
+     * The document page links here with `?amends=<id>`, which is how an
+     * amendment is started from the thing it amends rather than from a select
+     * of every contract ever signed. The customer follows the parent, exactly
+     * as the manager requires.
+     */
+    function openCreate(amendsId = null) {
+        const form = emptyForm(props.locales);
+        const parent = amendsId
+            ? props.amendable.find((contract) => contract.id === amendsId)
+            : null;
+
+        if (parent) {
+            form.amendsId = parent.id;
+            form.customerId = parent.customerId;
+        }
+
+        newContract.value = form;
         clearCreate();
         showCreate.value = true;
     }

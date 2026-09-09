@@ -111,6 +111,7 @@ final class ContractAnswerAndRetentionTest extends IntegrationTestCase
             $container->get(TranslatorInterface::class),
             new ContractCustomFieldScanner(),
             new ContractRetentionPolicy($this->settings),
+            $container->get(ContractRepository::class),
         );
     }
 

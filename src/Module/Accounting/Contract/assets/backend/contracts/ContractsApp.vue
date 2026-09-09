@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
 import { useContractsList } from "./composables/useContractsList.js";
@@ -48,6 +49,9 @@ const props = defineProps({
     countersignPath: { type: String, required: true },
     pdfPath: { type: String, required: true },
     showPath: { type: String, required: true },
+    terminatePath: { type: String, required: true },
+    terminationOrigins: { type: Array, default: () => [] },
+    amendable: { type: Array, default: () => [] },
 });
 
 const {
@@ -86,6 +90,35 @@ const {
  * than cards above rows.
  */
 const { viewMode, setViewMode } = useListViewMode(["list", "grid"], "list");
+
+/**
+ * `?amends=<id>` opens the form on an amendment of that contract.
+ *
+ * The document page of a concluded contract links here rather than growing its
+ * own form: one screen creates contracts, and an amendment is a contract. The
+ * parameter is dropped from the URL once used, so a reload does not reopen a
+ * modal somebody closed.
+ */
+onMounted(() => {
+    const requested = Number(
+        new URLSearchParams(window.location.search).get("amends"),
+    );
+
+    if (!requested || !props.amendable.some((each) => each.id === requested)) {
+        return;
+    }
+
+    openCreate(requested);
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete("amends");
+    const query = params.toString();
+    window.history.replaceState(
+        window.history.state,
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}`,
+    );
+});
 
 /**
  * One list of actions per half of the page, two presentations for the drafts.
@@ -151,7 +184,7 @@ function sealedRowActions(contract) {
                     variant="primary"
                     size="md"
                     class="w-full sm:w-auto"
-                    v-on:click="openCreate"
+                    v-on:click="openCreate()"
                 >
                     <Plus class="w-4 h-4" :stroke-width="2" />
                     {{ t("backend.accounting.contracts.add") }}
@@ -352,6 +385,23 @@ function sealedRowActions(contract) {
                         >
                             <td class="px-6 py-3 font-mono text-xs text-primary whitespace-nowrap">
                                 {{ contract.reference }}
+                                <!-- An amendment reads as what it changes: the
+                                     reference already carries the parentage,
+                                     and this says it in words. -->
+                                <span v-if="contract.amends" class="block text-2xs text-muted">
+                                    {{
+                                        t("backend.accounting.contracts.amends_short", {
+                                            reference: contract.amends.reference,
+                                        })
+                                    }}
+                                </span>
+                                <span v-if="contract.termination" class="block text-2xs text-amber-500">
+                                    {{
+                                        t("backend.accounting.contracts.terminated_short", {
+                                            date: new Date(contract.termination.effectiveAt).toLocaleDateString(),
+                                        })
+                                    }}
+                                </span>
                             </td>
                             <td class="px-6 py-3 text-primary">
                                 {{ contract.customerName }}
@@ -430,6 +480,7 @@ function sealedRowActions(contract) {
                     :annexes="annexes"
                     :locales="locales"
                     :currencies="currencies"
+                    :amendable="amendable"
                 />
             </form>
             <template #footer>

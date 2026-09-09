@@ -7,6 +7,7 @@ namespace Aurora\Module\Accounting\Contract\Entity;
 use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Core\Timestampable\TimestampableTrait;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Enum\ContractTerminationOriginEnum;
 use Aurora\Module\Accounting\Contract\Exception\ContractPdfAlreadyGeneratedException;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
@@ -125,6 +126,71 @@ abstract class AbstractContract implements ContractInterface
 
     #[ORM\Column(nullable: true)]
     protected ?DateTimeImmutable $frozenAt = null;
+
+    /**
+     * The contract this one amends, when it is an amendment.
+     *
+     * An amendment is a **document of its own**, not a new state on the one it
+     * changes. It has to be: a sealed contract is immutable by design, so
+     * "modify the annex of a signed contract" has no implementation that is
+     * not a lie. What happens on paper is what happens here - a second
+     * document, signed by both parties, that says which part of the first it
+     * replaces.
+     *
+     * That is also the answer to the annex modified after the body was signed:
+     * the original keeps its own sealed copy of both halves forever, and the
+     * amendment carries the new annex. Nothing is rewritten, and the history
+     * reads in the order it happened.
+     *
+     * `SET NULL` on delete, with the reference copied beside it: once the
+     * parent's retention runs out and somebody deletes it, the amendment still
+     * says what it amended. The same reason the document keeps its own snapshot
+     * of the wording rather than reading it back from the template.
+     */
+    #[ORM\ManyToOne(targetEntity: ContractInterface::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    protected ?ContractInterface $amends = null;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    protected ?string $amendsReference = null;
+
+    /**
+     * Which amendment of its parent this is, counted at the freeze.
+     *
+     * At the freeze and not at the creation, so a draft abandoned before it
+     * went anywhere consumes no number - unlike a template version, where the
+     * number is claimed early on purpose because a draft is already a thing
+     * somebody worked on.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?int $amendmentRank = null;
+
+    /**
+     * The end of the relationship, which is not the end of the document.
+     *
+     * Deliberately not a status. A concluded contract stays concluded forever:
+     * it was signed, and that fact does not expire. Termination is something
+     * that happened *to the relationship* afterwards, with its own two dates -
+     * when notice was given, and when it takes effect - because a notice
+     * period is exactly the gap between them.
+     *
+     * Not a signature flow either. A customer terminates by writing an email,
+     * not by clicking a link in an application they do not have an account on;
+     * building a form for it would be building something nobody can use. What
+     * the application can do is record the fact, which is what an accountant
+     * and a dispute both need.
+     */
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    protected ?DateTimeImmutable $terminationNoticedAt = null;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    protected ?DateTimeImmutable $terminationEffectiveAt = null;
+
+    #[ORM\Column(length: 20, nullable: true, enumType: ContractTerminationOriginEnum::class)]
+    protected ?ContractTerminationOriginEnum $terminationOrigin = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    protected ?string $terminationReason = null;
 
     /**
      * When the customer said no, and what they said about it.
@@ -594,6 +660,117 @@ abstract class AbstractContract implements ContractInterface
         }
 
         return $this->frozenAt->modify(sprintf('+%d years', $years));
+    }
+
+    public function getAmends(): ?ContractInterface
+    {
+        return $this->amends;
+    }
+
+    /**
+     * Names the contract this one amends, before the seal.
+     *
+     * The reference is copied at the same time rather than read through the
+     * relation later: the relation is `SET NULL` and the copy is what makes the
+     * amendment still able to say what it amended once the parent's retention
+     * has run out and somebody deleted it.
+     */
+    public function setAmends(?ContractInterface $amends): static
+    {
+        $this->assertEditable();
+
+        $this->amends = $amends;
+        $this->amendsReference = $amends?->getReference();
+
+        return $this;
+    }
+
+    public function getAmendsReference(): ?string
+    {
+        return $this->amendsReference;
+    }
+
+    /**
+     * Whether this document changes another one.
+     *
+     * Read from the copied reference as well as from the relation, so a
+     * deleted parent does not turn an amendment back into an original.
+     */
+    public function isAmendment(): bool
+    {
+        return $this->amends instanceof ContractInterface || null !== $this->amendsReference;
+    }
+
+    public function getAmendmentRank(): ?int
+    {
+        return $this->amendmentRank;
+    }
+
+    public function setAmendmentRank(?int $rank): static
+    {
+        $this->amendmentRank = $rank;
+
+        return $this;
+    }
+
+    public function getTerminationNoticedAt(): ?DateTimeImmutable
+    {
+        return $this->terminationNoticedAt;
+    }
+
+    public function getTerminationEffectiveAt(): ?DateTimeImmutable
+    {
+        return $this->terminationEffectiveAt;
+    }
+
+    public function getTerminationOrigin(): ?ContractTerminationOriginEnum
+    {
+        return $this->terminationOrigin;
+    }
+
+    public function getTerminationReason(): ?string
+    {
+        return $this->terminationReason;
+    }
+
+    public function isTerminated(): bool
+    {
+        return $this->terminationEffectiveAt instanceof DateTimeImmutable;
+    }
+
+    /**
+     * Whether the relationship has actually stopped, as opposed to being due to.
+     *
+     * The two dates exist because a notice period is the gap between them: a
+     * contract noticed today and effective in thirty days is still running,
+     * and a screen that showed it as over would be wrong for a month.
+     */
+    public function isTerminationEffective(?DateTimeImmutable $on = null): bool
+    {
+        return $this->terminationEffectiveAt instanceof DateTimeImmutable
+            && $this->terminationEffectiveAt <= ($on ?? new DateTimeImmutable());
+    }
+
+    /**
+     * Records the end of the relationship.
+     *
+     * Not guarded by `assertEditable()`, and it is the second writer that is
+     * not: everything about a termination happens after the seal, by
+     * definition. The status is left alone on purpose - the document was
+     * signed, and that stays true.
+     */
+    public function terminate(
+        DateTimeImmutable $noticedAt,
+        DateTimeImmutable $effectiveAt,
+        ContractTerminationOriginEnum $origin,
+        ?string $reason = null,
+    ): static {
+        $this->terminationNoticedAt = $noticedAt;
+        $this->terminationEffectiveAt = $effectiveAt;
+        $this->terminationOrigin = $origin;
+        $this->terminationReason = '' === $reason ? null : $reason;
+
+        return $this;
     }
 
     public function assertEditable(): void
