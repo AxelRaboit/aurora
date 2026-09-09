@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Module\Accounting\Contract\View;
 
 use Aurora\Core\Locale\Service\LocaleOptionsProviderInterface;
+use Aurora\Core\Routing\PathTemplateGenerator;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
@@ -20,6 +21,7 @@ final readonly class ContractTemplatesViewBuilder
         private ContractTemplateSerializerInterface $serializer,
         private ContractVariableCatalogue $variables,
         private LocaleOptionsProviderInterface $localeOptions,
+        private PathTemplateGenerator $pathTemplates,
         private UrlGeneratorInterface $urlGenerator,
     ) {}
 
@@ -30,17 +32,17 @@ final readonly class ContractTemplatesViewBuilder
             'templates' => $this->templates(),
             'kinds' => $this->kinds(),
             'createPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_create'),
-            'updatePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_update', ['id' => '__id__']),
-            'archivePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_archive', ['id' => '__id__']),
-            'restorePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_restore', ['id' => '__id__']),
-            'deletePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_delete', ['id' => '__id__']),
-            'openDraftPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_open_draft', ['id' => '__id__']),
-            'duplicatePath' => $this->urlGenerator->generate('backend_accounting_contract_templates_duplicate', ['id' => '__id__']),
+            'updatePath' => $this->pathTemplates->generate('backend_accounting_contract_templates_update', ['id' => '__id__']),
+            'archivePath' => $this->pathTemplates->generate('backend_accounting_contract_templates_archive', ['id' => '__id__']),
+            'restorePath' => $this->pathTemplates->generate('backend_accounting_contract_templates_restore', ['id' => '__id__']),
+            'deletePath' => $this->pathTemplates->generate('backend_accounting_contract_templates_delete', ['id' => '__id__']),
+            'openDraftPath' => $this->pathTemplates->generate('backend_accounting_contract_templates_open_draft', ['id' => '__id__']),
+            'duplicatePath' => $this->pathTemplates->generate('backend_accounting_contract_templates_duplicate', ['id' => '__id__']),
             // Abandoning a draft is offered from the list too, not only from
             // inside the editor: somebody who opened one by mistake should not
             // have to walk into it to walk back out.
-            'discardDraftPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_discard', ['id' => '__id__', 'versionId' => '__versionId__']),
-            'editorPath' => $this->urlGenerator->generate('backend_accounting_contract_templates_editor', ['id' => '__id__', 'versionId' => '__versionId__']),
+            'discardDraftPath' => $this->pathTemplates->generate('backend_accounting_contract_templates_discard', ['id' => '__id__', 'versionId' => '__versionId__']),
+            'editorPath' => $this->pathTemplates->generate('backend_accounting_contract_templates_editor', ['id' => '__id__', 'versionId' => '__versionId__']),
         ];
     }
 

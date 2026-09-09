@@ -1,5 +1,6 @@
 backend:
     modules:
+        accounting: Comptabilité
         accounting_backend: Comptabilité
         accounting_backend_description: Clients, contrats et pièces comptables. Le back-office de la facturation.
     nav:

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Module\Accounting\Customer\View;
 
 use Aurora\Core\Money\Enum\CurrencyEnum;
+use Aurora\Core\Routing\PathTemplateGenerator;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Accounting\Customer\Repository\CustomerRepository;
 use Aurora\Module\Accounting\Customer\Serializer\CustomerSerializerInterface;
@@ -19,6 +20,7 @@ final readonly class CustomersViewBuilder
         private CustomerRepository $customerRepository,
         private CustomerSerializerInterface $customerSerializer,
         private UserRepository $userRepository,
+        private PathTemplateGenerator $pathTemplates,
         private UrlGeneratorInterface $urlGenerator,
     ) {}
 
@@ -40,8 +42,8 @@ final readonly class CustomersViewBuilder
             'users' => $this->userOptions(),
             'currencies' => $this->currencyOptions(),
             'createPath' => $this->urlGenerator->generate('backend_accounting_customers_create'),
-            'updatePath' => $this->urlGenerator->generate('backend_accounting_customers_update', ['id' => '__id__']),
-            'deletePath' => $this->urlGenerator->generate('backend_accounting_customers_delete', ['id' => '__id__']),
+            'updatePath' => $this->pathTemplates->generate('backend_accounting_customers_update', ['id' => '__id__']),
+            'deletePath' => $this->pathTemplates->generate('backend_accounting_customers_delete', ['id' => '__id__']),
         ];
     }
 

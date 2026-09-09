@@ -13,6 +13,8 @@ backend:
           use: Use Markdown notes
   modules:
     notes_backend: Notes
+    # The module string an audit row carries, which is not the toggle key.
+    notes_markdown: Markdown notes
     notes_backend_description: Enables markdown note-taking, with links between notes and a graph.
   nav:
     sections:
