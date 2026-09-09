@@ -28,6 +28,20 @@ accounting:
             concluded: Este contrato está firmado por ambas partes.
             hash_notice: 'Huella del documento: {hash}. Garantiza que este texto no ha cambiado desde su envío.'
             footer: Este enlace es personal. No lo transmita.
+            refused: Ha indicado que no firma este contrato.
+            refused_hint: 'Rechazo registrado el {date}. Si es un error, dígalo al prestador: podrá volver a enviarle el contrato.'
+        refuse:
+            trigger: 'No firmo'
+            heading: 'No firmar este contrato'
+            intro: 'No está obligado a firmar. Su rechazo se transmite al prestador, que podrá volver a enviarle el contrato si cambia de opinión.'
+            reason: 'Motivo (opcional)'
+            reason_placeholder: 'Lo que quiera decir al respecto, si lo desea.'
+            reason_hint: 'Opcional. Nada le obliga a justificar un rechazo.'
+            submit: 'Confirmar mi rechazo'
+            cancel: 'Volver al contrato'
+            done: 'Su rechazo ha quedado registrado.'
+            errors:
+                reason_too_long: 'Este motivo es demasiado largo.'
         sign:
             heading: 'Firmar este contrato'
             intro: 'Indique su identidad, firme en el recuadro y confirme con el código que le enviaremos por email.'
@@ -92,6 +106,19 @@ accounting:
             authenticated: 'Firmado desde una cuenta autenticada del back-office'
             notice: 'Esta huella identifica el texto firmado. Cualquier modificación del documento produciría una huella diferente.'
     email:
+        customer_refused:
+            subject: 'Contrato {reference}: rechazo del cliente'
+            body: 'El cliente {customer} ha indicado que no firma el contrato {reference}.'
+            observed: 'Rechazo registrado el {at}, desde la dirección IP {ip}.'
+            reason: 'Motivo indicado:'
+            no_reason: 'No se ha indicado ningún motivo.'
+            action: 'Puede volver a enviar el contrato desde el back-office: un nuevo envío borra este rechazo y crea una nueva dirección.'
+        contract_reminder:
+            subject: 'Recordatorio: el contrato {reference} espera su firma'
+            body: 'El contrato {reference} le fue enviado y aún no está firmado.'
+            cta: 'Abrir el contrato y firmarlo'
+            replaces: 'Este enlace sustituye al del mensaje anterior, que ya no es válido.'
+            expires: 'Este enlace es válido hasta el {date}.'
         customer_signed:
             subject: 'Contrato {reference} firmado por el cliente'
             body: 'El contrato {reference} acaba de ser firmado por {name}. Espera su contrafirma.'

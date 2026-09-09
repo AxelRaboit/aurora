@@ -14,6 +14,14 @@
  * with the link goes out would mean it expires long before somebody sits down
  * to read nineteen articles. It is requested when the signer says they are
  * ready, which is also the moment it starts proving something.
+ *
+ * **Declining is offered, quietly.** A page whose only button is "sign" makes
+ * not signing feel like an error state, and leaves the provider unable to tell
+ * a refusal from silence. It asks for no code and no consent box: a refusal
+ * binds nobody and the provider can send the contract again, so the ceremony
+ * that protects a signature would only stand between somebody and the word no.
+ * The reason is optional, because requiring a justification to decline is a
+ * small piece of coercion in a document about consent.
  */
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -22,11 +30,15 @@ import AppSignaturePad from "@/shared/components/form/input/AppSignaturePad.vue"
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppMessage from "@/shared/components/feedback/AppMessage.vue";
-import { Check, Mail, PenLine } from "lucide-vue-next";
+import AppModal from "@/shared/components/overlay/AppModal.vue";
+import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
+import AppTextarea from "@/shared/components/form/input/AppTextarea.vue";
+import { Ban, Check, Mail, PenLine, X } from "lucide-vue-next";
 
 const props = defineProps({
     codePath: { type: String, required: true },
     signPath: { type: String, required: true },
+    refusePath: { type: String, required: true },
     documentSelector: { type: String, default: ".contract-document" },
 });
 
@@ -147,6 +159,40 @@ async function requestCode() {
         codeSentTo.value = data?.sentTo ?? "";
     } finally {
         requestingCode.value = false;
+    }
+}
+
+const showRefuse = ref(false);
+const refusal = ref({ reason: "" });
+const refusing = ref(false);
+const refused = ref(false);
+
+async function refuse() {
+    if (refusing.value) return;
+
+    refusing.value = true;
+    errors.value = {};
+
+    try {
+        const data = await request(props.refusePath, refusal.value, {
+            noGuard: true,
+        });
+
+        if (data?.errors) {
+            errors.value = data.errors;
+
+            return;
+        }
+
+        if (data?.refused) {
+            refused.value = true;
+            showRefuse.value = false;
+            // Reloaded like a signature is, and for the same reason: the state
+            // worth showing is the one the server recorded.
+            window.location.assign(data.reloadPath);
+        }
+    } finally {
+        refusing.value = false;
     }
 }
 
@@ -332,5 +378,57 @@ async function sign() {
                 {{ t("accounting.public.sign.consent_first") }}
             </p>
         </div>
+
+        <!-- Under the primary action and quieter than it, which is the honest
+             weight: this page exists to be signed. Never disabled by the
+             scroll gate - somebody who has decided not to sign should not
+             have to scroll a document to say so. -->
+        <div class="border-t border-line/60 pt-4">
+            <button
+                type="button"
+                class="text-xs text-muted underline underline-offset-2 hover:text-primary"
+                v-on:click="showRefuse = true"
+            >
+                {{ t("accounting.public.refuse.trigger") }}
+            </button>
+        </div>
+
+        <AppModal
+            :show="showRefuse"
+            max-width="md"
+            :closeable="false"
+            :title="t('accounting.public.refuse.heading')"
+            :icon="Ban"
+            v-on:close="showRefuse = false"
+        >
+            <p class="text-sm text-secondary">
+                {{ t("accounting.public.refuse.intro") }}
+            </p>
+            <AppTextarea
+                v-model="refusal.reason"
+                :label="t('accounting.public.refuse.reason')"
+                :placeholder="t('accounting.public.refuse.reason_placeholder')"
+                :hint="t('accounting.public.refuse.reason_hint')"
+                :error="errors.reason"
+                :rows="4"
+            />
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="showRefuse = false">
+                        <X class="h-3.5 w-3.5" :stroke-width="2" />
+                        {{ t("accounting.public.refuse.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="danger"
+                        size="md"
+                        :loading="refusing || refused"
+                        v-on:click="refuse"
+                    >
+                        <Ban class="h-3.5 w-3.5" :stroke-width="2" />
+                        {{ t("accounting.public.refuse.submit") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
     </section>
 </template>

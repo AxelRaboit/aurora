@@ -35,6 +35,8 @@ backend:
                     frozen: Contract frozen and sealed
                     link_sent: Signing link sent
                     link_revoked: Signing link revoked
+                    reminder_sent: Reminder sent to the customer
+                    refused: Contract refused by the customer
                     signed_by_customer: 'Contract signed by the customer'
                     countersigned: 'Contract countersigned and concluded'
                     deleted: Contract deleted
@@ -123,6 +125,15 @@ backend:
             link_never_opened: Never opened
             link_opened_at: 'Opened on {date}'
             no_link: No active link
+            refused_at: 'Refused on'
+            refusal_reason: 'Reason for the refusal'
+            refusal_no_reason: 'No reason given'
+            refused_from: 'Refusal received from {ip}'
+            retained_until: 'Kept until'
+            retention_hint: 'A sealed contract cannot be deleted before this date: it is the evidence of what was signed.'
+            reminders: 'Reminders'
+            reminders_none: 'No reminder'
+            reminders_count: '{count} reminder(s), last on {date}'
             row_actions:
                 edit_description: Edits the draft. Nothing is sealed until you ask for it.
                 freeze_description: Freezes the text, mints the reference and makes it sendable. Permanent.
@@ -169,6 +180,8 @@ backend:
                 contract_closed: 'This contract is closed and can no longer be signed.'
                 role_already_signed: 'This party has already signed.'
                 customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
+                already_refused: 'This contract has already been refused by the customer.'
+                retention_not_elapsed: 'This contract is kept until {date}. It cannot be deleted before then.'
                 governing_locale_conflict: 'The body and the annex name different governing languages ({locales}). A document cannot have two authoritative texts.'
                 custom_fields_missing: 'The chosen trames ask for these complements and they are empty: {fields}'
                 provider_settings_missing: 'These provider details are not set in the settings, and the trame prints them: {fields}'
@@ -372,6 +385,20 @@ accounting:
             concluded: This contract is signed by both parties.
             hash_notice: 'Document hash: {hash}. It guarantees this wording has not changed since it was sent.'
             footer: This link is personal to you. Please do not forward it.
+            refused: You have declined to sign this contract.
+            refused_hint: 'Refusal recorded on {date}. If that was a mistake, tell the provider: they can send the contract again.'
+        refuse:
+            trigger: 'I am not signing'
+            heading: 'Decline this contract'
+            intro: 'You are not obliged to sign. Your refusal goes to the provider, who can send the contract again if you change your mind.'
+            reason: 'Reason (optional)'
+            reason_placeholder: 'Anything you want to say about it, if you want to.'
+            reason_hint: 'Optional. Nothing obliges you to justify a refusal.'
+            submit: 'Confirm my refusal'
+            cancel: 'Back to the contract'
+            done: 'Your refusal has been recorded.'
+            errors:
+                reason_too_long: 'That reason is too long.'
         sign:
             heading: 'Sign this contract'
             intro: 'Fill in your details, sign in the frame, then confirm with the code we will email you.'
@@ -436,6 +463,19 @@ accounting:
             authenticated: 'Signed from an authenticated back office account'
             notice: 'This hash identifies the signed wording. Any change to the document would produce a different one.'
     email:
+        customer_refused:
+            subject: 'Contract {reference}: the customer declined'
+            body: 'Customer {customer} has declined to sign contract {reference}.'
+            observed: 'Refusal recorded on {at}, from IP address {ip}.'
+            reason: 'Reason given:'
+            no_reason: 'No reason was given.'
+            action: 'You can send the contract again from the back-office: a new send clears this refusal and mints a new address.'
+        contract_reminder:
+            subject: 'Reminder: contract {reference} is waiting for your signature'
+            body: 'Contract {reference} was sent to you and has not been signed yet.'
+            cta: 'Open the contract and sign it'
+            replaces: 'This link replaces the one in the previous message, which no longer works.'
+            expires: 'This link is valid until {date}.'
         customer_signed:
             subject: 'Contract {reference} signed by the customer'
             body: 'Contract {reference} has just been signed by {name}. It is waiting for your countersignature.'

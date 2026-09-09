@@ -35,6 +35,8 @@ backend:
                     frozen: Contrat gelé et scellé
                     link_sent: Lien de signature envoyé
                     link_revoked: Lien de signature révoqué
+                    reminder_sent: Relance envoyée au client
+                    refused: Contrat refusé par le client
                     signed_by_customer: 'Contrat signé par le client'
                     countersigned: 'Contrat contresigné et conclu'
                     deleted: Contrat supprimé
@@ -123,6 +125,15 @@ backend:
             link_never_opened: Jamais ouvert
             link_opened_at: 'Ouvert le {date}'
             no_link: Aucun lien actif
+            refused_at: 'Refusé le'
+            refusal_reason: 'Motif du refus'
+            refusal_no_reason: 'Aucun motif indiqué'
+            refused_from: 'Refus reçu depuis {ip}'
+            retained_until: 'Conservé jusqu''au'
+            retention_hint: 'Un contrat scellé ne peut pas être supprimé avant cette date : c''est la preuve de ce qui a été signé.'
+            reminders: 'Relances'
+            reminders_none: 'Aucune relance'
+            reminders_count: '{count} relance(s), dernière le {date}'
             row_actions:
                 edit_description: Modifie le brouillon. Rien n'est scellé tant qu'on ne le demande pas.
                 freeze_description: Fige le texte, tire la référence et rend le contrat envoyable. Définitif.
@@ -169,6 +180,8 @@ backend:
                 contract_closed: 'Ce contrat est clos et ne peut plus être signé.'
                 role_already_signed: 'Cette partie a déjà signé.'
                 customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
+                already_refused: 'Ce contrat a déjà été refusé par le client.'
+                retention_not_elapsed: 'Ce contrat est conservé jusqu''au {date}. Il ne peut pas être supprimé avant.'
                 governing_locale_conflict: 'Le corps et l''annexe ne désignent pas la même langue faisant foi ({locales}). Un document ne peut pas avoir deux textes de référence.'
                 custom_fields_missing: 'Ces compléments sont demandés par les trames choisies et ne sont pas renseignés : {fields}'
                 provider_settings_missing: 'Ces informations du prestataire ne sont pas renseignées dans les réglages, et la trame les imprime : {fields}'
@@ -372,6 +385,20 @@ accounting:
             concluded: Ce contrat est signé par les deux parties.
             hash_notice: 'Empreinte du document : {hash}. Elle garantit que ce texte n''a pas changé depuis son envoi.'
             footer: Ce lien vous est personnel. Ne le transmettez pas.
+            refused: Vous avez indiqué ne pas signer ce contrat.
+            refused_hint: 'Refus enregistré le {date}. Si c''est une erreur, dites-le au prestataire : il pourra vous renvoyer le contrat.'
+        refuse:
+            trigger: 'Je ne signe pas'
+            heading: 'Ne pas signer ce contrat'
+            intro: 'Vous n''êtes pas obligé de signer. Votre refus sera transmis au prestataire, qui pourra vous renvoyer le contrat si vous changez d''avis.'
+            reason: 'Motif (facultatif)'
+            reason_placeholder: 'Ce que vous souhaitez en dire, si vous le souhaitez.'
+            reason_hint: 'Facultatif. Rien ne vous oblige à justifier un refus.'
+            submit: 'Confirmer mon refus'
+            cancel: 'Revenir au contrat'
+            done: 'Votre refus a été enregistré.'
+            errors:
+                reason_too_long: 'Ce motif est trop long.'
         sign:
             heading: 'Signer ce contrat'
             intro: 'Renseignez votre identité, signez dans le cadre, puis confirmez avec le code que nous vous enverrons par email.'
@@ -436,6 +463,19 @@ accounting:
             authenticated: 'Signé depuis un compte authentifié du back-office'
             notice: 'Cette empreinte identifie le texte signé. Toute modification du document produirait une empreinte différente.'
     email:
+        customer_refused:
+            subject: 'Contrat {reference} : refus du client'
+            body: 'Le client {customer} a indiqué ne pas signer le contrat {reference}.'
+            observed: 'Refus enregistré le {at}, depuis l''adresse IP {ip}.'
+            reason: 'Motif indiqué :'
+            no_reason: 'Aucun motif n''a été indiqué.'
+            action: 'Vous pouvez renvoyer le contrat depuis le back-office : un nouvel envoi efface ce refus et crée une nouvelle adresse.'
+        contract_reminder:
+            subject: 'Rappel : le contrat {reference} attend votre signature'
+            body: 'Le contrat {reference} vous a été adressé et n''est pas encore signé.'
+            cta: 'Ouvrir le contrat et le signer'
+            replaces: 'Ce lien remplace celui du message précédent, qui n''est plus valide.'
+            expires: 'Ce lien est valide jusqu''au {date}.'
         customer_signed:
             subject: 'Contrat {reference} signé par le client'
             body: 'Le contrat {reference} vient d''être signé par {name}. Il attend votre contresignature.'

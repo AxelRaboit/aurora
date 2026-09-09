@@ -60,6 +60,80 @@ class ContractAccessLinkManager implements ContractAccessLinkManagerInterface
 
     public function send(ContractInterface $contract): ContractAccessLinkInterface
     {
+        $link = $this->handOut(
+            $contract,
+            'accounting.email.contract_link.subject',
+            '@Accounting/email/contract_link.html.twig',
+        );
+
+        $this->auditLogger->log('accounting', 'contract.link_sent', 'Contract', $contract->getId(), $this->handOutPayload($link));
+
+        return $link;
+    }
+
+    /**
+     * Chases a contract that was sent and not signed.
+     *
+     * Deliberately the same act as a resend rather than a mail beside it: the
+     * application stores only a hash of the token it handed out, so it cannot
+     * rebuild the address it sent last week. A reminder that pointed at the
+     * old link would be a link this code is unable to produce. It therefore
+     * hands out a new one and says so in the mail.
+     *
+     * The counter lives on the contract, not on the link this replaces, or the
+     * ceiling would reset every time it was reached.
+     */
+    public function remind(ContractInterface $contract): ContractAccessLinkInterface
+    {
+        $link = $this->handOut(
+            $contract,
+            'accounting.email.contract_reminder.subject',
+            '@Accounting/email/contract_reminder.html.twig',
+        );
+
+        $contract->markReminded(new DateTimeImmutable());
+        $this->entityManager->flush();
+
+        $this->auditLogger->log('accounting', 'contract.reminder_sent', 'Contract', $contract->getId(), [
+            ...$this->handOutPayload($link),
+            'reminderCount' => $contract->getReminderCount(),
+        ]);
+
+        return $link;
+    }
+
+    /**
+     * What both hand-outs record: which address went where, and until when.
+     *
+     * @return array<string, mixed>
+     */
+    protected function handOutPayload(ContractAccessLinkInterface $link): array
+    {
+        return [
+            'reference' => $link->getContract()->getReference(),
+            'recipient' => $link->getRecipientEmail(),
+            'selector' => $link->getSelector(),
+            'expiresAt' => $link->getExpiresAt()->format(DATE_ATOM),
+        ];
+    }
+
+    /**
+     * Mints an address, revokes whatever came before, and mails it.
+     *
+     * One body for the first send and for every reminder, because they differ
+     * only in what the mail says. Two copies of this would be two places for
+     * the revocation rule to drift.
+     *
+     * It deliberately does *not* write the audit entry. The action has to be a
+     * literal at its call site: the audit label check reads the source for
+     * `log('module', 'action')` pairs, and an action passed in as a variable is
+     * a blind spot it refuses to have. So each caller logs its own.
+     */
+    protected function handOut(
+        ContractInterface $contract,
+        string $subjectKey,
+        string $template,
+    ): ContractAccessLinkInterface {
         if (!$contract->isFrozen()) {
             throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.seal_before_sending'));
         }
@@ -94,8 +168,8 @@ class ContractAccessLinkManager implements ContractAccessLinkManagerInterface
 
         $this->mail->send(
             to: $link->getRecipientEmail(),
-            subjectKey: 'accounting.email.contract_link.subject',
-            template: '@Accounting/email/contract_link.html.twig',
+            subjectKey: $subjectKey,
+            template: $template,
             context: [
                 'contract' => $contract,
                 'customer' => $contract->getCustomer(),
@@ -110,14 +184,12 @@ class ContractAccessLinkManager implements ContractAccessLinkManagerInterface
 
         $link->markSent(new DateTimeImmutable());
         $contract->setStatus(ContractStatusEnum::Sent);
-        $this->entityManager->flush();
+        // A new address is a new ask, so a refusal recorded against the old
+        // one stops being the current state. The audit trail keeps it, which
+        // is where the history of an answer belongs.
+        $contract->clearRefusal();
 
-        $this->auditLogger->log('accounting', 'contract.link_sent', 'Contract', $contract->getId(), [
-            'reference' => $contract->getReference(),
-            'recipient' => $link->getRecipientEmail(),
-            'selector' => $link->getSelector(),
-            'expiresAt' => $link->getExpiresAt()->format(DATE_ATOM),
-        ]);
+        $this->entityManager->flush();
 
         return $link;
     }

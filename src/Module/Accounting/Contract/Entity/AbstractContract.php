@@ -127,6 +127,45 @@ abstract class AbstractContract implements ContractInterface
     protected ?DateTimeImmutable $frozenAt = null;
 
     /**
+     * When the customer said no, and what they said about it.
+     *
+     * A refusal is an answer, not an absence, and the difference matters to
+     * whoever reads the list: a contract nobody ever opened and one the
+     * customer declined are two different conversations to have. The three
+     * observed fields are the same evidence a signature carries, for the same
+     * reason - the act came from whoever held the address, and that is worth
+     * recording even when the act creates no obligation.
+     *
+     * The reason is the customer's own words and is optional. Demanding a
+     * justification to decline would be a small piece of coercion in a
+     * document about consent.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?DateTimeImmutable $refusedAt = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    protected ?string $refusalReason = null;
+
+    #[ORM\Column(length: 45, nullable: true)]
+    protected ?string $refusedFromIp = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    protected ?string $refusedUserAgent = null;
+
+    /**
+     * How many times this contract has been chased, and when last.
+     *
+     * On the contract rather than on the link, because a reminder hands out a
+     * new address: counting on the link would restart at zero every time and
+     * the ceiling would never be reached.
+     */
+    #[ORM\Column(options: ['default' => 0])]
+    protected int $reminderCount = 0;
+
+    #[ORM\Column(nullable: true)]
+    protected ?DateTimeImmutable $lastReminderAt = null;
+
+    /**
      * The canonical document, as the deterministic structure it was hashed
      * from.
      *
@@ -453,6 +492,108 @@ abstract class AbstractContract implements ContractInterface
         $this->pdfGeneratedAt = $at;
 
         return $this;
+    }
+
+    public function getRefusedAt(): ?DateTimeImmutable
+    {
+        return $this->refusedAt;
+    }
+
+    public function getRefusalReason(): ?string
+    {
+        return $this->refusalReason;
+    }
+
+    public function getRefusedFromIp(): ?string
+    {
+        return $this->refusedFromIp;
+    }
+
+    public function getRefusedUserAgent(): ?string
+    {
+        return $this->refusedUserAgent;
+    }
+
+    public function isRefused(): bool
+    {
+        return $this->refusedAt instanceof DateTimeImmutable;
+    }
+
+    /**
+     * Records the refusal and moves the contract to it.
+     *
+     * The status and the trace are set together rather than by two callers:
+     * a contract that says `refused` with no date, or carries a date without
+     * saying so, is a half-state somebody would have to interpret.
+     *
+     * Refused on a signed contract is refused: an engagement is not undone by
+     * a click on a page, and the manager refuses before reaching this.
+     */
+    public function refuse(
+        DateTimeImmutable $at,
+        ?string $reason = null,
+        ?string $ip = null,
+        ?string $userAgent = null,
+    ): static {
+        $this->refusedAt = $at;
+        $this->refusalReason = '' === $reason ? null : $reason;
+        $this->refusedFromIp = $ip;
+        $this->refusedUserAgent = $userAgent;
+        $this->status = ContractStatusEnum::Refused;
+
+        return $this;
+    }
+
+    /**
+     * Clears the refusal, because a new link is a new ask.
+     *
+     * The record of it does not disappear with it: the audit trail keeps the
+     * refusal and its trace, which is where a question about the history
+     * belongs. What this clears is the *current* state, and the current state
+     * of a contract that has just been sent again is "sent".
+     */
+    public function clearRefusal(): static
+    {
+        $this->refusedAt = null;
+        $this->refusalReason = null;
+        $this->refusedFromIp = null;
+        $this->refusedUserAgent = null;
+
+        return $this;
+    }
+
+    public function getReminderCount(): int
+    {
+        return $this->reminderCount;
+    }
+
+    public function getLastReminderAt(): ?DateTimeImmutable
+    {
+        return $this->lastReminderAt;
+    }
+
+    public function markReminded(DateTimeImmutable $at): static
+    {
+        ++$this->reminderCount;
+        $this->lastReminderAt = $at;
+
+        return $this;
+    }
+
+    /**
+     * The day the evidence stops being required.
+     *
+     * Counted from the freeze, which is the moment the document became final
+     * and the only date that cannot move afterwards. Null before then: a draft
+     * has nothing to keep.
+     */
+    public function retainedUntil(int $years): ?DateTimeImmutable
+    {
+        if (!$this->frozenAt instanceof DateTimeImmutable) {
+            return null;
+        }
+
+        return $this->frozenAt->modify(sprintf('+%d years', $years));
     }
 
     public function assertEditable(): void

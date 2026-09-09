@@ -25,6 +25,18 @@
                 {{ 'accounting.public.contract.concluded'|trans({}, null, contract.locale) }}
             </p>
         </div>
+    {% elseif isRefused %}
+        {# An answer, not an absence. The reader gets told what was recorded and
+           that it is not final for them to fix - the provider can send it
+           again, so nobody is stuck on a page they closed a door on. #}
+        <div class="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 text-sm space-y-1">
+            <p class="font-medium text-amber-500">
+                {{ 'accounting.public.contract.refused'|trans({}, null, contract.locale) }}
+            </p>
+            <p class="text-secondary">
+                {{ 'accounting.public.contract.refused_hint'|trans({'{date}': contract.refusedAt|date('d/m/Y')}, null, contract.locale) }}
+            </p>
+        </div>
     {% elseif isSigned %}
         <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-4 text-sm space-y-1">
             <p class="font-medium text-emerald-500">
@@ -61,10 +73,11 @@
 
     {# The form comes after the document, which is the order the page asks for
        things: read, then sign. #}
-    {% if not isSigned %}
+    {% if not isSigned and not isRefused %}
         <div {{ vue_component('accounting/public/sign/ContractSignApp', {
             codePath: codePath,
             signPath: signPath,
+            refusePath: refusePath,
         }) }}></div>
     {% endif %}
 

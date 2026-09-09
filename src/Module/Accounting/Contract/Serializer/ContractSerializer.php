@@ -8,6 +8,7 @@ use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
 use Aurora\Module\Accounting\Contract\Access\Repository\ContractAccessLinkRepository;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
+use Aurora\Module\Accounting\Contract\Service\ContractRetentionPolicy;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 
@@ -19,6 +20,7 @@ class ContractSerializer implements ContractSerializerInterface
     public function __construct(
         protected readonly ContractSeal $seal,
         protected readonly ContractAccessLinkRepository $links,
+        protected readonly ContractRetentionPolicy $retention,
     ) {}
 
     /** @return array<string, mixed> */
@@ -47,6 +49,22 @@ class ContractSerializer implements ContractSerializerInterface
             'link' => $this->link($contract),
             'hasPdf' => $contract->hasPdf(),
             'pdfHash' => $contract->getPdfHash(),
+            // A refusal is an answer, so it travels with the row rather than
+            // only with the document: the list is where somebody decides
+            // whether to chase a customer or to leave them alone.
+            'refusal' => $contract->isRefused() ? [
+                'refusedAt' => $contract->getRefusedAt()?->format(DATE_ATOM),
+                'reason' => $contract->getRefusalReason(),
+                'ip' => $contract->getRefusedFromIp(),
+            ] : null,
+            'reminders' => [
+                'count' => $contract->getReminderCount(),
+                'lastAt' => $contract->getLastReminderAt()?->format(DATE_ATOM),
+            ],
+            // The day the evidence stops being required, computed from the
+            // policy in force rather than stored: a retention that changed
+            // would otherwise leave old rows quoting the old rule.
+            'retainedUntil' => $this->retention->until($contract)?->format(DATE_ATOM),
         ];
     }
 

@@ -120,6 +120,25 @@ const sealedAt = computed(() => {
     return new Date(seal.value.frozenAt).toLocaleString();
 });
 
+/** Dates the server computed, formatted where the reader is. */
+const retainedUntil = computed(() =>
+    contract.value.retainedUntil
+        ? new Date(contract.value.retainedUntil).toLocaleDateString()
+        : null,
+);
+
+const lastReminderAt = computed(() =>
+    contract.value.reminders?.lastAt
+        ? new Date(contract.value.reminders.lastAt).toLocaleDateString()
+        : "-",
+);
+
+const refusedAt = computed(() =>
+    contract.value.refusal?.refusedAt
+        ? new Date(contract.value.refusal.refusedAt).toLocaleString()
+        : "-",
+);
+
 /**
  * The stored document, cleaned again before it is put in the DOM.
  *
@@ -277,7 +296,66 @@ const documentHtml = computed(() =>
                         </dt>
                         <dd class="text-primary">{{ sealedAt ?? "-" }}</dd>
                     </div>
+                    <!-- How long this evidence has to be kept. Beside the seal
+                         rather than in a settings screen: the question is
+                         asked about this document, and the answer is the date
+                         the delete button starts working. -->
+                    <div class="space-y-0.5">
+                        <dt class="text-muted uppercase tracking-wider">
+                            {{ t("backend.accounting.contracts.retained_until") }}
+                        </dt>
+                        <dd class="text-primary">{{ retainedUntil ?? "-" }}</dd>
+                        <dd class="text-muted">
+                            {{ t("backend.accounting.contracts.retention_hint") }}
+                        </dd>
+                    </div>
+                    <div class="space-y-0.5">
+                        <dt class="text-muted uppercase tracking-wider">
+                            {{ t("backend.accounting.contracts.reminders") }}
+                        </dt>
+                        <dd class="text-primary">
+                            {{
+                                contract.reminders?.count
+                                    ? t("backend.accounting.contracts.reminders_count", {
+                                        count: contract.reminders.count,
+                                        date: lastReminderAt,
+                                    })
+                                    : t("backend.accounting.contracts.reminders_none")
+                            }}
+                        </dd>
+                    </div>
                 </dl>
+            </div>
+
+            <!-- The other answer, when it is the one that came back. Its own
+                 block rather than a status word: a refusal carries a reason
+                 somebody wrote, and that is the part worth reading. -->
+            <div
+                v-if="contract.refusal"
+                class="bg-surface border border-amber-500/40 rounded-lg p-4 space-y-2 text-sm"
+            >
+                <p class="font-medium text-amber-500">
+                    {{ t("backend.accounting.contracts.refused_at") }}
+                    {{ refusedAt }}
+                </p>
+                <p class="text-xs text-muted">
+                    {{
+                        t("backend.accounting.contracts.refused_from", {
+                            ip: contract.refusal.ip ?? "-",
+                        })
+                    }}
+                </p>
+                <div class="space-y-1">
+                    <p class="text-xs uppercase tracking-wider text-muted">
+                        {{ t("backend.accounting.contracts.refusal_reason") }}
+                    </p>
+                    <p v-if="contract.refusal.reason" class="text-primary whitespace-pre-line">
+                        {{ contract.refusal.reason }}
+                    </p>
+                    <p v-else class="text-muted">
+                        {{ t("backend.accounting.contracts.refusal_no_reason") }}
+                    </p>
+                </div>
             </div>
 
             <!-- The document as it was rendered and hashed. Printed from the
