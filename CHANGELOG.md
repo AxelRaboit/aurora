@@ -5,6 +5,38 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.99] - 2026-09-12
+
+### Ajouté
+
+#### Le sommaire d'une documentation, et la page suivante
+Ce qui sépare une documentation d'une liste d'articles : un lecteur qui
+arrive sur une page doit voir où elle se situe et ce qui vient après. Un
+blog n'a besoin ni de l'un ni de l'autre, donc rien de tout cela ne
+s'affiche par défaut.
+
+Un type de contenu déclare qu'il **se lit en séquence**, une case à cocher
+de plus à côté de « contenu en blocs » et « image à la une ». Cochée, la
+page publique dessine sous son contenu le sommaire de l'ensemble, la page
+en cours marquée, puis un lien vers la précédente et un vers la suivante.
+
+Le sommaire n'est pas une seconde structure à tenir à jour : c'est la
+taxonomie hiérarchique du type, dessinée. Les rubriques et sous-rubriques
+donnent l'arborescence, leur position donne l'ordre, et les pages s'y
+accrochent par leur terme. Leur ordre à elles est le rang de lecture livré
+en 0.9.97.
+
+Les deux voisins traversent tout l'ouvrage plutôt que de s'arrêter au bout
+de la rubrique : un lecteur qui finit « Éditorial » veut la première page
+de « Médiathèque », pas une impasse. Une page hors de l'arborescence n'a
+pas de voisins du tout, plutôt que les deux premières de la séquence, ce
+qui mentirait sur l'endroit où elle se trouve.
+
+Tout est lu en deux requêtes et regroupé en mémoire : le nombre de requêtes
+ne grandit pas avec le nombre de rubriques.
+
+---
+
 ## [0.9.98] - 2026-09-12
 
 ### Corrigé

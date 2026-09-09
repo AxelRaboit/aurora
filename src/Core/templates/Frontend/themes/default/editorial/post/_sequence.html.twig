@@ -1,0 +1,75 @@
+{# The table of contents of a sequence, and the way out of the page.
+
+   Only drawn for a type of content that says it is read in sequence, so a
+   blog article never sees it. `sequence` is null otherwise and the caller
+   leaves the whole thing out.
+
+   `not-prose` throughout: the page is rendered inside `<article class="prose">`
+   and Typography would give these lists the margins and markers of body text,
+   which is exactly what a summary must not look like.
+
+   Order matters on small screens. The summary comes after the page rather than
+   before it: a reader who opened this address wants what they came for first,
+   and a hundred and thirty-four links between them and the first sentence is
+   how a documentation gets closed. On a wide screen the sticky aside puts it
+   back beside the text, where it belongs. #}
+
+{% if sequence.summary is not empty %}
+    <nav class="not-prose mt-12 border-t border-line pt-6" aria-label="{{ 'frontend.sequence.summary'|trans }}">
+        <p class="m-0 mb-4 text-xs font-semibold uppercase tracking-wider text-accent">{{ 'frontend.sequence.summary'|trans }}</p>
+
+        <div class="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for section in sequence.summary %}
+                <div class="flex flex-col gap-3">
+                    <p class="m-0 text-sm font-semibold text-primary">{{ section.label }}</p>
+
+                    {% for rubric in section.rubrics %}
+                        {% if rubric.pages is not empty %}
+                            <div class="flex flex-col gap-1">
+                                {# The rubric's own name is dropped when it is
+                                   the section repeating itself, which happens
+                                   wherever the tree is only one level deep. #}
+                                {% if rubric.label != section.label %}
+                                    <p class="m-0 text-xs uppercase tracking-wide text-muted">{{ rubric.label }}</p>
+                                {% endif %}
+
+                                <ul class="m-0 list-none p-0 flex flex-col gap-0.5">
+                                    {% for page in rubric.pages %}
+                                        <li class="m-0">
+                                            {% if page.current %}
+                                                <span class="block text-sm text-accent font-medium" aria-current="page">{{ page.title }}</span>
+                                            {% else %}
+                                                <a class="block text-sm text-secondary no-underline transition-colors hover:text-primary" href="{{ page.url }}">{{ page.title }}</a>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </nav>
+{% endif %}
+
+{% if sequence.previous or sequence.next %}
+    {# Two halves that keep their side whichever one is missing: `ml-auto` on
+       the second, so a page with only a next link does not draw it on the
+       left where the previous one belongs. #}
+    <nav class="not-prose mt-8 flex flex-wrap gap-3 border-t border-line pt-6" aria-label="{{ 'frontend.sequence.pagination'|trans }}">
+        {% if sequence.previous %}
+            <a class="group flex max-w-[20rem] flex-col gap-0.5 rounded-xl border border-line bg-surface px-4 py-3 no-underline transition-colors hover:border-accent-500/60" href="{{ sequence.previous.url }}" rel="prev">
+                <span class="text-xs uppercase tracking-wide text-muted">{{ 'frontend.sequence.previous'|trans }}</span>
+                <span class="text-sm font-medium text-primary transition-colors group-hover:text-accent">{{ sequence.previous.title }}</span>
+            </a>
+        {% endif %}
+
+        {% if sequence.next %}
+            <a class="group ml-auto flex max-w-[20rem] flex-col items-end gap-0.5 rounded-xl border border-line bg-surface px-4 py-3 text-right no-underline transition-colors hover:border-accent-500/60" href="{{ sequence.next.url }}" rel="next">
+                <span class="text-xs uppercase tracking-wide text-muted">{{ 'frontend.sequence.next'|trans }}</span>
+                <span class="text-sm font-medium text-primary transition-colors group-hover:text-accent">{{ sequence.next.title }}</span>
+            </a>
+        {% endif %}
+    </nav>
+{% endif %}
