@@ -8,6 +8,7 @@ use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
 use Aurora\Module\Accounting\Contract\Access\Repository\ContractAccessLinkRepository;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
+use Aurora\Module\Accounting\Contract\Repository\ContractRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractRetentionPolicy;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -21,6 +22,7 @@ class ContractSerializer implements ContractSerializerInterface
         protected readonly ContractSeal $seal,
         protected readonly ContractAccessLinkRepository $links,
         protected readonly ContractRetentionPolicy $retention,
+        protected readonly ContractRepository $contracts,
     ) {}
 
     /** @return array<string, mixed> */
@@ -65,6 +67,26 @@ class ContractSerializer implements ContractSerializerInterface
             // policy in force rather than stored: a retention that changed
             // would otherwise leave old rows quoting the old rule.
             'retainedUntil' => $this->retention->until($contract)?->format(DATE_ATOM),
+            // What this document changes, if anything. The reference comes
+            // from the copy on the row rather than through the relation, so an
+            // amendment whose parent was deleted after its retention still
+            // says what it amended.
+            'amends' => $contract->isAmendment() ? [
+                'id' => $contract->getAmends()?->getId(),
+                'reference' => $contract->getAmendsReference(),
+                'rank' => $contract->getAmendmentRank(),
+            ] : null,
+            'termination' => $contract->isTerminated() ? [
+                'noticedAt' => $contract->getTerminationNoticedAt()?->format('Y-m-d'),
+                'effectiveAt' => $contract->getTerminationEffectiveAt()?->format('Y-m-d'),
+                'origin' => $contract->getTerminationOrigin()?->value,
+                'originLabel' => $contract->getTerminationOrigin()?->getLabel(),
+                'reason' => $contract->getTerminationReason(),
+                // Whether it has actually taken effect, because a notice given
+                // today for the end of the month is not the same screen as a
+                // contract that has already stopped.
+                'isEffective' => $contract->isTerminationEffective(),
+            ] : null,
         ];
     }
 
@@ -77,6 +99,20 @@ class ContractSerializer implements ContractSerializerInterface
             // The seal, as a block a human can read and check. A hash shown
             // without its algorithm and its canonical form is a string nobody
             // can do anything with.
+            // The amendments this contract carries, oldest first: the last one
+            // is what is in force, and reading forward is how somebody checks
+            // that nothing is missing in between.
+            'amendments' => array_map(
+                fn (ContractInterface $amendment): array => [
+                    'id' => $amendment->getId(),
+                    'reference' => $amendment->getReference(),
+                    'rank' => $amendment->getAmendmentRank(),
+                    'status' => $amendment->getStatus()->value,
+                    'statusLabel' => $amendment->getStatus()->getLabel(),
+                    'frozenAt' => $amendment->getFrozenAt()?->format(DATE_ATOM),
+                ],
+                $this->contracts->findAmendmentsOf($contract),
+            ),
             'seal' => [
                 'contentHash' => $contract->getContentHash(),
                 'hashAlgo' => $contract->getHashAlgo(),

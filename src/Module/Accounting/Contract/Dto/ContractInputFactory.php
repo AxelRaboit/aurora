@@ -38,6 +38,7 @@ class ContractInputFactory implements ContractInputFactoryInterface
             amountCurrency: null === $amount ? null : $this->currency($data),
             effectiveDate: $this->rawOrNull($data, 'effectiveDate'),
             customFields: $this->customFields($data['customFields'] ?? null),
+            amendsId: $this->idOrNull($data, 'amendsId'),
         );
     }
 

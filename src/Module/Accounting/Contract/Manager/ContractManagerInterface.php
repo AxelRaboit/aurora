@@ -8,6 +8,7 @@ use Aurora\Core\Validation\Exception\FieldException;
 use Aurora\Module\Accounting\Contract\Dto\ContractInputInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
+use Aurora\Module\Accounting\Contract\Termination\Dto\ContractTerminationInputInterface;
 
 interface ContractManagerInterface
 {
@@ -27,6 +28,14 @@ interface ContractManagerInterface
      * @throws FieldException when the retention still covers the document
      */
     public function delete(ContractInterface $contract): void;
+
+    /**
+     * Records the end of the relationship on a concluded contract.
+     *
+     * @throws FieldException when the contract was never concluded, is already
+     *                        terminated, or carries dates in the wrong order
+     */
+    public function terminate(ContractInterface $contract, ContractTerminationInputInterface $input): void;
 
     /** How long a sealed contract must be kept, in years, floor included. */
     public function retentionYears(): int;

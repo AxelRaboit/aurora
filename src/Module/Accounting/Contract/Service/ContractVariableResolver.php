@@ -91,7 +91,13 @@ final readonly class ContractVariableResolver
             'customer.phone' => $customer->getPhone() ?? '',
             'contract.reference' => $contract->getReference() ?? '',
             'contract.amount' => $this->amount($contract, $locale),
-            'contract.effective_date' => $this->date($contract, $locale),
+            'contract.effective_date' => $this->formatDate($contract->getEffectiveDate(), $locale),
+            // What an amendment says about the document it changes. Empty on
+            // an original, and the freeze refuses a wording that asks for them
+            // there rather than sealing the blank.
+            'contract.amends_reference' => $contract->getAmendsReference() ?? '',
+            'contract.amends_effective_date' => $this->formatDate($contract->getAmends()?->getEffectiveDate(), $locale),
+            'contract.amends_rank' => null === $contract->getAmendmentRank() ? '' : (string) $contract->getAmendmentRank(),
             ...$this->providerValues(),
             // The blanks this contract carries, last so a trame cannot shadow
             // a catalogue variable with a custom field of the same name.
@@ -204,10 +210,8 @@ final readonly class ContractVariableResolver
         return (string) $formatter->formatCurrency($cents / 100, $currency);
     }
 
-    private function date(ContractInterface $contract, string $locale): string
+    private function formatDate(?DateTimeImmutable $date, string $locale): string
     {
-        $date = $contract->getEffectiveDate();
-
         if (!$date instanceof DateTimeImmutable) {
             return '';
         }

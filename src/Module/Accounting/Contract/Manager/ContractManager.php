@@ -15,7 +15,9 @@ use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslationInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
+use Aurora\Module\Accounting\Contract\Enum\ContractTerminationOriginEnum;
 use Aurora\Module\Accounting\Contract\Exception\UnrenderableBlockException;
+use Aurora\Module\Accounting\Contract\Repository\ContractRepository;
 use Aurora\Module\Accounting\Contract\Repository\ContractTemplateRepository;
 use Aurora\Module\Accounting\Contract\Service\ContractCanonicalizer;
 use Aurora\Module\Accounting\Contract\Service\ContractCustomFieldScanner;
@@ -23,6 +25,7 @@ use Aurora\Module\Accounting\Contract\Service\ContractDocumentRenderer;
 use Aurora\Module\Accounting\Contract\Service\ContractRetentionPolicy;
 use Aurora\Module\Accounting\Contract\Service\ContractSeal;
 use Aurora\Module\Accounting\Contract\Service\ContractVariableResolver;
+use Aurora\Module\Accounting\Contract\Termination\Dto\ContractTerminationInputInterface;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Accounting\Customer\Repository\CustomerRepository;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
@@ -54,6 +57,14 @@ use function sprintf;
 #[AsAlias(ContractManagerInterface::class)]
 class ContractManager implements ContractManagerInterface
 {
+    /**
+     * The tokens only an amendment can fill.
+     *
+     * Grouped under one prefix so the guard is a prefix scan rather than a
+     * list to keep in step with the catalogue.
+     */
+    public const string AMENDS_PREFIX = 'contract.amends_';
+
     public function __construct(
         protected readonly EntityManagerInterface $entityManager,
         protected readonly AuditLogger $auditLogger,
@@ -68,6 +79,7 @@ class ContractManager implements ContractManagerInterface
         protected readonly TranslatorInterface $translator,
         protected readonly ContractCustomFieldScanner $customFields,
         protected readonly ContractRetentionPolicy $retention,
+        protected readonly ContractRepository $contractRepository,
     ) {}
 
     public function create(ContractInputInterface $input): ContractInterface
@@ -112,6 +124,7 @@ class ContractManager implements ContractManagerInterface
         }
 
         $contract
+            ->setAmends($this->amendedContract($input, $customer))
             ->setCustomer($customer)
             ->setCustomFields($input->getCustomFields())
             ->setLocale($input->getLocale())
@@ -120,6 +133,57 @@ class ContractManager implements ContractManagerInterface
             ->setEffectiveDate($this->effectiveDate($input))
             ->setBodyVersion($this->publishedVersionOf($input->getBodyTemplateId(), ContractTemplateKindEnum::Body, 'bodyTemplateId'))
             ->setAnnexVersion($this->publishedVersionOf($input->getAnnexTemplateId(), ContractTemplateKindEnum::Annex, 'annexTemplateId'));
+    }
+
+    /**
+     * The contract an amendment changes, checked before it is attached.
+     *
+     * Four refusals, and each is a different mistake:
+     *
+     * - **Nothing to amend.** A reference that names no row.
+     * - **Not concluded.** You do not amend a document nobody signed: while it
+     *   is a draft you edit it, and once it is sent you send a new one. An
+     *   amendment only makes sense against something that binds.
+     * - **Somebody else's contract.** The customer of an amendment is the
+     *   customer of what it amends, and the two are checked against each other
+     *   rather than trusted to have been picked consistently.
+     * - **An amendment of an amendment.** Practice numbers them all against
+     *   the original - "avenant n°2 au contrat CM-2026-0001" - and a chain
+     *   would make "which annex is in force" a walk instead of a lookup.
+     *
+     * A terminated contract is refused too: there is nothing left to modify.
+     */
+    protected function amendedContract(ContractInputInterface $input, CustomerInterface $customer): ?ContractInterface
+    {
+        $amendsId = $input->getAmendsId();
+
+        if (null === $amendsId) {
+            return null;
+        }
+
+        $parent = $this->contractRepository->find($amendsId);
+
+        if (!$parent instanceof ContractInterface) {
+            throw new FieldException('amendsId', $this->translator->trans('backend.accounting.contracts.errors.amends_not_found'));
+        }
+
+        if (!$parent->getStatus()->isConcluded()) {
+            throw new FieldException('amendsId', $this->translator->trans('backend.accounting.contracts.errors.amends_not_concluded'));
+        }
+
+        if ($parent->isAmendment()) {
+            throw new FieldException('amendsId', $this->translator->trans('backend.accounting.contracts.errors.amends_is_amendment'));
+        }
+
+        if ($parent->isTerminated()) {
+            throw new FieldException('amendsId', $this->translator->trans('backend.accounting.contracts.errors.amends_terminated'));
+        }
+
+        if ($parent->getCustomer()->getId() !== $customer->getId()) {
+            throw new FieldException('amendsId', $this->translator->trans('backend.accounting.contracts.errors.amends_other_customer'));
+        }
+
+        return $parent;
     }
 
     /**
@@ -187,6 +251,61 @@ class ContractManager implements ContractManagerInterface
         $this->entityManager->flush();
     }
 
+    public function terminate(ContractInterface $contract, ContractTerminationInputInterface $input): void
+    {
+        if (!$contract->getStatus()->isConcluded()) {
+            // Nothing to end. A contract that was never concluded is withdrawn
+            // by revoking its link, or refused by the customer, and calling
+            // either of those a termination would put three different events
+            // under one word.
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.terminate_not_concluded'));
+        }
+
+        if ($contract->isTerminated()) {
+            throw new FieldException('status', $this->translator->trans('backend.accounting.contracts.errors.already_terminated'));
+        }
+
+        $origin = ContractTerminationOriginEnum::tryFrom($input->getOrigin());
+
+        if (!$origin instanceof ContractTerminationOriginEnum) {
+            throw new FieldException('origin', $this->translator->trans('backend.accounting.contracts.errors.termination_origin_invalid'));
+        }
+
+        $noticedAt = $this->dateOrFail($input->getNoticedAt(), 'noticedAt');
+        $effectiveAt = $this->dateOrFail($input->getEffectiveAt(), 'effectiveAt');
+
+        if ($effectiveAt < $noticedAt) {
+            // A notice period runs forward. The other order is not a shorter
+            // notice, it is a typo, and storing it would make every report
+            // that subtracts the two dates produce a negative period.
+            throw new FieldException('effectiveAt', $this->translator->trans('backend.accounting.contracts.errors.termination_before_notice'));
+        }
+
+        $contract->terminate($noticedAt, $effectiveAt, $origin, $input->getReason());
+        $this->entityManager->flush();
+
+        $this->auditLogger->log('accounting', 'contract.terminated', 'Contract', $contract->getId(), [
+            'reference' => $contract->getReference(),
+            'customer' => $contract->getCustomer()->getLegalName(),
+            'noticedAt' => $noticedAt->format('Y-m-d'),
+            'effectiveAt' => $effectiveAt->format('Y-m-d'),
+            'origin' => $origin->value,
+            'reason' => $contract->getTerminationReason(),
+        ]);
+    }
+
+    /** A `Y-m-d` string, or a field error naming the field that carried it. */
+    protected function dateOrFail(string $raw, string $field): DateTimeImmutable
+    {
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $raw);
+
+        if (false === $date) {
+            throw new FieldException($field, $this->translator->trans('backend.accounting.contracts.errors.termination_date_invalid'));
+        }
+
+        return $date;
+    }
+
     public function retentionYears(): int
     {
         return $this->retention->years();
@@ -249,9 +368,18 @@ class ContractManager implements ContractManagerInterface
             throw new FieldException('bodyVersion', $this->translator->trans('backend.accounting.contracts.errors.provider_settings_missing', ['{fields}' => implode(', ', $unsetProvider)]));
         }
 
+        // Refused before a reference is minted, like every other guard here: a
+        // trame written as an amendment, sealed as a standalone contract, would
+        // print blanks where it names the document it modifies.
+        $unsetAmendment = $this->unsetAmendmentTokens($contract);
+
+        if ([] !== $unsetAmendment) {
+            throw new FieldException('amendsId', $this->translator->trans('backend.accounting.contracts.errors.amendment_tokens_without_parent', ['{fields}' => implode(', ', $unsetAmendment)]));
+        }
+
         // Minted before the rendering, because the reference is printed inside
         // the document and therefore has to be part of what the hash covers.
-        $reference = $this->nextReference();
+        $reference = $this->amendmentReference($contract) ?? $this->nextReference();
         $contract->setReference($reference);
 
         $values = $this->variables->resolve($contract);
@@ -535,6 +663,58 @@ class ContractManager implements ContractManagerInterface
         ) ?? SequencePrefixEnum::Contract->value;
 
         return $this->sequenceGenerator->nextYearly($prefix, (int) new DateTimeImmutable()->format('Y'));
+    }
+
+    /**
+     * `CM-2026-0001-A1`, when this contract amends another.
+     *
+     * Derived from the parent rather than drawn from the sequence, so the
+     * reference itself carries the parentage: a line in an accounting export
+     * says what it belongs to without a join. The rank is counted over the
+     * parent's *sealed* amendments, so a draft abandoned before it went
+     * anywhere consumes nothing.
+     */
+    protected function amendmentReference(ContractInterface $contract): ?string
+    {
+        $parentReference = $contract->getAmendsReference();
+
+        if (null === $parentReference) {
+            return null;
+        }
+
+        $parent = $contract->getAmends();
+        $rank = 1 + ($parent instanceof ContractInterface ? $this->contractRepository->countSealedAmendmentsOf($parent) : 0);
+
+        $contract->setAmendmentRank($rank);
+
+        return sprintf('%s-A%d', $parentReference, $rank);
+    }
+
+    /**
+     * The amendment tokens a wording asks for that this contract cannot fill.
+     *
+     * The same shape as the provider-settings guard, and for the same reason:
+     * the token is known to the catalogue, so the renderer would happily print
+     * an empty string and seal a document that names no parent. This turns
+     * that into a refusal that says which trame was chosen by mistake.
+     *
+     * @return list<string>
+     */
+    protected function unsetAmendmentTokens(ContractInterface $contract): array
+    {
+        if ($contract->isAmendment()) {
+            return [];
+        }
+
+        $used = [];
+
+        foreach ($this->partsOf($contract) as $version) {
+            foreach ($this->customFields->keysOf($version, self::AMENDS_PREFIX) as $key) {
+                $used[self::AMENDS_PREFIX.$key] = true;
+            }
+        }
+
+        return array_keys($used);
     }
 
     protected function createContract(): ContractInterface

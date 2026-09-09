@@ -7,6 +7,7 @@ namespace Aurora\Module\Accounting\Contract\Entity;
 use Aurora\Core\Money\Enum\CurrencyEnum;
 use Aurora\Core\Timestampable\TimestampableInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractStatusEnum;
+use Aurora\Module\Accounting\Contract\Enum\ContractTerminationOriginEnum;
 use Aurora\Module\Accounting\Contract\Exception\ContractPdfAlreadyGeneratedException;
 use Aurora\Module\Accounting\Contract\Exception\FrozenContractIsImmutableException;
 use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
@@ -142,6 +143,40 @@ interface ContractInterface extends TimestampableInterface
     public function getLastReminderAt(): ?DateTimeImmutable;
 
     public function markReminded(DateTimeImmutable $at): static;
+
+    public function getAmends(): ?self;
+
+    /** Names the contract this one amends, and copies its reference. */
+    public function setAmends(?self $amends): static;
+
+    public function getAmendsReference(): ?string;
+
+    public function isAmendment(): bool;
+
+    public function getAmendmentRank(): ?int;
+
+    public function setAmendmentRank(?int $rank): static;
+
+    public function getTerminationNoticedAt(): ?DateTimeImmutable;
+
+    public function getTerminationEffectiveAt(): ?DateTimeImmutable;
+
+    public function getTerminationOrigin(): ?ContractTerminationOriginEnum;
+
+    public function getTerminationReason(): ?string;
+
+    public function isTerminated(): bool;
+
+    /** Whether the termination has taken effect, as opposed to being due to. */
+    public function isTerminationEffective(?DateTimeImmutable $on = null): bool;
+
+    /** Records the end of the relationship, which is not the end of the document. */
+    public function terminate(
+        DateTimeImmutable $noticedAt,
+        DateTimeImmutable $effectiveAt,
+        ContractTerminationOriginEnum $origin,
+        ?string $reason = null,
+    ): static;
 
     /** The day the evidence stops being required, counted from the freeze. */
     public function retainedUntil(int $years): ?DateTimeImmutable;
