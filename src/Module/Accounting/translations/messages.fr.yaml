@@ -249,6 +249,7 @@ backend:
             discard_confirm: 'Abandonner le brouillon de la version {number} ? Son texte sera perdu.'
             discard_hint: 'La version en vigueur ne change pas et aucun contrat n''est touché. Le numéro {number} reste consommé : le prochain brouillon sera la version {next}.'
             discarded: Brouillon abandonné.
+            draft_opened: Brouillon ouvert.
             filter_all_kinds: Tous
             no_match: Aucune trame ne correspond.
             variables:
