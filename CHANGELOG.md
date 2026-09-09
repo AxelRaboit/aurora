@@ -5,6 +5,61 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.95] - 2026-09-09
+
+### Ajouté
+
+#### Les avenants
+La question qui décide de tout : un avenant est-il un nouveau document ou un
+nouvel état ? C'est un document, et il n'y avait pas le choix. Un contrat
+scellé est immuable par construction, donc « modifier l'annexe d'un contrat
+signé » n'a aucune implémentation qui ne soit un mensonge. Ce qui se passe sur
+papier est ce qui se passe ici : un second document, signé lui aussi, qui dit
+quelle partie du premier il remplace.
+
+C'est aussi la réponse au cas de l'annexe modifiée après signature du corps.
+L'original garde sa copie scellée des deux moitiés pour toujours, l'avenant
+porte la nouvelle annexe, et l'histoire se lit dans l'ordre où elle est
+arrivée. Un test le prouve en vérifiant que la référence, le hash et le HTML
+du parent ne bougent pas.
+
+La référence est dérivée du parent, `CM-2026-0001-A1`, et pas tirée de la
+séquence : une ligne dans un export comptable dit à quoi elle appartient sans
+jointure. Le rang est compté au gel, donc un brouillon abandonné ne consomme
+rien.
+
+Quatre refus, chacun une erreur différente : on n'amende pas un brouillon, un
+avenant ne s'amende pas lui-même (la pratique les numérote tous contre
+l'original), le client d'un avenant est celui du contrat modifié, et un
+contrat résilié n'a plus rien à modifier. Plus une garde de jeton : les
+variables `{{contract.amends_*}}` existent, et une trame qui les emploie
+refuse de sceller un contrat qui n'amende personne, au lieu d'imprimer un
+blanc là où elle nomme le document qu'elle modifie.
+
+#### La résiliation
+L'inverse d'un avenant : un fait, pas un document. Un contrat conclu reste
+conclu, parce qu'il a été signé et que ça n'expire pas ; ce qui se termine est
+la relation. Deux dates, puisqu'un préavis est exactement l'écart entre elles,
+et une origine, parce qu'un client qui part, un prestataire qui arrête et un
+accord commun ne se relisent pas de la même façon un an plus tard.
+
+Pas un parcours de signature : un client résilie par email, pas en cliquant
+dans une application où il n'a pas de compte, et lui construire un formulaire
+serait construire ce que personne ne peut utiliser. La date d'effet dans le
+futur reste distinguée de la date passée : un contrat notifié aujourd'hui pour
+la fin du mois tourne encore.
+
+### Dans aurora-client
+
+Une migration, jouée par `make aurora-update` : sept colonnes sur
+`core_contracts` et une clé étrangère du contrat vers lui-même, en `SET NULL`
+avec la référence du parent copiée à côté - un avenant dit encore ce qu'il
+amende après que le parent soit sorti de sa conservation.
+
+Rien d'autre à répercuter. Pour l'utiliser il faudra une trame d'avenant, qui
+est du contenu : un corps qui emploie `{{contract.amends_reference}}` et décrit
+ce qu'il remplace.
+
 ## [0.9.94] - 2026-09-09
 
 ### Ajouté

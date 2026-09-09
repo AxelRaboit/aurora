@@ -20,10 +20,14 @@ import AppDatePicker from "@/shared/components/form/picker/AppDatePicker.vue";
 import AppMessage from "@/shared/components/feedback/AppMessage.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
+import AppSelect from "@/shared/components/form/select/AppSelect.vue";
+import AppTextarea from "@/shared/components/form/input/AppTextarea.vue";
 import {
     ArrowLeft,
+    CalendarX,
     Check,
     FileDown,
+    FilePlus2,
     Lock,
     PenLine,
     ShieldAlert,
@@ -39,6 +43,9 @@ const props = defineProps({
     freezePath: { type: String, required: true },
     countersignPath: { type: String, required: true },
     pdfPath: { type: String, required: true },
+    terminatePath: { type: String, required: true },
+    amendPath: { type: String, required: true },
+    terminationOrigins: { type: Array, default: () => [] },
 });
 
 const { can } = usePrivileges();
@@ -132,6 +139,66 @@ const lastReminderAt = computed(() =>
         ? new Date(contract.value.reminders.lastAt).toLocaleDateString()
         : "-",
 );
+
+const isConcluded = computed(() => "countersigned" === contract.value.status);
+
+const originOptions = computed(() =>
+    props.terminationOrigins.map((origin) => ({
+        value: origin.value,
+        label: t(origin.labelKey),
+    })),
+);
+
+const showTerminate = ref(false);
+const terminating = ref(false);
+const terminationErrors = ref({});
+const termination = ref({
+    // Today for the notice, because that is when somebody records it, and
+    // nothing for the effective date: the notice period is a decision, and a
+    // default would quietly make it whatever this form guessed.
+    noticedAt: new Date().toISOString().slice(0, 10),
+    effectiveAt: "",
+    origin: "",
+    reason: "",
+});
+
+async function terminate() {
+    if (terminating.value) return;
+
+    terminating.value = true;
+    terminationErrors.value = {};
+
+    try {
+        const data = await request(props.terminatePath, termination.value, {
+            noGuard: true,
+        });
+
+        if (data?.errors) {
+            terminationErrors.value = data.errors;
+
+            return;
+        }
+
+        if (data?.contract) {
+            contract.value = data.contract;
+            showTerminate.value = false;
+            toast.success(t("backend.accounting.contracts.terminated"));
+        }
+    } finally {
+        terminating.value = false;
+    }
+}
+
+const terminationDates = computed(() => {
+    const record = contract.value.termination;
+
+    if (!record) return null;
+
+    return {
+        noticedAt: new Date(record.noticedAt).toLocaleDateString(),
+        effectiveAt: new Date(record.effectiveAt).toLocaleDateString(),
+    };
+});
 
 const refusedAt = computed(() =>
     contract.value.refusal?.refusedAt
@@ -356,6 +423,98 @@ const documentHtml = computed(() =>
                         {{ t("backend.accounting.contracts.refusal_no_reason") }}
                     </p>
                 </div>
+            </div>
+
+            <!-- What this document changes, and what changed it. A contract
+                 and its amendments are read as a history: the parent first,
+                 then each amendment in the order it was signed, because the
+                 last one is what is in force. -->
+            <div
+                v-if="contract.amends || contract.amendments?.length"
+                class="bg-surface border border-line rounded-lg p-4 space-y-2 text-sm"
+            >
+                <p class="text-xs uppercase tracking-wider text-muted">
+                    {{ t("backend.accounting.contracts.chain") }}
+                </p>
+
+                <p v-if="contract.amends" class="text-primary">
+                    {{
+                        t("backend.accounting.contracts.amends_long", {
+                            reference: contract.amends.reference,
+                            rank: contract.amends.rank ?? "-",
+                        })
+                    }}
+                </p>
+
+                <ul v-if="contract.amendments?.length" class="space-y-1">
+                    <li
+                        v-for="amendment in contract.amendments"
+                        :key="amendment.id"
+                        class="flex flex-wrap items-baseline gap-2"
+                    >
+                        <span class="font-mono text-xs text-primary">
+                            {{ amendment.reference ?? t("backend.accounting.contracts.draft_title") }}
+                        </span>
+                        <span class="text-xs text-muted">{{ t(amendment.statusLabel) }}</span>
+                    </li>
+                </ul>
+
+                <p v-else-if="contract.amends" class="text-xs text-muted">
+                    {{ t("backend.accounting.contracts.chain_leaf") }}
+                </p>
+            </div>
+
+            <!-- The end of the relationship, which is not the end of the
+                 document: the seal above stays intact and stays true. Two
+                 dates, because a notice period is the gap between them. -->
+            <div
+                v-if="contract.termination"
+                class="bg-surface border border-amber-500/40 rounded-lg p-4 space-y-2 text-sm"
+            >
+                <p class="font-medium text-amber-500">
+                    {{
+                        contract.termination.isEffective
+                            ? t("backend.accounting.contracts.termination.ended", { date: terminationDates.effectiveAt })
+                            : t("backend.accounting.contracts.termination.ending", { date: terminationDates.effectiveAt })
+                    }}
+                </p>
+                <p class="text-xs text-muted">
+                    {{
+                        t("backend.accounting.contracts.termination.noticed", {
+                            date: terminationDates.noticedAt,
+                            origin: t(contract.termination.originLabel),
+                        })
+                    }}
+                </p>
+                <p v-if="contract.termination.reason" class="text-primary whitespace-pre-line">
+                    {{ contract.termination.reason }}
+                </p>
+            </div>
+
+            <!-- Offered only on a concluded contract, because those are the two
+                 things that can happen to one: it gets modified, or it ends. -->
+            <div
+                v-if="isConcluded && !contract.amends"
+                class="flex flex-wrap gap-2"
+            >
+                <AppButton
+                    v-if="can('accounting.contracts.create') && !contract.termination"
+                    variant="secondary"
+                    size="md"
+                    :href="amendPath"
+                >
+                    <FilePlus2 class="w-4 h-4" :stroke-width="2" />
+                    {{ t("backend.accounting.contracts.amend") }}
+                </AppButton>
+                <AppButton
+                    v-if="can('accounting.contracts.edit') && !contract.termination"
+                    variant="ghost"
+                    size="md"
+                    v-on:click="showTerminate = true"
+                >
+                    <CalendarX class="w-4 h-4" :stroke-width="2" />
+                    {{ t("backend.accounting.contracts.terminate") }}
+                </AppButton>
             </div>
 
             <!-- The document as it was rendered and hashed. Printed from the

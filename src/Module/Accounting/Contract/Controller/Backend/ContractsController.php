@@ -22,6 +22,7 @@ use Aurora\Module\Accounting\Contract\Serializer\ContractSerializerInterface;
 use Aurora\Module\Accounting\Contract\Service\ContractPdfGenerator;
 use Aurora\Module\Accounting\Contract\Signature\Dto\ContractSignatureInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManagerInterface;
+use Aurora\Module\Accounting\Contract\Termination\Dto\ContractTerminationInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\View\ContractsViewBuilder;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
 use RuntimeException;
@@ -48,6 +49,7 @@ class ContractsController extends AbstractController
         protected readonly PayloadValidator $payloadValidator,
         protected readonly ContractAccessLinkManagerInterface $accessLinks,
         protected readonly ContractAccessLinkRepository $accessLinkRepository,
+        protected readonly ContractTerminationInputFactoryInterface $terminationInputFactory,
         protected readonly ContractSignatureManagerInterface $signatures,
         protected readonly ContractSignatureInputFactoryInterface $signatureInputFactory,
         protected readonly ContractPdfGenerator $pdfGenerator,
@@ -162,6 +164,37 @@ class ContractsController extends AbstractController
             'contract' => $this->serializer->serialize($contract),
             'contracts' => $this->viewBuilder->contracts(),
             'sentTo' => $link->getRecipientEmail(),
+        ]);
+    }
+
+    /**
+     * Records the end of the relationship.
+     *
+     * Under `edit` rather than `delete`: nothing is destroyed, a fact is
+     * written down. And not under `send`, because nothing leaves the building -
+     * a customer terminates by writing an email, and this is where that email
+     * gets recorded.
+     */
+    #[Route('/{id}/terminate', name: '_terminate', requirements: ['id' => '\d+'], methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('accounting.contracts.edit')]
+    public function terminate(Contract $contract, Request $request): JsonResponse
+    {
+        $input = $this->terminationInputFactory->fromArray($this->decodeJson($request));
+
+        $errors = $this->payloadValidator->errors($input);
+        if ([] !== $errors) {
+            return $this->jsonInvalidInput($errors);
+        }
+
+        try {
+            $this->contractManager->terminate($contract, $input);
+        } catch (FieldException $fieldException) {
+            return $this->jsonInvalidInput([$fieldException->getField() => $fieldException->getMessage()]);
+        }
+
+        return $this->jsonSuccess([
+            'contract' => $this->serializer->serializeDocument($contract),
+            ...$this->viewBuilder->listPayload(),
         ]);
     }
 

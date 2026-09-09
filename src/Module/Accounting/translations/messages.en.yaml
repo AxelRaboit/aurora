@@ -37,6 +37,7 @@ backend:
                     link_revoked: Signing link revoked
                     reminder_sent: Reminder sent to the customer
                     refused: Contract refused by the customer
+                    terminated: Contract terminated
                     signed_by_customer: 'Contract signed by the customer'
                     countersigned: 'Contract countersigned and concluded'
                     deleted: Contract deleted
@@ -125,6 +126,35 @@ backend:
             link_never_opened: Never opened
             link_opened_at: 'Opened on {date}'
             no_link: No active link
+            amends: 'Amendment to contract'
+            amends_placeholder: 'None, an original contract'
+            amends_hint: 'An amendment is a document of its own, signed too. The original keeps its sealed text.'
+            amends_short: 'amendment to {reference}'
+            amends_long: 'This amendment modifies contract {reference}.'
+            amend: 'Create an amendment'
+            chain: 'Amendments'
+            chain_leaf: 'No amendment on this contract.'
+            customer_from_amended: 'Taken from contract {reference}: the customer of an amendment is the customer of what it amends.'
+            terminate: 'Terminate'
+            terminated: Termination recorded.
+            terminated_short: 'terminated on {date}'
+            termination:
+                intro: 'A termination is a fact, not a document: it is recorded here, and a signed contract stays signed. Both dates matter, because a notice period is the gap between them.'
+                noticed_at: 'Notice given on'
+                noticed_at_hint: 'The day the termination was notified, by email or otherwise.'
+                effective_at: 'Takes effect on'
+                effective_at_hint: 'The real end of the work, notice period included.'
+                origin_label: 'Ended by'
+                origin_placeholder: 'Who is ending the contract'
+                origin:
+                    customer: 'The customer'
+                    provider: 'The provider'
+                    mutual: 'Both parties'
+                reason: 'Reason (optional)'
+                reason_placeholder: 'What was said, if it is worth keeping.'
+                ended: 'Terminated since {date}'
+                ending: 'Termination pending, effective {date}'
+                noticed: 'Notice given on {date}, by: {origin}.'
             refused_at: 'Refused on'
             refusal_reason: 'Reason for the refusal'
             refusal_no_reason: 'No reason given'
@@ -181,6 +211,22 @@ backend:
                 role_already_signed: 'This party has already signed.'
                 customer_has_not_signed: 'The customer has not signed yet. The countersignature comes after.'
                 already_refused: 'This contract has already been refused by the customer.'
+                amends_invalid: 'That contract to amend is not valid.'
+                amends_not_found: 'The contract to amend cannot be found.'
+                amends_not_concluded: 'Only a concluded contract is amended: while it is not signed by both sides, edit it or send it again.'
+                amends_is_amendment: 'An amendment is not itself amended: attach this one to the original contract.'
+                amends_terminated: 'This contract is terminated: there is nothing left to modify.'
+                amends_other_customer: 'The customer of an amendment is the customer of what it amends.'
+                amendment_tokens_without_parent: 'This trame is written for an amendment ({fields}): name the contract it modifies.'
+                terminate_not_concluded: 'Only a concluded contract is terminated. An unsigned one is revoked, or refused.'
+                already_terminated: 'This contract is already terminated.'
+                termination_noticed_required: 'The notice date is required.'
+                termination_effective_required: 'The effective date is required.'
+                termination_origin_required: 'Say who is ending the contract.'
+                termination_origin_invalid: 'That termination origin is not valid.'
+                termination_date_invalid: 'That date is not valid.'
+                termination_before_notice: 'The effective date cannot precede the notice: a notice period runs forward.'
+                termination_reason_too_long: 'That reason is too long.'
                 retention_not_elapsed: 'This contract is kept until {date}. It cannot be deleted before then.'
                 governing_locale_conflict: 'The body and the annex name different governing languages ({locales}). A document cannot have two authoritative texts.'
                 custom_fields_missing: 'The chosen trames ask for these complements and they are empty: {fields}'

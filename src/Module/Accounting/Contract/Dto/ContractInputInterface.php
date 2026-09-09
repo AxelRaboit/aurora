@@ -6,6 +6,9 @@ namespace Aurora\Module\Accounting\Contract\Dto;
 
 interface ContractInputInterface
 {
+    /** The contract this one amends, or null for an original. */
+    public function getAmendsId(): ?int;
+
     public function getCustomerId(): ?int;
 
     public function getBodyTemplateId(): ?int;

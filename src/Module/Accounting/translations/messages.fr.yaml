@@ -37,6 +37,7 @@ backend:
                     link_revoked: Lien de signature révoqué
                     reminder_sent: Relance envoyée au client
                     refused: Contrat refusé par le client
+                    terminated: Contrat résilié
                     signed_by_customer: 'Contrat signé par le client'
                     countersigned: 'Contrat contresigné et conclu'
                     deleted: Contrat supprimé
@@ -125,6 +126,35 @@ backend:
             link_never_opened: Jamais ouvert
             link_opened_at: 'Ouvert le {date}'
             no_link: Aucun lien actif
+            amends: 'Avenant au contrat'
+            amends_placeholder: 'Aucun, contrat d''origine'
+            amends_hint: 'Un avenant est un document à part, signé lui aussi. Le contrat d''origine garde son texte scellé.'
+            amends_short: 'avenant à {reference}'
+            amends_long: 'Cet avenant modifie le contrat {reference}.'
+            amend: 'Créer un avenant'
+            chain: 'Avenants'
+            chain_leaf: 'Aucun avenant sur ce contrat.'
+            customer_from_amended: 'Repris du contrat {reference} : le client d''un avenant est celui du contrat modifié.'
+            terminate: 'Résilier'
+            terminated: Résiliation enregistrée.
+            terminated_short: 'résilié le {date}'
+            termination:
+                intro: 'La résiliation est un fait, pas un document : elle s''enregistre ici, et le contrat signé reste signé. Les deux dates comptent, parce qu''un préavis est l''écart entre elles.'
+                noticed_at: 'Préavis donné le'
+                noticed_at_hint: 'La date à laquelle la résiliation a été notifiée, par email ou autrement.'
+                effective_at: 'Prend effet le'
+                effective_at_hint: 'La fin réelle de la prestation, préavis inclus.'
+                origin_label: 'À l''initiative de'
+                origin_placeholder: 'Qui met fin au contrat'
+                origin:
+                    customer: 'Le client'
+                    provider: 'Le prestataire'
+                    mutual: 'Les deux parties'
+                reason: 'Motif (facultatif)'
+                reason_placeholder: 'Ce qui a été dit, si ça mérite d''être gardé.'
+                ended: 'Contrat résilié depuis le {date}'
+                ending: 'Résiliation en cours, effet au {date}'
+                noticed: 'Préavis donné le {date}, à l''initiative de : {origin}.'
             refused_at: 'Refusé le'
             refusal_reason: 'Motif du refus'
             refusal_no_reason: 'Aucun motif indiqué'
@@ -181,6 +211,22 @@ backend:
                 role_already_signed: 'Cette partie a déjà signé.'
                 customer_has_not_signed: 'Le client n''a pas encore signé. La contresignature vient après.'
                 already_refused: 'Ce contrat a déjà été refusé par le client.'
+                amends_invalid: 'Ce contrat à amender n''est pas valide.'
+                amends_not_found: 'Le contrat à amender est introuvable.'
+                amends_not_concluded: 'On n''amende qu''un contrat conclu : tant qu''il n''est pas signé des deux côtés, modifiez-le ou renvoyez-le.'
+                amends_is_amendment: 'Un avenant ne s''amende pas : rattachez celui-ci au contrat d''origine.'
+                amends_terminated: 'Ce contrat est résilié : il n''y a plus rien à modifier.'
+                amends_other_customer: 'Le client d''un avenant est celui du contrat modifié.'
+                amendment_tokens_without_parent: 'Cette trame est écrite pour un avenant ({fields}) : indiquez le contrat qu''elle modifie.'
+                terminate_not_concluded: 'Seul un contrat conclu se résilie. Un contrat non signé se révoque, ou se fait refuser.'
+                already_terminated: 'Ce contrat est déjà résilié.'
+                termination_noticed_required: 'La date du préavis est obligatoire.'
+                termination_effective_required: 'La date d''effet est obligatoire.'
+                termination_origin_required: 'Indiquez qui met fin au contrat.'
+                termination_origin_invalid: 'Cette origine de résiliation n''est pas valide.'
+                termination_date_invalid: 'Cette date n''est pas valide.'
+                termination_before_notice: 'La date d''effet ne peut pas précéder le préavis : un préavis court vers l''avant.'
+                termination_reason_too_long: 'Ce motif est trop long.'
                 retention_not_elapsed: 'Ce contrat est conservé jusqu''au {date}. Il ne peut pas être supprimé avant.'
                 governing_locale_conflict: 'Le corps et l''annexe ne désignent pas la même langue faisant foi ({locales}). Un document ne peut pas avoir deux textes de référence.'
                 custom_fields_missing: 'Ces compléments sont demandés par les trames choisies et ne sont pas renseignés : {fields}'

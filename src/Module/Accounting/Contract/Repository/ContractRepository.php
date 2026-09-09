@@ -60,6 +60,43 @@ class ContractRepository extends ResolveTargetEntityRepository
     }
 
     /**
+     * How many sealed amendments a contract already carries.
+     *
+     * Sealed only, because the rank is minted at the freeze: a draft
+     * abandoned before it went anywhere must not have consumed a number that
+     * an accountant would then look for and never find.
+     */
+    public function countSealedAmendmentsOf(ContractInterface $parent): int
+    {
+        return (int) $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->andWhere('c.amends = :parent')
+            ->andWhere('c.frozenAt IS NOT NULL')
+            ->setParameter('parent', $parent)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * The amendments of a contract, oldest first.
+     *
+     * Oldest first because they are read as a history: the last one is what is
+     * in force, and getting there by reading forward is how somebody checks
+     * that nothing is missing in between.
+     *
+     * @return list<ContractInterface>
+     */
+    public function findAmendmentsOf(ContractInterface $parent): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.amends = :parent')
+            ->setParameter('parent', $parent)
+            ->orderBy('c.createdAt', Order::Ascending->value)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Contracts a reminder is due on.
      *
      * Sent or opened and nothing more: signed, concluded, refused, expired and
