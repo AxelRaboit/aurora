@@ -5,6 +5,49 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.91] - 2026-09-09
+
+### Ajouté
+
+#### Un filtre par type sur les trames
+Le groupe de pilules que le reste de l'application utilise pour filtrer, avec
+un *Tous*, le compte à côté de chaque libellé, et le choix gardé dans l'URL
+comme le sélecteur de vue. Deux valeurs et un *tous* : le panneau de cases à
+cocher de la liste des articles gagne sa place sur trois dimensions, pas sur
+une.
+
+Le compte suit la recherche et le repli des archivées, sinon il promettrait des
+lignes que le clic ne donne pas. Et la liste vide distingue désormais les deux
+absences : rien encore, ou rien qui corresponde. La deuxième est celle où il
+faut effacer un filtre plutôt que créer une trame.
+
+#### Abandonner un brouillon depuis la liste
+L'action existait, mais seulement dans l'éditeur : il fallait entrer dans le
+brouillon pour en sortir. Elle est maintenant dans le menu de la ligne et sur
+la carte, sous la permission de suppression, comme le bouton de l'éditeur.
+
+La confirmation dit ce qui revient et ce qui ne revient pas. La version en
+vigueur ne bouge pas et aucun contrat n'est touché ; le numéro que le brouillon
+avait pris reste consommé, parce qu'un numéro qui a existé ne doit jamais
+désigner un autre texte. Sans cette phrase, quelqu'un qui lit « comme si je
+n'avais rien ouvert » et voit la version 4 croirait à un défaut.
+
+### Modifié
+
+#### La version et les langues passent en badge
+La version en vigueur porte la couleur d'un contenu publié, le brouillon celle
+d'un contenu en cours, et le badge du brouillon reste le chemin vers l'éditeur.
+Une absence reste du texte : « jamais publiée » est une phrase, pas un état à
+repérer.
+
+Les langues aussi, un badge chacune plutôt qu'une liste à virgules : la
+question posée sur cette colonne est de savoir si une langue donnée est
+rédigée, et un badge y répond sans lire la ligne.
+
+### Dans aurora-client
+
+Rien à répercuter, aucune migration.
+
 ## [0.9.90] - 2026-09-09
 
 ### Corrigé
