@@ -807,6 +807,9 @@ backend:
     crm_sync: Signal the contact
     public_url: Public URL
     fields:
+      row_actions:
+        edit_description: Label, type, required or not, display conditions.
+        delete_description: Removes the field. Answers already received keep it.
       title: Fields
       empty: No field yet.
       create: Add a field
@@ -857,6 +860,8 @@ backend:
       and: All conditions
       or: Any condition
     errors:
+      step_below_one: "Steps are numbered from 1."
+      step_out_of_range: "This form has {count} step(s)."
       translations_required: At least one language must be filled in.
       field_translations_required: At least one language must be filled in.
       slug_taken: 'The slug "{slug}" is already used.'

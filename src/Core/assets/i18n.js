@@ -1,5 +1,6 @@
 import { createI18n } from "vue-i18n";
 import { deepMerge } from "@/shared/utils/data/deepMerge.js";
+import { datetimeFormats } from "@/datetimeFormats.js";
 
 // Generated from translations/messages.{locale}.yaml via `php bin/console app:translations:dump-js`.
 // Single source of truth for all Vue + Twig translations.
@@ -41,5 +42,6 @@ export function createAppI18n(locale = "fr") {
         // rather than in two.
         fallbackLocale: "fr",
         messages: { fr, en, es },
+        datetimeFormats,
     });
 }
