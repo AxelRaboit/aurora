@@ -507,6 +507,7 @@ accounting:
                 code_invalid: 'This code is not valid. Ask for a new one.'
                 too_many_codes: 'Too many codes requested for this contract. Try again in an hour.'
                 too_many_requests: 'Too many attempts. Wait a few minutes.'
+                code_not_sent: "The code could not be sent. Try again in a moment, or tell your contact."
         unavailable:
             title: This link is no longer valid
             message: The address you opened does not exist, has expired, or has been revoked. If you were expecting a contract, ask your contact for a new link.

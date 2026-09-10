@@ -5,6 +5,28 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.105] - 2026-09-10
+
+### Corrigé
+
+#### La page de signature n'annonce plus un code qui n'est pas parti
+Sur la page qu'ouvre le client, la demande de code basculait l'écran dans
+l'état « code envoyé » quelle que soit la réponse du serveur. Quand l'envoi
+échouait, le client lisait « Code envoyé à . », sans adresse, et attendait
+ensuite un code que personne n'avait expédié. Aucune erreur ne s'affichait.
+
+L'adresse masquée rendue par le serveur est ce qui prouve que l'envoi a eu
+lieu : sans elle, l'écran signale l'échec et invite à réessayer ou à prévenir
+son interlocuteur, plutôt que d'annoncer un succès.
+
+C'est la seule page du produit qu'un client voit, et une panne d'envoi y
+coûtait une signature sans que personne le sache.
+
+Trouvé en écrivant la documentation, en photographiant le parcours de
+signature de bout en bout.
+
+---
+
 ## [0.9.104] - 2026-09-10
 
 ### Corrigé
