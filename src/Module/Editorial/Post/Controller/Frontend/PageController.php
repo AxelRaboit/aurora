@@ -84,14 +84,34 @@ class PageController extends AbstractController
         ), $locale);
     }
 
+    /**
+     * The site's search, and the search of one type of content.
+     *
+     * `?type=documentation` scopes it to that type instead of the one the
+     * home page lists. A documentation is read by looking something up, and
+     * a search that answered with articles would answer beside the question.
+     *
+     * Named but unknown is a 404 rather than a silent fall-back to the
+     * default type: a caller that asks for a type which does not exist has
+     * made a mistake, and returning articles would hide it.
+     */
     #[Route('/{locale}/search', name: 'editorial_home_search', requirements: ['locale' => '[a-z]{2}'], methods: [HttpMethodEnum::Get->value], priority: 10)]
     public function search(string $locale, Request $request): JsonResponse
     {
         $this->assertActiveLocale($locale);
 
+        $typeSlug = mb_trim($request->query->getString('type', ''));
+        $postType = '' === $typeSlug
+            ? $this->defaultPostType()
+            : $this->postTypeRepository->findOneBySlug($typeSlug);
+
+        if ('' !== $typeSlug && !$postType instanceof PostTypeInterface) {
+            throw $this->createNotFoundException();
+        }
+
         $query = mb_trim($request->query->getString('q', ''));
         $result = $this->publishedPage(
-            $this->defaultPostType(),
+            $postType,
             $this->page($request),
             $locale,
             '' !== $query ? $query : null,

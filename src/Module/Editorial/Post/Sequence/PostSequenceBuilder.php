@@ -40,7 +40,7 @@ final readonly class PostSequenceBuilder
     ) {}
 
     /**
-     * @return array{summary: list<array<string, mixed>>, previous: ?array<string, string>, next: ?array<string, string>}|null
+     * @return array{summary: list<array<string, mixed>>, searchUrl: string, previous: ?array<string, string>, next: ?array<string, string>}|null
      */
     public function build(PostInterface $post, string $locale): ?array
     {
@@ -86,6 +86,16 @@ final readonly class PostSequenceBuilder
                 $entries[] = $this->rubricView($section, $byTerm, $post, $locale, $flat);
             }
 
+            // Une section dont aucune rubrique ne porte de page n'a rien à
+            // dire : elle s'affichait quand même, en titre suivi de blanc.
+            // Cela arrive dès qu'un terme existe sans publication visible,
+            // une rubrique dépubliée ou pas encore écrite.
+            $hasPages = array_any($entries, static fn (array $entry): bool => [] !== $entry['pages']);
+
+            if (!$hasPages) {
+                continue;
+            }
+
             $summary[] = [
                 'label' => $section->getTranslation($locale)?->getName() ?? '',
                 'rubrics' => $entries,
@@ -94,6 +104,13 @@ final readonly class PostSequenceBuilder
 
         return [
             'summary' => $summary,
+            // The search of this type, not of the site: a reader looking
+            // something up in a documentation is not looking for a blog
+            // post that happens to share a word.
+            'searchUrl' => $this->urlGenerator->generate('editorial_home_search', [
+                'locale' => $locale,
+                'type' => $postType->getSlug(),
+            ]),
             ...$this->neighbours($flat, $post),
         ];
     }
