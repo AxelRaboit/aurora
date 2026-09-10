@@ -5,6 +5,30 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.107] - 2026-09-10
+
+### Corrigé
+
+#### Le bouton « Résilier » n'ouvrait aucune fenêtre
+Sur un contrat conclu, le bouton était là, et il ne faisait rien. Tout le
+reste existait pourtant : l'état qui commande la fenêtre, le modèle du
+formulaire avec ses quatre champs, la fonction d'envoi, les options
+d'initiative, la route du serveur, la validation, et les traductions
+jusqu'aux textes d'aide sous chaque champ. Seul le balisage de la fenêtre
+manquait, si bien que le clic posait un drapeau que rien ne lisait.
+
+Deux composants importés et utilisés nulle part, `AppSelect` et
+`AppTextarea`, disaient d'ailleurs que ce balisage avait existé.
+
+La fenêtre est écrite, calquée sur celle de contresignature : les deux dates,
+l'initiative, le motif facultatif, et un bouton qui reste éteint tant que les
+trois champs obligatoires ne sont pas remplis.
+
+Trouvé en photographiant le parcours pour la documentation : la capture
+montrait une page inchangée après le clic.
+
+---
+
 ## [0.9.106] - 2026-09-10
 
 ### Corrigé
