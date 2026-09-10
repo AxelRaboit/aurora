@@ -85,7 +85,12 @@ final readonly class PostSequenceBuilder
             if ([] === $entries) {
                 $entries[] = $this->rubricView($section, $byTerm, $post, $locale, $flat);
             }
-            $hasPages = array_any($entries, fn ($entry): bool => [] !== $entry['pages']);
+
+            // Une section dont aucune rubrique ne porte de page n'a rien à
+            // dire : elle s'affichait quand même, en titre suivi de blanc.
+            // Cela arrive dès qu'un terme existe sans publication visible,
+            // une rubrique dépubliée ou pas encore écrite.
+            $hasPages = array_any($entries, static fn (array $entry): bool => [] !== $entry['pages']);
 
             if (!$hasPages) {
                 continue;
