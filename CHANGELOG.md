@@ -5,6 +5,42 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.110] - 2026-09-10
+
+### Corrigé
+
+#### Le graphe des liens entre notes n'avait aucun bouton pour l'ouvrir
+Le composant était monté, branché sur son point d'API et traduit jusqu'au
+libellé « Ouvrir le graphe » - et `graphOpen` n'était mis à vrai nulle part.
+L'icône `Network` était même déjà importée dans l'écran, sans être utilisée.
+La fonction existait entière, sans porte d'entrée, comme l'historique des
+versions avant elle.
+
+Le bouton est dans la barre de la note, entre « Partager » et le panneau des
+liens entrants.
+
+#### L'écran de modération nommait les publications dans une langue au hasard
+`getTranslations()->first()` rend la traduction que Doctrine a chargée en
+premier. Le back-office français listait donc des commentaires « Sur
+Escribir su primer artículo ». Le titre suit maintenant la langue de qui
+modère, avec repli sur une autre langue plutôt qu'une case vide pour une
+publication qui n'existe pas dans la sienne.
+
+### Ajouté
+
+#### Des commentaires et un carnet de notes dans la démo
+`make demo` ne créait ni l'un ni l'autre. L'écran de modération, la page
+publique d'un article, l'écran des notes et le graphe s'ouvraient donc tous
+sur du vide - et les captures de la documentation montraient ce vide, sur
+une douzaine de pages.
+
+La démo porte maintenant quatre commentaires dans les trois états, dont une
+réponse et des réactions, et sept notes reliées entre elles par des
+`[[liens]]`, avec des étiquettes, une note fille, une mention non liée et
+une note orpheline. De quoi photographier ce que ces écrans font.
+
+---
+
 ## [0.9.109] - 2026-09-10
 
 ### Ajouté
