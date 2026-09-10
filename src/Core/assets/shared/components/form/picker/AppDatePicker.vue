@@ -86,6 +86,16 @@ const internalValue = computed(() => {
 </template>
 
 <style>
+/* Le champ du calendrier, peint comme AppInput.
+ *
+ * Il n'est pas rendu par nous - la bibliotheque pose son propre `input` - donc
+ * il ne peut pas porter les classes utilitaires des autres champs, et ces
+ * regles sont la traduction litterale de celles d'AppInput. Le liseré de
+ * focus etait un indigo ecrit en dur : sur un site dont l'accent n'est pas
+ * l'indigo, un seul champ du formulaire s'allumait de la mauvaise couleur.
+ *
+ * Toute retouche d'AppInput doit passer ici, faute de quoi les deux champs se
+ * remettent a diverger. */
 .dp-custom-input {
     width: 100%;
     border-radius: 0.375rem;
@@ -97,8 +107,11 @@ const internalValue = computed(() => {
     transition: border-color 0.15s, box-shadow 0.15s;
     outline: none;
 }
+.dp-custom-input::placeholder {
+    color: var(--color-muted);
+}
 .dp-custom-input:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 1px #6366f1;
+    border-color: var(--color-accent-500);
+    box-shadow: 0 0 0 1px var(--color-accent-500);
 }
 </style>
