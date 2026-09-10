@@ -17,6 +17,19 @@ const globalConfig = {
     stubs: { VueDatePicker: true },
 };
 
+// Un bouchon qui déclare les props qu'on veut lire : `stubs: true` les laisse
+// tomber dans les attributs, et un objet y arrive illisible.
+const withProbe = {
+    plugins: [i18n],
+    stubs: {
+        VueDatePicker: {
+            name: "VueDatePicker",
+            props: ["textInput", "modelValue", "placeholder"],
+            template: "<div />",
+        },
+    },
+};
+
 describe("AppDatePicker", () => {
     it("renders label text", () => {
         const wrapper = mount(AppDatePicker, {
@@ -79,5 +92,39 @@ describe("AppDatePicker", () => {
             global: globalConfig,
         });
         expect(wrapper.find("vue-date-picker-stub").exists()).toBe(true);
+    });
+
+    it("accepts a typed date, in the formats a person writes", async () => {
+        // Le comportement, pas la prop : le champ ressemble à un champ de
+        // texte, donc il se tape. Sans la saisie clavier le composant
+        // n'écoutait que les clics, et une date tapée disparaissait à la
+        // fermeture du calendrier sans un mot.
+        const wrapper = mount(AppDatePicker, {
+            props: { modelValue: "" },
+            global: { plugins: [i18n] },
+        });
+
+        const input = wrapper.find("input");
+        await input.setValue("15/11/2026");
+        await input.trigger("keydown.enter");
+
+        expect(wrapper.emitted("update:modelValue")?.at(-1)).toEqual([
+            "2026-11-15",
+        ]);
+    });
+
+    it("accepts the ISO form too", async () => {
+        const wrapper = mount(AppDatePicker, {
+            props: { modelValue: "" },
+            global: { plugins: [i18n] },
+        });
+
+        const input = wrapper.find("input");
+        await input.setValue("2026-11-15");
+        await input.trigger("keydown.enter");
+
+        expect(wrapper.emitted("update:modelValue")?.at(-1)).toEqual([
+            "2026-11-15",
+        ]);
     });
 });
