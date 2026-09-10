@@ -343,6 +343,19 @@ backend:
     trash_emptied: '{count} publications supprimées définitivement.'
     irreversible: Cette action est irréversible.
     back_to_list: Retour à la liste
+    revisions:
+      title: Historique des versions
+      open: Historique
+      empty: Aucune version enregistrée pour le moment.
+      this_version: Cette version
+      current_version: Version actuelle
+      body: Contenu
+      no_author: Auteur inconnu
+      no_translation: Cette version ne contenait pas cette langue.
+      restore: Restaurer cette version
+      restore_now: Confirmer la restauration
+      restore_confirm: "Le contenu actuel sera remplacé. Il devient lui-même une version, donc le retour reste possible."
+      restored: Version restaurée.
     review:
       waiting: "En attente de relecture"
       note_label: "Retour de relecture"

@@ -343,6 +343,19 @@ backend:
     trash_emptied: '{count} posts deleted for good.'
     irreversible: This cannot be undone.
     back_to_list: Back to the list
+    revisions:
+      title: Version history
+      open: History
+      empty: No version saved yet.
+      this_version: This version
+      current_version: Current version
+      body: Content
+      no_author: Unknown author
+      no_translation: This version did not contain this language.
+      restore: Restore this version
+      restore_now: Confirm restore
+      restore_confirm: "The current content will be replaced. It becomes a version of its own, so the way back stays open."
+      restored: Version restored.
     review:
       waiting: "Waiting for review"
       note_label: "Review feedback"
