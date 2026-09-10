@@ -322,8 +322,10 @@ function formatDate(value) {
             <AppInput
                 v-model.number="fieldForm.step"
                 type="number"
+                min="1"
                 :label="t('backend.forms.fields.step')"
                 :placeholder="t('backend.forms.fields.step_placeholder')"
+                :error="fieldErrors.step"
             />
 
             <div v-for="locale in locales" :key="locale" class="space-y-2 border-t border-line/40 pt-3">

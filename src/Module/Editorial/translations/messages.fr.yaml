@@ -807,6 +807,9 @@ backend:
     crm_sync: Signaler le contact
     public_url: URL publique
     fields:
+      row_actions:
+        edit_description: Libellé, type, obligatoire ou non, conditions d'affichage.
+        delete_description: Supprime le champ. Les réponses déjà reçues le gardent.
       title: Champs
       empty: Aucun champ.
       create: Ajouter un champ
@@ -857,6 +860,8 @@ backend:
       and: Toutes les conditions
       or: Au moins une condition
     errors:
+      step_below_one: "Les étapes se comptent à partir de 1."
+      step_out_of_range: "Ce formulaire compte {count} étape(s)."
       translations_required: Au moins une langue doit être renseignée.
       field_translations_required: Au moins une langue doit être renseignée.
       slug_taken: 'Le slug « {slug} » est déjà utilisé.'

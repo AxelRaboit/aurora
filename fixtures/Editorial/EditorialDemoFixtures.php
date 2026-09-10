@@ -10,6 +10,14 @@ use Aurora\Fixtures\Core\CoreDemoFixtures;
 use Aurora\Fixtures\Ged\GedDemoFixtures;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Service\SettingsService;
+use Aurora\Module\Editorial\Form\Dto\FormFieldInput;
+use Aurora\Module\Editorial\Form\Dto\FormInput;
+use Aurora\Module\Editorial\Form\Entity\FormFieldInterface;
+use Aurora\Module\Editorial\Form\Entity\FormInterface;
+use Aurora\Module\Editorial\Form\Entity\FormTranslationInterface;
+use Aurora\Module\Editorial\Form\Enum\FormFieldTypeEnum;
+use Aurora\Module\Editorial\Form\Manager\FormManagerInterface;
+use Aurora\Module\Editorial\Form\Repository\FormTranslationRepository;
 use Aurora\Module\Editorial\Menu\Entity\MenuInterface;
 use Aurora\Module\Editorial\Menu\Entity\MenuItem;
 use Aurora\Module\Editorial\Menu\Enum\MenuItemTargetTypeEnum;
@@ -68,6 +76,8 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         private readonly GalleryNormalizer $galleryNormalizer,
         private readonly BannerNormalizer $bannerNormalizer,
         private readonly SettingsService $settingsManager,
+        private readonly FormManagerInterface $forms,
+        private readonly FormTranslationRepository $formTranslationRepository,
     ) {}
 
     public static function getGroups(): array
@@ -107,6 +117,8 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         $this->addGalleries($posts);
 
         $this->fillPrimaryMenu($manager, $posts);
+
+        $this->createQuoteForm();
 
         $manager->flush();
 
@@ -861,6 +873,213 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
 
             $menu->addItem($item);
             $em->persist($item);
+        }
+    }
+
+    /**
+     * A form with something in it.
+     *
+     * The builder, the field types, the conditional display and the list of
+     * requests received all show the same screen on an empty demo: "no form".
+     * This one is a quote request in two steps, and it carries one field of
+     * every type the product offers, because the screen that lists the types
+     * is only worth looking at when each of them is there to be seen.
+     *
+     * Idempotent on its French slug: `make demo` twice must not leave two.
+     */
+    private function createQuoteForm(): void
+    {
+        if ($this->formTranslationRepository->findOneByLocaleAndSlug('fr', 'demande-de-devis') instanceof FormTranslationInterface) {
+            return;
+        }
+
+        $form = $this->forms->create(new FormInput(
+            translations: [
+                'fr' => ['title' => 'Demande de devis', 'slug' => 'demande-de-devis', 'description' => 'Décrivez votre projet, nous revenons vers vous sous 48 heures.'],
+                'en' => ['title' => 'Quote request', 'slug' => 'quote-request', 'description' => 'Tell us about your project, we answer within 48 hours.'],
+                'es' => ['title' => 'Solicitud de presupuesto', 'slug' => 'solicitud-de-presupuesto', 'description' => 'Cuéntenos su proyecto, respondemos en 48 horas.'],
+            ],
+            notifyEmail: 'contact@example.com',
+            steps: [
+                ['title' => 'Vos coordonnées'],
+                ['title' => 'Votre projet'],
+            ],
+        ));
+
+        $fields = [];
+        foreach ($this->quoteFormFields() as $key => $definition) {
+            // The conditional field points at another field by id, so it is
+            // written after the one it depends on - hence the loop rather
+            // than one createField call per line.
+            $conditions = [];
+            if (isset($definition['showsWhen'])) {
+                [$dependency, $value] = $definition['showsWhen'];
+                $conditions = [['fieldId' => (int) $fields[$dependency]->getId(), 'value' => $value]];
+            }
+
+            $fields[$key] = $this->forms->createField($form, new FormFieldInput(
+                translations: $definition['translations'],
+                type: $definition['type'],
+                required: $definition['required'] ?? false,
+                conditions: $conditions,
+                step: $definition['step'],
+            ));
+        }
+
+        $this->submitQuoteForm($form, $fields);
+    }
+
+    /**
+     * @return array<string, array{type: FormFieldTypeEnum, step: int, required?: bool, showsWhen?: array{string, string}, translations: array<string, array{label: string, placeholder: ?string, options: list<string>}>}>
+     */
+    private function quoteFormFields(): array
+    {
+        return [
+            'name' => [
+                'type' => FormFieldTypeEnum::Text,
+                'step' => 1,
+                'required' => true,
+                'translations' => [
+                    'fr' => ['label' => 'Nom complet', 'placeholder' => 'Camille Durand', 'options' => []],
+                    'en' => ['label' => 'Full name', 'placeholder' => 'Camille Durand', 'options' => []],
+                    'es' => ['label' => 'Nombre completo', 'placeholder' => 'Camille Durand', 'options' => []],
+                ],
+            ],
+            'email' => [
+                'type' => FormFieldTypeEnum::Email,
+                'step' => 1,
+                'required' => true,
+                'translations' => [
+                    'fr' => ['label' => 'Adresse e-mail', 'placeholder' => 'camille@exemple.fr', 'options' => []],
+                    'en' => ['label' => 'Email address', 'placeholder' => 'camille@example.com', 'options' => []],
+                    'es' => ['label' => 'Correo electrónico', 'placeholder' => 'camille@ejemplo.es', 'options' => []],
+                ],
+            ],
+            'phone' => [
+                'type' => FormFieldTypeEnum::Tel,
+                'step' => 1,
+                'translations' => [
+                    'fr' => ['label' => 'Téléphone', 'placeholder' => '06 12 34 56 78', 'options' => []],
+                    'en' => ['label' => 'Phone', 'placeholder' => '+33 6 12 34 56 78', 'options' => []],
+                    'es' => ['label' => 'Teléfono', 'placeholder' => '+34 612 34 56 78', 'options' => []],
+                ],
+            ],
+            'source' => [
+                'type' => FormFieldTypeEnum::Radio,
+                'step' => 1,
+                'translations' => [
+                    'fr' => ['label' => 'Comment nous avez-vous connus ?', 'placeholder' => null, 'options' => ['Recherche web', 'Recommandation', 'Réseaux sociaux']],
+                    'en' => ['label' => 'How did you hear about us?', 'placeholder' => null, 'options' => ['Web search', 'Word of mouth', 'Social media']],
+                    'es' => ['label' => '¿Cómo nos ha conocido?', 'placeholder' => null, 'options' => ['Búsqueda web', 'Recomendación', 'Redes sociales']],
+                ],
+            ],
+            'project' => [
+                'type' => FormFieldTypeEnum::Select,
+                'step' => 2,
+                'required' => true,
+                'translations' => [
+                    'fr' => ['label' => 'Type de projet', 'placeholder' => null, 'options' => ['Site vitrine', 'Boutique en ligne', 'Application métier']],
+                    'en' => ['label' => 'Kind of project', 'placeholder' => null, 'options' => ['Showcase site', 'Online shop', 'Business application']],
+                    'es' => ['label' => 'Tipo de proyecto', 'placeholder' => null, 'options' => ['Sitio de presentación', 'Tienda en línea', 'Aplicación de gestión']],
+                ],
+            ],
+            'references' => [
+                'type' => FormFieldTypeEnum::Number,
+                'step' => 2,
+                // The one field nobody sees unless they need it: a shop is
+                // the only answer that makes a catalogue size worth asking.
+                'showsWhen' => ['project', 'Boutique en ligne'],
+                'translations' => [
+                    'fr' => ['label' => 'Nombre de références au catalogue', 'placeholder' => '250', 'options' => []],
+                    'en' => ['label' => 'Number of catalogue items', 'placeholder' => '250', 'options' => []],
+                    'es' => ['label' => 'Número de referencias del catálogo', 'placeholder' => '250', 'options' => []],
+                ],
+            ],
+            'deadline' => [
+                'type' => FormFieldTypeEnum::Date,
+                'step' => 2,
+                'translations' => [
+                    'fr' => ['label' => 'Mise en ligne souhaitée', 'placeholder' => null, 'options' => []],
+                    'en' => ['label' => 'Preferred launch date', 'placeholder' => null, 'options' => []],
+                    'es' => ['label' => 'Fecha de lanzamiento deseada', 'placeholder' => null, 'options' => []],
+                ],
+            ],
+            'message' => [
+                'type' => FormFieldTypeEnum::Textarea,
+                'step' => 2,
+                'required' => true,
+                'translations' => [
+                    'fr' => ['label' => 'Votre projet en quelques lignes', 'placeholder' => 'Ce que vous vendez, à qui, et ce qui existe déjà.', 'options' => []],
+                    'en' => ['label' => 'Your project in a few lines', 'placeholder' => 'What you sell, to whom, and what already exists.', 'options' => []],
+                    'es' => ['label' => 'Su proyecto en unas líneas', 'placeholder' => 'Qué vende, a quién y qué existe ya.', 'options' => []],
+                ],
+            ],
+            // "Cases à cocher" is a list of choices, not a single flag: the
+            // value it stores is the set of options ticked. A checkbox field
+            // with no option renders as a label above nothing.
+            'consent' => [
+                'type' => FormFieldTypeEnum::Checkbox,
+                'step' => 2,
+                'required' => true,
+                'translations' => [
+                    'fr' => ['label' => 'Accord', 'placeholder' => null, 'options' => ["J'accepte d'être recontacté au sujet de cette demande"]],
+                    'en' => ['label' => 'Consent', 'placeholder' => null, 'options' => ['I agree to be contacted about this request']],
+                    'es' => ['label' => 'Consentimiento', 'placeholder' => null, 'options' => ['Acepto que me contacten sobre esta solicitud']],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Three requests already received.
+     *
+     * Going through the manager rather than writing rows: a submission gets
+     * its reference from the sequence, and a list of requests whose reference
+     * column is empty shows a screen the product never produces.
+     *
+     * @param array<string, FormFieldInterface> $fields
+     */
+    private function submitQuoteForm(FormInterface $form, array $fields): void
+    {
+        $answers = [
+            [
+                'name' => 'Camille Durand',
+                'email' => 'camille.durand@example.com',
+                'phone' => '06 12 34 56 78',
+                'source' => 'Recommandation',
+                'project' => 'Boutique en ligne',
+                'references' => '250',
+                'deadline' => '2026-03-02',
+                'message' => 'Nous vendons du matériel de randonnée dans deux boutiques et nous voulons ouvrir en ligne avant la saison.',
+                'consent' => ["J'accepte d'être recontacté au sujet de cette demande"],
+            ],
+            [
+                'name' => 'Yann Lefebvre',
+                'email' => 'y.lefebvre@example.org',
+                'phone' => '07 88 45 12 03',
+                'source' => 'Recherche web',
+                'project' => 'Site vitrine',
+                'deadline' => '2026-01-15',
+                'message' => 'Un cabinet de trois architectes, un site qui montre les chantiers livrés et rien de plus.',
+                'consent' => ["J'accepte d'être recontacté au sujet de cette demande"],
+            ],
+            [
+                'name' => 'Sofia Marchetti',
+                'email' => 'sofia.marchetti@example.net',
+                'source' => 'Réseaux sociaux',
+                'project' => 'Application métier',
+                'message' => "Le suivi des interventions se fait aujourd'hui sur un tableur partagé, et il ne tient plus.",
+                'consent' => ["J'accepte d'être recontacté au sujet de cette demande"],
+            ],
+        ];
+
+        foreach ($answers as $answer) {
+            $data = [];
+            foreach ($answer as $key => $value) {
+                $data[(string) $fields[$key]->getId()] = $value;
+            }
+
+            $this->forms->submit($form, $data, 'fr', '203.0.113.42');
         }
     }
 }
