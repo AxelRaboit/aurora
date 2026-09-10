@@ -117,7 +117,7 @@ Le constructeur acceptait n'importe quel nombre dans la case « Étape ». Le
 rendu public, lui, compte les étapes à partir de 1 et n'affiche que celles du
 formulaire : un champ sur l'étape 0, ou sur l'étape 3 d'un formulaire qui en
 a deux, n'était montré à personne. Il restait listé dans l'administration,
-modifiable, et absent du site — le seul moyen de s'en apercevoir était
+modifiable, et absent du site. Le seul moyen de s'en apercevoir était
 d'ouvrir la page publique et de compter.
 
 L'enregistrement le refuse maintenant, à la création comme à la modification,

@@ -122,8 +122,8 @@ class NotesDemoFixtures extends Fixture implements DependentFixtureInterface, Fi
                     La porte d'entrée du carnet : chaque client a sa note, et
                     chaque note renvoie ici.
 
-                    - [[Studio Lumen]] — photo, en cours
-                    - [[Cabinet Verrier]] — site vitrine, livré
+                    - [[Studio Lumen]] : photo, en cours
+                    - [[Cabinet Verrier]] : site vitrine, livré
 
                     Tout ce qui est contractuel part de [[Contrat type]].
                     MD,
@@ -183,9 +183,9 @@ class NotesDemoFixtures extends Fixture implements DependentFixtureInterface, Fi
                     Repérage la veille, lumière de fin de journée, une heure
                     de battement pour la météo.
 
-                    Le Studio Lumen redemande ce format à chaque fois — noté
-                    ici sans lien exprès, pour voir ce que donne une mention
-                    non liée.
+                    Le Studio Lumen redemande ce format à chaque fois, noté ici
+                    sans lien exprès pour voir ce que donne une mention non
+                    liée.
 
                     Matériel : voir [[Matériel]].
                     MD,
