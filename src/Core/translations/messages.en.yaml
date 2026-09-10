@@ -104,6 +104,8 @@ shared:
     load_more: Load more
     send: Send
     next: Next
+  reveal:
+    more: '1 more | {count} more'
   pagination:
     previous: Previous
     next: Next

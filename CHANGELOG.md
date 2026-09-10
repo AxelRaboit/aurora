@@ -5,6 +5,40 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.112] - 2026-09-10
+
+### Ajouté
+
+#### Prévisualiser une publication depuis la liste
+Le bouton n'existait que dans l'éditeur : voir une page telle que le visiteur
+la voit demandait de l'ouvrir en modification d'abord. Il est maintenant dans
+le menu d'une ligne, après « Modifier » qui reste le geste courant de cet
+écran.
+
+Il n'enregistre rien, contrairement à celui de l'éditeur : depuis une liste
+il n'y a rien à l'écran à sauver, et c'est le dernier état enregistré que le
+lecteur demande à regarder.
+
+Il ne réclame aucun droit d'écriture, ce qui comble un manque : le privilège
+`editorial.posts.view` existe séparément de `.edit`, et un compte qui pouvait
+voir la liste sans pouvoir modifier n'avait **aucune action** dans ce menu.
+
+#### Une liste qui se replie au-delà de cinq entrées
+`AppRevealList` montre les premières entrées d'une liste et cache le reste
+derrière « 12 de plus ». Posée sur les trois colonnes de filtres des
+publications, où les termes suivent le nombre de rubriques du site : à
+dix-sept, la colonne poussait la liste filtrée sous la ligne de flottaison.
+
+Elle s'ouvre d'elle-même quand une entrée cachée est active, au chargement
+comme plus tard. Sans quoi un filtre coché mais invisible rétrécit l'écran
+sans que rien ne l'explique, ce qui est pire que la colonne trop longue.
+
+Le composant est dans le socle et prend sa liste en propriété plutôt que de
+compter ce qu'un slot a rendu : d'autres écrans ont des colonnes de filtres
+qui grandiront pareil.
+
+---
+
 ## [0.9.111] - 2026-09-10
 
 ### Ajouté

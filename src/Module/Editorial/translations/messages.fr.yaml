@@ -329,6 +329,7 @@ backend:
     updated: Publication enregistrée.
     restore: Restaurer
     row_actions:
+      preview_description: Ouvre la page telle que le visiteur la voit, dans un onglet.
       edit_description: "Ouvrir l'éditeur : contenu, en-tête, disposition."
       duplicate_description: "Crée un brouillon identique, à retoucher."
       restore_description: Sort la publication de la corbeille, telle qu'elle était.
