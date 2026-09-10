@@ -11,6 +11,7 @@ import AppRowActions from "@/shared/components/action/AppRowActions.vue";
 import AppSearchInput from "@/shared/components/form/input/AppSearchInput.vue";
 import AppCheckbox from "@/shared/components/form/toggle/AppCheckbox.vue";
 import AppListToolbar from "@/shared/components/list/AppListToolbar.vue";
+import AppRevealList from "@/shared/components/list/AppRevealList.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppBadge from "@/shared/components/feedback/AppBadge.vue";
@@ -40,6 +41,7 @@ const props = defineProps({
     editPathTemplate: { type: String, required: true },
     deletePathTemplate: { type: String, required: true },
     duplicatePathTemplate: { type: String, default: "" },
+    previewPathTemplate: { type: String, default: "" },
     bulkPath: { type: String, default: "" },
     restorePathTemplate: { type: String, required: true },
     forceDeletePathTemplate: { type: String, required: true },
@@ -68,7 +70,51 @@ const actionsFor = usePostRowActions({
         pendingForceDelete.value = post;
     },
     duplicate: duplicatePost,
+    preview: previewPost,
+    canPreview: Boolean(props.previewPathTemplate),
 });
+
+/**
+ * Opens the page as a visitor will see it, in another tab.
+ *
+ * Nothing is saved first, unlike the editor's own button: from a list there
+ * is nothing on screen to save, and the last saved state is exactly what the
+ * reader is asking to look at.
+ *
+ * The tab is opened *before* the request, because a `window.open` that
+ * follows an await is a pop-up the browser did not see the click for, and
+ * gets blocked. `opener` is cleared rather than passing `noopener`, which by
+ * specification would return null and lose the handle.
+ */
+async function previewPost(post) {
+    const tab = window.open("", "_blank");
+
+    if (null !== tab) {
+        tab.opener = null;
+    }
+
+    try {
+        const data = await request(props.previewPathTemplate.replace("__id__", String(post.id)));
+
+        if (!data?.url) {
+            tab?.close();
+
+            return;
+        }
+
+        if (null === tab) {
+            window.location.href = data.url;
+
+            return;
+        }
+
+        tab.location.href = data.url;
+    } catch (error) {
+        tab?.close();
+
+        throw error;
+    }
+}
 
 /**
  * Copies a post and goes straight to the copy.
@@ -292,34 +338,40 @@ const allTerms = computed(() =>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div class="space-y-1">
                     <p class="text-xs uppercase tracking-wide text-muted">{{ t("backend.posts.filter_type") }}</p>
-                    <AppCheckbox
-                        v-for="postType in postTypes"
-                        :key="postType.id"
-                        :model-value="postTypeIds.includes(postType.id)"
-                        :label="postType.label"
-                        v-on:update:model-value="toggleIn(postTypeIds, postType.id)"
-                    />
+                    <AppRevealList :items="postTypes" :is-active="(postType) => postTypeIds.includes(postType.id)">
+                        <template #default="{ item }">
+                            <AppCheckbox
+                                :model-value="postTypeIds.includes(item.id)"
+                                :label="item.label"
+                                v-on:update:model-value="toggleIn(postTypeIds, item.id)"
+                            />
+                        </template>
+                    </AppRevealList>
                 </div>
                 <div class="space-y-1">
                     <p class="text-xs uppercase tracking-wide text-muted">{{ t("backend.posts.filter_status") }}</p>
-                    <AppCheckbox
-                        v-for="status in statusOptions"
-                        :key="status"
-                        :model-value="statuses.includes(status)"
-                        :label="t(`backend.posts.status.${status}`)"
-                        v-on:update:model-value="toggleIn(statuses, status)"
-                    />
+                    <AppRevealList :items="statusOptions" :is-active="(status) => statuses.includes(status)">
+                        <template #default="{ item }">
+                            <AppCheckbox
+                                :model-value="statuses.includes(item)"
+                                :label="t(`backend.posts.status.${item}`)"
+                                v-on:update:model-value="toggleIn(statuses, item)"
+                            />
+                        </template>
+                    </AppRevealList>
                 </div>
                 <div class="space-y-1">
                     <p class="text-xs uppercase tracking-wide text-muted">{{ t("backend.posts.filter_term") }}</p>
                     <AppNoData v-if="!allTerms.length" :message="t('backend.posts.no_terms')" />
-                    <AppCheckbox
-                        v-for="term in allTerms"
-                        :key="term.id"
-                        :model-value="termIds.includes(term.id)"
-                        :label="term.label"
-                        v-on:update:model-value="toggleIn(termIds, term.id)"
-                    />
+                    <AppRevealList :items="allTerms" :is-active="(term) => termIds.includes(term.id)">
+                        <template #default="{ item }">
+                            <AppCheckbox
+                                :model-value="termIds.includes(item.id)"
+                                :label="item.label"
+                                v-on:update:model-value="toggleIn(termIds, item.id)"
+                            />
+                        </template>
+                    </AppRevealList>
                 </div>
             </div>
         </div>
