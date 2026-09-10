@@ -5,6 +5,31 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.104] - 2026-09-10
+
+### Corrigé
+
+#### Une date tapée au clavier n'est plus avalée en silence
+Le champ de date ressemble à un champ de texte, donc il se tape. Le composant
+n'écoutait que les clics dans le calendrier : la saisie s'affichait, puis
+disparaissait à la fermeture, sans message et sans que la valeur précédente
+revienne. Une personne qui tapait sa date au lieu de la choisir enregistrait
+un formulaire sans date, et rien ne le lui disait.
+
+La saisie clavier est maintenant acceptée, dans les formes qu'on écrit
+vraiment : `15/11/2026` d'abord, puis `2026-11-15`, `15112026`, `15-11-2026`
+et `15.11.2026`. Entrée et Tab valident. Le mois seul a les siennes,
+`11/2026` et `2026-11`, et un champ avec heure accepte `15/11/2026 09:30`.
+
+Une saisie que le composant ne sait pas lire laisse la valeur précédente en
+place plutôt que de vider le champ.
+
+Trouvé en écrivant la documentation : le script qui rejouait le parcours de
+préparation d'un contrat tapait la date, et le contrat partait sans date de
+prise d'effet.
+
+---
+
 ## [0.9.103] - 2026-09-10
 
 ### Corrigé
