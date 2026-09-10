@@ -33,6 +33,30 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue"]);
 
+/**
+ * Les formats acceptés au clavier, du plus courant au plus toléré.
+ *
+ * Le champ ressemble à un champ de texte, donc il se tape. Avant, une date
+ * tapée s'affichait puis disparaissait à la fermeture du calendrier, sans un
+ * mot : le composant n'écoutait que les clics. Le premier format est celui
+ * que rend le composant, les suivants sont ce qu'une personne écrit d'elle
+ * même.
+ *
+ * Le mois seul a les siens : `2026-05` et `05/2026`.
+ */
+const TEXT_FORMATS = ["dd/MM/yyyy", "yyyy-MM-dd", "ddMMyyyy", "dd-MM-yyyy", "dd.MM.yyyy"];
+const TIME_FORMATS = ["dd/MM/yyyy HH:mm", "yyyy-MM-dd HH:mm"];
+const MONTH_FORMATS = ["MM/yyyy", "yyyy-MM"];
+
+const textInput = computed(() => ({
+    format: props.monthOnly ? MONTH_FORMATS : (props.enableTime ? TIME_FORMATS : TEXT_FORMATS),
+    // Entrée valide la saisie, et une saisie que le composant ne sait pas
+    // lire laisse la valeur précédente plutôt que de vider le champ.
+    enterSubmit: true,
+    tabSubmit: true,
+    openMenu: "open",
+}));
+
 function onUpdate(val) {
     if (!val) { emit("update:modelValue", ""); return; }
     const pad = (n) => String(n).padStart(2, "0");
@@ -75,6 +99,7 @@ const internalValue = computed(() => {
             :enable-time-picker="enableTime"
             :month-picker="monthOnly"
             :placeholder="placeholder"
+            :text-input="textInput"
             auto-apply
             :teleport="true"
             input-class-name="dp-custom-input"
