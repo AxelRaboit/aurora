@@ -5,6 +5,54 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.109] - 2026-09-10
+
+### Ajouté
+
+#### L'historique des versions d'une publication
+Chaque enregistrement écrivait déjà une version, et les trois routes pour les
+lire et en restaurer une existaient, testées et soumises aux permissions.
+Rien ne les appelait : la fonction était complète et hors d'atteinte, et la
+documentation décrivait un filet de sécurité que personne ne pouvait tirer.
+
+Un bouton **Historique** ouvre le panneau depuis l'éditeur. La liste donne
+date, statut et auteur de chaque version ; choisir une version l'affiche à
+côté de la version actuelle - titre, adresse, résumé et texte du contenu -
+et la restauration demande confirmation avant d'écrire.
+
+Côte à côte plutôt que différence ligne à ligne : ce qu'on cherche d'abord
+est « laquelle est-ce », et cela se répond sans moteur de comparaison. La
+restauration crée elle-même une version, donc le retour reste possible.
+
+### Corrigé
+
+#### Annuler dans une fenêtre de confirmation quittait la page
+Dans toutes les listes du produit : ouvrir le menu d'une ligne, choisir une
+action, puis cliquer **Annuler** renvoyait sur le tableau de bord du module.
+Supprimer faisait la même chose - la suppression avait bien lieu, et on se
+retrouvait ailleurs, sans ses filtres ni sa page.
+
+`useBackButtonClose` poussait une entrée d'historique par surcouche et
+appelait `history.back()` par surcouche à la fermeture. `history.back()` est
+asynchrone : l'entrée n'est pas retirée quand l'appel revient, elle l'est
+quand `popstate` arrive. L'enchaînement le plus courant du produit - un menu
+de ligne qui se ferme pendant que la fenêtre qu'il ouvre apparaît - croisait
+donc une poussée et un retrait en attente, et la pile se dépilait d'un cran
+de trop.
+
+Une seule entrée partagée désormais, pour « une surcouche est ouverte », et
+son retrait attend une micro-tâche : le remplacement d'une surcouche par une
+autre ne touche plus du tout à l'historique. La touche Retour continue de
+fermer la surcouche du dessus, une par une, avant de quitter la page.
+
+#### Deux statuts manquaient à la démo
+`make demo` créait des publications dans trois états sur cinq. La page de
+documentation sur le cycle de vie en annonce cinq, et sa capture en montrait
+trois. La démo porte maintenant un article en attente de revue et un article
+archivé.
+
+---
+
 ## [0.9.108] - 2026-09-10
 
 ### Corrigé
