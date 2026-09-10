@@ -10,6 +10,11 @@ use Aurora\Fixtures\Core\CoreDemoFixtures;
 use Aurora\Fixtures\Ged\GedDemoFixtures;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Service\SettingsService;
+use Aurora\Module\Editorial\Comment\Entity\Comment;
+use Aurora\Module\Editorial\Comment\Entity\CommentInterface;
+use Aurora\Module\Editorial\Comment\Entity\CommentReaction;
+use Aurora\Module\Editorial\Comment\Enum\CommentStatusEnum;
+use Aurora\Module\Editorial\Comment\Enum\ReactionTypeEnum;
 use Aurora\Module\Editorial\Form\Dto\FormFieldInput;
 use Aurora\Module\Editorial\Form\Dto\FormInput;
 use Aurora\Module\Editorial\Form\Entity\FormFieldInterface;
@@ -119,6 +124,9 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         $this->fillPrimaryMenu($manager, $posts);
 
         $this->createQuoteForm();
+
+        $this->createComments($manager, $posts);
+        $manager->flush();
 
         $manager->flush();
 
@@ -1104,5 +1112,132 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
 
             $this->forms->submit($form, $data, 'fr', '203.0.113.42');
         }
+    }
+
+    /**
+     * Des commentaires, dans les trois états, avec un fil et des réactions.
+     *
+     * L'écran de modération et la page publique d'un article s'ouvraient tous
+     * les deux sur « Aucun commentaire » : on y voyait où la fonction se
+     * trouve, et rien de ce qu'elle fait. Les trois statuts sont là parce que
+     * c'est entre eux que l'écran sert à choisir, et le fil parce qu'une
+     * réponse ne se range pas comme un commentaire de premier niveau.
+     *
+     * Idempotent sur la référence : `make demo` deux fois ne doit pas en
+     * laisser six.
+     *
+     * @param array<string, PostInterface> $posts
+     */
+    private function createComments(EntityManagerInterface $em, array $posts): void
+    {
+        $post = $posts['first-steps'] ?? null;
+
+        if (!$post instanceof PostInterface) {
+            return;
+        }
+
+        $repository = $em->getRepository(Comment::class);
+        $now = new DateTimeImmutable();
+
+        $entries = [
+            'approved' => [
+                'status' => CommentStatusEnum::Approved,
+                'name' => 'Camille Durand',
+                'email' => 'camille.durand@example.com',
+                'content' => "Merci pour ce guide, la partie sur les zones m'a débloquée. Une question : peut-on réutiliser une disposition d'une page à l'autre ?",
+                'at' => $now->modify('-6 days'),
+                'reactions' => [ReactionTypeEnum::Like, ReactionTypeEnum::Like, ReactionTypeEnum::Love],
+            ],
+            'reply' => [
+                'status' => CommentStatusEnum::Approved,
+                'name' => 'Yann Lefebvre',
+                'email' => 'y.lefebvre@example.org',
+                'content' => "Oui : dupliquez la publication, videz les textes, et vous gardez la grille. C'est ce que je fais pour les fiches produit.",
+                'at' => $now->modify('-5 days'),
+                'parent' => 'approved',
+                'reactions' => [ReactionTypeEnum::Like],
+            ],
+            'pending' => [
+                'status' => CommentStatusEnum::Pending,
+                'name' => 'Sofia Marchetti',
+                'email' => 'sofia.marchetti@example.net',
+                'content' => 'Est-ce que la mise en ligne programmée fonctionne aussi pour les pages, ou seulement pour les articles ?',
+                'at' => $now->modify('-2 days'),
+                'reactions' => [],
+            ],
+            'spam' => [
+                'status' => CommentStatusEnum::Spam,
+                'name' => 'Best SEO Offer',
+                'email' => 'contact@example-spam.test',
+                'content' => 'Boostez votre trafic maintenant, tarifs imbattables, contactez-nous vite !',
+                'at' => $now->modify('-1 day'),
+                'reactions' => [],
+            ],
+        ];
+
+        $created = [];
+
+        foreach ($entries as $key => $entry) {
+            $reference = sprintf('%s-DEMO-%s', SequencePrefixEnum::Comment->value, mb_strtoupper($key));
+            $comment = $repository->findOneBy(['reference' => $reference]) ?? new Comment();
+
+            $comment
+                ->setReference($reference)
+                ->setPost($post)
+                ->setAuthorName($entry['name'])
+                ->setAuthorEmail($entry['email'])
+                ->setContent($entry['content'])
+                ->setStatus($entry['status']);
+
+            if (isset($entry['parent'])) {
+                $comment->setParent($created[$entry['parent']]);
+            }
+
+            $em->persist($comment);
+            $created[$key] = $comment;
+
+            // Une empreinte par réaction : c'est ce qui tient lieu d'identité
+            // à un visiteur sans compte, et deux réactions du même visiteur
+            // sur le même commentaire n'en font qu'une. La base le garantit
+            // par un index unique, ce qui faisait échouer le deuxième
+            // `make demo` - d'où la recherche avant l'insertion.
+            $reactions = $em->getRepository(CommentReaction::class);
+
+            foreach ($entry['reactions'] as $index => $type) {
+                $fingerprint = sprintf('demo-%s-%d', $key, $index);
+
+                if (null !== $reactions->findOneBy(['comment' => $comment, 'fingerprint' => $fingerprint])) {
+                    continue;
+                }
+
+                $reaction = new CommentReaction();
+                $reaction
+                    ->setComment($comment)
+                    ->setType($type)
+                    ->setFingerprint($fingerprint);
+
+                $em->persist($reaction);
+            }
+        }
+
+        $em->flush();
+
+        // Après le flush : la date de création est posée par le constructeur,
+        // et une démo dont les quatre commentaires portent la même minute ne
+        // montre pas un fil de discussion.
+        foreach ($entries as $key => $entry) {
+            $this->backdate($em, $created[$key], $entry['at']);
+        }
+
+        $em->flush();
+    }
+
+    /** Repositionne la date d'un commentaire, que l'entité ne laisse pas écrire. */
+    private function backdate(EntityManagerInterface $em, CommentInterface $comment, DateTimeImmutable $at): void
+    {
+        $em->getConnection()->executeStatement(
+            'UPDATE core_comments SET created_at = :at WHERE id = :id',
+            ['at' => $at->format('Y-m-d H:i:s'), 'id' => $comment->getId()],
+        );
     }
 }

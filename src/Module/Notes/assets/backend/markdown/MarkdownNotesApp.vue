@@ -200,6 +200,19 @@ onUnmounted(() => {
                             <Share2 class="w-4 h-4" :stroke-width="2" />
                         </AppIconButton>
 
+                        <!-- Le graphe n'avait aucun bouton : le composant était
+                             monté, branché sur sa source et traduit, et
+                             `graphOpen` n'était mis à vrai nulle part. La
+                             fonction existait sans porte d'entrée. -->
+                        <AppIconButton
+                            :title="t('notes.markdown.graph.open')"
+                            size="md"
+                            variant="ghost"
+                            v-on:click="graphOpen = true"
+                        >
+                            <Network class="w-4 h-4" :stroke-width="2" />
+                        </AppIconButton>
+
                         <AppIconButton
                             :title="sidePanelOpen ? t('notes.markdown.links.close') : t('notes.markdown.links.open')"
                             size="md"

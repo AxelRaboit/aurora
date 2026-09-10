@@ -201,3 +201,34 @@ describe("deleting a note the panel asked to delete", () => {
         expect(called, "the delete endpoint was called").toBe(true);
     });
 });
+
+/**
+ * The graph had every part but the way in: the component was mounted, wired
+ * to its endpoint and translated, and `graphOpen` was never set to true. The
+ * page of documentation about it published a black rectangle, because there
+ * was nothing to photograph.
+ */
+describe("the way into the graph", () => {
+    it("opens the graph when its button is pressed", async () => {
+        const wrapper = render();
+        await flushPromises();
+
+        const graph = wrapper.findComponent({ name: "NoteGraph" });
+        expect(graph.props("show")).toBe(false);
+
+        const button = wrapper
+            .findAll("button")
+            .find(
+                (node) =>
+                    node.attributes("title") === "notes.markdown.graph.open",
+            );
+
+        expect(button, "aucun bouton pour ouvrir le graphe").toBeDefined();
+
+        await button.trigger("click");
+
+        expect(wrapper.findComponent({ name: "NoteGraph" }).props("show")).toBe(
+            true,
+        );
+    });
+});
