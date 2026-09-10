@@ -86,6 +86,8 @@ class FormManager implements FormManagerInterface
 
     public function createField(FormInterface $form, FormFieldInputInterface $input): FormFieldInterface
     {
+        $this->assertStepExists($form, $input->getStep());
+
         $field = $this->createFormField();
         $form->addField($field);
 
@@ -106,6 +108,8 @@ class FormManager implements FormManagerInterface
 
     public function updateField(FormFieldInterface $field, FormFieldInputInterface $input): void
     {
+        $this->assertStepExists($field->getForm(), $input->getStep());
+
         $this->applyFieldInput($field, $input);
         $field->getForm()->touch();
 
@@ -349,6 +353,31 @@ class FormManager implements FormManagerInterface
      * same locale - and the database says so too. Caught here to answer with
      * a sentence rather than a constraint violation.
      */
+    /**
+     * A step the form does not have hides the field from the site.
+     *
+     * The renderer reads steps from 1 and shows the fields of the current one,
+     * so a field on step 0 - or on step 3 of a two-step form - belongs to no
+     * screen a visitor ever reaches. It stayed in the builder, listed and
+     * editable, and simply never appeared: the form asked for a name nobody
+     * was shown a place to write.
+     */
+    private function assertStepExists(FormInterface $form, ?int $step): void
+    {
+        if (null === $step) {
+            return;
+        }
+
+        if ($step < 1) {
+            throw new FieldException('step', $this->translator->trans('backend.forms.errors.step_below_one'));
+        }
+
+        $count = count($form->getSteps() ?? []);
+        if ($count > 0 && $step > $count) {
+            throw new FieldException('step', $this->translator->trans('backend.forms.errors.step_out_of_range', ['{count}' => $count]));
+        }
+    }
+
     private function assertSlugIsFree(string $locale, string $slug, ?int $formId): void
     {
         if ($this->translationRepository->isSlugTaken($locale, $slug, $formId)) {

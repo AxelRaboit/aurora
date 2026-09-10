@@ -1,4 +1,5 @@
 import { createI18n } from "vue-i18n";
+import { datetimeFormats } from "@/datetimeFormats.js";
 
 /**
  * Build a minimal vue-i18n instance for component tests.
@@ -72,6 +73,9 @@ export function createTestI18n(messages = {}, locale = "fr") {
         messages: {
             [locale]: deepMerge(baseMessages, messages),
         },
+        // The same table the app builds: a component test that formats a date
+        // should see what the product shows, not an empty string.
+        datetimeFormats,
     });
 }
 

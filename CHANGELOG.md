@@ -5,6 +5,60 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.108] - 2026-09-10
+
+### Corrigé
+
+#### Toutes les dates de l'interface s'affichaient vides
+`d(valeur, "short")` demande à vue-i18n un format nommé. Aucune table de
+formats n'était déclarée, et vue-i18n répond alors par une chaîne vide, sans
+exception ni repli : la liste des soumissions d'un formulaire affichait
+« SUB-000001 · · fr », un commentaire à modérer arrivait sans date, et la
+ligne d'un prochain événement dans le menu latéral n'en portait pas non plus.
+
+Le trou ne se voyait qu'à l'œil, sur un écran qui avait des données à
+montrer. Les quatre appels concernés passaient par le même `d(…, "short")` ou
+`d(…, "long")` ; les dizaines d'autres endroits passent un objet d'options et
+n'ont jamais été touchés, ce qui explique qu'une interface entière ait pu
+paraître normale.
+
+`datetimeFormats.js` déclare les deux noms dans les trois langues : `short`
+répond à « quand exactement », horloge comprise, `long` à « quel jour », et
+c'est ce que reçoit une entrée qui dure toute la journée. Le même tableau est
+donné aux tests de composants, pour qu'un test qui formate une date voie ce
+que le produit affiche.
+
+#### Un champ de formulaire pouvait être rangé sur une étape inexistante
+Le constructeur acceptait n'importe quel nombre dans la case « Étape ». Le
+rendu public, lui, compte les étapes à partir de 1 et n'affiche que celles du
+formulaire : un champ sur l'étape 0, ou sur l'étape 3 d'un formulaire qui en
+a deux, n'était montré à personne. Il restait listé dans l'administration,
+modifiable, et absent du site — le seul moyen de s'en apercevoir était
+d'ouvrir la page publique et de compter.
+
+L'enregistrement le refuse maintenant, à la création comme à la modification,
+et la case n'accepte plus de valeur en dessous de 1.
+
+#### Le menu d'un champ montrait deux clés de traduction
+`Modifier` et `Supprimer` y étaient suivis de
+`backend.forms.fields.row_actions.edit_description` et de son pendant. Les
+deux clés n'existaient nulle part : elles sont écrites comme données, pas
+appelées par `t()`, et le test qui vérifie les traductions des composants ne
+regardait que les appels. Il lit désormais aussi les littéraux qui commencent
+par une racine du catalogue, ce qui est le seul endroit d'où ils peuvent
+venir.
+
+### Ajouté
+
+#### Un formulaire de démonstration dans les fixtures
+`make demo` ne créait aucun formulaire, donc l'écran du constructeur, la liste
+des types de champ et celle des demandes reçues s'ouvraient tous sur « Aucun
+formulaire ». La démo porte maintenant une demande de devis en deux étapes,
+avec un champ de chacun des neuf types, un champ conditionné, et trois
+demandes déjà reçues.
+
+---
+
 ## [0.9.107] - 2026-09-10
 
 ### Corrigé

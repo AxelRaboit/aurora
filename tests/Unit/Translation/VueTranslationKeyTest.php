@@ -30,6 +30,15 @@ use Symfony\Component\Yaml\Yaml;
  *    caller's business;
  *  - occurrences inside comments, which are documentation rather than code -
  *    `useAutoSave.js` has a `t("xxx.save_failed")` in its usage example.
+ *
+ * A second pass covers the keys that never reach `t()` at the call site: a
+ * row-actions menu takes its wording as `editDescription: "backend.…"` and
+ * translates it further down. The first pass saw nothing there, and the
+ * menu of a form field showed
+ * `backend.forms.fields.row_actions.edit_description` to anybody who opened
+ * it. Any literal starting with a catalogue namespace is a key, wherever it
+ * sits - and it may resolve to a branch rather than a sentence, since a
+ * literal is also how a component holds the prefix it will complete.
  */
 final class VueTranslationKeyTest extends TestCase
 {
@@ -61,6 +70,82 @@ final class VueTranslationKeyTest extends TestCase
                 $file,
             ),
         );
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function literalProvider(): iterable
+    {
+        foreach (self::sourceFiles() as $file) {
+            // Test files invent keys to feed a component; they are fixtures,
+            // not screens, and nothing renders what they hold.
+            if (str_contains($file, '.test.')) {
+                continue;
+            }
+
+            foreach (self::literalsIn($file) as $key) {
+                yield sprintf('%s in %s', $key, basename($file)) => [$key, basename($file)];
+            }
+        }
+    }
+
+    #[DataProvider('literalProvider')]
+    public function testEveryKeyShapedLiteralExists(string $key, string $file): void
+    {
+        self::assertTrue(
+            self::exists(self::catalogue(), $key),
+            sprintf(
+                '"%s" is written in %s and reads as a translation key, but the catalogue has nothing under it.'."\n",
+                $key,
+                $file,
+            ),
+        );
+    }
+
+    /**
+     * Unlike resolves(), a branch counts: `const prefix = "backend.accounting.contracts"`
+     * is a real use of the catalogue, completed a line later.
+     *
+     * @param array<string, mixed> $catalogue
+     */
+    private static function exists(array $catalogue, string $key): bool
+    {
+        $node = $catalogue;
+        foreach (explode('.', $key) as $segment) {
+            if (!is_array($node) || !array_key_exists($segment, $node)) {
+                return false;
+            }
+
+            $node = $node[$segment];
+        }
+
+        return true;
+    }
+
+    /**
+     * Every `"backend.…"`, `"shared.…"` or `"frontend.…"` string in the file.
+     * Those three are the catalogue's roots, so a literal starting with one
+     * is a key and nothing else.
+     *
+     * @return list<string>
+     */
+    private static function literalsIn(string $file): array
+    {
+        $contents = file_get_contents($file);
+        if (false === $contents) {
+            return [];
+        }
+
+        $code = preg_replace(['#/\*.*?\*/#s', '#^\s*//.*$#m'], '', $contents) ?? $contents;
+
+        $matches = [];
+        preg_match_all('/[\'"](backend|shared|frontend)((?:\.[a-zA-Z0-9_]+)+)[\'"]/', $code, $matches);
+
+        $keys = [];
+        foreach ($matches[1] as $index => $root) {
+            $keys[] = $root.$matches[2][$index];
+        }
+
+        return array_values(array_unique($keys));
     }
 
     /** @param array<string, mixed> $catalogue */
