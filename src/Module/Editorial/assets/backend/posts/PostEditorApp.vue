@@ -22,7 +22,8 @@ import BannerColorField from "./components/BannerColorField.vue";
 import PostBannerPanel from "./components/PostBannerPanel.vue";
 import PostGridPanel from "./components/PostGridPanel.vue";
 import PostGalleryPanel from "./components/PostGalleryPanel.vue";
-import { Save, ArrowLeft, AlertTriangle, Check, Eye, RefreshCw, X } from "lucide-vue-next";
+import PostRevisionsModal from "./components/PostRevisionsModal.vue";
+import { Save, ArrowLeft, AlertTriangle, Check, Eye, History, RefreshCw, X } from "lucide-vue-next";
 
 const { t, d } = useI18n();
 
@@ -41,6 +42,9 @@ const props = defineProps({
     gridPreviewPath: { type: String, required: true },
     searchPath: { type: String, required: true },
     previewPathTemplate: { type: String, default: "" },
+    revisionsPathTemplate: { type: String, default: "" },
+    revisionShowPathTemplate: { type: String, default: "" },
+    revisionRestorePathTemplate: { type: String, default: "" },
     reviewApprovePathTemplate: { type: String, default: "" },
     reviewRejectPathTemplate: { type: String, default: "" },
 });
@@ -220,6 +224,17 @@ function hasTitleIn(code) {
 }
 
 const previewing = ref(false);
+const showRevisions = ref(false);
+
+/**
+ * A restore rewrites the publication server-side and returns it whole.
+ * Reloading rather than patching the form in place: the editor holds a grid,
+ * a banner, a gallery and a translation per language, and a half-applied
+ * restore is worse than a second of waiting.
+ */
+function onRestored() {
+    window.location.reload();
+}
 
 /**
  * Opens the page as it will look, in another tab.
@@ -348,6 +363,17 @@ function termLabel(term) {
                         <Check class="w-4 h-4" :stroke-width="2" /> {{ t("backend.posts.review.approve") }}
                     </AppButton>
                 </template>
+
+                <!-- Same condition as the preview: a history needs something
+                     to have a history of. -->
+                <AppButton
+                    v-if="postId && revisionsPathTemplate"
+                    variant="ghost"
+                    size="md"
+                    v-on:click="showRevisions = true"
+                >
+                    <History class="w-4 h-4" :stroke-width="2" /> {{ t("backend.posts.revisions.open") }}
+                </AppButton>
 
                 <!-- Only once the post exists: a preview needs an id, and offering
                      it on a form that has not saved yet would be a button that
@@ -806,5 +832,19 @@ function termLabel(term) {
                 </AppModalFooter>
             </template>
         </AppModal>
+
+        <PostRevisionsModal
+            v-if="postId && revisionsPathTemplate"
+            :show="showRevisions"
+            :post-id="postId"
+            :locale="locale"
+            :current="current"
+            :list-path-template="revisionsPathTemplate"
+            :show-path-template="revisionShowPathTemplate"
+            :restore-path-template="revisionRestorePathTemplate"
+            :can-restore="can('editorial.posts.edit')"
+            v-on:close="showRevisions = false"
+            v-on:restored="onRestored"
+        />
     </div>
 </template>

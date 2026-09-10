@@ -312,6 +312,29 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
                 'en' => ['What comes next', 'what-comes-next', 'A draft, visible in the backend only.'],
                 'es' => ['Lo que viene después', 'lo-que-viene-despues', 'Un borrador, visible solo en la administración.'],
             ],
+            // Les deux statuts que la démo n'avait pas. La page de documentation
+            // sur le cycle de vie en annonce cinq, et la liste n'en montrait
+            // que trois : une capture qui contredit son propre texte.
+            'review' => [
+                'type' => $article,
+                'media' => 1,
+                'status' => PostStatusEnum::PendingReview,
+                'publishedAt' => null,
+                'terms' => ['guides'],
+                'fr' => ['Relire avant de publier', 'relire-avant-de-publier', 'Envoyée en relecture : elle attend un avis.'],
+                'en' => ['Review before publishing', 'review-before-publishing', 'Sent for review: it is waiting for an opinion.'],
+                'es' => ['Revisar antes de publicar', 'revisar-antes-de-publicar', 'Enviada a revisión: espera una opinión.'],
+            ],
+            'retired' => [
+                'type' => $article,
+                'media' => 0,
+                'status' => PostStatusEnum::Archived,
+                'publishedAt' => $now->modify('-120 days'),
+                'terms' => ['release'],
+                'fr' => ["Les tarifs de l'an dernier", 'les-tarifs-de-l-an-dernier', 'Archivée : retirée du site, gardée en base.'],
+                'en' => ["Last year's prices", 'last-years-prices', 'Archived: off the site, kept in the database.'],
+                'es' => ['Las tarifas del año pasado', 'las-tarifas-del-ano-pasado', 'Archivada: fuera del sitio, guardada en base.'],
+            ],
             'announcement' => [
                 'type' => $article,
                 'media' => 0,
