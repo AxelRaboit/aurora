@@ -963,6 +963,12 @@ backend:
     label_placeholder: "Home"
 frontend:
   sequence:
+    search:
+      placeholder: Search the documentation…
+      loading: Searching…
+      count: '1 page found | {count} pages found'
+      empty: "Nothing matches “{query}”."
+      clear: Clear
     summary: Contents
     pagination: Previous and next page
     previous: Previous page

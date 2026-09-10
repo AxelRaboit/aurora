@@ -40,7 +40,7 @@ final readonly class PostSequenceBuilder
     ) {}
 
     /**
-     * @return array{summary: list<array<string, mixed>>, previous: ?array<string, string>, next: ?array<string, string>}|null
+     * @return array{summary: list<array<string, mixed>>, searchUrl: string, previous: ?array<string, string>, next: ?array<string, string>}|null
      */
     public function build(PostInterface $post, string $locale): ?array
     {
@@ -85,6 +85,11 @@ final readonly class PostSequenceBuilder
             if ([] === $entries) {
                 $entries[] = $this->rubricView($section, $byTerm, $post, $locale, $flat);
             }
+            $hasPages = array_any($entries, fn ($entry): bool => [] !== $entry['pages']);
+
+            if (!$hasPages) {
+                continue;
+            }
 
             $summary[] = [
                 'label' => $section->getTranslation($locale)?->getName() ?? '',
@@ -94,6 +99,13 @@ final readonly class PostSequenceBuilder
 
         return [
             'summary' => $summary,
+            // The search of this type, not of the site: a reader looking
+            // something up in a documentation is not looking for a blog
+            // post that happens to share a word.
+            'searchUrl' => $this->urlGenerator->generate('editorial_home_search', [
+                'locale' => $locale,
+                'type' => $postType->getSlug(),
+            ]),
             ...$this->neighbours($flat, $post),
         ];
     }

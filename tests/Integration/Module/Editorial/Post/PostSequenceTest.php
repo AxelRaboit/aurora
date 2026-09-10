@@ -15,8 +15,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 use function bin2hex;
+use function json_decode;
 use function random_bytes;
 use function sprintf;
+use function urlencode;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * The summary beside a page, and the way to the next one.
@@ -181,6 +185,104 @@ final class PostSequenceTest extends IntegrationTestCase
 
         self::assertStringNotContainsString('rel="next"', $html);
         self::assertStringNotContainsString('aria-label="Sommaire"', $html);
+    }
+
+    /**
+     * The search of the documentation, scoped to its own type.
+     *
+     * A reader looks something up rather than browsing a hundred and thirty
+     * links; the summary answers "what is there" and this answers "where is
+     * the page that mentions it". Scoped to the type, because an answer from
+     * the blog would be an answer beside the question.
+     */
+    public function testTheSummaryCarriesTheSearchOfItsOwnType(): void
+    {
+        $this->page('Premier', 1);
+        $this->entityManager->flush();
+
+        $html = $this->read('premier');
+
+        self::assertStringContainsString('SequenceSearch', $html);
+        self::assertStringContainsString(sprintf('type=guide-%s', $this->suffix), $html);
+    }
+
+    /**
+     * A section whose rubrics hold no visible page used to print its own
+     * label followed by nothing. It happens as soon as a term exists without
+     * a published page under it - a rubric emptied, or created before
+     * anything is written in it - and a heading with no list under it reads
+     * as a broken page.
+     */
+    public function testASectionWithNoPageIsNotDrawn(): void
+    {
+        $empty = new TaxonomyTerm();
+        $empty->setTaxonomy($this->rubric->getTaxonomy())->setPosition(2);
+        $empty->translate('fr')->setName('Pour finir')->setSlug('pour-finir-'.$this->suffix);
+
+        $this->entityManager->persist($empty);
+
+        $this->page('Premier', 1);
+        $this->entityManager->flush();
+        $this->track($empty);
+
+        $html = $this->read('premier');
+
+        self::assertStringContainsString('Pour commencer', $html, 'la section qui porte une page a disparu');
+        self::assertStringNotContainsString('Pour finir', $html);
+    }
+
+    /**
+     * The endpoint behind the field. Scoped by `type`, and searching the text
+     * of the pages rather than their titles alone: a reader who remembers a
+     * word from a paragraph has no reason to remember which heading it sat
+     * under.
+     */
+    public function testTheSearchAnswersWithinItsTypeOnly(): void
+    {
+        $mine = $this->page('Premier', 1);
+        // `search_content` is what the full-text index reads, and the manager
+        // fills it from the page's own words on save. Written by hand here
+        // because this test creates the page directly: what is under test is
+        // the scope of the search, not the extractor.
+        $mine->getTranslation('fr')?->setSearchContent('Une histoire de girafes rousses.');
+        $this->entityManager->flush();
+
+        $found = $this->searchJson('girafes', 'guide-'.$this->suffix);
+
+        self::assertCount(1, $found['posts']);
+        self::assertSame('Premier', $found['posts'][0]['title']);
+
+        // The same word asked of the default type, which holds no such page.
+        self::assertSame([], $this->searchJson('girafes', null)['posts']);
+    }
+
+    /** A type that does not exist is a wrong address, not an empty answer. */
+    public function testAnUnknownTypeIsRefused(): void
+    {
+        $this->client->request('GET', '/fr/search?q=quoi&type=ce-type-n-existe-pas');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    /** @return array{posts: list<array<string, mixed>>} */
+    private function searchJson(string $query, ?string $type): array
+    {
+        $this->entityManager->clear();
+
+        $url = sprintf('/fr/search?q=%s', urlencode($query));
+
+        if (null !== $type) {
+            $url .= '&type='.urlencode($type);
+        }
+
+        $this->client->request('GET', $url);
+
+        self::assertResponseIsSuccessful();
+
+        /** @var array{posts: list<array<string, mixed>>} $data */
+        $data = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        return $data;
     }
 
     private function read(string $slug): string
