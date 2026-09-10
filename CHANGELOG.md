@@ -5,6 +5,28 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.106] - 2026-09-10
+
+### Corrigé
+
+#### Quinze jetons affichaient leur clé de traduction dans le panneau des variables
+Le panneau qui liste les jetons disponibles à l'écriture d'une trame dérive
+la clé de libellé du jeton lui-même, ce qui évite une table de correspondance
+à tenir. Mais rien ne vérifiait que la traduction existe : les douze jetons
+`provider.*` et les trois `contract.amends_*` n'en avaient aucune, et le
+panneau affichait à leur place
+`backend.accounting.contract_templates.variables.provider_name`, à côté de la
+valeur d'exemple.
+
+Les quinze libellés manquants sont écrits, en français et en anglais. Un test
+parcourt le catalogue et exige un libellé par jeton et par langue du
+back-office, de sorte qu'un jeton ajouté sans traduction fera tomber la suite
+en nommant le jeton fautif.
+
+Trouvé en photographiant l'éditeur de trame pour la documentation.
+
+---
+
 ## [0.9.105] - 2026-09-10
 
 ### Corrigé
