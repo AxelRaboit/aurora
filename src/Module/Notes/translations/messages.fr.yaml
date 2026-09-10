@@ -173,10 +173,14 @@ notes:
       title: Liens
       open: Afficher les liens entrants
       close: Fermer le panneau
-      backlinks: Backlinks
+      # « Backlinks » restait en anglais dans un écran qui dit « Afficher les
+      # liens entrants » deux boutons plus loin, et dans un produit dont la
+      # documentation appelle ça « les notes qui pointent ici ». Le jargon
+      # n'apprend rien à qui prend des notes.
+      backlinks: Liens entrants
       mentions: Mentions
       loading: Chargement…
-      empty_backlinks: Aucun backlink
+      empty_backlinks: Aucun lien entrant
       empty_backlinks_description: Aucune note ne référence celle-ci avec [[…]].
       empty_mentions: Aucune mention
       empty_mentions_description: Aucune note ne mentionne ce titre sans wiki-link.
