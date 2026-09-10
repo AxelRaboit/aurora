@@ -189,6 +189,20 @@ async function terminate() {
     }
 }
 
+/**
+ * Les trois champs que le serveur exige, vérifiés avant de laisser cliquer.
+ *
+ * Le motif est facultatif : une résiliation se constate, elle ne se justifie
+ * pas forcément.
+ */
+const canSubmitTerminate = computed(
+    () =>
+        termination.value.noticedAt !== "" &&
+        termination.value.effectiveAt !== "" &&
+        termination.value.origin !== "" &&
+        !terminating.value,
+);
+
 const terminationDates = computed(() => {
     const record = contract.value.termination;
 
@@ -618,6 +632,80 @@ const documentHtml = computed(() =>
                     >
                         <Check class="w-3.5 h-3.5" :stroke-width="2" />
                         {{ t("backend.accounting.contracts.countersign") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <!-- Résilier.
+             Le bouton existait, son état aussi, la fonction d'envoi aussi, et
+             les traductions aussi : seule cette fenêtre manquait, si bien que
+             le clic ne faisait rien du tout. -->
+        <AppModal
+            :show="showTerminate"
+            max-width="lg"
+            :title="t('backend.accounting.contracts.terminate')"
+            :icon="CalendarX"
+            v-on:close="showTerminate = false"
+        >
+            <div class="space-y-4">
+                <AppMessage v-if="terminationErrors.status" variant="danger">
+                    {{ terminationErrors.status }}
+                </AppMessage>
+
+                <p class="text-sm text-secondary">
+                    {{ t("backend.accounting.contracts.termination.intro") }}
+                </p>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <AppDatePicker
+                        v-model="termination.noticedAt"
+                        :label="t('backend.accounting.contracts.termination.noticed_at')"
+                        :hint="t('backend.accounting.contracts.termination.noticed_at_hint')"
+                        :error="terminationErrors.noticedAt"
+                        required
+                    />
+                    <AppDatePicker
+                        v-model="termination.effectiveAt"
+                        :label="t('backend.accounting.contracts.termination.effective_at')"
+                        :hint="t('backend.accounting.contracts.termination.effective_at_hint')"
+                        :error="terminationErrors.effectiveAt"
+                        required
+                    />
+                </div>
+
+                <AppSelect
+                    v-model="termination.origin"
+                    :label="t('backend.accounting.contracts.termination.origin_label')"
+                    :placeholder="t('backend.accounting.contracts.termination.origin_placeholder')"
+                    :options="originOptions"
+                    :error="terminationErrors.origin"
+                    required
+                />
+
+                <AppTextarea
+                    v-model="termination.reason"
+                    :label="t('backend.accounting.contracts.termination.reason')"
+                    :placeholder="t('backend.accounting.contracts.termination.reason_placeholder')"
+                    :error="terminationErrors.reason"
+                    :rows="4"
+                />
+            </div>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="showTerminate = false">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton
+                        variant="primary"
+                        size="md"
+                        :disabled="!canSubmitTerminate"
+                        :loading="terminating"
+                        v-on:click="terminate"
+                    >
+                        <CalendarX class="w-3.5 h-3.5" :stroke-width="2" />
+                        {{ t("backend.accounting.contracts.terminate") }}
                     </AppButton>
                 </AppModalFooter>
             </template>
