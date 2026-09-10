@@ -5,6 +5,42 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.111] - 2026-09-10
+
+### Ajouté
+
+#### Une barre de recherche sur un type lu en séquence
+Un sommaire de cent trente liens répond à « qu'est-ce qu'il y a » ; il ne
+répond pas à « où est la page qui parle de la date de dépublication ». Le
+champ est au-dessus du sommaire, sur chaque page d'un type lu en séquence, et
+il cherche dans le **texte** des pages et pas seulement dans leurs titres.
+
+La recherche publique existante savait déjà chercher le contenu, mais elle
+était câblée sur le type que liste la page d'accueil. Elle accepte désormais
+`?type=<slug>`, ce qui la rend utilisable par n'importe quel type. Un type
+nommé mais inconnu répond 404 plutôt que de retomber en silence sur les
+articles : un appelant qui se trompe doit l'apprendre.
+
+Le sommaire reste rendu par le serveur et le composant le masque pendant
+qu'il répond, au lieu de le redessiner : ce sont cent trente liens que les
+moteurs doivent lire et qu'un lecteur sans JavaScript doit pouvoir suivre.
+
+### Corrigé
+
+#### Une section vide du sommaire s'affichait quand même
+Une section dont aucune rubrique ne portait de page publiée imprimait son
+titre suivi de blanc. Cela arrive dès qu'un terme existe sans publication
+visible : une rubrique dépubliée, ou créée avant que rien n'y soit écrit.
+
+#### La démo n'avait aucune lecture en séquence à montrer
+Aucune taxonomie n'était rattachée à un type de contenu, si bien que l'écran
+d'édition ne proposait aucun terme et que le site public ne dessinait ni
+sommaire ni page suivante. Ce qui distingue une documentation d'un blog était
+donc invisible dans la démonstration. Les catégories et les étiquettes sont
+maintenant rattachées au type Article.
+
+---
+
 ## [0.9.110] - 2026-09-10
 
 ### Corrigé

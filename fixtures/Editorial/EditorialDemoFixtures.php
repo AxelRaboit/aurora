@@ -109,6 +109,7 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
         }
 
         $this->createCustomFields($manager, $article);
+        $this->bindTaxonomies($manager, $article);
 
         $terms = $this->createTerms($manager);
         $posts = $this->createPosts($manager, $article, $page, $terms);
@@ -191,6 +192,33 @@ class EditorialDemoFixtures extends Fixture implements DependentFixtureInterface
      *
      * @return array<string, TaxonomyTermInterface>
      */
+    /**
+     * Rattache les taxonomies au type Article.
+     *
+     * Sans ce rattachement, l'écran d'édition ne propose aucun terme et le
+     * site public ne dessine ni sommaire ni page suivante : la démo n'avait
+     * donc rien pour montrer une lecture en séquence, alors que c'est ce qui
+     * distingue une documentation d'un blog. Une taxonomie hiérarchique et
+     * une plate, parce que les deux ne servent pas à la même chose et que le
+     * sommaire se dessine à partir de la première.
+     */
+    private function bindTaxonomies(EntityManagerInterface $em, PostTypeInterface $article): void
+    {
+        foreach (['category', 'tag'] as $slug) {
+            $taxonomy = $this->taxonomyRepository->findOneBySlug($slug);
+
+            if (!$taxonomy instanceof TaxonomyInterface) {
+                continue;
+            }
+
+            if (!$article->getTaxonomies()->contains($taxonomy)) {
+                $article->addTaxonomy($taxonomy);
+            }
+        }
+
+        $em->flush();
+    }
+
     private function createTerms(EntityManagerInterface $em): array
     {
         $category = $this->taxonomyRepository->findOneBySlug('category');
