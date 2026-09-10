@@ -156,7 +156,17 @@ async function requestCode() {
             return;
         }
 
-        codeSentTo.value = data?.sentTo ?? "";
+        // L'adresse est ce qui prouve que l'envoi a eu lieu : sans elle, la
+        // requête a échoué, et basculer quand même dans l'état « code envoyé »
+        // affichait « Code envoyé à . » à un client qui attendrait ensuite un
+        // code que personne n'a expédié.
+        if (!data?.sentTo) {
+            errors.value = { code: t("accounting.public.sign.errors.code_not_sent") };
+
+            return;
+        }
+
+        codeSentTo.value = data.sentTo;
     } finally {
         requestingCode.value = false;
     }
