@@ -332,11 +332,26 @@ backend:
                 customer_representative_role: Representative capacity
                 customer_contractual_email: Contractual email
                 customer_phone: Phone
+                provider_name: Trading name
+                provider_representative: Representative
+                provider_address: Business address
+                provider_siret: SIRET
+                provider_ape_code: APE code
+                provider_vat_mention: VAT statement
+                provider_email: Email
+                provider_phone: Phone
+                provider_bank_holder: Account holder
+                provider_bank_iban: IBAN
+                provider_bank_bic: BIC
+                provider_bank_name: Bank
                 contract_reference: Contract reference
                 contract_amount: Amount
                 contract_effective_date: Effective date
                 contract_signature_city: City of signature
                 contract_signature_date: Date of signature
+                contract_amends_reference: Amended contract reference
+                contract_amends_effective_date: Amended contract effective date
+                contract_amends_rank: Amendment number
         customers:
             title: Customers
             add: Add a customer
