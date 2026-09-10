@@ -1,5 +1,5 @@
 import { useI18n } from "vue-i18n";
-import { Copy, Flame, Pencil, Trash2, Undo2 } from "lucide-vue-next";
+import { Copy, Eye, Flame, Pencil, Trash2, Undo2 } from "lucide-vue-next";
 
 /**
  * What one publication row offers, given who is looking and where it sits.
@@ -20,6 +20,8 @@ export function usePostRowActions({
     confirmDelete,
     forceDelete,
     duplicate,
+    preview,
+    canPreview = false,
 }) {
     const { t } = useI18n();
 
@@ -34,6 +36,22 @@ export function usePostRowActions({
                 title: t("shared.common.edit"),
                 description: t("backend.posts.row_actions.edit_description"),
                 href: editPath(post),
+            });
+        }
+
+        // Après « Modifier », qui reste le geste courant sur cet écran, et
+        // avant les deux qui écrivent. Aucun droit propre au-delà de voir la
+        // liste : regarder une page telle que le visiteur la voit est ce
+        // qu'un visiteur peut déjà faire, et un lecteur qui ne peut pas
+        // modifier n'avait aucun moyen d'ouvrir une publication d'ici.
+        if (canPreview && !post.trashed) {
+            actions.push({
+                key: "preview",
+                color: "accent",
+                icon: Eye,
+                title: t("backend.posts.preview.open"),
+                description: t("backend.posts.row_actions.preview_description"),
+                onSelect: () => preview(post),
             });
         }
 
