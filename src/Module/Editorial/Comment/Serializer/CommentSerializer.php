@@ -7,12 +7,15 @@ namespace Aurora\Module\Editorial\Comment\Serializer;
 use Aurora\Module\Editorial\Comment\Entity\CommentInterface;
 use Aurora\Module\Editorial\Comment\Enum\ReactionTypeEnum;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use const DATE_ATOM;
 
 #[AsAlias(CommentSerializerInterface::class)]
 class CommentSerializer implements CommentSerializerInterface
 {
+    public function __construct(protected readonly TranslatorInterface $translator) {}
+
     public function serialize(CommentInterface $comment, array $reactionCounts = []): array
     {
         return [
@@ -93,9 +96,22 @@ class CommentSerializer implements CommentSerializerInterface
         ];
     }
 
+    /**
+     * The title of the publication being commented on, in the language of the
+     * person moderating.
+     *
+     * `getTranslations()->first()` returned whichever translation Doctrine
+     * had loaded first, so the French moderation screen listed comments
+     * "Sur Escribir su primer artículo". The fallback stays, for a
+     * publication that has no version in the reader's language: a title in
+     * the wrong language beats an empty cell, as long as it is the exception
+     * rather than the rule.
+     */
     private function postTitle(CommentInterface $comment): string
     {
-        $translation = $comment->getPost()->getTranslations()->first() ?: null;
+        $post = $comment->getPost();
+        $translation = $post->getTranslation($this->translator->getLocale())
+            ?? ($post->getTranslations()->first() ?: null);
 
         return $translation?->getTitle() ?? '';
     }
