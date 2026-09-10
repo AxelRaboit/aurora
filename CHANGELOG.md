@@ -5,6 +5,24 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.103] - 2026-09-10
+
+### Corrigé
+
+#### Le champ de date se peint comme les autres champs
+Le sélecteur de date pose son propre `input`, qui ne peut donc pas porter les
+classes utilitaires des autres champs : son apparence est écrite à part, et
+elle avait dérivé. Le liseré de focus était un indigo en dur, si bien que sur
+un site dont la couleur d'accent n'est pas l'indigo, un seul champ du
+formulaire s'allumait de la mauvaise couleur. Le texte de substitution, lui,
+n'était pas atténué comme ailleurs.
+
+Les deux suivent maintenant les jetons du thème, comme `AppInput`. Visible
+partout où une date se saisit : contrats, agenda, rappels, partages, éditeur
+de publication.
+
+---
+
 ## [0.9.102] - 2026-09-09
 
 ### Corrigé
