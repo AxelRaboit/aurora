@@ -140,10 +140,15 @@ const current = computed(() => props.page.slug);
         <AppLightbox :items="pictures" :trigger="TRIGGER" />
 
         <!-- Les étapes de la page. Cachée quand elle n'apprendrait rien :
-             une page d'une seule section n'a pas de sommaire. -->
+             une page d'une seule section n'a pas de sommaire.
+
+             Même hauteur bornée et même défilement propre que la liste des
+             rubriques à gauche : sans eux, une page à beaucoup de sections
+             dans une fenêtre courte débordait sous le pli, et la fin du
+             sommaire n'était atteignable par aucun geste. -->
         <aside
             v-if="outline.length > 1"
-            class="hidden w-56 shrink-0 xl:sticky xl:top-4 xl:block"
+            class="hidden w-56 shrink-0 xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto"
             :aria-label="t('backend.documentation.on_this_page')"
         >
             <p class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-muted">

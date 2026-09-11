@@ -5,6 +5,39 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.121] - 2026-09-11
+
+### Corrigé
+
+#### La pagination de la médiathèque ne changeait pas de page
+`AppPagination` émet `change`, et quatre écrans écoutaient `go-to-page` : le
+clic partait dans le vide. Les documents, les catégories, et les deux
+paginations du sélecteur d'images étaient concernés - c'est-à-dire toutes
+celles de la GED, et seulement celles-là. Le reste de l'application écoutait
+déjà le bon nom.
+
+Signalé sur la liste des documents, où la deuxième page était inatteignable
+alors que le serveur la rendait correctement.
+
+#### Le tableau de bord titrait des barres vides
+La carte « Commentaires par statut » s'affichait sur un site sans un seul
+commentaire. Sa garde comptait les segments, et une barre de répartition en
+reçoit un par catégorie connue, remplie ou non : trois statuts donnent trois
+segments même quand tout est à zéro.
+
+Les **quatre** barres du tableau de bord posaient la même garde fautive -
+publications par statut, commentaires, comptes par rôle, documents par type.
+La règle est nommée une fois, dans `hasAnyShare`, plutôt que recopiée quatre
+fois. Le graphique « Publications par mois » la posait déjà correctement,
+c'était le seul.
+
+#### Le sommaire d'une page de documentation pouvait déborder
+Il n'avait ni hauteur maximale ni défilement propre, là où la liste des
+rubriques à gauche a les deux. Sur une page à beaucoup de sections dans une
+fenêtre courte, la fin du sommaire n'était atteignable par aucun geste.
+
+---
+
 ## [0.9.120] - 2026-09-11
 
 ### Corrigé
