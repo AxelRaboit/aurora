@@ -5,6 +5,59 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.128] - 2026-09-12
+
+### Ajouté
+
+#### Un second support de stockage : Cloudflare R2
+La couche posée en 0.9.127 n'avait qu'une implémentation, le disque. Elle en a
+une seconde, qui parle à R2 par son API compatible S3. Rien ne s'en sert
+encore : la GED écrit toujours sur le disque, et R2 ne s'allumera qu'avec
+l'écran de configuration, à venir. Ce qui est là est l'adaptateur, éprouvé.
+
+Le SDK retenu est `async-aws/simple-s3`, 2,2 Mo installés là où le SDK AWS en
+pèse plus de dix. Aurora est un bundle que chaque client installe : le poids se
+paie chez eux.
+
+#### La commande `aurora:storage:doctor`
+Elle ne vérifie pas la configuration, elle l'utilise : elle écrit un objet
+témoin, le relit, compare les octets, confirme que le listing le voit, puis le
+supprime, et rapporte chaque étape séparément. Lire quatre chaînes non vides
+dans l'environnement ne prouve rien, et la panne que tout le monde rencontre
+est un jeton en lecture seule ou limité au mauvais bucket, ce qui a l'air
+parfaitement configuré jusqu'à la première écriture.
+
+Les échecs courants reçoivent la chose à aller changer plutôt que le message de
+l'API, qui ne nomme aucune des causes. Le témoin est supprimé dans un `finally`,
+donc un support qui sait écrire mais pas supprimer le dit aussi.
+
+### Corrigé
+
+#### La taille d'un fichier était fausse pour les types que Cloudflare compresse
+Trouvé en branchant l'adaptateur sur un vrai bucket. Cloudflare gzippe à la
+volée les types compressibles, et une réponse gzippée n'a pas de
+`Content-Length` et porte un ETag faible. Demander ses métadonnées à un objet
+par une requête `HEAD` renvoyait donc zéro octet pour un `text/plain`, et la
+bonne taille pour un PNG.
+
+Une taille fausse ne se voit pas tout de suite : elle se serait vue plus tard,
+à la migration, quand la vérification aurait comparé la taille locale à une
+taille distante nulle. Les métadonnées viennent maintenant d'un listing réduit
+à la clé cherchée, qui rapporte ce que l'objet pèse dans le bucket et non ce
+que la réponse pèse sur le fil.
+
+### Dans aurora-client
+
+Rien à répercuter. Aucune migration, aucune signature changée, et le stockage
+par défaut reste le disque.
+
+Pour essayer R2 sur une installation : `R2_ENDPOINT`, `R2_BUCKET`,
+`R2_ACCESS_KEY_ID` et `R2_SECRET_ACCESS_KEY` dans `.env.local` ou dans
+l'environnement du serveur, jamais dans un fichier versionné, puis
+`php bin/console aurora:storage:doctor --disk=r2`. L'endpoint est l'URL du
+compte **sans** le bucket à la fin : la console en affiche une avec le bucket
+ajouté, et la coller telle quelle met le bucket deux fois dans chaque requête.
+
 ## [0.9.127] - 2026-09-11
 
 ### Modifié
