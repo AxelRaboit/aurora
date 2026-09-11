@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.113] - 2026-09-11
+
+### Ajouté
+
+#### Le manuel du produit, dans le produit
+Une entrée **Documentation** dans le menu latéral ouvre cent quatre pages qui
+expliquent le back-office écran par écran, avec cent soixante et onze
+captures.
+
+Elles vivent dans le code, `src/Module/Documentation/content/`, un fichier
+Markdown par page : le dossier est la rubrique, le numéro est l'ordre de
+lecture, l'en-tête porte le titre et le résumé. Aucun index à tenir à jour,
+ajouter une page est ajouter un fichier. Les captures sont à côté, dans
+`images/`, servies par une route plutôt que par le build : un client met
+Aurora à jour avec Composer et rien d'autre, et une page aux cadres vides
+serait pire que pas de page.
+
+**Pourquoi pas dans les publications.** Ces pages y étaient, écrites avec
+l'éditeur comme n'importe quel contenu. C'était le mauvais endroit deux fois :
+un client pouvait les modifier, et une fonctionnalité partait sans sa
+documentation puisque les deux vivaient dans des dépôts différents. Ici la
+page est à côté du code qu'elle décrit, et les changer ensemble tient dans un
+commit.
+
+L'écran se lit en trois colonnes : les rubriques à gauche avec une recherche
+qui cherche dans le texte et ignore les accents, la page au milieu, et ses
+étapes à droite. Rien à configurer, aucun réglage, aucune permission propre :
+qui peut ouvrir le back-office peut lire comment il marche.
+
+---
+
 ## [0.9.112] - 2026-09-10
 
 ### Ajouté

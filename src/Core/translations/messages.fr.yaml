@@ -147,7 +147,19 @@ shared:
 # AppBlockEditor. Les libellés des outils spécifiques à un module,
 # injectés via `extraTools`, restent dans son propre messages.fr.yaml.
 backend:
+  documentation:
+    sections: Rubriques de la documentation
+    search_placeholder: Chercher dans la documentation…
+    results: '1 page trouvée | {count} pages trouvées'
+    no_result: Aucune page ne correspond.
+    on_this_page: Sur cette page
+    pagination: Page précédente et page suivante
+    previous: Page précédente
+    next: Page suivante
+    empty: Aucune page de documentation n'est livrée avec cette version.
   nav:
+    documentation: Documentation
+    documentation_description: Comment utiliser le back-office, écran par écran.
     sections:
       general: Général
       platform: Plateforme
@@ -155,6 +167,7 @@ backend:
       configuration: Configuration
       dev: Administration
       account: Compte
+      documentation: Documentation
     go_back: Page précédente
     go_forward: Page suivante
     hard_reload: Recharger en vidant les caches

@@ -141,7 +141,19 @@ shared:
     cropped: Imagen recortada
 
 backend:
+  documentation:
+    sections: Secciones de la documentación
+    search_placeholder: Buscar en la documentación…
+    results: '1 página encontrada | {count} páginas encontradas'
+    no_result: Ninguna página coincide.
+    on_this_page: En esta página
+    pagination: Página anterior y siguiente
+    previous: Página anterior
+    next: Página siguiente
+    empty: Esta versión no incluye ninguna página de documentación.
   nav:
+    documentation: Documentación
+    documentation_description: Cómo usar la administración, pantalla por pantalla.
     sections:
       general: General
       platform: Plataforma
@@ -149,6 +161,7 @@ backend:
       configuration: Configuración
       dev: Administración
       account: Cuenta
+      documentation: Documentación
     go_back: Página anterior
     go_forward: Página siguiente
     hard_reload: Recargar vaciando las cachés

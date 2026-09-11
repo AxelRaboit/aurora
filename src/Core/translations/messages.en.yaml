@@ -147,7 +147,19 @@ shared:
 # module-specific tools injected via `extraTools` stay in that module's
 # own messages.en.yaml.
 backend:
+  documentation:
+    sections: Documentation sections
+    search_placeholder: Search the documentation…
+    results: '1 page found | {count} pages found'
+    no_result: No page matches.
+    on_this_page: On this page
+    pagination: Previous and next page
+    previous: Previous page
+    next: Next page
+    empty: No documentation page ships with this version.
   nav:
+    documentation: Documentation
+    documentation_description: How to use the back office, screen by screen.
     sections:
       general: General
       platform: Platform
@@ -155,6 +167,7 @@ backend:
       configuration: Configuration
       dev: Administration
       account: Account
+      documentation: Documentation
     go_back: Previous page
     go_forward: Next page
     hard_reload: Reload and clear caches
