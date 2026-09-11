@@ -5,6 +5,38 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.125] - 2026-09-11
+
+### Modifié
+
+#### Les rubriques de la documentation passent dans le menu latéral
+Le manuel portait sa propre colonne de gauche : la recherche, les huit rubriques
+et leurs quatre-vingt-douze pages, sur toutes les pages, à l'intérieur du
+contenu. Elle coûtait un quart de la largeur au texte, et sur un téléphone elle
+s'empilait au-dessus de lui, si bien que la première chose qu'on y rencontrait
+était quatre-vingt-douze liens vers ailleurs.
+
+Cette colonne est maintenant un panneau du menu latéral, le même mécanisme que
+l'arborescence de la GED et la liste des notes. Le texte récupère la largeur, et
+les captures avec lui : la colonne de lecture passe de 48 à 56 rems, ce qui se
+voit sur des images de 1600 pixels.
+
+Une rubrique se plie et se déplie, et seule celle qu'on lit s'ouvre d'elle-même.
+Un pli qu'on a ouvert ou fermé soi-même est retenu et l'emporte sur ce défaut.
+
+### Corrigé
+
+#### Les panneaux de module étaient absents sur mobile
+Le tiroir du menu, sur téléphone, ne montait aucun panneau de module : il
+n'affichait que les liens. Un module qui avait sorti une colonne de sa page pour
+la mettre dans le menu l'avait donc sortie de portée d'un téléphone. Les
+dossiers de la GED, l'arborescence des notes et les agendas du calendrier
+n'existaient que sur grand écran.
+
+Le tiroir monte maintenant le panneau, à son ouverture plutôt qu'au chargement
+de la page : un panneau va chercher ses propres données, et personne ne devrait
+payer pour un panneau qu'il n'ouvre pas.
+
 ## [0.9.124] - 2026-09-11
 
 ### Corrigé

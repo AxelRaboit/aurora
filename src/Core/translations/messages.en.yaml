@@ -149,7 +149,7 @@ shared:
 backend:
   documentation:
     enlarge: Enlarge the screenshot
-    sections: Documentation sections
+    rubrics: Sections
     search_placeholder: Search the documentation…
     results: '1 page found | {count} pages found'
     no_result: No page matches.

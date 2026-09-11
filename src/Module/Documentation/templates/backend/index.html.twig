@@ -21,10 +21,8 @@
 {% block body %}
 <div {{ vue_component('documentation/backend/documentation/DocumentationApp', {
     page: page,
-    tree: tree,
     neighbours: neighbours,
     pagePathTemplate: pagePathTemplate,
     imagePathTemplate: imagePathTemplate,
-    searchPath: searchPath,
 }) }} class="flex-1 min-w-0"></div>
 {% endblock %}
