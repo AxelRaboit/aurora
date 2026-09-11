@@ -623,17 +623,17 @@ class PlanningDemoFixtures extends Fixture implements DependentFixtureInterface,
         $maybe = $this->event($manager, $work, 'Déjeuner à confirmer', $monday->modify('+3 days')->setTime(12, 30), $monday->modify('+3 days')->setTime(13, 30));
         $maybe->setStatus(PlanningEventStatusEnum::Tentative);
 
-        // Owned by another module, so the screen must refuse to drag, edit or
-        // delete it. Nothing else in the demo is read-only, and a permission that
-        // is never exercised is a permission nobody notices is broken.
-        $invoiced = $this->event(
-            $manager,
-            $work,
-            'Échéance facture F-2043',
-            $monday->modify('+6 days')->setTime(8, 0),
-            $monday->modify('+6 days')->setTime(8, 30),
-        );
-        $invoiced->setSource('billing', 2043, 'Facture F-2043');
+        // Rien ici ne se présente comme venant d'un autre module.
+        //
+        // Il y avait une « Échéance facture F-2043 » marquée `billing`, pour
+        // que l'écran ait un événement en lecture seule à refuser de déplacer.
+        // Mais `billing` n'existe pas : le seul module qui dépose vraiment une
+        // date est l'éditorial, quand une publication est programmée. Une
+        // démo qui invente un module enseigne une fonctionnalité qui n'existe
+        // pas, et c'est par elle que la documentation a failli l'enseigner.
+        //
+        // Le cas lecture seule reste couvert là où il doit l'être :
+        // `PlanningModuleSyncTest::testASyncedEntryIsReadOnlyAndPointsAtItsSource`.
 
         // Early and late in the day, so the grid's scroll has something at both
         // ends rather than everything in office hours.

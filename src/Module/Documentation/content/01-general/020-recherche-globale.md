@@ -5,7 +5,7 @@ rubric: "Général"
 ---
 Chercher dans une administration veut d'habitude dire choisir d'abord où chercher. Ici il y a un champ, en haut à droite, et il répond depuis n'importe quel écran.
 
-![La recherche globale](../../images/01-general/search-palette.png)
+![La palette, à l'ouverture](../../images/01-general/recherche-globale-01-la-palette-vide.png)
 
 ## Ouvrir et se déplacer
 
@@ -13,12 +13,16 @@ Chercher dans une administration veut d'habitude dire choisir d'abord où cherch
 - Les flèches haut et bas parcourent les résultats, Entrée ouvre celui qui est surligné, Échap ferme la palette.
 - Le terme cherché est surligné dans chaque résultat, ce qui dit pourquoi il est là.
 
+![Les résultats, groupés par nature](../../images/01-general/recherche-globale-02-les-resultats-groupes.png)
+
 ## Ce que le champ traverse
 
 - Navigation : les écrans de l'administration eux-mêmes. Taper « contrats » propose d'y aller, sans passer par le menu.
 - Contenus : les publications, tous types confondus, sur leur titre comme sur le texte de leurs zones, avec leur statut et leur type affichés.
 - Médias : les documents de la médiathèque, par leur nom.
 - Agendas : les calendriers, leurs événements et leurs rappels.
+
+![Se déplacer au clavier](../../images/01-general/recherche-globale-03-se-deplacer-au-clavier.png)
 
 ## Ce qu'il ne traverse pas
 

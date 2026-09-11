@@ -5,7 +5,7 @@ rubric: "Notes"
 ---
 Une image se colle directement dans la note. Elle est redimensionnée avant l'envoi, dans le navigateur.
 
-![Les images dans une note](../../images/05-notes/notes.png)
+![Les deux réglages du collage d'images](../../images/05-notes/images-dans-une-note-01-les-deux-reglages.png)
 
 ## Les deux réglages
 

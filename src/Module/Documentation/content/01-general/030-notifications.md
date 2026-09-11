@@ -5,7 +5,7 @@ rubric: "Général"
 ---
 La cloche en haut à droite ne signale que ce qui demande une décision ou vous concerne personnellement. Elle n'est pas un journal d'activité : ça, c'est l'audit.
 
-![Les notifications](../../images/01-general/notifications.png)
+![La cloche ouverte](../../images/01-general/notifications-01-la-cloche-ouverte.png)
 
 ## Ce qui en déclenche une
 

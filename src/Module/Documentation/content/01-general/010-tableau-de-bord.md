@@ -5,7 +5,7 @@ rubric: "Général"
 ---
 C'est le premier écran après la connexion, et il répond à une seule question : où en est le site. Rien ne s'y règle, tout s'y lit.
 
-![Le tableau de bord](../../images/01-general/dashboard.png)
+![Le tableau de bord](../../images/01-general/tableau-de-bord-01-le-tableau-de-bord.png)
 
 ## Un onglet par module actif
 
