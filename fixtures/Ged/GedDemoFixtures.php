@@ -11,6 +11,7 @@ use Aurora\Fixtures\Core\AppFixtures;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Service\SettingsService;
 use Aurora\Module\Ged\Document\Entity\Document;
+use Aurora\Module\Ged\Document\Entity\DocumentVersion;
 use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategoryInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolder;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTag;
@@ -68,6 +69,8 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
         $this->createGed($manager, $media);
 
         $manager->flush();
+
+        $this->createVersionHistory($manager);
 
         // Favicon + logo point at the landscape image (media[1]); after flush so IDs exist.
         if (isset($media[1]) && null !== $media[1]->getId()) {
@@ -462,6 +465,110 @@ class GedDemoFixtures extends Fixture implements DependentFixtureInterface, Fixt
             }
 
             $em->persist($d);
+        }
+    }
+
+    /**
+     * Trois états successifs d'un même visuel.
+     *
+     * Remplacer le fichier d'un document laisse une trace : le panneau de
+     * détail liste les versions, et il ne les liste qu'à partir de deux. Une
+     * démo fraîche n'en a aucune - l'historique naît d'un remplacement, et
+     * personne n'en fait avant la première capture -, donc la page qui
+     * explique les versions montrait une bibliothèque sans historique.
+     *
+     * Les deux fichiers antérieurs sont écrits sur le disque : une version
+     * est téléchargeable, et une ligne qui pointe vers rien n'aurait montré
+     * que la moitié de l'écran.
+     */
+    private function createVersionHistory(EntityManagerInterface $em): void
+    {
+        $document = $em->getRepository(Document::class)
+            ->findOneBy(['title' => 'Visuel de campagne - Automne 2025']);
+
+        if (!$document instanceof Document || null === $document->getFilePath()) {
+            return;
+        }
+
+        $versionRepository = $em->getRepository(DocumentVersion::class);
+
+        // La démo se rejoue : sans cette garde, chaque `make demo` ajoutait
+        // trois lignes de plus au même document.
+        if ([] !== $versionRepository->findBy(['document' => $document])) {
+            return;
+        }
+
+        $month = new DateTimeImmutable()->format('Y/m');
+        $dir = $this->uploadDir.'/ged/'.$month;
+        $this->fs->mkdir($dir);
+
+        // La version la plus récente est le fichier courant : c'est ce
+        // qu'écrit le produit, qui photographie l'état du document à chaque
+        // enregistrement. Les deux précédentes ont leur propre fichier.
+        $history = [
+            ['file' => 'demo-doc-14-v1.jpg', 'own' => true,  'days' => 24],
+            ['file' => 'demo-doc-14-v2.jpg', 'own' => true,  'days' => 9],
+            ['file' => (string) $document->getFileName(), 'own' => false, 'days' => 0],
+        ];
+
+        $ids = [];
+        foreach ($history as $number => $state) {
+            // Le fichier courant garde le chemin que le document porte : il a
+            // pu être écrit un autre mois que celui de ce run.
+            $path = $state['own'] ? 'ged/'.$month.'/'.$state['file'] : $document->getFilePath();
+
+            if ($state['own']) {
+                $dest = $dir.'/'.$state['file'];
+
+                if (!file_exists($dest)) {
+                    $this->drawPlaceholder($dest, [
+                        'name' => $state['file'],
+                        'mime' => 'image/jpeg',
+                        'w' => 1600,
+                        'h' => 900,
+                    ]);
+                }
+
+                if (!file_exists($dest)) {
+                    continue;
+                }
+            }
+
+            $version = new DocumentVersion();
+            $version->setDocument($document)
+                ->setFilePath($path)
+                ->setFileName($state['file'])
+                ->setOriginalName('visuel-campagne-automne.jpg')
+                ->setMimeType('image/jpeg')
+                ->setSize(@filesize($this->uploadDir.'/'.$path) ?: 0)
+                ->setVersionNumber($number + 1);
+
+            $em->persist($version);
+            $ids[] = [$version, $state['days']];
+        }
+
+        $em->flush();
+
+        // La date de création se pose au constructeur, et le produit n'a
+        // aucune raison de la déplacer. Trois versions nées à la même seconde
+        // ne montreraient pas ce que la colonne sert à lire, donc la démo les
+        // recule en base plutôt que d'ouvrir un point d'entrée que personne
+        // n'utiliserait ailleurs.
+        $table = $em->getClassMetadata(DocumentVersion::class)->getTableName();
+        $connection = $em->getConnection();
+
+        foreach ($ids as [$version, $days]) {
+            if (0 === $days) {
+                continue;
+            }
+
+            $connection->executeStatement(
+                sprintf('UPDATE %s SET created_at = :created WHERE id = :id', $table),
+                [
+                    'created' => new DateTimeImmutable(sprintf('-%d days', $days))->format('Y-m-d H:i:s'),
+                    'id' => $version->getId(),
+                ],
+            );
         }
     }
 }

@@ -36,7 +36,7 @@ L'écran du contrat montre ce que le scellement a produit :
 - la **date de scellement** et la date jusqu'à laquelle le contrat est conservé ;
 - le **document lui-même**, tel qu'il sera lu par le client, jetons remplacés.
 
-Le bandeau « le sceau est intact » compare le document stocké à son empreinte. Il se revérifie à chaque affichage, et en masse par la commande de vérification des sceaux.
+Le bandeau « le sceau est intact » compare le document stocké à son empreinte. Il se revérifie à chaque affichage.
 
 ![Le contrat scellé, son sceau et son document](../../images/06-comptabilite/sceller-un-contrat-04-le-contrat-scelle.png)
 

@@ -15,4 +15,4 @@ Chercher une photo sans quitter l'écran, la déposer dans la bibliothèque, et 
 
 ## S'en servir
 
-La recherche se fait depuis la bibliothèque. La photo choisie est téléchargée, rangée, et le nom de son auteur ainsi que le lien vers sa page sont enregistrés avec elle. L'affichage du crédit sous l'image est un réglage.
+La recherche se fait depuis le sélecteur d'images, celui qui s'ouvre pour choisir une vignette ou remplir une zone média : un onglet « Pexels » s'y ajoute une fois la banque activée. La photo choisie est téléchargée, rangée, et le nom de son auteur ainsi que le lien vers sa page sont enregistrés avec elle. L'affichage du crédit sous l'image est un réglage.
