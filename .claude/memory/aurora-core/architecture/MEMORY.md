@@ -17,6 +17,7 @@
 - [pattern_single_locale_mode.md](pattern_single_locale_mode.md) - toggle `single_locale_mode` réversible : filtre l'UI/écritures via `LocaleContext`, préserve les `XxxTranslation` dormantes
 - [decision_locale_added_in_core.md](decision_locale_added_in_core.md) - toute nouvelle locale (es, de…) s'ajoute dans `LocaleEnum` côté core, jamais côté client (capitalisation + cohérence cross-écosystème)
 - [pattern_migration_drift_detection.md](pattern_migration_drift_detection.md) - détection 2-couches des migrations en attente sur le dev DB (banner Twig dans l'admin + warning CLI dans `make ft`)
+- [pattern_storage_adapter.md](pattern_storage_adapter.md) - tout passe par `StorageAdapterInterface` ; `LocalWorkspace` prête un vrai chemin à GD/`pdftoppm` ; les listings portent taille et date, et `app.upload_dir` ne se lit plus nulle part
 - [pattern_self_owned_storage.md](pattern_self_owned_storage.md) - modules stockent leurs propres fichiers sous `var/uploads/<module>/Y/m/` avec 5 colonnes standard + `UploadUrlGenerator` ; jamais de FK vers Media
 - [decision_core_submodule_nesting.md](decision_core_submodule_nesting.md) - Core sub-modules nichés sous leur module parent (Platform/User, Configuration/Setting, Media/Library, …) depuis 0.4.0 - alignement Vault-style. Breaking pour aurora-client : voir `docs/aurora-client/MIGRATION_0.4.md`
 - [reference_module_vocabulary.md](reference_module_vocabulary.md) - vocabulaire de référence : module / section / sous-module / NavItem / sous-domaine / entité (exemple Ecommerce ; sous-module ≠ NavItem)

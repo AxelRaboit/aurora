@@ -1,5 +1,18 @@
 # Chantier - Split aurora-core en monorepo de N packages Composer
 
+> ## ⚠️ Vérifié le 11/09/2026 : le dépôt n'est pas un monorepo
+>
+> `composer.json` déclare un seul paquet `axelraboit/aurora` avec
+> `Aurora\ -> src/`, il n'existe aucun dossier `packages/`, et `src/Core/`
+> comme `src/Module/` vivent dans le même arbre. Le statut « ✅ TERMINÉ et
+> validé end-to-end » que l'index porte pour cette mémoire ne décrit donc pas
+> l'état courant.
+>
+> Le récit ci-dessous reste utile comme histoire du chantier, mais **ne pas
+> s'en servir pour décider où placer du code** : un module s'ajoute dans
+> `src/Module/`, pas dans un paquet à lui. Le retour d'Editorial dans le core
+> (bloc suivant) va dans le même sens et est peut-être la fin de l'histoire.
+
 > ## ⚠️ Editorial est revenu dans le core (août 2026)
 >
 > Tout ce qui suit décrit le chantier de split tel qu'il s'est déroulé, et
