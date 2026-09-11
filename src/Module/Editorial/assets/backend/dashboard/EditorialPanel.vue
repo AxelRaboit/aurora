@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { FileText, LayoutTemplate, Tags, Trash2 } from "lucide-vue-next";
 import AppShareBar from "@/shared/components/chart/AppShareBar.vue";
+import { hasAnyShare } from "@/shared/utils/data/hasAnyShare.js";
 import AppChart from "@/shared/components/display/AppChart.vue";
 import { useDateFormat } from "@/shared/composables/format/useDateFormat.js";
 import { useChartPalette } from "@/shared/composables/chart/useChartPalette.js";
@@ -135,7 +136,7 @@ const byStatus = computed(() =>
             </div>
         </div>
 
-        <div v-if="byStatus.length" class="bg-surface border border-line rounded-xl p-5 space-y-4">
+        <div v-if="hasAnyShare(byStatus)" class="bg-surface border border-line rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold text-primary">{{ t("backend.stats.editorial.by_status") }}</h3>
 
             <AppShareBar :segments="byStatus" />
@@ -154,7 +155,7 @@ const byStatus = computed(() =>
         <!-- Its own card rather than a second bar in the one above: two
              compositions of two different wholes under one heading would invite
              comparing their widths, which mean nothing to each other. -->
-        <div v-if="byCommentStatus.length" class="bg-surface border border-line rounded-xl p-5 space-y-4">
+        <div v-if="hasAnyShare(byCommentStatus)" class="bg-surface border border-line rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold text-primary">{{ t("backend.stats.editorial.comments_by_status") }}</h3>
 
             <AppShareBar :segments="byCommentStatus" />

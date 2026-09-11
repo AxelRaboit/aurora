@@ -13,6 +13,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { FileText, FolderTree, Tag, Tags } from "lucide-vue-next";
 import AppShareBar from "@/shared/components/chart/AppShareBar.vue";
+import { hasAnyShare } from "@/shared/utils/data/hasAnyShare.js";
 
 const props = defineProps({
     stats: { type: Object, default: () => ({}) },
@@ -56,7 +57,7 @@ const byType = computed(() =>
             </div>
         </div>
 
-        <div v-if="byType.length" class="bg-surface border border-line rounded-xl p-5 space-y-4">
+        <div v-if="hasAnyShare(byType)" class="bg-surface border border-line rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold text-primary">{{ t("backend.stats.ged.by_type") }}</h3>
 
             <AppShareBar :segments="byType" />
