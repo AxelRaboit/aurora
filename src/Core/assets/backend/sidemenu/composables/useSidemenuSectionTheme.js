@@ -46,6 +46,9 @@ const SECTION_THEMES = {
     notes: makeTheme("violet"),
     accounting: makeTheme("emerald"),
     dev: makeTheme("orange"),
+    // Ambre : le manuel ferme le menu, sous « Administration » en orange,
+    // et une teinte voisine y lit comme une suite plutôt qu'une rupture.
+    documentation: makeTheme("amber"),
 };
 
 const FALLBACK_THEME = makeTheme("accent");
