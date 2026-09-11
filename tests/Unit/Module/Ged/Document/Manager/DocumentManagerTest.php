@@ -6,9 +6,12 @@ namespace Aurora\Tests\Unit\Module\Ged\Document\Manager;
 
 use Aurora\Core\Sequence\SequenceGenerator;
 use Aurora\Core\Sequence\SequencePrefixEnum;
+use Aurora\Core\Storage\Adapter\LocalStorageAdapter;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\ImageVariantGenerator;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\StorageManager;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
 use Aurora\Module\Ged\Document\Dto\DocumentInputInterface;
@@ -65,6 +68,10 @@ final class DocumentManagerTest extends TestCase
         $this->workDir = sys_get_temp_dir().'/aurora-ged-manager-'.uniqid();
         mkdir($this->workDir, 0o777, true);
 
+        $filesystem = new Filesystem();
+        $workspace = new LocalWorkspace($filesystem);
+        $storageManager = new StorageManager([new LocalStorageAdapter($filesystem, $this->workDir)]);
+
         $this->manager = new DocumentManager(
             $this->entityManager,
             $this->categoryRepository,
@@ -76,13 +83,14 @@ final class DocumentManagerTest extends TestCase
             $this->versionRepository,
             $this->documentRepository,
             new GedDocumentUploader(
-                new Filesystem(),
                 new AsciiSlugger(),
-                new PdfThumbnailGenerator($this->workDir),
-                new ImageCropper(new Filesystem()),
-                $this->workDir,
+                new PdfThumbnailGenerator($workspace),
+                new ImageCropper($filesystem),
+                $storageManager,
+                $workspace,
             ),
-            new ImageVariantGenerator(new Filesystem(), $this->workDir),
+            new ImageVariantGenerator($workspace),
+            $storageManager,
         );
     }
 

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Aurora\Core\Storage\Service;
 
+use Aurora\Core\Storage\Adapter\StorageAdapterInterface;
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Process\ExecutableFinder;
@@ -31,39 +32,49 @@ use Throwable;
 final readonly class PdfThumbnailGenerator
 {
     public function __construct(
-        #[Autowire(param: 'app.upload_dir')]
-        private string $uploadDir,
+        private LocalWorkspace $workspace,
         private Filesystem $filesystem = new Filesystem(),
         private ExecutableFinder $executableFinder = new ExecutableFinder(),
         private LoggerInterface $logger = new NullLogger(),
     ) {}
 
     /**
-     * Renders page 1 of `$sourceRelativePath` to a JPEG thumb under
-     * `$thumbRelativeDir` and returns its relative path, or `null` on
-     * any failure.
+     * Renders page 1 of `$sourceKey` to a JPEG thumb under `$thumbDirKey` and
+     * returns the key it was stored at, or `null` on any failure.
      *
-     * @param string $sourceRelativePath path under var/uploads/ to the PDF
-     * @param string $thumbRelativeDir   directory under var/uploads/ for the output
-     * @param string $basename           output filename without extension
+     * Both binaries take filenames and neither will take a stream, so the work
+     * runs against paths {@see LocalWorkspace} provides - the stored file
+     * itself on a local disk, a temporary elsewhere. When neither backend
+     * produces anything the workspace stores nothing, so a failed render
+     * leaves no empty object behind.
+     *
+     * @param string $sourceKey   key of the PDF to render
+     * @param string $thumbDirKey key prefix the output is stored under
+     * @param string $basename    output filename without extension
      */
-    public function generate(string $sourceRelativePath, string $thumbRelativeDir, string $basename): ?string
+    public function generate(StorageAdapterInterface $adapter, string $sourceKey, string $thumbDirKey, string $basename): ?string
     {
-        $sourceAbsolute = Path::join($this->uploadDir, $sourceRelativePath);
-        if (!$this->filesystem->exists($sourceAbsolute)) {
-            $this->logger->warning('PdfThumbnailGenerator: source missing', ['path' => $sourceAbsolute]);
+        if (!$adapter->exists($sourceKey)) {
+            $this->logger->warning('PdfThumbnailGenerator: source missing', ['key' => $sourceKey]);
 
             return null;
         }
 
-        $thumbDirAbsolute = Path::join($this->uploadDir, $thumbRelativeDir);
-        $this->filesystem->mkdir($thumbDirAbsolute);
+        $thumbKey = Path::join($thumbDirKey, sprintf('%s.%s', $basename, MimeTypeEnum::Jpeg->extension()));
 
-        $thumbFilename = sprintf('%s.%s', $basename, MimeTypeEnum::Jpeg->extension());
-        $thumbAbsolute = Path::join($thumbDirAbsolute, $thumbFilename);
+        $rendered = $this->workspace->readable(
+            $adapter,
+            $sourceKey,
+            fn (string $sourceAbsolute): bool => $this->workspace->target(
+                $adapter,
+                $thumbKey,
+                fn (string $output): bool => $this->tryPdftoppm($sourceAbsolute, $output)
+                    || $this->tryGhostscript($sourceAbsolute, $output),
+            ),
+        );
 
-        if ($this->tryPdftoppm($sourceAbsolute, $thumbAbsolute) || $this->tryGhostscript($sourceAbsolute, $thumbAbsolute)) {
-            return Path::join($thumbRelativeDir, $thumbFilename);
+        if ($rendered) {
+            return $thumbKey;
         }
 
         $this->logger->warning('PdfThumbnailGenerator: no working backend (install poppler-utils or ghostscript)');

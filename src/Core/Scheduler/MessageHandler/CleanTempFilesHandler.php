@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Core\Scheduler\MessageHandler;
 
 use Aurora\Core\Scheduler\Message\CleanTempFilesMessage;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -13,6 +14,9 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  *
  * Covers:
  *   - /tmp/aurora_ssh_*  (SSH key files from MountPoint tunnels - crash orphans)
+ *   - /tmp/aurora_storage_workspace_*  (local working copies of stored
+ *     objects - LocalWorkspace removes its own in a `finally`, so anything
+ *     left here is a process that died mid-work)
  */
 #[AsMessageHandler]
 final readonly class CleanTempFilesHandler
@@ -23,6 +27,7 @@ final readonly class CleanTempFilesHandler
     /** Prefixes of temporary files Aurora creates in sys_get_temp_dir(). */
     private const array TMP_PREFIXES = [
         'aurora_ssh_',
+        LocalWorkspace::TMP_PREFIX,
     ];
 
     public function __construct(

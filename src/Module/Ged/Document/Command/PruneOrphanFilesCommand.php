@@ -5,20 +5,15 @@ declare(strict_types=1);
 namespace Aurora\Module\Ged\Document\Command;
 
 use Aurora\Core\Storage\Enum\StorageAreaEnum;
+use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\Document\Repository\DocumentVersionRepository;
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use SplFileInfo;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Lists, and on `--force` removes, the files under `var/uploads/ged/` that no
@@ -36,6 +31,12 @@ use Symfony\Component\Filesystem\Filesystem;
  * (7 by default) keeps a file somebody is still working on out of reach.
  *
  * Dry by default. Nothing is deleted without `--force`.
+ *
+ * Note on `--days`: it reads the stored object's modification date, which on a
+ * remote backend is when the object was put there rather than when the file
+ * was made. Right after a migration everything looks new, and this spares all
+ * of it until the window passes. Prudent rather than wrong, but surprising if
+ * you do not know it.
  */
 #[AsCommand(
     name: 'aurora:ged:prune-orphans',
@@ -46,9 +47,7 @@ final class PruneOrphanFilesCommand extends Command
     public function __construct(
         private readonly DocumentRepository $documentRepository,
         private readonly DocumentVersionRepository $versionRepository,
-        private readonly Filesystem $filesystem,
-        #[Autowire(param: 'app.upload_dir')]
-        private readonly string $uploadDir,
+        private readonly StorageManager $storageManager,
     ) {
         parent::__construct();
     }
@@ -67,13 +66,7 @@ final class PruneOrphanFilesCommand extends Command
         $days = max(0, (int) $input->getOption('days'));
         $force = true === $input->getOption('force');
 
-        $root = $this->uploadDir.'/'.StorageAreaEnum::Ged->value;
-        if (!is_dir($root)) {
-            $io->info(sprintf('Nothing to scan: %s does not exist.', $root));
-
-            return Command::SUCCESS;
-        }
-
+        $adapter = $this->storageManager->active();
         $referenced = $this->referencedPaths();
         $cutoff = time() - ($days * 86400);
 
@@ -81,19 +74,21 @@ final class PruneOrphanFilesCommand extends Command
         $spared = 0;
         $bytes = 0;
 
-        foreach ($this->files($root) as $file) {
-            $relative = StorageAreaEnum::Ged->value.'/'.mb_ltrim(str_replace($root, '', $file->getPathname()), '/');
-            if (isset($referenced[$relative])) {
+        // One listing, and every size and date comes with it. Asking the
+        // backend again per file would be free on a disk and one billed
+        // request per file anywhere else.
+        foreach ($adapter->list(StorageAreaEnum::Ged->value) as $object) {
+            if (isset($referenced[$object->key])) {
                 continue;
             }
 
-            if ($file->getMTime() > $cutoff) {
+            if ($object->lastModifiedAt->getTimestamp() > $cutoff) {
                 ++$spared;
                 continue;
             }
 
-            $orphans[] = $relative;
-            $bytes += $file->getSize();
+            $orphans[] = $object->key;
+            $bytes += $object->size;
         }
 
         if ($spared > 0) {
@@ -120,9 +115,9 @@ final class PruneOrphanFilesCommand extends Command
             return Command::SUCCESS;
         }
 
-        foreach ($orphans as $relative) {
-            $this->filesystem->remove($this->uploadDir.'/'.$relative);
-        }
+        // In one call rather than one per orphan: this command exists to clean
+        // up after thousands of them.
+        $adapter->deleteMany($orphans);
 
         $io->success($summary.' Deleted.');
 
@@ -170,21 +165,6 @@ final class PruneOrphanFilesCommand extends Command
         }
 
         return $paths;
-    }
-
-    /** @return iterable<SplFileInfo> */
-    private function files(string $root): iterable
-    {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY,
-        );
-
-        foreach ($iterator as $file) {
-            if ($file instanceof SplFileInfo && $file->isFile()) {
-                yield $file;
-            }
-        }
     }
 
     private function humanBytes(int $bytes): string

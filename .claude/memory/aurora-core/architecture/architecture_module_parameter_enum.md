@@ -1,6 +1,6 @@
 ---
 name: Architecture ModuleParameterEnum
-description: Toggles de modules - depuis le monorepo-split, chaque module métier a son <Module>ModuleParameterEnum + provider ; l'enum central est core-infra only
+description: Toggles de modules - chaque module métier a son <Module>ModuleParameterEnum + provider ; l'enum central est core-infra only
 type: project
 ---
 
@@ -10,7 +10,7 @@ Les paramètres "module on/off" vivent dans un enum dédié, **séparément** d'
 (paramètres applicatifs : SEO, séquences, seuils…). Tous implémentent
 `ApplicationParameterEnumInterface`, groupe `'modules'`.
 
-**Depuis le monorepo-split (2026-05-30)** la propriété est distribuée :
+**Depuis la distribution des enums (2026-05-30)** la propriété est répartie :
 
 - **Chaque module métier** porte ses toggles dans son **propre**
   `Aurora\Module\<Module>\Setting\<Module>ModuleParameterEnum` + un
@@ -50,8 +50,10 @@ et distribution Composer (un module léger n'embarque pas les toggles des autres
 - `<Module>Context::isBackendEnabled()` → `moduleAccessChecker->isEnabled(<Module>ModuleParameterEnum::Backend->value)`.
   **Passer `->value` (string)** : l'enum par-module ne satisfait pas le type-hint de l'enum
   central, et `ModuleAccessChecker::isEnabled()` accepte `ModuleParameterEnum|string`.
-- Le provider est tagué `aurora.application_parameter_provider` (par le `config/services.php`
-  du package, ou le `_instanceof` central dans le monorepo). Sans lui,
+- Le provider est tagué `aurora.application_parameter_provider` par le `_instanceof`
+  central de `config/services.yaml`. (L'autre voie, un `config/services.php` par
+  package, appartenait aux dépôts `aurora-*` : le split est abandonné, voir
+  [[project_monorepo_split_chantier]].) Sans le tag,
   `aurora:application-parameter` flague les rows obsolètes et les wipe.
 
 ## Consommateurs cross-module
@@ -72,7 +74,7 @@ au lieu de stockage : `SettingsService` (cascade), `ModulesViewBuilder`, `UsersV
 
 ## Liens
 
-- [[project_monorepo_split_chantier]] - le chantier qui a distribué les enums.
+- [[project_monorepo_split_chantier]] - le chantier qui a distribué les enums. Le split lui-même a été abandonné ; la distribution des enums, elle, est restée.
 - [[pattern_core_submodules_split]] - "1 module = 1 toggle root = 1 context".
 - Outils alignés sur ce pattern : skills `/add-module`, `/register-module-toggle`,
   `/audit-module-toggles`, `/add-submodule` + doc `docs/aurora-core/dev/add_module.md`.

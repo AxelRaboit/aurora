@@ -5,6 +5,58 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.127] - 2026-09-11
+
+### Modifié
+
+#### Les fichiers ne passent plus par le dossier d'upload, mais par une couche de stockage
+Huit classes lisaient `app.upload_dir` et joignaient un chemin à la main. Changer
+de support voulait dire les toucher toutes, et l'outillage image et PDF en
+dessous prend des noms de fichiers, pas des flux.
+
+`StorageAdapterInterface` est maintenant le seul chemin vers les octets. Une clé
+y est le chemin relatif que la base stocke déjà, inchangé : brancher un autre
+support plus tard ne réécrira aucune ligne. `LocalStorageAdapter` fait ce
+qu'Aurora a toujours fait, au même endroit et aux mêmes fichiers, et c'est lui
+qui tourne dans les tests, sans identifiants à fournir.
+
+`LocalWorkspace` prête un vrai chemin à GD, `pdftoppm` et Ghostscript. Trois
+verbes, parce que « j'ai besoin d'un chemin » cache trois intentions et que les
+confondre est la façon dont une vignette cesse silencieusement d'être
+enregistrée : regarder sans modifier, modifier sur place, ou créer un nouvel
+objet. Sur le disque, les trois prêtent le fichier stocké lui-même : aucune
+copie, aucun temporaire, exactement les performances d'avant.
+
+`aurora:ged:prune-orphans` parcourait le dossier puis interrogeait chaque
+fichier pour sa taille et sa date. Il fait désormais un seul listing, qui porte
+ces deux informations, et supprime en un appel.
+
+Rien ne change pour qui utilise l'application : mêmes fichiers, mêmes adresses,
+même comportement.
+
+#### `UploadPathResolver` est supprimé
+Reliquat de la fusion Media vers GED. Plus aucun appelant, ni dans le core ni
+dans aurora-client, et son `is_file()` tournait à chaque appel pour une garantie
+que personne ne demandait.
+
+### Dans aurora-client
+
+Aucune migration, aucune donnée touchée. À répercuter seulement si le projet
+étend une de ces classes :
+
+- `DocumentManager` prend un `StorageManager` en dernier argument. Un manager
+  client qui redéclare le constructeur doit le passer.
+- `ImageVariantGenerator::generate()` et `deleteVariants()`, ainsi que
+  `PdfThumbnailGenerator::generate()`, prennent un `StorageAdapterInterface` en
+  premier argument. Le bon, dans la plupart des cas, est
+  `$storageManager->active()`.
+- `GedDocumentUploader` ne reçoit plus `Filesystem` ni le dossier d'upload, mais
+  un `StorageManager` et un `LocalWorkspace`.
+- `UploadPathResolver` n'existe plus. Un appelant qui a besoin d'un chemin local
+  passe par `LocalWorkspace`, qui le prête pour la durée du travail.
+
+Un projet qui n'étend aucune de ces classes n'a rien à faire.
+
 ## [0.9.126] - 2026-09-11
 
 ### Corrigé

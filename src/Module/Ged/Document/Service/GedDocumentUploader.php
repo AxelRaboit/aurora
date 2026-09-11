@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Document\Service;
 
+use Aurora\Core\Storage\Adapter\StorageAdapterInterface;
+use Aurora\Core\Storage\Adapter\StoredObject;
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
 use Aurora\Core\Storage\Enum\StorageAreaEnum;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\StorageManager;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use DateTimeImmutable;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Filesystem\Path;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
@@ -29,12 +30,11 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final readonly class GedDocumentUploader
 {
     public function __construct(
-        private Filesystem $filesystem,
         private SluggerInterface $slugger,
         private PdfThumbnailGenerator $pdfThumbnailGenerator,
         private ImageCropper $imageCropper,
-        #[Autowire(param: 'app.upload_dir')]
-        private string $uploadDir,
+        private StorageManager $storageManager,
+        private LocalWorkspace $workspace,
     ) {}
 
     /**
@@ -53,17 +53,21 @@ final readonly class GedDocumentUploader
         $relativeDir = sprintf('%s/%s', StorageAreaEnum::Ged->value, $dateSlug);
         $relativePath = sprintf('%s/%s', $relativeDir, $newFilename);
 
-        $this->filesystem->mkdir(Path::join($this->uploadDir, $relativeDir));
-        $file->move(Path::join($this->uploadDir, $relativeDir), $newFilename);
+        $adapter = $this->storageManager->active();
+
+        // PHP already put the upload somewhere on this machine; handing that
+        // path over rather than moving it first means one copy instead of two,
+        // and the temporary is swept at the end of the request either way.
+        $adapter->writeFromLocalFile($relativePath, $file->getPathname());
 
         $thumbnailPath = null;
         if (MimeTypeEnum::Pdf->value === $mimeType) {
             $thumbDir = sprintf('%s/thumbnails/%s', StorageAreaEnum::Ged->value, $dateSlug);
             $thumbBasename = pathinfo($newFilename, PATHINFO_FILENAME);
-            $thumbnailPath = $this->pdfThumbnailGenerator->generate($relativePath, $thumbDir, $thumbBasename);
+            $thumbnailPath = $this->pdfThumbnailGenerator->generate($adapter, $relativePath, $thumbDir, $thumbBasename);
         }
 
-        [$width, $height] = $this->readImageDimensions(Path::join($this->uploadDir, $relativePath), $mimeType);
+        [$width, $height] = $this->readImageDimensions($adapter, $relativePath, $mimeType);
 
         return [
             'filePath' => $relativePath,
@@ -101,24 +105,38 @@ final readonly class GedDocumentUploader
         $newFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
         $relativePath = sprintf('%s/%s/%s', StorageAreaEnum::Ged->value, $dateSlug, $newFilename);
 
-        $dimensions = $this->imageCropper->crop(
-            Path::join($this->uploadDir, $sourceRelativePath),
-            Path::join($this->uploadDir, $relativePath),
-            $mimeType,
-            $x,
-            $y,
-            $width,
-            $height,
+        $adapter = $this->storageManager->active();
+
+        $dimensions = $this->workspace->readable(
+            $adapter,
+            $sourceRelativePath,
+            fn (string $source): ?array => $this->workspace->target(
+                $adapter,
+                $relativePath,
+                fn (string $destination): ?array => $this->imageCropper->crop(
+                    $source,
+                    $destination,
+                    $mimeType,
+                    $x,
+                    $y,
+                    $width,
+                    $height,
+                ),
+            ),
         );
 
         if (null === $dimensions) {
             return null;
         }
 
+        // The crop just stored these bytes, so the size comes from the object
+        // it wrote rather than from a second look at the disk.
+        $stored = $adapter->stat($relativePath);
+
         return [
             'filePath' => $relativePath,
             'fileName' => $newFilename,
-            'size' => @filesize(Path::join($this->uploadDir, $relativePath)) ?: 0,
+            'size' => $stored instanceof StoredObject ? $stored->size : 0,
             'width' => $dimensions[0],
             'height' => $dimensions[1],
         ];
@@ -134,7 +152,7 @@ final readonly class GedDocumentUploader
             return;
         }
 
-        $this->filesystem->remove(Path::join($this->uploadDir, $relativePath));
+        $this->storageManager->active()->delete($relativePath);
     }
 
     /**
@@ -143,17 +161,16 @@ final readonly class GedDocumentUploader
      *
      * @return array{0: int|null, 1: int|null}
      */
-    private function readImageDimensions(string $absolutePath, string $mimeType): array
+    private function readImageDimensions(StorageAdapterInterface $adapter, string $key, string $mimeType): array
     {
         if (!str_starts_with($mimeType, 'image/')) {
             return [null, null];
         }
 
-        $info = @getimagesize($absolutePath);
-        if (false === $info) {
-            return [null, null];
-        }
+        return $this->workspace->readable($adapter, $key, static function (string $path): array {
+            $info = @getimagesize($path);
 
-        return [$info[0], $info[1]];
+            return false === $info ? [null, null] : [$info[0], $info[1]];
+        });
     }
 }

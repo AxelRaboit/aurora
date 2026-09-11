@@ -31,6 +31,7 @@ services:
     # Auto-tag every registered front so the Registry collects them.
     # Auto-tag every menu location provider so the MenuLocationRegistry collects them.
     # Auto-tag every sequence prefix provider so the conflict listener validates uniqueness at boot.
+    # Auto-tag every storage adapter so StorageManager can index them by disk.
     _instanceof:
         Aurora\Core\Module\Contract\ModuleInterface:
             tags: [aurora.module]
@@ -62,6 +63,8 @@ services:
             tags: [aurora.entity_reference_provider]
         Aurora\Core\Scheduler\RecurringMessageProviderInterface:
             tags: [aurora.recurring_message_provider]
+        Aurora\Core\Storage\Adapter\StorageAdapterInterface:
+            tags: [aurora.storage_adapter]
 
     Aurora\Core\Scheduler\MainSchedule:
         arguments:

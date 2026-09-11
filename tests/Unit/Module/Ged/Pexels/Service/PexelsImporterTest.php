@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Module\Ged\Pexels\Service;
 
+use Aurora\Core\Storage\Adapter\LocalStorageAdapter;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\StorageManager;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Aurora\Module\Ged\Document\Dto\DocumentInputFactory;
 use Aurora\Module\Ged\Document\Dto\DocumentInputInterface;
 use Aurora\Module\Ged\Document\Entity\Document;
@@ -96,13 +99,7 @@ final class PexelsImporterTest extends TestCase
             $manager,
             new DocumentInputFactory(),
             $categoryProvider,
-            new GedDocumentUploader(
-                new Filesystem(),
-                new AsciiSlugger(),
-                new PdfThumbnailGenerator($this->workDir),
-                new ImageCropper(new Filesystem()),
-                $this->workDir,
-            ),
+            $this->makeUploader(),
             $http ?? $this->respondingWith((string) base64_decode(self::PNG, strict: true)),
         );
 
@@ -223,5 +220,19 @@ final class PexelsImporterTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         $this->import($this->photo(), $this->respondingWith('<!doctype html><title>nope</title>'));
+    }
+
+    private function makeUploader(): GedDocumentUploader
+    {
+        $filesystem = new Filesystem();
+        $workspace = new LocalWorkspace($filesystem);
+
+        return new GedDocumentUploader(
+            new AsciiSlugger(),
+            new PdfThumbnailGenerator($workspace),
+            new ImageCropper($filesystem),
+            new StorageManager([new LocalStorageAdapter($filesystem, $this->workDir)]),
+            $workspace,
+        );
     }
 }
