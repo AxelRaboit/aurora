@@ -40,7 +40,7 @@ const current = computed(() => props.page.slug);
         <!-- Les rubriques. `sticky` sur grand écran : parcourir une page de
              six étapes ne devrait pas faire perdre la table des matières. -->
         <nav
-            class="w-full shrink-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:w-64 xl:overflow-y-auto xl:border-r xl:border-line/60 xl:pr-5"
+            class="w-full shrink-0 xl:sticky xl:top-[calc(var(--aurora-topbar)+1rem)] xl:max-h-[calc(100vh-var(--aurora-topbar)-2rem)] xl:w-64 xl:overflow-y-auto xl:border-r xl:border-line/60 xl:pr-5"
             :aria-label="t('backend.documentation.sections')"
         >
             <div class="relative mb-3">
@@ -142,13 +142,14 @@ const current = computed(() => props.page.slug);
         <!-- Les étapes de la page. Cachée quand elle n'apprendrait rien :
              une page d'une seule section n'a pas de sommaire.
 
-             Même hauteur bornée et même défilement propre que la liste des
-             rubriques à gauche : sans eux, une page à beaucoup de sections
-             dans une fenêtre courte débordait sous le pli, et la fin du
-             sommaire n'était atteignable par aucun geste. -->
+             Collé sous la barre du haut, pas à seize pixels du haut de la
+             fenêtre : celle-ci est collée elle aussi, et le sommaire passait
+             dessous. Sur une page à quatre sections, il n'en restait que la
+             dernière ligne visible. Même hauteur bornée et même défilement
+             propre que la liste des rubriques à gauche. -->
         <aside
             v-if="outline.length > 1"
-            class="hidden w-56 shrink-0 xl:sticky xl:top-4 xl:block xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto"
+            class="hidden w-56 shrink-0 xl:sticky xl:top-[calc(var(--aurora-topbar)+1rem)] xl:block xl:max-h-[calc(100vh-var(--aurora-topbar)-2rem)] xl:overflow-y-auto"
             :aria-label="t('backend.documentation.on_this_page')"
         >
             <p class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
