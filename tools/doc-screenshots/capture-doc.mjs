@@ -57,7 +57,17 @@ const SHOTS = [
       await settle(page, 1500);
     },
   },
-  { name: "notifications", path: "/backend/notifications" },
+  {
+    // La cloche, pas l'adresse du même nom : /backend/notifications est le
+    // point d'API qui la nourrit, et la photographier donnait un pavé de
+    // JSON sur fond sombre. Les notifications n'ont pas de page.
+    name: "notifications",
+    path: "/backend",
+    async prepare(page) {
+      await page.getByRole("button", { name: /^Notifications/ }).first().click();
+      await settle(page, 1500);
+    },
+  },
   { name: "profile", path: "/backend/general/profile" },
   { name: "sidemenu", path: "/backend/general/profile/sidemenu" },
 

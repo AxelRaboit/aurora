@@ -16,7 +16,12 @@ import DOMPurify from "dompurify";
  * nothing and the day somebody pastes a table from elsewhere is not the day
  * to discover it was missing.
  */
-export function useDocumentationPage(props) {
+/** The attribute the overlay listens on, and the label its trigger carries. */
+const TRIGGER = "data-doc-image";
+
+export function useDocumentationPage(props, zoomLabel = "") {
+    const ZOOM_LABEL = zoomLabel;
+
     /** Headings get an address so the summary on the right can point at them. */
     function slugify(text) {
         return String(text)
@@ -43,7 +48,18 @@ export function useDocumentationPage(props) {
             .replace("__name__", match[2]);
     }
 
+    /**
+     * The pictures of the page being read, in the order they appear.
+     *
+     * Collected while rendering rather than parsed a second time: the
+     * enlarged view is indexed by position, and two passes over the same
+     * Markdown is two chances for the orders to disagree.
+     */
+    const pictures = ref([]);
+
     const rendered = computed(() => {
+        const collected = [];
+
         const renderer = {
             heading({ tokens, depth }) {
                 const text = this.parser.parseInline(tokens);
@@ -51,16 +67,33 @@ export function useDocumentationPage(props) {
                 return `<h${depth} id="${slugify(text)}">${text}</h${depth}>`;
             },
             image({ href, title, text }) {
+                const url = imageUrl(href);
+                const at = collected.length;
+                collected.push({ url, alt: text ?? "", caption: title ?? "" });
+
+                // A button rather than a div with a handler: enlarging a
+                // screenshot is an action, and a reader on a keyboard has to
+                // be able to reach it.
+                //
                 // `loading="lazy"`: a page carries up to six screenshots of
                 // 1600 pixels, and the reader sees the first one.
-                return `<figure><img src="${imageUrl(href)}" alt="${text ?? ""}"${title ? ` title="${title}"` : ""} loading="lazy"></figure>`;
+                return `<figure><button type="button" class="doc-figure" ${TRIGGER}="${at}" aria-label="${ZOOM_LABEL}"><img src="${url}" alt="${text ?? ""}"${title ? ` title="${title}"` : ""} loading="lazy"></button></figure>`;
             },
         };
 
         const parser = new Marked({ gfm: true });
         parser.use({ renderer });
 
-        return DOMPurify.sanitize(parser.parse(props.page.markdown ?? ""));
+        const html = DOMPurify.sanitize(
+            parser.parse(props.page.markdown ?? ""),
+            {
+                ADD_ATTR: [TRIGGER],
+            },
+        );
+
+        pictures.value = collected;
+
+        return html;
     });
 
     /** The page's own sections, for the summary beside it. */
@@ -120,5 +153,14 @@ export function useDocumentationPage(props) {
         return props.pagePathTemplate.replace("__slug__", slug);
     }
 
-    return { rendered, outline, query, results, searching, pageUrl };
+    return {
+        rendered,
+        pictures,
+        outline,
+        query,
+        results,
+        searching,
+        pageUrl,
+        TRIGGER,
+    };
 }

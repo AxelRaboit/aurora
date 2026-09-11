@@ -372,3 +372,28 @@ pre .hljs-attribute {
 .doc-prose code::after {
     content: none;
 }
+
+/*
+ * La capture, devenue bouton.
+ *
+ * Le cadre et le fond restent ceux de l'image ; ce qui s'ajoute est le
+ * curseur et la teinte au survol, pour que le lecteur sache qu'il peut
+ * l'ouvrir avant d'avoir essayé.
+ */
+.doc-prose .doc-figure {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+}
+
+.doc-prose .doc-figure img {
+    transition: border-color 150ms ease;
+}
+
+.doc-prose .doc-figure:hover img,
+.doc-prose .doc-figure:focus-visible img {
+    border-color: var(--th-accent);
+}

@@ -2,11 +2,16 @@
 
 {% block title %}{{ page.title }} - {{ parent() }}{% endblock %}
 
+{# La section et l'entrée de menu portent le même mot, et le fil d'Ariane
+   le répétait. La section, la rubrique, la page : trois crans qui disent
+   chacun quelque chose. Une section ne porte pas de lien, comme partout
+   ailleurs : elle nomme un endroit, elle n'est pas une page. Un commentaire
+   Twig ne peut pas vivre à l'intérieur d'une expression, d'où sa place
+   ici. #}
 {% block page_header_slot %}
     {{ include('@Shared/components/page_header.html.twig', {
         crumbs: [
             {label: 'backend.nav.sections.documentation'|trans},
-            {label: 'backend.nav.documentation'|trans, href: path('backend_documentation')},
             {label: page.rubric},
             {label: page.title},
         ],
