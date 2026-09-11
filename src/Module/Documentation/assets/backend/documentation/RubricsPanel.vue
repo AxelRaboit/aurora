@@ -70,7 +70,7 @@ const currentRubric = computed(
         )?.slug ?? "",
 );
 
-const { isExpanded, toggle, getRaw } = usePersistedExpanded(
+const { isExpanded, set, getRaw } = usePersistedExpanded(
     "aurora-documentation-rubrics",
 );
 
@@ -79,6 +79,16 @@ function isOpen(rubric) {
     return undefined === getRaw(rubric.slug)
         ? rubric.slug === currentRubric.value
         : isExpanded(rubric.slug);
+}
+
+/**
+ * `set`, not `toggle`: the store's own default is "unfolded" and ours is the
+ * opposite, so flipping what the store believes is not flipping what the reader
+ * sees. On a folded rubric `toggle` wrote the state already on screen, and the
+ * first click did nothing.
+ */
+function toggleRubric(rubric) {
+    set(rubric.slug, !isOpen(rubric));
 }
 
 const query = ref("");
@@ -199,7 +209,7 @@ watch(tree, revealCurrent);
                     type="button"
                     class="si flex w-full items-center rounded-lg text-left text-sm font-medium text-secondary transition-colors hover:bg-surface-2 hover:text-primary"
                     :aria-expanded="isOpen(rubric)"
-                    v-on:click="toggle(rubric.slug)"
+                    v-on:click="toggleRubric(rubric)"
                 >
                     <component
                         :is="isOpen(rubric) ? ChevronDown : ChevronRight"
