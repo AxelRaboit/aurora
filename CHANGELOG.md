@@ -5,6 +5,26 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.124] - 2026-09-11
+
+### Corrigé
+
+#### Le même saut d'ancre, sur le site public
+La correction de la 0.9.123 ne valait que pour la documentation. La zone
+« Sommaire » d'une publication pointe elle aussi sur les titres de la page, et
+le site public a son propre en-tête collé : le titre visé atterrissait dessous,
+exactement comme dans l'administration.
+
+La règle passe donc sur `.prose`, que les deux côtés partagent, et chacun
+déclare la hauteur de sa barre dans `--aurora-topbar` : six rems et demi pour
+l'administration, six pour le site public. Une page dont l'en-tête est plus
+court gagne un peu d'air plutôt qu'un titre caché, ce qui est le bon sens de
+l'erreur.
+
+Vérifié des deux côtés : rien n'est plus masqué.
+
+---
+
 ## [0.9.123] - 2026-09-11
 
 ### Corrigé

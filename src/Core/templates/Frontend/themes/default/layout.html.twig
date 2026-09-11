@@ -8,7 +8,7 @@
     <meta name="generator" content="Aurora by axelraboit">
     {{ include('Frontend/themes/default/partials/head.html.twig') }}
 </head>
-<body class="min-h-screen bg-bg text-primary flex flex-col">
+<body class="aurora-front min-h-screen bg-bg text-primary flex flex-col">
     {% set alternatesByLocale = {} %}
     {% for alt in alternates %}
         {% set alternatesByLocale = alternatesByLocale|merge({(alt.locale): alt.url}) %}

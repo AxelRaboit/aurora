@@ -134,6 +134,20 @@
  */
 .prose :is(h2, h3, h4) {
     margin-bottom: 0.5em;
+    /*
+     * Ou s'arrete un saut d'ancre.
+     *
+     * Un sommaire pointe sur `#un-titre`, et le navigateur amene ce titre tout
+     * en haut de la fenetre, c'est-a-dire derriere l'en-tete colle : on
+     * atterrissait sur le deuxieme paragraphe, sans avoir vu le titre qu'on
+     * venait de demander. Vrai des deux cotes, l'administration comme le site
+     * public, qui ont chacun leur barre.
+     *
+     * `scroll-margin-top` deplace la ligne d'arrivee, pas l'element : la mise
+     * en page ne bouge pas, seul le saut s'arrete plus bas. Chaque cote
+     * declare la hauteur de sa propre barre dans `--aurora-topbar`.
+     */
+    scroll-margin-top: calc(var(--aurora-topbar) + 1rem);
 }
 
 /*
@@ -347,21 +361,6 @@ pre .hljs-attribute {
     padding-top: 1.25em;
     border-top: 1px solid color-mix(in srgb, var(--th-line) 60%, transparent);
     font-size: 1.15em;
-}
-
-/**
- * Où s'arrête un saut d'ancre.
- *
- * Le sommaire pointe sur `#un-titre`, et le navigateur amène ce titre tout en
- * haut de la fenêtre, c'est-a-dire derrière la barre collée : on atterrissait
- * sur le deuxième paragraphe, sans avoir vu le titre qu'on venait de demander.
- *
- * `scroll-margin-top` déplace la ligne d'arrivée, pas l'élément : la mise en
- * page ne bouge pas, seul le saut s'arrête plus bas. Le `1rem` est la même
- * respiration que celle des colonnes collées.
- */
-.doc-prose :is(h2, h3, h4) {
-    scroll-margin-top: calc(var(--aurora-topbar) + 1rem);
 }
 
 /* Le premier titre ouvre la page : rien au-dessus dont il faille le séparer. */
