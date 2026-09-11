@@ -11,7 +11,7 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 #### Le manuel du produit, dans le produit
 Une entrée **Documentation** dans le menu latéral ouvre cent quatre pages qui
-expliquent le back-office écran par écran, avec cent quatre-vingt-quatorze
+expliquent le back-office écran par écran, avec cent soixante et onze
 captures.
 
 Elles vivent dans le code, `src/Module/Documentation/content/`, un fichier
