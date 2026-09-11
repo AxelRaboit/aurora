@@ -27,3 +27,12 @@ body {
 :root {
     --aurora-topbar: 6.5rem;
 }
+
+/**
+ * Le site public a sa propre barre, plus courte : un seul bandeau, sans fil
+ * d'Ariane. La valeur est celle que la zone sommaire utilisait deja pour se
+ * coller (`lg:top-24`), donc les deux disent la meme chose.
+ */
+body.aurora-front {
+    --aurora-topbar: 6rem;
+}
