@@ -1,18 +1,18 @@
 ---
 title: "Le mot de passe oublié"
-description: "Le parcours complet, et les limites qui le protègent."
+description: "Ce que la page répond, et pourquoi elle répond toujours la même chose."
 rubric: "Plateforme"
 ---
-Une demande de réinitialisation, un lien, un nouveau mot de passe.
+La page est accessible depuis l'écran de connexion, sans être connecté.
 
-## Le parcours
+![La page de mot de passe oublié](../../images/07-plateforme/mot-de-passe-oublie-01-la-page-de-mot-de-passe-oublie.png)
 
-- La personne demande depuis la page de connexion, en donnant son adresse.
-- Un e-mail part avec un lien à usage unique et limité dans le temps.
-- Le lien mène à une page où poser un nouveau mot de passe.
+## La réponse est toujours la même
 
-## Ce qui le protège
+« Si cette adresse est associée à un compte, vous recevrez un email sous peu. » Elle s'affiche que l'adresse existe ou non, et c'est délibéré : une réponse qui distinguerait les deux cas dirait à n'importe qui quelles adresses ont un compte sur le site.
 
-- Le lien ne vaut qu'une fois, et expire.
-- La page ne dit pas si l'adresse existe : répondre autrement dirait à un curieux qui a un compte.
-- La connexion est limitée à cinq tentatives par quart d'heure, indépendamment de tout ça.
+![La réponse](../../images/07-plateforme/mot-de-passe-oublie-02-la-reponse-toujours-la-meme.png)
+
+## Le lien reçu
+
+À usage unique, et il expire. Une fois le nouveau mot de passe posé, les liens précédents ne valent plus rien.

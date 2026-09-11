@@ -19,7 +19,7 @@ Une ligne par document : son titre, sa catégorie, son statut, le nom du fichier
 
 ## Choisir le fichier
 
-Un fichier à la fois, pris sur l'ordinateur. Vingt méga-octets au maximum, et une liste d'extensions autorisées : images, PDF, documents bureautiques, archives. Les deux sont des réglages.
+Un fichier à la fois, pris sur l'ordinateur. Vingt méga-octets au maximum, et une liste d'extensions autorisées : images, PDF, documents bureautiques, archives. Les deux se règlent, mais dans un onglet réservé au développeur du site : c'est à lui qu'il faut demander de les changer.
 
 **Deux champs apparaissent une fois le fichier choisi**, et seulement si c'est une image : le texte alternatif et la légende. Le panneau ne peut pas les proposer avant, il ne sait pas encore ce qu'on dépose.
 

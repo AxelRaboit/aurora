@@ -1,9 +1,9 @@
 ---
-title: "Ce qui est chiffré en base"
-description: "Le contenu des notes, et ce que ça protège ou non."
+title: "Ce que le chiffrement protège"
+description: "Vos notes sont chiffrées : ce que cela vous garantit, et ce que cela ne vous garantit pas."
 rubric: "Notes"
 ---
-Le contenu d'une note est chiffré dans la base de données. C'est un des deux seuls endroits de l'application où c'est le cas, avec le tracé d'une signature de contrat.
+Le titre et le contenu d'une note sont chiffrés là où ils sont stockés. C'est l'un des deux seuls endroits de l'application où c'est le cas, avec le tracé d'une signature de contrat.
 
 ## Ce que ça protège
 

@@ -1,15 +1,19 @@
 ---
 title: "Les privilèges"
-description: "Cinquante-quatre droits, par écran et par action."
+description: "Le rôle décide de la catégorie, le privilège décide de l'écran."
 rubric: "Plateforme"
 ---
 Le rôle décide de la catégorie, le privilège décide de l'écran. C'est le second qui fait le travail au quotidien.
 
-![Les privilèges](../../images/07-plateforme/users.png)
+## La fenêtre
+
+Elle s'ouvre depuis les actions d'un compte, et range les privilèges par module.
+
+![La fenêtre des privilèges](../../images/07-plateforme/privileges-01-la-fenetre-des-privileges.png)
 
 ## Comment ils sont formés
 
-Un privilège nomme un module, un écran et une action : voir, créer, modifier, supprimer, ou gérer quand l'écran ne se découpe pas. Il y en a cinquante-quatre aujourd'hui, et la liste complète se lit dans la section Administration.
+Un privilège nomme un module, un écran et une action : voir, créer, modifier, supprimer, ou gérer quand l'écran ne se découpe pas.
 
 ## Ce qu'ils commandent
 
