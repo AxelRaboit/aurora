@@ -5,16 +5,19 @@ rubric: "Général"
 ---
 Le menu latéral se règle compte par compte. Deux personnes sur le même site peuvent avoir deux menus différents, et aucune ne modifie celui de l'autre.
 
-![Régler son menu latéral](../../images/01-general/sidemenu.png)
+L'écran s'appelle **Préférences**, sous « Mon profil ».
 
-## Ce qui se règle
+![L'écran de réglage du menu](../../images/01-general/menu-lateral-personnel-01-l-ecran-de-reglage.png)
+
+## Ce qui se règle ici
 
 - Masquer une section entière, ou seulement une entrée : ce qui ne sert jamais disparaît de la vue sans être retiré à personne d'autre.
-- Changer l'ordre des sections et des entrées.
 - Donner sa couleur à une section, par-dessus celle du module.
-- Replier le menu pour ne garder que les icônes.
-- Afficher ou cacher les descriptions sous chaque entrée.
-- Tout remettre à zéro d'un bouton.
+- « Tout réafficher » remet le menu à son état d'origine.
+
+## Ce qui se règle sur le menu lui-même
+
+Le repli, par le bouton en haut du menu, et l'affichage des descriptions sous chaque entrée, par l'interrupteur au-dessus des sections. Ces deux-là ne sont pas sur cet écran.
 
 ## Préférence ou droit
 

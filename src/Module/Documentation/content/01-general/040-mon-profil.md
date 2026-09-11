@@ -5,7 +5,7 @@ rubric: "Général"
 ---
 L'écran de son propre compte : ce qu'on y change vaut pour soi seul, et n'a rien à voir avec les droits, qui se règlent depuis les utilisateurs.
 
-![Mon profil](../../images/01-general/profile.png)
+![Mon profil](../../images/01-general/mon-profil-01-mon-profil.png)
 
 ## Ce qui se change
 

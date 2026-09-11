@@ -154,7 +154,12 @@ async function lastCodeFromMailbox() {
  * titre attendu est la seule preuve que le bon carnet est ouvert.
  */
 async function openNote(id, title) {
-  await page.goto(`${BASE}/backend/notes/markdown/${id}`, { waitUntil: "domcontentloaded" });
+  // `waitUntil: "load"` et non `domcontentloaded` : l'éditeur se remplit
+  // depuis des données posées par le gabarit, et partir trop tôt laissait le
+  // champ sur la note précédente pendant plus de trente secondes - assez
+  // longtemps pour que la garde ci-dessous conclue à tort que la page n'avait
+  // pas changé.
+  await page.goto(`${BASE}/backend/notes/markdown/${id}`, { waitUntil: "load" });
 
   const field = page.getByPlaceholder("Titre de la note…").first();
   await field.waitFor({ timeout: 15000 });
@@ -163,17 +168,26 @@ async function openNote(id, title) {
   // capture prise trop tôt a déjà montré la note précédente à côté du
   // panneau de la nouvelle. Une image fausse et plausible est le pire cas,
   // parce qu'elle passe la relecture.
-  for (let tries = 0; tries < 30; tries += 1) {
+  for (let tries = 0; tries < 75; tries += 1) {
     if (await field.inputValue() === title) {
       await wait(1200);
 
       return;
     }
 
+    // Une fois, et une seule : il arrive que la navigation n'aboutisse pas -
+    // une garde « modifications non enregistrées » posée par l'éditeur y
+    // suffit. Recharger règle le cas sans masquer le vrai échec, puisque la
+    // boucle continue de vérifier ensuite.
+    if (10 === tries) {
+      await page.reload({ waitUntil: "load" });
+      await wait(1500);
+    }
+
     await page.waitForTimeout(400);
   }
 
-  throw new Error(`la note « ${title} » ne s'est pas ouverte (vu : « ${await field.inputValue()} »)`);
+  throw new Error(`la note « ${title} » ne s'est pas ouverte (vu : « ${await field.inputValue()} », adresse ${page.url()})`);
 }
 
 /**
@@ -283,6 +297,75 @@ async function wideAncestor(locator, minWidth) {
 }
 
 const FLOWS = {
+  /**
+   * Les deux réglages du collage d'images dans une note.
+   */
+  "images-dans-une-note": async () => {
+    await page.goto(`${BASE}/backend/configuration/settings/notes`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("les-deux-reglages");
+  },
+
+  /**
+   * Les cinq écrans de la rubrique Général, repris ensemble.
+   */
+  "tableau-de-bord": async () => {
+    await page.goto(`${BASE}/backend`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("le-tableau-de-bord");
+  },
+
+  /**
+   * La recherche globale : ouvrir, taper, lire les groupes.
+   */
+  "recherche-globale": async () => {
+    await page.goto(`${BASE}/backend`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+
+    await page.getByRole("button", { name: /Rechercher/ }).first().click();
+    await wait(1500);
+    await shot("la-palette-vide");
+
+    await page.keyboard.type("contrat", { delay: 60 });
+    await wait(2500);
+    await shot("les-resultats-groupes");
+
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    await wait(900);
+    await shot("se-deplacer-au-clavier");
+  },
+
+  /**
+   * La cloche, et ce qu'elle contient.
+   */
+  "notifications": async () => {
+    await page.goto(`${BASE}/backend`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+
+    await page.getByRole("button", { name: /Notifications/ }).first().click();
+    await wait(2000);
+    await shot("la-cloche-ouverte");
+  },
+
+  /**
+   * Mon profil.
+   */
+  "mon-profil": async () => {
+    await page.goto(`${BASE}/backend/general/profile`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("mon-profil");
+  },
+
+  /**
+   * Régler son menu latéral, compte par compte.
+   */
+  "menu-lateral-personnel": async () => {
+    await page.goto(`${BASE}/backend/general/profile/sidemenu`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("l-ecran-de-reglage");
+  },
+
   /**
    * Le fond d'une zone, dans le panneau de la zone choisie.
    *
@@ -1482,9 +1565,20 @@ const FLOWS = {
 
     // Le carnet dans le menu : l'arborescence est une note dans une note,
     // et c'est là qu'elle se voit.
-    await shotOf(page.getByText("Idées d'articles").first()
-      .locator("xpath=ancestor::nav[1] | xpath=ancestor::aside[1]").first(), "l-arborescence", 8, 8)
-      .catch(async () => { await shot("l-arborescence"); });
+    //
+    // Sans repli, ce cadrage échouait et retombait sur une capture pleine
+    // page : la légende annonçait l'arborescence et l'image montrait la même
+    // chose que la précédente, au pixel près.
+    // Le plus petit conteneur qui porte la première note et la dernière :
+    // remonter par la largeur ne donnait qu'une ligne, puisqu'une ligne est
+    // déjà aussi large que la colonne.
+    const tree = page.locator("div")
+      .filter({ has: page.getByText("Clients", { exact: true }) })
+      .filter({ has: page.getByText("Idées d'articles", { exact: true }) })
+      .last();
+    await tree.scrollIntoViewIfNeeded();
+    await wait(600);
+    await shotOf(tree, "l-arborescence", 10, 10);
 
     await page.getByRole("button", { name: /^Aperçu seul$/ }).first().click();
     await wait(1200);
@@ -1506,9 +1600,16 @@ const FLOWS = {
     await wait(2000);
     await shot("le-panneau-des-liens");
 
-    await shotOf(page.getByText("Liens", { exact: true }).first()
-      .locator("xpath=ancestor::div[3]"), "qui-cite-cette-note", 8, 8)
-      .catch(async () => { await shot("qui-cite-cette-note"); });
+    // Même remarque : le repli produisait une seconde capture identique à la
+    // première. Le panneau des liens porte deux listes, et c'est la seconde -
+    // ce qui cite cette note - que la page explique.
+    const backlinks = page.locator("div")
+      .filter({ has: page.getByText("Liens entrants", { exact: true }) })
+      .filter({ has: page.getByText("Cabinet Verrier", { exact: true }) })
+      .last();
+    await backlinks.scrollIntoViewIfNeeded();
+    await wait(600);
+    await shotOf(backlinks, "qui-cite-cette-note", 12, 12);
 
     flowName = "mentions-non-liees";
     step = 0;
@@ -2016,6 +2117,13 @@ const context = await browser.newContext({
 });
 context.setDefaultTimeout(20000);
 page = await context.newPage();
+
+// L'éditeur de notes pose une garde `beforeunload` tant qu'une modification
+// n'est pas enregistrée, et Playwright refuse les boîtes de dialogue par
+// défaut : la navigation ne partait pas, et la garde d'`openNote` concluait -
+// à raison - que la note affichée n'était pas celle demandée. Ici on accepte,
+// puisqu'une prise de vue n'a rien à sauvegarder.
+page.on("dialog", (dialog) => dialog.accept().catch(() => {}));
 
 await page.goto(`${BASE}/backend/platform/login`, { waitUntil: "domcontentloaded" });
 await page.locator("input[type='email']").first().fill("dev@aurora.app");

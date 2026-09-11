@@ -5,6 +5,60 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.120] - 2026-09-11
+
+### Corrigé
+
+#### Ouvrir une note par son adresse en affichait une autre
+L'écran des notes demande deux notes coup sur coup au chargement - celle que
+le gabarit annonce, puis celle de l'adresse - et `selectNote` posait la
+réponse sans vérifier qu'elle concernait encore la note choisie. Quand elles
+revenaient dans le désordre, la première écrasait la seconde : le lien d'une
+note en ouvrait une autre, au hasard du réseau.
+
+#### Une frappe pouvait écrire une note par-dessus une autre
+Le même `selectNote` posait le nouvel identifiant **avant** d'avoir la
+réponse, et sortait sur échec sans toucher au formulaire. L'éditeur affichait
+donc le texte de la note précédente en face du nouvel identifiant. Une seule
+frappe suffisait ensuite à déclencher la sauvegarde automatique, qui écrivait
+l'ancienne note par-dessus la nouvelle.
+
+Rien à l'écran ne le signalait : il y avait du texte, il avait l'air d'être le
+bon. Le formulaire est désormais marqué non chargé tant que la note demandée
+n'est pas arrivée, et la sauvegarde refuse d'écrire un formulaire qui
+n'appartient pas à la note courante.
+
+Les deux ont été trouvés parce que le script de capture refuse de
+photographier une note dont le titre n'est pas celui attendu.
+
+### Documentation
+
+#### Les cinq écrans de Général, repris
+Ils dataient d'avant le module de documentation, et la capture de la
+recherche globale montrait des publications du type `documentation` qui
+n'existe plus. La palette montre maintenant son ouverture, ses résultats
+groupés par nature, et le déplacement au clavier.
+
+La page du menu latéral annonçait le repli et l'affichage des descriptions
+comme réglables sur cet écran : ils sont sur le menu lui-même. Et l'écran
+s'appelle « Préférences », ce que la page ne disait pas.
+
+#### Trois doublons dans les Notes
+Cinq légendes promettaient cinq choses différentes, adossées à trois copies
+de la même capture. Un cadrage raté retombait en silence sur une capture
+pleine page, ce qui produit une image plausible et fausse. Le repli est
+retiré : un cadrage qui échoue doit le dire.
+
+### Interne
+
+#### La démo n'invente plus de module de facturation
+Une « Échéance facture F-2043 » se présentait comme venant d'un module
+`billing` qui n'existe pas. Le seul module qui dépose vraiment une date est
+l'éditorial, quand une publication est programmée. Le cas lecture seule reste
+couvert par `PlanningModuleSyncTest`.
+
+---
+
 ## [0.9.119] - 2026-09-11
 
 ### Documentation
