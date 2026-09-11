@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Aurora\Fixtures\Core;
 
 use Aurora\Core\Locale\Enum\LocaleEnum;
+use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Module\Configuration\Theme\Entity\Theme;
 use Aurora\Module\Platform\User\Entity\User;
 use Aurora\Module\Platform\User\Enum\UserRoleEnum;
+use Aurora\Module\Platform\User\Enum\UserTypeEnum;
+use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -64,6 +67,90 @@ class CoreDemoFixtures extends Fixture implements DependentFixtureInterface, Fix
         $this->createThemes($manager);
 
         $manager->flush();
+
+        $this->createNotifications($manager);
+    }
+
+    /**
+     * Quelques notifications dans la cloche.
+     *
+     * Elles naissent d'habitude d'une tâche de fond : un rappel d'événement
+     * qui arrive à échéance, une publication envoyée en relecture. Une démo
+     * fraîche n'en a donc aucune tant que le worker n'a pas tourné, et la
+     * cloche s'ouvre sur « Aucune notification » - ce qu'a montré la page de
+     * documentation qui la décrit.
+     *
+     * Écrites directement plutôt qu'attendues : ce qu'il faut voir est ce
+     * que la cloche affiche, et trois lignes dont une lue le disent mieux
+     * qu'un délai à espérer.
+     *
+     * Idempotent sur le titre, par destinataire.
+     */
+    private function createNotifications(EntityManagerInterface $em): void
+    {
+        // Le compte que l'on regarde, pas le premier de la liste. Les
+        // notifications sont personnelles : rangées ailleurs, la cloche
+        // s'ouvre vide pour qui prend la capture, ce qui est exactement ce
+        // qui s'est passé la première fois.
+        $recipient = $em->getRepository(User::class)
+            ->findOneBy(['email' => 'dev@aurora.app', 'type' => UserTypeEnum::Backend->value]);
+
+        if (!$recipient instanceof User) {
+            return;
+        }
+
+        $repository = $em->getRepository(Notification::class);
+        $now = new DateTimeImmutable();
+
+        $entries = [
+            [
+                'type' => 'editorial.review',
+                'title' => 'Une publication attend votre relecture',
+                'body' => '« Relire avant de publier » a été envoyée en relecture par Marie Dupont.',
+                'url' => '/backend/editorial/posts',
+                'at' => $now->modify('-2 hours'),
+                'read' => false,
+            ],
+            [
+                'type' => 'editorial.comment',
+                'title' => 'Un commentaire attend la modération',
+                'body' => 'Sofia Marchetti a commenté « Écrire son premier article ».',
+                'url' => '/backend/editorial/comments',
+                'at' => $now->modify('-1 day'),
+                'read' => false,
+            ],
+            [
+                'type' => 'planning.reminder',
+                'title' => 'Point hebdomadaire dans une heure',
+                'body' => 'Pro, aujourd\'hui à 11:00.',
+                'url' => '/backend/planning/calendar',
+                'at' => $now->modify('-3 days'),
+                'read' => true,
+            ],
+        ];
+
+        foreach ($entries as $entry) {
+            $existing = $repository->findOneBy(['recipient' => $recipient, 'title' => $entry['title']]);
+            $notification = $existing ?? new Notification();
+
+            $notification
+                ->setRecipient($recipient)
+                ->setType($entry['type'])
+                ->setTitle($entry['title'])
+                ->setBody($entry['body'])
+                ->setUrl($entry['url']);
+
+            // L'entité ne laisse pas écrire la date de lecture : elle se
+            // pose en marquant lu, ce qui est la seule façon dont ça arrive
+            // dans le produit.
+            if ($entry['read']) {
+                $notification->markAsRead();
+            }
+
+            $em->persist($notification);
+        }
+
+        $em->flush();
     }
 
     /**

@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { ArrowLeft, ArrowRight, BookOpen, Search } from "lucide-vue-next";
+import AppLightbox from "@/shared/components/overlay/AppLightbox.vue";
 import { useDocumentationPage } from "./composables/useDocumentationPage.js";
 
 /**
@@ -28,8 +29,8 @@ const props = defineProps({
 
 const { t } = useI18n();
 
-const { rendered, outline, query, results, searching, pageUrl } =
-    useDocumentationPage(props);
+const { rendered, pictures, outline, query, results, searching, pageUrl, TRIGGER } =
+    useDocumentationPage(props, t("backend.documentation.enlarge"));
 
 const current = computed(() => props.page.slug);
 </script>
@@ -132,6 +133,11 @@ const current = computed(() => props.page.slug);
                 </a>
             </nav>
         </article>
+
+        <!-- Une capture d'un écran entier est illisible à la largeur d'une
+             colonne de texte : le clic l'ouvre en grand, au clavier comme à
+             la souris, et les flèches passent d'une étape à la suivante. -->
+        <AppLightbox :items="pictures" :trigger="TRIGGER" />
 
         <!-- Les étapes de la page. Cachée quand elle n'apprendrait rien :
              une page d'une seule section n'a pas de sommaire. -->

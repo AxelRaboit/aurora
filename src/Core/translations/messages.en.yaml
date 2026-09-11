@@ -148,6 +148,7 @@ shared:
 # own messages.en.yaml.
 backend:
   documentation:
+    enlarge: Enlarge the screenshot
     sections: Documentation sections
     search_placeholder: Search the documentation…
     results: '1 page found | {count} pages found'
