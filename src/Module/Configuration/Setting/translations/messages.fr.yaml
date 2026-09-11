@@ -35,7 +35,7 @@ backend:
       modules: Modules
     appearance:
       color_presets:
-        title: Palette du picker de couleurs
+        title: Palette du sélecteur de couleurs
         help: 'Ces couleurs s''affichent en raccourci dans tous les sélecteurs de couleurs de l''admin.'
         add: Ajouter une couleur
         confirm_add: Ajouter
@@ -275,7 +275,7 @@ backend:
       label: Alias des items de navigation
       description: 'Carte JSON des alias d''items du menu (géré via l''interface).'
     color_picker_presets:
-      label: Palette du picker de couleurs
+      label: Palette du sélecteur de couleurs
       description: 'Liste JSON de couleurs hexadécimales proposées en raccourci dans tous les sélecteurs de couleurs de l''admin.'
     intro: Consultez et modifiez les paramètres techniques de l'application.
     key: Paramètre

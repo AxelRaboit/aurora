@@ -284,6 +284,62 @@ async function wideAncestor(locator, minWidth) {
 
 const FLOWS = {
   /**
+   * Un onglet de réglages par page qui en parle.
+   *
+   * Refaites toutes ensemble : les six captures dataient d'avant plusieurs
+   * changements d'écran, et une capture de réglages périmée montre un champ
+   * que le lecteur ne trouvera pas.
+   */
+  "onglets-de-reglages": async () => {
+    const tabs = [
+      ["general", "general"],
+      ["localization", "localisation"],
+      ["reading", "lecture"],
+      ["branding", "branding"],
+      ["seo", "seo"],
+      ["email", "emails"],
+      ["system", "systeme"],
+    ];
+
+    for (const [group, name] of tabs) {
+      await page.goto(`${BASE}/backend/configuration/settings/${group}`, { waitUntil: "domcontentloaded" });
+      await wait(3000);
+      await shot(name);
+    }
+  },
+
+  /**
+   * Les thèmes : la liste, puis l'éditeur d'un thème.
+   */
+  "themes": async () => {
+    await page.goto(`${BASE}/backend/configuration/themes`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+    await shot("la-liste-des-themes");
+
+    await page.getByRole("button", { name: /^Modifier/ }).first().click();
+    await wait(2500);
+    await shot("l-editeur-d-un-theme");
+  },
+
+  /**
+   * Renommer et réordonner le menu latéral.
+   */
+  "menu-lateral": async () => {
+    await page.goto(`${BASE}/backend/configuration/settings/navigation`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("l-onglet-navigation");
+  },
+
+  /**
+   * La palette du sélecteur de couleur.
+   */
+  "palette-du-selecteur": async () => {
+    await page.goto(`${BASE}/backend/configuration/settings/appearance`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("l-onglet-apparence");
+  },
+
+  /**
    * La page que reçoit le client, sans compte.
    *
    * L'adresse est passée en paramètre : le jeton n'existe en clair que dans

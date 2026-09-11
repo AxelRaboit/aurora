@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Un petit réglage qui évite beaucoup de dérive : la liste des couleurs proposées dans les sélecteurs.
 
-![La palette du sélecteur de couleur](../../images/08-configuration/settings-appearance.png)
+![L'onglet Apparence](../../images/08-configuration/palette-du-selecteur-01-l-onglet-apparence.png)
 
 ## À quoi ça sert
 

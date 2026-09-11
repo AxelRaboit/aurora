@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Ce qui décide de la forme des e-mails que le site envoie.
 
-![E-mails](../../images/08-configuration/settings-email.png)
+![E-mails](../../images/08-configuration/onglets-de-reglages-06-emails.png)
 
 ## Les réglages
 

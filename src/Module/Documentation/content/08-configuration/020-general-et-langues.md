@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Ce que le site est, et dans quelles langues il parle.
 
-![Général et langues](../../images/08-configuration/settings-localization.png)
+Deux onglets voisins, qu'il est plus simple de lire ensemble.
 
 ## Général
 
@@ -13,9 +13,13 @@ Ce que le site est, et dans quelles langues il parle.
 - L'adresse du site, utilisée pour construire les liens dans les e-mails et les flux.
 - L'adresse e-mail de l'administration.
 
+![L'onglet Général](../../images/08-configuration/onglets-de-reglages-01-general.png)
+
 ## Localisation
 
 - La langue par défaut : celle du site quand rien ne la précise.
 - Le mode monolingue, qui retire les onglets de langue de tous les écrans.
 - Le fuseau horaire, qui décide de l'heure affichée partout.
 - Le format de date.
+
+![L'onglet Localisation](../../images/08-configuration/onglets-de-reglages-02-localisation.png)
