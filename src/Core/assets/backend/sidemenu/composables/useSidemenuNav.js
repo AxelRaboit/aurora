@@ -30,6 +30,7 @@ export function useSidemenuNav(
 
     const {
         isExpanded: isGroupExpanded,
+        set: setGroup,
         toggle: toggleGroup,
         getRaw: getGroupRaw,
     } = usePersistedExpanded("aurora-sidemenu-groups");
@@ -278,6 +279,17 @@ export function useSidemenuNav(
         });
     }
 
+    /**
+     * A group holding the page being read starts open, unless the reader said
+     * otherwise.
+     *
+     * `setGroup(..., true)`, not `toggleGroup`: the store's default is already
+     * "open", so flipping it here would have *closed* the group holding the
+     * current page, and written that shut state down for good. No module builds
+     * `NavItem` children today, so nobody ever saw it - which is exactly why it
+     * is worth writing the intent rather than a flip that happens to read like
+     * it.
+     */
     onMounted(() => {
         activeSections.value.forEach((section) => {
             section.items.forEach((item) => {
@@ -286,7 +298,7 @@ export function useSidemenuNav(
                     getGroupRaw(item.route) === undefined &&
                     item.children.some((c) => itemIsCurrent(c))
                 ) {
-                    toggleGroup(item.route);
+                    setGroup(item.route, true);
                 }
             });
         });

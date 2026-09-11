@@ -5,6 +5,23 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.126] - 2026-09-11
+
+### Corrigé
+
+#### Le premier clic sur une rubrique de la documentation ne faisait rien
+Déplier une rubrique du manuel demandait deux clics, la première fois seulement.
+
+Le magasin qui retient les plis a pour défaut « déplié », alors que le panneau
+affiche « replié » sauf pour la rubrique en cours de lecture. Inverser ce que le
+magasin croit n'était donc pas inverser ce qui était à l'écran : le premier clic
+écrivait l'état déjà affiché, et le second seulement ouvrait la rubrique. Une
+fois la valeur écrite, tout se comportait normalement, ce qui rendait la chose
+difficile à voir deux fois.
+
+`usePersistedExpanded` reçoit un `set(id, valeur)`, et le panneau écrit l'état
+voulu au lieu d'inverser celui qu'on lui prête.
+
 ## [0.9.125] - 2026-09-11
 
 ### Modifié
