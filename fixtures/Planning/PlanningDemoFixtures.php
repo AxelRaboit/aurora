@@ -470,6 +470,12 @@ class PlanningDemoFixtures extends Fixture implements DependentFixtureInterface,
 
         // One meeting with everybody on it, so the modal's attendee list is long
         // enough to show how it wraps.
+        //
+        // Et une réponse différente par personne. Les entretiens juste
+        // au-dessus donnent une réponse unique chacun, ce qui montre bien
+        // chaque état mais jamais le cas ordinaire : on invite trois
+        // personnes, on en reçoit trois réponses qui ne sont pas les mêmes.
+        // La liste ne dit ce qu'elle sert à dire qu'à ce moment-là.
         $allHands = $this->event(
             $manager,
             $team,
@@ -478,10 +484,25 @@ class PlanningDemoFixtures extends Fixture implements DependentFixtureInterface,
             $monday->modify('+4 days')->setTime(18, 0),
         );
 
-        foreach ($this->people as $person) {
+        $answers = [
+            PlanningAttendeeStatusEnum::Accepted,
+            PlanningAttendeeStatusEnum::Declined,
+            PlanningAttendeeStatusEnum::NeedsAction,
+            PlanningAttendeeStatusEnum::Tentative,
+        ];
+
+        foreach ($this->people as $index => $person) {
+            $status = $answers[$index % count($answers)];
+
             $attendee = new PlanningEventAttendee();
             $attendee->setUser($person);
-            $attendee->respond(PlanningAttendeeStatusEnum::Accepted, $monday->setTime(8, 0));
+
+            // Sans réponse veut dire sans réponse : `respond()` poserait une
+            // date, et la liste afficherait un état répondu.
+            if (PlanningAttendeeStatusEnum::NeedsAction !== $status) {
+                $attendee->respond($status, $monday->setTime(8, 0));
+            }
+
             $allHands->addAttendee($attendee);
 
             $manager->persist($attendee);

@@ -104,7 +104,7 @@ function payload() {
         <div v-if="reminder" class="space-y-3">
             <AppInput
                 v-model="form.title"
-                :label="t('backend.plannings.reminders.title')"
+                :label="t('backend.plannings.reminders.title_label')"
                 :placeholder="t('backend.plannings.reminders.title_placeholder')"
                 :error="errors.title"
             />
