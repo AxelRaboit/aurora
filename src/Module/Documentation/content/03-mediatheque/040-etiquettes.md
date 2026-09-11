@@ -5,13 +5,23 @@ rubric: "Médiathèque"
 ---
 L'étiquette ne range pas, elle retrouve. Là où la catégorie tranche, l'étiquette s'accumule.
 
-![Les étiquettes](../../images/03-mediatheque/ged-tags.png)
+## La liste
 
-## S'en servir
+Un nom et une couleur, celle de la pastille qui suivra l'étiquette partout où elle s'affiche.
 
-- Autant d'étiquettes que nécessaire sur un même document.
-- Se créent à la volée en les tapant.
-- Se combinent au filtre par dossier et par catégorie.
+![La liste des étiquettes](../../images/03-mediatheque/etiquettes-de-documents-01-la-liste-des-etiquettes.png)
+
+## En créer une
+
+Un nom, et une couleur choisie dans la palette ou écrite en hexadécimal.
+
+![Créer une étiquette](../../images/03-mediatheque/etiquettes-de-documents-02-creer-une-etiquette.png)
+
+## S'en servir pour filtrer
+
+La bibliothèque filtre par étiquette comme elle filtre par catégorie, et les deux se combinent.
+
+![Filtrer la bibliothèque par étiquette](../../images/03-mediatheque/etiquettes-de-documents-03-filtrer-la-bibliotheque-par-etiquette.png)
 
 ## Le conseil
 
