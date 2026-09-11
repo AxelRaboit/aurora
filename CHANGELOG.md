@@ -5,6 +5,21 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.123] - 2026-09-11
+
+### Corrigé
+
+#### Un lien du sommaire atterrissait sous le titre visé
+Cliquer une entrée du sommaire amenait le titre tout en haut de la fenêtre,
+c'est-à-dire derrière la barre collée : on arrivait au deuxième paragraphe,
+sans avoir vu le titre qu'on venait de demander.
+
+`scroll-margin-top` déplace la ligne d'arrivée du saut, pas l'élément : la mise
+en page ne bouge pas. Même origine que le sommaire qui passait sous la barre
+dans la 0.9.122, et même mesure de référence, `--aurora-topbar`.
+
+---
+
 ## [0.9.122] - 2026-09-11
 
 ### Corrigé
