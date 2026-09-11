@@ -5,6 +5,28 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.122] - 2026-09-11
+
+### Corrigé
+
+#### Le sommaire d'une page de documentation passait sous la barre du haut
+La barre de titre et le fil d'Ariane sont collés en haut et mesurent cent
+quatre pixels. Le sommaire, lui, se collait à seize pixels : ses quatre-vingt-
+huit premiers pixels étaient donc **derrière** la barre. Sur une page à quatre
+sections, il n'en restait que la dernière ligne à l'écran - ce qui donnait un
+sommaire qui suit le défilement en ne montrant rien d'utile.
+
+La hauteur de cette barre est désormais nommée une fois, `--aurora-topbar`, et
+les deux colonnes collées de la documentation s'en servent pour leur décalage
+comme pour leur hauteur maximale. La correction précédente bornait leur
+hauteur sans corriger leur point d'ancrage : elle était nécessaire, elle
+n'était pas suffisante.
+
+Le seul autre élément collé du back-office vit dans une fenêtre modale, qui a
+son propre défilement et ne passe sous rien.
+
+---
+
 ## [0.9.121] - 2026-09-11
 
 ### Corrigé

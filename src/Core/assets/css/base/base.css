@@ -9,3 +9,21 @@ body {
     color: var(--color-primary);
     font-family: var(--font-sans);
 }
+
+/**
+ * La hauteur de la barre collée en haut d'une page d'administration.
+ *
+ * `page_header.html.twig` empile un bandeau de titre (`h-16`) et un fil
+ * d'Ariane (`h-10`), et se colle en haut à partir de `lg`. Tout ce qui se colle
+ * ensuite dans le contenu doit démarrer sous elle : `sticky top-4` plaçait le
+ * sommaire d'une page de documentation à seize pixels du haut, c'est-à-dire
+ * quatre-vingt-huit pixels sous la barre, et il n'en restait que la dernière
+ * ligne à l'écran.
+ *
+ * Une page sans fil d'Ariane a une barre plus courte de quarante pixels ; elle
+ * gagne donc un peu d'air plutôt qu'un chevauchement, ce qui est le bon sens
+ * de l'erreur.
+ */
+:root {
+    --aurora-topbar: 6.5rem;
+}
