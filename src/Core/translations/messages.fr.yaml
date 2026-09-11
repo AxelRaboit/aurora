@@ -148,6 +148,7 @@ shared:
 # injectés via `extraTools`, restent dans son propre messages.fr.yaml.
 backend:
   documentation:
+    enlarge: Agrandir la capture
     sections: Rubriques de la documentation
     search_placeholder: Chercher dans la documentation…
     results: '1 page trouvée | {count} pages trouvées'

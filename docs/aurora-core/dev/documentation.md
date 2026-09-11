@@ -58,6 +58,11 @@ parcours, une seule photo par adresse.
 depuis `var/doc-screenshots/out/` celles qui manquent ou qui ont changé. Il
 signale ce qui est cité sans exister nulle part.
 
+`audit-paths.mjs` vérifie que chaque adresse photographiée rend bien une
+page. Quatre captures publiées venaient d'un point d'API : le navigateur
+affichait le JSON sur fond sombre, et la page montrait un rectangle noir ou
+un pavé de code. Toutes répondaient 200.
+
 ### Ce qu'il faut vérifier soi-même
 
 **Regarder l'image.** Un parcours qui n'a pas planté n'est pas un parcours

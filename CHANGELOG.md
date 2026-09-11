@@ -5,6 +5,46 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.114] - 2026-09-11
+
+### Ajouté
+
+#### Agrandir une capture de la documentation
+Une capture d'un écran entier est illisible à la largeur d'une colonne de
+texte. Le clic l'ouvre en grand, les flèches passent d'une étape à la
+suivante, Échap referme.
+
+La visionneuse du site public a été promue dans la bibliothèque partagée,
+`AppLightbox`, plutôt que recopiée : elle ne rendait déjà aucune vignette et
+trouvait ses déclencheurs par un attribut que l'appelant nomme, donc il n'y
+avait rien à changer pour qu'elle serve deux fois. Le point de montage du
+site public garde son nom, parce qu'un nom dans un gabarit est une adresse
+qui ne devrait pas bouger parce qu'un composant a déménagé.
+
+### Corrigé
+
+#### La page des notifications montrait du JSON
+`/backend/notifications` est le point d'API qui nourrit la cloche, pas une
+page : les notifications n'en ont pas. La capture affichait donc le JSON
+rendu par le navigateur sur fond sombre.
+
+C'est la quatrième capture prise sur un point d'API après le captcha, Pexels
+et le graphe des notes, et toutes répondaient 200. `audit-paths.mjs` vérifie
+désormais les trente et une adresses photographiées et signale celles qui ne
+rendent pas une page.
+
+#### La démo n'avait aucune notification
+La cloche s'ouvrait sur « Aucune notification » : elles naissent d'une tâche
+de fond, et une démo fraîche n'en a donc pas tant que le worker n'a pas
+tourné. La démo en porte trois, dont une déjà lue.
+
+#### Le fil d'Ariane de la documentation disait deux fois « Documentation »
+La section et l'entrée de menu portent le même mot. Le fil va maintenant de
+la section à la rubrique puis à la page, trois crans qui disent chacun
+quelque chose.
+
+---
+
 ## [0.9.113] - 2026-09-11
 
 ### Ajouté
