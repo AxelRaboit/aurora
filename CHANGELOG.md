@@ -5,6 +5,40 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.118] - 2026-09-11
+
+### Documentation
+
+#### Les réglages, refaits sur l'écran d'aujourd'hui
+Les sept captures d'onglets dataient d'avant plusieurs changements d'écran.
+Une capture de réglages périmée est pire qu'une capture absente : elle montre
+un champ que le lecteur ne trouvera pas. Elles sont reprises, et la page qui
+les résume ne promet plus que les onglets qu'un administrateur voit.
+
+« Général et langues » parlait de deux onglets avec une seule image, celle du
+second. Chacun a la sienne.
+
+#### L'éditeur d'un thème
+La page des thèmes montrait la liste et s'arrêtait là, alors que tout ce
+qu'elle décrit - la couleur d'accent dont la palette est dérivée, le contraste
+calculé pour chaque surface - vit dans l'éditeur.
+
+#### Une page retirée
+« Activer et désactiver les modules » décrit `dev_modules`, derrière
+`ROLE_DEV` comme le reste de cette section.
+
+#### « Palette du picker de couleurs »
+Un mot anglais au milieu d'une interface française, dans l'onglet Apparence.
+Vu sur la capture. C'est « Palette du sélecteur de couleurs » désormais, le
+mot que la documentation employait déjà.
+
+#### Le menu latéral
+La page disait ce qui se règle sans dire comment : la poignée qui déplace une
+ligne, le nom d'origine en filigrane quand le champ est vide, le compte
+d'entrées par section, et le bouton qui rend au menu son état d'origine.
+
+---
+
 ## [0.9.117] - 2026-09-11
 
 ### Documentation

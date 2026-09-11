@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Les valeurs de repli du référencement, utilisées quand une publication laisse son onglet vide.
 
-![Référencement par défaut](../../images/08-configuration/settings-seo.png)
+![Référencement par défaut](../../images/08-configuration/onglets-de-reglages-05-seo.png)
 
 ## Les quatre
 

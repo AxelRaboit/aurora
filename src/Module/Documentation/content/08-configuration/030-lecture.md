@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Ce qui règle le comportement du site vis-à-vis du lecteur.
 
-![Lecture](../../images/08-configuration/settings-reading.png)
+![Lecture](../../images/08-configuration/onglets-de-reglages-03-lecture.png)
 
 ## Ce qui se règle
 

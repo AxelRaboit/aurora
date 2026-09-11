@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Cinq interrupteurs qui décident de ce que le site accepte.
 
-![Système](../../images/08-configuration/settings-system.png)
+![Système](../../images/08-configuration/onglets-de-reglages-07-systeme.png)
 
 ## Les cinq
 

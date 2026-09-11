@@ -5,7 +5,7 @@ rubric: "Configuration"
 ---
 Deux images qui identifient le site, choisies dans la médiathèque plutôt que téléversées ici.
 
-![Logo et favicon](../../images/08-configuration/settings-branding.png)
+![Logo et favicon](../../images/08-configuration/onglets-de-reglages-04-branding.png)
 
 ## Où ils servent
 
