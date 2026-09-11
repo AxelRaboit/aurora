@@ -43,7 +43,14 @@ function apiThatFailsAfterTheFirstLoad() {
             if (1 === calls) {
                 return Promise.resolve({
                     ok: true,
-                    payload: { note: { id, title: "Clients", content: "Le texte de la note 1.", tags: [] } },
+                    payload: {
+                        note: {
+                            id,
+                            title: "Clients",
+                            content: "Le texte de la note 1.",
+                            tags: [],
+                        },
+                    },
                 });
             }
 
@@ -59,7 +66,14 @@ describe("useNotesEditor", () => {
         const api = {
             show: vi.fn().mockResolvedValue({
                 ok: true,
-                payload: { note: { id: 2, title: "Studio Lumen", content: "Texte.", tags: [] } },
+                payload: {
+                    note: {
+                        id: 2,
+                        title: "Studio Lumen",
+                        content: "Texte.",
+                        tags: [],
+                    },
+                },
             }),
             update: vi.fn(),
         };
@@ -99,7 +113,9 @@ describe("useNotesEditor", () => {
     // montrait une autre.
     it("ignore la réponse d'une note qu'on a quittée entre-temps", async () => {
         let releaseFirst;
-        const firstAnswered = new Promise((resolve) => { releaseFirst = resolve; });
+        const firstAnswered = new Promise((resolve) => {
+            releaseFirst = resolve;
+        });
 
         const api = {
             update: vi.fn(),
@@ -107,13 +123,27 @@ describe("useNotesEditor", () => {
                 if (1 === id) {
                     return firstAnswered.then(() => ({
                         ok: true,
-                        payload: { note: { id: 1, title: "Clients", content: "Note 1.", tags: [] } },
+                        payload: {
+                            note: {
+                                id: 1,
+                                title: "Clients",
+                                content: "Note 1.",
+                                tags: [],
+                            },
+                        },
                     }));
                 }
 
                 return Promise.resolve({
                     ok: true,
-                    payload: { note: { id: 2, title: "Studio Lumen", content: "Note 2.", tags: [] } },
+                    payload: {
+                        note: {
+                            id: 2,
+                            title: "Studio Lumen",
+                            content: "Note 2.",
+                            tags: [],
+                        },
+                    },
                 });
             }),
         };
@@ -135,7 +165,14 @@ describe("useNotesEditor", () => {
             update: vi.fn().mockResolvedValue({ ok: true, payload: {} }),
             show: vi.fn().mockResolvedValue({
                 ok: true,
-                payload: { note: { id: 2, title: "Studio Lumen", content: "Texte.", tags: [] } },
+                payload: {
+                    note: {
+                        id: 2,
+                        title: "Studio Lumen",
+                        content: "Texte.",
+                        tags: [],
+                    },
+                },
             }),
         };
 
@@ -145,6 +182,9 @@ describe("useNotesEditor", () => {
         await nextTick();
         await editor.saveSelected();
 
-        expect(api.update).toHaveBeenCalledWith(2, expect.objectContaining({ content: "Texte modifié." }));
+        expect(api.update).toHaveBeenCalledWith(
+            2,
+            expect.objectContaining({ content: "Texte modifié." }),
+        );
     });
 });
