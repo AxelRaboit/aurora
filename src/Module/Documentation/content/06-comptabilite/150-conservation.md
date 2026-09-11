@@ -17,6 +17,6 @@ Configuration → Réglages → Comptabilité, « durée de conservation ». Dix
 
 Chaque contrat affiche sa date de fin de conservation dans son bloc de preuve, calculée au scellement. Avant elle, la suppression est refusée.
 
-## La commande
+## Une fois la durée écoulée
 
-`aurora:contracts:retention` parcourt les contrats et rapporte ceux dont la durée est écoulée. Elle ne supprime rien d'elle-même : supprimer une preuve est une décision, pas une conséquence.
+Rien ne se passe tout seul. La suppression redevient possible, elle ne devient pas automatique : supprimer une preuve est une décision, pas une conséquence.

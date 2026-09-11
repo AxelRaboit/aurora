@@ -5,6 +5,67 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.115] - 2026-09-11
+
+### Corrigé
+
+#### « Ajouter une catégorie » ne faisait rien
+Dans la bibliothèque, le bouton restait sans effet : `openCreate()` appelait
+`emptyForm()` sans la liste des champs qu'un projet client peut ajouter,
+`Object.entries(undefined)` levait, et le gestionnaire de clic mourait avant
+d'ouvrir la fenêtre. Vue avale l'erreur d'un gestionnaire, donc l'écran ne
+disait rien : le bouton se contentait de ne pas répondre.
+
+Personne ne pouvait créer une catégorie depuis l'interface. Trois tests
+couvrent maintenant l'ouverture, avec et sans champs ajoutés, et le retour à
+un formulaire vide d'une ouverture à l'autre.
+
+### Documentation
+
+#### La Médiathèque, étape par étape
+Dix-huit captures remplacent les quatre vues d'ensemble : le dépôt du panneau
+vide à la ligne créée, l'arborescence des dossiers et le filtre qu'un dossier
+pose, les catégories et leurs actions, les étiquettes et leur couleur,
+l'historique des versions, le recadrage avec son cadre tiré à la souris.
+
+Le dépôt méritait sa suite d'images à lui seul : **le texte alternatif et la
+légende n'apparaissent qu'une fois le fichier choisi**, et une capture du
+panneau vide laissait croire qu'ils n'existent pas. La page disait aussi que
+l'on peut déposer plusieurs fichiers par glisser-déposer : c'est un fichier à
+la fois, par un bouton.
+
+#### Trois pages retirées
+- « La médiathèque côté visiteur » parle du site public, hors sujet pour une
+  documentation du back-office.
+- « Les fichiers orphelins » décrit une commande en terminal : rien à l'écran,
+  rien à montrer à quelqu'un qui utilise l'administration.
+- « Où un document est utilisé » décrivait un panneau que **rien n'alimente** :
+  `DocumentUsageProviderInterface` n'a aucune implémentation dans le noyau,
+  donc la liste reste vide tant qu'un module client n'en branche pas une.
+
+Deux pages de Comptabilité renvoyaient elles aussi à une commande. « Vérifier
+les sceaux » devient « Le sceau d'un contrat » et s'appuie sur le bandeau, qui
+fait la même vérification à chaque affichage.
+
+#### La recherche Pexels n'est pas là où la page le disait
+Elle vit dans le sélecteur d'images, celui qui s'ouvre pour choisir une
+vignette, pas dans la bibliothèque.
+
+### Interne
+
+#### La démo n'avait aucun historique de versions
+Le bloc « Historique des versions » ne s'affiche qu'à partir de deux versions,
+et une version naît d'un remplacement de fichier - que personne ne fait avant
+la première capture. Un visuel de la démo en porte trois désormais, datées et
+avec leurs fichiers sur le disque, sinon une ligne d'historique pointerait
+vers rien.
+
+Les flux de capture de la Médiathèque nettoient ce qu'ils créent : le dépôt
+photographié est un vrai dépôt, et sans ce ménage chaque prise laissait une
+affiche de plus dans la démo.
+
+---
+
 ## [0.9.114] - 2026-09-11
 
 ### Ajouté

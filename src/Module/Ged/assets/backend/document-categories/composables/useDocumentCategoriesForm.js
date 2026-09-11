@@ -58,7 +58,12 @@ export function useDocumentCategoriesForm(
     });
 
     function openCreate() {
-        newCategory.value = emptyForm();
+        // Avec `extraFields` : sans lui, `Object.entries(undefined)` lève, le
+        // gestionnaire de clic meurt avant `showCreate`, et le bouton
+        // « Ajouter une catégorie » ne faisait rien du tout. Les champs
+        // ajoutés par un projet client repartiraient vides par-dessus le
+        // marché.
+        newCategory.value = emptyForm(extraFields);
         clearCreate();
         showCreate.value = true;
     }

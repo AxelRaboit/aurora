@@ -12,7 +12,7 @@
  * Output: var/doc-screenshots/out/<flux>-NN-<nom>.png
  */
 import { chromium } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
+import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -174,6 +174,82 @@ async function openNote(id, title) {
   }
 
   throw new Error(`la note « ${title} » ne s'est pas ouverte (vu : « ${await field.inputValue()} »)`);
+}
+
+/**
+ * Une image à déposer, prise dans les fichiers que la démo a déjà écrits.
+ *
+ * Le dépôt se photographie avec un vrai fichier, et `test_files/` n'est pas
+ * livré avec le dépôt : les uploads de la démo sont la seule source présente
+ * sur toutes les machines.
+ */
+async function sampleUpload() {
+  const uploads = resolve(here, "../../var/uploads/ged");
+  const months = await readdir(uploads, { recursive: true, withFileTypes: true });
+  const picture = months.find((entry) => entry.isFile() && /\.(jpg|jpeg|png)$/i.test(entry.name));
+
+  if (!picture) {
+    throw new Error("aucune image dans var/uploads/ged : lancer `make demo` d'abord");
+  }
+
+  const copy = resolve(outDir, "..", "affiche-salon-2026.jpg");
+  await copyFile(resolve(picture.parentPath ?? picture.path, picture.name), copy);
+
+  return copy;
+}
+
+/**
+ * Ouvre le détail du document que la démo fait vivre en trois versions.
+ *
+ * Vérifié plutôt qu'espéré : la recherche filtre la liste en différé, et une
+ * capture prise trop tôt montrait le détail d'un autre document.
+ */
+async function openCampaignDocument() {
+  const title = "Visuel de campagne - Automne 2025";
+
+  await page.goto(`${BASE}/backend/ged/documents`, { waitUntil: "domcontentloaded" });
+  await wait(2500);
+  await page.getByPlaceholder("Rechercher un document…").first().fill("Visuel de campagne");
+  await wait(2500);
+
+  await page.getByRole("button", { name: `Aperçu : ${title}` }).first().click();
+  await wait(2500);
+
+  const heading = page.getByRole("heading", { name: title });
+  await heading.waitFor({ timeout: 15000 });
+  await wait(800);
+}
+
+/**
+ * Supprime un document depuis son menu d'actions.
+ *
+ * Par l'interface plutôt qu'en base : c'est le chemin que le produit
+ * garantit, et il nettoie aussi ce que la suppression nettoie.
+ */
+async function removeDocument(title) {
+  await page.getByPlaceholder("Rechercher un document…").first().fill(title);
+  await wait(2500);
+
+  const actions = page.getByRole("button", { name: `Actions pour ${title}` });
+
+  if (await actions.count() === 0) {
+    return;
+  }
+
+  await actions.first().click();
+  await wait(900);
+
+  // Cadré sur la fenêtre ouverte : l'arbre des dossiers porte lui aussi des
+  // boutons « Supprimer », invisibles tant qu'on ne survole pas leur ligne,
+  // et c'est sur l'un d'eux que le clic attendait sa disparition.
+  //
+  // L'entrée du menu porte son libellé et sa description d'un seul tenant
+  // (« SupprimerSupprime le document et son fichier… »), donc le nom exact
+  // ne désigne que le bouton de confirmation.
+  await page.locator('[role="dialog"]').last().getByRole("button", { name: /^Supprimer/ }).first().click();
+  await wait(1500);
+  await page.locator('[role="dialog"]').last().getByRole("button", { name: "Supprimer", exact: true }).click();
+  await wait(2000);
 }
 
 const FLOWS = {
@@ -1306,6 +1382,163 @@ const FLOWS = {
     await page.getByRole("button", { name: /Partager/ }).first().click();
     await wait(2000);
     await shot("la-fenetre-de-partage");
+  },
+
+  /**
+   * Déposer un document, du panneau vide à la ligne dans la bibliothèque.
+   *
+   * Les champs propres à une image - le texte alternatif, la légende -
+   * n'apparaissent qu'une fois le fichier choisi : le panneau ne sait pas
+   * avant. Une capture du panneau vide, seule, laissait croire qu'ils
+   * n'existent pas.
+   */
+  "deposer-un-document": async () => {
+    await page.goto(`${BASE}/backend/ged/documents`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await shot("la-bibliotheque");
+
+    await page.getByRole("button", { name: "Ajouter un document" }).first().click();
+    await wait(1500);
+    await shot("le-panneau-de-depot");
+
+    // Le bouton ouvre la fenêtre de l'ordinateur, que Playwright ne peut pas
+    // photographier : le fichier est posé sur le champ caché qu'elle
+    // remplirait.
+    await page.locator("input[type='file']").first().setInputFiles(await sampleUpload());
+    await wait(3000);
+    await shot("les-champs-propres-a-une-image");
+
+    await page.getByPlaceholder("Titre du document…").first().fill("Affiche du salon 2026");
+    await page.getByPlaceholder("Description optionnelle…").first().fill("Affiche officielle, format portrait, à décliner en bannière.");
+
+    await page.getByPlaceholder("Décris l'image pour les lecteurs d'écran et le SEO…").first().fill("Affiche du salon 2026, fond dégradé et titre centré.");
+    await page.getByPlaceholder("Légende affichée sous l'image…").first().fill("Salon 2026, du 12 au 14 mars.");
+    await wait(800);
+    await shot("avant-d-enregistrer");
+
+    await page.getByRole("button", { name: "Enregistrer" }).first().click();
+    await wait(3000);
+    await shot("le-document-dans-la-bibliotheque");
+
+    // Le dépôt est réel : sans ce ménage, chaque prise laissait une affiche
+    // de plus dans la démo, et la bibliothèque photographiée finissait par
+    // n'être qu'une pile de doublons.
+    await removeDocument("Affiche du salon 2026");
+  },
+
+  /**
+   * Les dossiers : l'arborescence, la création, et le filtre qu'un dossier
+   * pose sur la liste.
+   */
+  "dossiers": async () => {
+    await page.goto(`${BASE}/backend/ged/documents`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+
+    // L'arborescence est en bas du menu, hors de l'écran au chargement : une
+    // capture pleine page la montrait coupée après deux dossiers.
+    const tree = page.locator('section:has(a[href*="folderId="])').first();
+    await tree.scrollIntoViewIfNeeded();
+    await wait(800);
+    await shotOf(tree, "l-arborescence", 12, 10);
+
+    await page.getByRole("button", { name: "Nouveau dossier" }).first().click();
+    await wait(1500);
+    await shot("creer-un-dossier");
+
+    // Par le bouton : la fenêtre ne se ferme pas à Échap, et le clic suivant
+    // tombait sur le voile.
+    await page.getByRole("button", { name: "Annuler" }).first().click();
+    await wait(1200);
+
+    // Par l'adresse : les entrées de l'arbre n'ont pas de nom accessible, et
+    // un nom de dossier de démo pourrait changer.
+    await page.locator('a[href*="folderId="]').first().click();
+    await wait(2500);
+    await shot("la-liste-filtree-par-dossier");
+  },
+
+  /**
+   * Les catégories : une par document, et ce que la page permet d'en faire.
+   */
+  "categories-de-documents": async () => {
+    await page.goto(`${BASE}/backend/ged/categories`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await shot("la-liste-des-categories");
+
+    await page.getByRole("button", { name: "Ajouter une catégorie" }).first().click();
+    await wait(1500);
+    await shot("creer-une-categorie");
+
+    // La fenêtre ne se ferme pas à Échap : `closeable` est faux, et le clic
+    // suivant tombait sur le voile.
+    await page.getByRole("button", { name: "Annuler" }).first().click();
+    await wait(1200);
+
+    await page.getByRole("button", { name: /^Actions pour / }).first().click();
+    await wait(1200);
+    await shot("les-actions-d-une-categorie");
+  },
+
+  /**
+   * Les étiquettes : plusieurs par document, et le filtre qu'elles servent.
+   */
+  "etiquettes-de-documents": async () => {
+    await page.goto(`${BASE}/backend/ged/tags`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await shot("la-liste-des-etiquettes");
+
+    await page.getByRole("button", { name: /Ajouter une étiquette/i }).first().click();
+    await wait(1500);
+    await shot("creer-une-etiquette");
+
+    await page.getByRole("button", { name: "Annuler" }).first().click();
+    await wait(1200);
+
+    await page.goto(`${BASE}/backend/ged/documents`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await page.locator("select, [role='combobox']").nth(1).click();
+    await wait(1200);
+    await shot("filtrer-la-bibliotheque-par-etiquette");
+  },
+
+  /**
+   * L'historique des versions, dans le panneau de détail.
+   *
+   * Le bloc n'apparaît qu'à partir de deux versions, donc le document
+   * photographié est celui que la démo fait remplacer deux fois.
+   */
+  "versions-d-un-document": async () => {
+    await openCampaignDocument();
+    await shot("le-panneau-de-detail");
+
+    const history = page.locator("div").filter({ hasText: /^Historique des versions/i }).last();
+    await shotOf(history, "l-historique-des-versions", 24, 12);
+  },
+
+  /**
+   * Recadrer une image sans quitter la bibliothèque.
+   */
+  "recadrer-une-image": async () => {
+    await openCampaignDocument();
+
+    await page.getByRole("button", { name: "Recadrer" }).first().click();
+    await wait(2500);
+    await shot("l-outil-de-recadrage");
+
+    // Une sélection tirée à la souris : la photo doit montrer un cadre
+    // déplacé, pas le cadre par défaut qui couvre toute l'image.
+    const frame = page.locator("img").last();
+    const box = await frame.boundingBox();
+
+    if (box) {
+      await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.8, { steps: 20 });
+      await page.mouse.up();
+      await wait(1200);
+    }
+
+    await shot("la-zone-choisie");
   },
 };
 

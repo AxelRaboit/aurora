@@ -1,20 +1,26 @@
 ---
 title: "Recadrer une image"
-description: "Le recadrage, le point d'intérêt, et ce que ça change aux tailles servies."
+description: "Couper l'image pour de bon, et quand il vaut mieux ne pas le faire."
 rubric: "Médiathèque"
 ---
-Deux gestes différents que l'on confond souvent : recadrer coupe l'image, le point d'intérêt décide de ce qui reste visible quand c'est le gabarit qui coupe.
+Le recadrage coupe l'image. C'est un geste définitif, à distinguer du point d'intérêt, qui se règle sur la publication et ne touche à aucun fichier.
 
-![Recadrer une image](../../images/03-mediatheque/ged-documents.png)
+## L'outil
 
-## Recadrer
+Il s'ouvre depuis le panneau de détail d'une image, par « Recadrer ».
 
-Coupe l'image pour de bon, remplace le fichier et régénère les tailles servies. L'original est perdu : à réserver aux cas où l'on est sûr.
+![L'outil de recadrage](../../images/03-mediatheque/recadrer-une-image-01-l-outil-de-recadrage.png)
 
-## Le point d'intérêt
+## Choisir la zone
 
-Ne touche pas au fichier. Il dit à quel endroit de l'image il faut s'accrocher quand une carte est plus large que haute : sans lui, c'est le centre, et un visage en haut à gauche se fait couper.
+Le cadre se tire à la souris, ses poignées l'ajustent, et la grille aide à placer le sujet. Ce qui reste en dehors sera perdu.
 
-## Lequel choisir
+![La zone choisie](../../images/03-mediatheque/recadrer-une-image-02-la-zone-choisie.png)
 
-Le point d'intérêt dans presque tous les cas. Le recadrage quand l'image contient quelque chose qui ne doit jamais s'afficher.
+## Ce que ça change
+
+Le fichier est remplacé, les tailles servies sont régénérées, et une version s'ajoute à l'historique. L'image d'avant reste téléchargeable depuis cet historique, tant qu'elle n'est pas sortie de la fenêtre des trois versions conservées.
+
+## Quand ne pas recadrer
+
+Si le but est seulement de bien cadrer une vignette, le **point d'intérêt** de la publication fait le travail sans rien détruire : il dit quelle partie de l'image doit rester visible quand le gabarit coupe. Le recadrage se réserve aux images qui contiennent quelque chose qui ne doit jamais s'afficher.
