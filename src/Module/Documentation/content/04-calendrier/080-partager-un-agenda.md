@@ -1,16 +1,24 @@
 ---
 title: "Partager un agenda à un compte"
-description: "En lecture ou en écriture, avec quelqu'un qui a un compte."
+description: "Le partage interne, et ses deux niveaux."
 rubric: "Calendrier"
 ---
 Le partage à un compte est le partage interne : la personne voit l'agenda dans sa propre liste.
 
-![Partager un agenda à un compte](../../images/04-calendrier/planning-month.png)
+## Où ça se règle
+
+Dans la fenêtre du calendrier, celle qui sert aussi à le renommer.
+
+![La fenêtre du calendrier](../../images/04-calendrier/partager-un-agenda-01-la-fenetre-du-calendrier.png)
 
 ## Les deux niveaux
 
-- Lecture : la personne voit les événements et ne peut rien changer.
-- Écriture : elle peut ajouter et modifier.
+Chaque personne ajoutée porte un interrupteur « peut modifier » :
+
+- Éteint, c'est la lecture : la personne voit les événements et ne peut rien changer.
+- Allumé, c'est l'écriture : elle peut ajouter et modifier.
+
+![Le partage avec un compte](../../images/04-calendrier/partager-un-agenda-02-partage-avec-un-compte.png)
 
 ## Ce que ça ne fait pas
 

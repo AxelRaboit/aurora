@@ -5,6 +5,47 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.116] - 2026-09-11
+
+### Corrigé
+
+#### Le champ du titre s'appelait « Événements »
+Dans la fenêtre d'un événement comme dans celle d'un rappel, le champ qui
+demande un titre portait le nom pluriel de la section : « Événements »,
+« Rappels ». Vu en photographiant les deux formulaires pour la
+documentation. C'est « Titre » désormais, et la bande des rappels de la
+grille garde l'intitulé qui est le sien.
+
+### Documentation
+
+#### Le Calendrier, étape par étape
+Vingt captures remplacent les deux vues d'ensemble que dix pages se
+partageaient : la page des récurrences était illustrée par une vue semaine
+qui ne montre aucune récurrence, celle des invités par la même image que
+celle des alertes.
+
+Les quatre vues ont chacune la leur. Les récurrences montrent le menu des
+quatre cas courants puis le panneau que « Personnalisé… » déplie. Les invités
+se lisent sur la bulle d'un événement, avec leurs réponses. Le partage à un
+compte et le partage par lien deviennent deux pages distinctes, parce que ce
+sont deux écrans différents et que les confondre était le défaut de la page
+précédente.
+
+#### Trois portées, pas quatre
+La page des récurrences annonçait quatre portées pour la modification d'une
+occurrence. Il y en a trois : cette occurrence, celle-ci et les suivantes,
+toute la série.
+
+### Interne
+
+#### La réunion générale reçoit des réponses différentes
+Les entretiens de la démo portent chacun une réponse unique, ce qui montre
+bien chaque état mais jamais le cas ordinaire : on invite plusieurs personnes
+et on reçoit des réponses qui ne sont pas les mêmes. La liste ne dit ce
+qu'elle sert à dire qu'à ce moment-là.
+
+---
+
 ## [0.9.115] - 2026-09-11
 
 ### Corrigé

@@ -5,7 +5,17 @@ rubric: "Calendrier"
 ---
 Plusieurs agendas plutôt qu'un seul : c'est ce qui permet de montrer les rendez-vous sans montrer les échéances, ou l'inverse.
 
-![Les agendas](../../images/04-calendrier/planning-month.png)
+## La liste
+
+Chaque agenda porte sa couleur et le nombre d'événements de la période affichée. Le clic l'affiche ou le masque, sans rien supprimer : c'est un filtre d'affichage, pas un réglage de l'agenda.
+
+![La liste des agendas](../../images/04-calendrier/agendas-01-la-liste-des-calendriers.png)
+
+## En créer un
+
+Le « + » en haut de la liste.
+
+![Créer un agenda](../../images/04-calendrier/agendas-02-creer-un-calendrier.png)
 
 ## Ce que porte un agenda
 
@@ -13,7 +23,3 @@ Plusieurs agendas plutôt qu'un seul : c'est ce qui permet de montrer les rendez
 - Une couleur, qui teinte tous ses événements.
 - Un fuseau horaire, utile quand une conférence se tient ailleurs.
 - Une visibilité : privé, ou partagé avec les comptes du site.
-
-## Les afficher
-
-Chaque agenda s'affiche ou se masque d'un clic dans la liste latérale, sans rien supprimer. C'est un filtre d'affichage, pas un réglage de l'agenda.
