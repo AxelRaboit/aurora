@@ -363,7 +363,7 @@ function isSelected(doc) {
                     v-if="pexelsTotalPages > 1"
                     :page="pexelsPage"
                     :total-pages="pexelsTotalPages"
-                    v-on:go-to-page="goToPexelsPage"
+                    v-on:change="goToPexelsPage"
                 />
             </template>
 
@@ -410,7 +410,7 @@ function isSelected(doc) {
                     <AppLoader :active="loading" />
                 </div>
 
-                <AppPagination v-if="totalPages > 1" :page="page" :total-pages="totalPages" v-on:go-to-page="goToPage" />
+                <AppPagination v-if="totalPages > 1" :page="page" :total-pages="totalPages" v-on:change="goToPage" />
             </template>
         </div>
 

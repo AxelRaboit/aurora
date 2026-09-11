@@ -118,7 +118,7 @@ const columnCount = computed(() => 3 + Object.keys(props.extraFields).length);
                     </tbody>
                 </table>
             </div>
-            <AppPagination v-if="totalPages > 1" :page="page" :total-pages="totalPages" v-on:go-to-page="goToPage" />
+            <AppPagination v-if="totalPages > 1" :page="page" :total-pages="totalPages" v-on:change="goToPage" />
             <AppLoader :active="loading" />
         </div>
 
