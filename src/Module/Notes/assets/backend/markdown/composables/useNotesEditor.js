@@ -50,6 +50,11 @@ export function useNotesEditor({ api, initialNotes, extraFields = {} }) {
     // includes content (which the flat `notes` list omits). The isDirty
     // comparison runs against this, not against the flat list entry.
     const loadedSnapshot = ref(null);
+    // Quelle note ce formulaire contient réellement. Sans elle, un chargement
+    // qui échoue laissait le texte de la note précédente en face d'un
+    // identifiant déjà changé, et la sauvegarde automatique écrivait l'une
+    // par-dessus l'autre.
+    const loadedId = ref(null);
     const saving = ref(false);
     const deleting = ref(false);
     const pendingDelete = ref(null);
@@ -98,11 +103,28 @@ export function useNotesEditor({ api, initialNotes, extraFields = {} }) {
         await flushPendingSave();
 
         selectedId.value = id;
+        // Le formulaire ne contient plus rien de fiable tant que la note
+        // demandée n'est pas arrivée : la marquer non chargée ferme la porte à
+        // une sauvegarde qui écrirait l'ancienne note sur la nouvelle.
+        loadedId.value = null;
+        loadedSnapshot.value = null;
+
         const { ok, reported, payload } = await api.show(id);
+
+        // Une réponse en retard ne doit pas écraser une note choisie depuis.
+        // L'écran en demande deux coup sur coup au chargement - la note active
+        // du gabarit, puis celle de l'adresse - et quand elles revenaient dans
+        // le désordre, c'est la première qui s'affichait : ouvrir le lien d'une
+        // note en montrait une autre, au hasard du réseau.
+        if (selectedId.value !== id) {
+            return;
+        }
+
         if (!ok) {
             // `useRequest` already reports transport and 5xx failures; a second
             // toast here stacked two messages over each other.
             if (!reported) toast.error(t("notes.markdown.errors.load_failed"));
+
             return;
         }
 
@@ -114,6 +136,7 @@ export function useNotesEditor({ api, initialNotes, extraFields = {} }) {
         };
         loadedSnapshot.value = snapshot;
         form.value = { ...snapshot, tags: [...snapshot.tags] };
+        loadedId.value = id;
         cancelAutoSave();
     }
 
@@ -139,6 +162,11 @@ export function useNotesEditor({ api, initialNotes, extraFields = {} }) {
      */
     async function performSave() {
         if (!selectedNote.value) return true;
+
+        // Ne jamais écrire un formulaire qui n'a pas été chargé pour cette
+        // note : c'est le seul point où la confusion se transformerait en
+        // perte de texte.
+        if (loadedId.value !== selectedNote.value.id) return true;
 
         saving.value = true;
         const noteId = selectedNote.value.id;
@@ -225,6 +253,7 @@ export function useNotesEditor({ api, initialNotes, extraFields = {} }) {
             if (selectedId.value === targetId) {
                 selectedId.value = null;
                 loadedSnapshot.value = null;
+                loadedId.value = null;
                 form.value = {
                     title: "",
                     content: "",
