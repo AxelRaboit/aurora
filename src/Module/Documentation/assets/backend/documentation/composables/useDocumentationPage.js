@@ -1,10 +1,14 @@
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { Marked } from "marked";
 import DOMPurify from "dompurify";
 
 /**
- * Turns one manual page into what the screen needs: its HTML, the headings
- * it is made of, and the answers to a search.
+ * Turns one manual page into what the screen needs: its HTML and the headings
+ * it is made of.
+ *
+ * The search used to live here too. It moved with the column it belonged to,
+ * into `RubricsPanel` in the side menu: the field and the results it replaces
+ * were always the same surface.
  *
  * The Markdown ships with the product and nobody else writes it, so the
  * parser stays plain: headings, paragraphs, lists, emphasis, code and
@@ -106,49 +110,6 @@ export function useDocumentationPage(props, zoomLabel = "") {
         ),
     );
 
-    const query = ref("");
-    const results = ref([]);
-    const searching = computed(() => query.value.trim().length >= 2);
-
-    let timer = null;
-    let rank = 0;
-
-    watch(query, (value) => {
-        const term = value.trim();
-
-        if (timer) clearTimeout(timer);
-
-        if (term.length < 2) {
-            results.value = [];
-
-            return;
-        }
-
-        timer = setTimeout(() => run(term), 200);
-    });
-
-    async function run(term) {
-        rank += 1;
-        const mine = rank;
-
-        try {
-            const url = new URL(props.searchPath, window.location.origin);
-            url.searchParams.set("q", term);
-
-            const response = await fetch(url, {
-                headers: { "X-Requested-With": "XMLHttpRequest" },
-            });
-
-            if (!response.ok || mine !== rank) return;
-
-            const data = await response.json();
-            results.value = data?.results ?? [];
-        } catch {
-            // A search that cannot reach the server leaves the tree in place,
-            // which is still a way to find a page.
-        }
-    }
-
     function pageUrl(slug) {
         return props.pagePathTemplate.replace("__slug__", slug);
     }
@@ -157,9 +118,6 @@ export function useDocumentationPage(props, zoomLabel = "") {
         rendered,
         pictures,
         outline,
-        query,
-        results,
-        searching,
         pageUrl,
         TRIGGER,
     };

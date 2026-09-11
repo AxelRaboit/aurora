@@ -55,6 +55,21 @@ final class DocumentationController extends AbstractController
         return $this->redirectToRoute('backend_documentation_page', ['slug' => $first]);
     }
 
+    /**
+     * The rubrics and their pages, for the side menu's panel.
+     *
+     * The page used to receive this with its payload and draw it in a column
+     * of its own. The column moved into the menu, where it is mounted by the
+     * menu with no props at all - so it fetches, like every other module
+     * panel. One round trip per page read, against a list the reader needs on
+     * every one of them.
+     */
+    #[Route('/tree', name: '_tree', methods: [HttpMethodEnum::Get->value], priority: 10)]
+    public function tree(): JsonResponse
+    {
+        return $this->jsonSuccess(['tree' => $this->index->tree()]);
+    }
+
     #[Route('/search', name: '_search', methods: [HttpMethodEnum::Get->value], priority: 10)]
     public function search(Request $request): JsonResponse
     {
@@ -111,13 +126,15 @@ final class DocumentationController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        // Neither the tree nor the search path any more: both belong to the
+        // side menu's panel now, which fetches them itself. Handing them to
+        // the page as well would ship the whole table of contents twice on
+        // every read.
         return $this->render('@Documentation/backend/index.html.twig', [
             'page' => $page,
-            'tree' => $this->index->tree(),
             'neighbours' => $this->index->neighbours($slug),
             'pagePathTemplate' => $this->urlGenerator->generate('backend_documentation_page', ['slug' => '__slug__']),
             'imagePathTemplate' => $this->urlGenerator->generate('backend_documentation_image', ['rubric' => '__rubric__', 'name' => '__name__']),
-            'searchPath' => $this->urlGenerator->generate('backend_documentation_search'),
         ]);
     }
 }

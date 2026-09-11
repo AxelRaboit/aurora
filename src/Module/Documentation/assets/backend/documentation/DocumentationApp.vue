@@ -1,97 +1,40 @@
 <script setup>
-import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { ArrowLeft, ArrowRight, BookOpen, Search } from "lucide-vue-next";
+import { ArrowLeft, ArrowRight, BookOpen } from "lucide-vue-next";
 import AppLightbox from "@/shared/components/overlay/AppLightbox.vue";
 import { useDocumentationPage } from "./composables/useDocumentationPage.js";
 
 /**
  * The product's manual, inside the product.
  *
- * Three columns on a wide screen and one on a narrow one: the rubrics on the
- * left because a reader arrives looking for a subject, the page in the
- * middle at a readable width, and its own sections on the right because a
- * page of six steps is scrolled more often than it is read straight through.
+ * Two columns on a wide screen and one on a narrow one: the page at a readable
+ * width, and its own sections on the right because a page of six steps is
+ * scrolled more often than it is read straight through.
  *
- * Server-rendered navigation would have been possible; the page is handed
- * over whole and rendered here instead, because the search replaces the tree
- * in place and a round trip per keystroke would be a worse answer than a
- * hundred kilobytes of Markdown already in the page.
+ * It used to carry a third column on the left - the rubrics, and the search
+ * above them. That column is `RubricsPanel` now, in the side menu, where it
+ * costs the text none of its width and folds away with the menu on a
+ * telephone.
  */
 const props = defineProps({
     page: { type: Object, required: true },
-    tree: { type: Array, default: () => [] },
     neighbours: { type: Object, default: () => ({ previous: null, next: null }) },
     pagePathTemplate: { type: String, required: true },
     imagePathTemplate: { type: String, required: true },
-    searchPath: { type: String, required: true },
 });
 
 const { t } = useI18n();
 
-const { rendered, pictures, outline, query, results, searching, pageUrl, TRIGGER } =
+const { rendered, pictures, outline, pageUrl, TRIGGER } =
     useDocumentationPage(props, t("backend.documentation.enlarge"));
-
-const current = computed(() => props.page.slug);
 </script>
 
 <template>
     <div class="flex flex-col gap-6 xl:flex-row xl:items-start">
-        <!-- Les rubriques. `sticky` sur grand écran : parcourir une page de
-             six étapes ne devrait pas faire perdre la table des matières. -->
-        <nav
-            class="w-full shrink-0 xl:sticky xl:top-[calc(var(--aurora-topbar)+1rem)] xl:max-h-[calc(100vh-var(--aurora-topbar)-2rem)] xl:w-64 xl:overflow-y-auto xl:border-r xl:border-line/60 xl:pr-5"
-            :aria-label="t('backend.documentation.sections')"
-        >
-            <div class="relative mb-3">
-                <Search class="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted" :stroke-width="2" />
-                <input
-                    v-model="query"
-                    type="search"
-                    class="w-full rounded-lg border border-line bg-surface py-2 pr-3 pl-8 text-sm text-primary placeholder:text-muted focus:border-accent focus:outline-none"
-                    :placeholder="t('backend.documentation.search_placeholder')"
-                    :aria-label="t('backend.documentation.search_placeholder')"
-                >
-            </div>
-
-            <div v-if="searching" class="space-y-3">
-                <p class="m-0 text-xs uppercase tracking-wide text-muted">
-                    {{ results.length
-                        ? t("backend.documentation.results", { count: results.length }, results.length)
-                        : t("backend.documentation.no_result") }}
-                </p>
-                <a
-                    v-for="result in results"
-                    :key="result.slug"
-                    class="block rounded-lg px-2 py-1.5 no-underline transition-colors hover:bg-surface-2"
-                    :href="pageUrl(result.slug)"
-                >
-                    <span class="block text-sm font-medium text-primary">{{ result.title }}</span>
-                    <span class="block text-xs text-muted">{{ result.rubric }}</span>
-                    <span class="mt-0.5 block text-xs text-secondary line-clamp-2">{{ result.excerpt }}</span>
-                </a>
-            </div>
-
-            <div v-else class="space-y-5">
-                <div v-for="rubric in tree" :key="rubric.slug" class="space-y-1">
-                    <p class="m-0 text-xs font-semibold uppercase tracking-wide text-muted">
-                        {{ rubric.label }}
-                    </p>
-                    <a
-                        v-for="entry in rubric.pages"
-                        :key="entry.slug"
-                        class="block rounded-md px-2 py-1 text-sm no-underline transition-colors"
-                        :class="entry.slug === current
-                            ? 'bg-surface-2 font-medium text-accent'
-                            : 'text-secondary hover:bg-surface-2/60 hover:text-primary'"
-                        :href="pageUrl(entry.slug)"
-                        :aria-current="entry.slug === current ? 'page' : undefined"
-                    >{{ entry.title }}</a>
-                </div>
-            </div>
-        </nav>
-
-        <article class="min-w-0 flex-1 xl:max-w-3xl">
+        <!-- `4xl` plutôt que `3xl` : c'est la largeur que la colonne de
+             gauche occupait, rendue au texte et surtout aux captures, qui
+             font 1600 pixels et se lisaient à l'étroit. -->
+        <article class="min-w-0 flex-1 xl:max-w-4xl">
             <header class="mb-6">
                 <p class="m-0 flex items-center gap-1.5 text-xs uppercase tracking-wide text-accent">
                     <BookOpen class="h-3.5 w-3.5" :stroke-width="2" /> {{ page.rubric }}
@@ -145,8 +88,8 @@ const current = computed(() => props.page.slug);
              Collé sous la barre du haut, pas à seize pixels du haut de la
              fenêtre : celle-ci est collée elle aussi, et le sommaire passait
              dessous. Sur une page à quatre sections, il n'en restait que la
-             dernière ligne visible. Même hauteur bornée et même défilement
-             propre que la liste des rubriques à gauche. -->
+             dernière ligne visible. D'où la hauteur bornée et le défilement
+             qui lui est propre. -->
         <aside
             v-if="outline.length > 1"
             class="hidden w-56 shrink-0 xl:sticky xl:top-[calc(var(--aurora-topbar)+1rem)] xl:block xl:max-h-[calc(100vh-var(--aurora-topbar)-2rem)] xl:overflow-y-auto"
