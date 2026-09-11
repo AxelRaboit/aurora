@@ -82,9 +82,12 @@ présent en core) n'ont pas besoin de garde.
 
 ## i18n du menu (piège associé)
 
-Le sidemenu est en Vue (vue-i18n). `app:translations:dump-js` doit découvrir
+Le sidemenu est en Vue (vue-i18n). `app:translations:dump-js` sait découvrir
 les traductions des **packages modules siblings** (`vendor/axelraboit/aurora-*`),
-pas seulement `$auroraDir`. Gating : `basename(dirname($auroraDir)) === 'axelraboit'`
+pas seulement `$auroraDir`. Plus aucun de ces paquets n'existe depuis
+l'abandon du split (voir [[project_monorepo_split_chantier]]) : le balayage ne
+trouve plus rien et ne coûte rien, mais ne pas le prendre pour une organisation
+encore en place. Gating : `basename(dirname($auroraDir)) === 'axelraboit'`
 (actif uniquement en install vendored, laisse le standalone intact). Sans ça,
 les libellés nav des modules s'affichent en clés brutes (`backend.nav.posts`).
 

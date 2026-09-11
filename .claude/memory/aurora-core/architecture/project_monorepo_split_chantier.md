@@ -1,17 +1,32 @@
 # Chantier - Split aurora-core en monorepo de N packages Composer
 
-> ## ⚠️ Vérifié le 11/09/2026 : le dépôt n'est pas un monorepo
+> ## ⛔ Le split a été abandonné - ce document est de l'histoire
 >
-> `composer.json` déclare un seul paquet `axelraboit/aurora` avec
-> `Aurora\ -> src/`, il n'existe aucun dossier `packages/`, et `src/Core/`
-> comme `src/Module/` vivent dans le même arbre. Le statut « ✅ TERMINÉ et
-> validé end-to-end » que l'index porte pour cette mémoire ne décrit donc pas
-> l'état courant.
+> **Il n'y a plus de split.** `composer.json` déclare un seul paquet
+> `axelraboit/aurora` avec `Aurora\ -> src/`, et `src/Core/` comme
+> `src/Module/` vivent dans le même arbre. Un module s'ajoute dans
+> `src/Module/`, jamais dans un paquet à lui.
 >
-> Le récit ci-dessous reste utile comme histoire du chantier, mais **ne pas
-> s'en servir pour décider où placer du code** : un module s'ajoute dans
-> `src/Module/`, pas dans un paquet à lui. Le retour d'Editorial dans le core
-> (bloc suivant) va dans le même sens et est peut-être la fin de l'histoire.
+> Ce qui s'est passé : le split a bien été mené (mai 2026), en dépôts séparés
+> `aurora-*` et non en dossier `packages/`. Puis il a été défait. Editorial a
+> été **reconstruit** dans le core en août 2026 (bloc suivant), et le commit
+> `36ff70af` (30/08/2026) a supprimé dix-huit modules partagés devenus sans
+> consommateur, « left behind by the abandoned split ». Sur seize dépôts,
+> quatorze sont archivés : seuls `aurora-core` et `aurora-client` sont vivants.
+>
+> La raison, telle que ce commit la formule : le multi-dépôt coûtait plus qu'il
+> ne rapportait, et deux allers-retours (0.9.11 retire `useSlugLock`, 0.9.12 le
+> remet parce qu'`aurora-editorial` l'importe) reposaient sur une question
+> jamais posée, celle de savoir si ces dépôts étaient encore vivants. La bonne
+> question n'est pas « qui importe ce fichier » mais « ce consommateur
+> existe-t-il encore ».
+>
+> **Ce qui survit du chantier** : `AbstractAuroraModuleBundle` et le mécanisme
+> de `prepend()` par bundle de module sont toujours là et toujours référencés
+> par `AuroraBundle`. Ne pas les retirer en croyant nettoyer un reliquat.
+>
+> Le récit ci-dessous reste utile pour comprendre d'où viennent certaines
+> structures. Il ne décrit pas l'organisation actuelle.
 
 > ## ⚠️ Editorial est revenu dans le core (août 2026)
 >
