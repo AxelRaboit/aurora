@@ -5,6 +5,54 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.117] - 2026-09-11
+
+### Documentation
+
+#### La Plateforme, étape par étape
+La liste des comptes, les actions d'une ligne, la fiche en lecture, la
+fenêtre des privilèges rangée par module, le panneau d'invitation, et la page
+de mot de passe oublié telle que la voit quelqu'un qui n'est pas connecté.
+Sept captures, là où quatre pages partageaient la même vue d'ensemble.
+
+Deux corrections en écrivant : l'invitation ne règle pas les privilèges, ils
+se posent après ; et elle sait préparer un compte désactivé, dont
+l'invitation partira à la réactivation.
+
+#### Cinq pages retirées, toutes derrière le rôle développeur
+La rubrique Administration décrivait le journal d'audit, les permissions
+enregistrées, les points de montage et les comptes côté administration. Ces
+quatre écrans vivent dans `DevModule`, et leur entrée de menu porte
+`ROLE_DEV` : un administrateur chez un client ne la voit pas grisée, il ne
+la voit pas du tout. La page « Les demandes d'accès » part pour la même
+raison - l'écran qui les traite est `dev_access_requests`.
+
+Documenter un écran que le lecteur ne peut pas ouvrir est pire qu'une page
+absente : cela lui apprend à chercher ce qui n'est pas là. L'interrupteur du
+formulaire de demande d'accès reste documenté, dans les réglages Système, en
+disant où les demandes atterrissent.
+
+Reste à trancher côté produit : le journal d'audit répond à « qui a touché à
+quoi », une question d'administrateur plutôt que de développeur. La page
+reviendra le jour où l'écran leur sera ouvert.
+
+#### Deux onglets de réglages invisibles au client
+`CoreConfigurationTabProvider::DEV_ONLY_GROUPS` réserve « Médias » et
+« Séquences » au rôle développeur. Leurs deux pages partent, et les trois
+endroits qui renvoyaient à ces réglages - la taille maximale d'un dépôt, le
+nombre de versions gardées, l'affichage du crédit d'une photo - le disent
+désormais : le réglage existe, il se demande au développeur du site.
+
+### Interne
+
+#### Trois demandes d'accès dans la démo
+Elles naissent d'un formulaire public que personne ne remplit sur une démo,
+donc l'écran qui les traite s'ouvrait sur « Aucune demande d'accès » - et
+c'est cet écran vide qui était parti dans la documentation. Une en attente,
+une acceptée, une refusée.
+
+---
+
 ## [0.9.116] - 2026-09-11
 
 ### Corrigé
