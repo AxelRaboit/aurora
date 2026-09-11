@@ -20,7 +20,7 @@ Une ligne par version, la plus récente en tête et mise en avant : son numéro,
 ## Comment ça marche
 
 - Le document garde son identité, ses étiquettes et son adresse ; seul le fichier change.
-- L'historique conserve les versions précédentes, trois par défaut, un réglage.
+- L'historique conserve les versions précédentes, trois par défaut. Le nombre se règle, dans un onglet réservé au développeur du site.
 - Les tailles servies sont régénérées à chaque remplacement.
 
 ## Quand ne pas s'en servir

@@ -1605,6 +1605,74 @@ const FLOWS = {
   },
 
   /**
+   * Les comptes : la liste, ses filtres, et ce qu'on fait d'une ligne.
+   */
+  "les-comptes": async () => {
+    await page.goto(`${BASE}/backend/platform/users`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+    await shot("la-liste-des-comptes");
+
+    await page.getByRole("button", { name: /Actions pour Marie Dupont/ }).first().click();
+    await wait(1500);
+    await shot("les-actions-d-un-compte");
+
+    await page.getByRole("button", { name: /^Voir le profil/ }).first().click();
+    await wait(2500);
+    await shot("la-fiche-d-un-compte");
+  },
+
+  /**
+   * Les privilèges d'un compte, écran par écran.
+   */
+  "privileges": async () => {
+    await page.goto(`${BASE}/backend/platform/users`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+
+    await page.getByRole("button", { name: /Actions pour Jean Martin/ }).first().click();
+    await wait(1500);
+    await page.getByRole("button", { name: /^Privilèges/ }).first().click();
+    await wait(2500);
+    await shot("la-fenetre-des-privileges");
+  },
+
+  /**
+   * Inviter quelqu'un.
+   */
+  "inviter-quelqu-un": async () => {
+    await page.goto(`${BASE}/backend/platform/users`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+
+    await page.getByRole("button", { name: /Inviter un utilisateur/ }).first().click();
+    await wait(2000);
+    await shot("le-panneau-d-invitation");
+  },
+
+  /**
+   * Le mot de passe oublié, tel que le voit quelqu'un qui n'est pas connecté.
+   */
+  "mot-de-passe-oublie": async () => {
+    const guest = await page.context().browser().newContext({
+      viewport: VIEWPORT, locale: "fr-FR", timezoneId: "Europe/Paris", colorScheme: "dark",
+    });
+    const visitor = await guest.newPage();
+    const held = page;
+    page = visitor;
+
+    await page.goto(`${BASE}/backend/platform/forgot-password`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await shot("la-page-de-mot-de-passe-oublie");
+
+    await page.locator("input[type='email']").first().fill("marie.dupont@aurora.app");
+    await wait(700);
+    await page.locator("button[type='submit']").first().click();
+    await wait(3000);
+    await shot("la-reponse-toujours-la-meme");
+
+    await guest.close();
+    page = held;
+  },
+
+  /**
    * Les rappels : ce qu'ils sont, et où ils s'affichent.
    */
   "rappels": async () => {

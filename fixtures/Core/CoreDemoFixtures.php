@@ -7,6 +7,8 @@ namespace Aurora\Fixtures\Core;
 use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Module\Configuration\Theme\Entity\Theme;
+use Aurora\Module\Platform\Auth\Entity\AccessRequest;
+use Aurora\Module\Platform\Auth\Enum\AccessRequestStatusEnum;
 use Aurora\Module\Platform\User\Entity\User;
 use Aurora\Module\Platform\User\Enum\UserRoleEnum;
 use Aurora\Module\Platform\User\Enum\UserTypeEnum;
@@ -69,6 +71,7 @@ class CoreDemoFixtures extends Fixture implements DependentFixtureInterface, Fix
         $manager->flush();
 
         $this->createNotifications($manager);
+        $this->createAccessRequests($manager);
     }
 
     /**
@@ -165,6 +168,62 @@ class CoreDemoFixtures extends Fixture implements DependentFixtureInterface, Fix
      * Inactive on purpose. A demo reload must not take the site away from
      * whatever theme somebody is currently working on.
      */
+    /**
+     * Trois demandes d'accès, une par état.
+     *
+     * Elles naissent d'un formulaire public que personne ne remplit sur une
+     * démo, donc l'écran qui les traite s'ouvrait sur « Aucune demande
+     * d'accès » - et c'est cet écran vide qui est parti dans la
+     * documentation. Une en attente pour montrer les actions, une acceptée
+     * et une refusée pour montrer ce que la liste garde.
+     *
+     * Idempotent sur l'adresse du demandeur.
+     */
+    private function createAccessRequests(EntityManagerInterface $em): void
+    {
+        $repository = $em->getRepository(AccessRequest::class);
+        $now = new DateTimeImmutable();
+
+        $defs = [
+            [
+                'email' => 'camille.perrot@atelier-dupont.test',
+                'name' => 'Camille Perrot',
+                'message' => "Bonjour, je reprends la rédaction du blog à partir d'octobre. Pouvez-vous m'ouvrir un accès ?",
+                'status' => AccessRequestStatusEnum::Pending,
+                'expires' => '+5 days',
+            ],
+            [
+                'email' => 'sofiane.benali@atelier-dupont.test',
+                'name' => 'Sofiane Benali',
+                'message' => 'Besoin de déposer les visuels du salon dans la médiathèque.',
+                'status' => AccessRequestStatusEnum::Approved,
+                'expires' => '-2 days',
+            ],
+            [
+                'email' => 'contact@referencement-express.test',
+                'name' => 'Agence Référencement Express',
+                'message' => "Nous proposons un audit SEO gratuit. Merci de nous ouvrir un accès pour l'installer.",
+                'status' => AccessRequestStatusEnum::Rejected,
+                'expires' => '-9 days',
+            ],
+        ];
+
+        foreach ($defs as $def) {
+            if (null !== $repository->findOneBy(['requesterEmail' => $def['email']])) {
+                continue;
+            }
+
+            $request = new AccessRequest($def['email'], $now->modify($def['expires']));
+            $request->setRequesterName($def['name'])
+                ->setMessage($def['message'])
+                ->setStatus($def['status']);
+
+            $em->persist($request);
+        }
+
+        $em->flush();
+    }
+
     private function createThemes(EntityManagerInterface $em): void
     {
         $defs = [
