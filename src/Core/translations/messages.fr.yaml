@@ -149,7 +149,7 @@ shared:
 backend:
   documentation:
     enlarge: Agrandir la capture
-    sections: Rubriques de la documentation
+    rubrics: Rubriques
     search_placeholder: Chercher dans la documentation…
     results: '1 page trouvée | {count} pages trouvées'
     no_result: Aucune page ne correspond.

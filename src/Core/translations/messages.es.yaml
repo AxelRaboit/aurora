@@ -143,7 +143,7 @@ shared:
 backend:
   documentation:
     enlarge: Ampliar la captura
-    sections: Secciones de la documentación
+    rubrics: Secciones
     search_placeholder: Buscar en la documentación…
     results: '1 página encontrada | {count} páginas encontradas'
     no_result: Ninguna página coincide.

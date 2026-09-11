@@ -467,6 +467,24 @@ function openSearchFromMobile() {
                     :theme="sectionTheme"
                     :show-descriptions="showDescriptions"
                 />
+
+                <!-- The module's panel belongs here too, and its absence was a
+                     hole: a module that moved a column out of its page into the
+                     menu had moved it out of reach of a telephone entirely. The
+                     GED's folders, the notes tree and the manual's rubrics were
+                     all on a desktop only.
+
+                     Mounted when the drawer opens rather than with the page: a
+                     panel fetches its own data, and a reader who never opens the
+                     menu should not pay for one. That makes it a second instance
+                     beside the hidden aside's, which is why a panel's state has
+                     to live in its data or in storage - `usePersistedExpanded`
+                     and the folder favourites already do. -->
+                <component
+                    :is="modulePanel"
+                    v-if="modulePanel && inModuleView && mobileOpen"
+                    class="mt-1"
+                />
             </nav>
 
             <!-- The same component the aside uses. It carried its own copy

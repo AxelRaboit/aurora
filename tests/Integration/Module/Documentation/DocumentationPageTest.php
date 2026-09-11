@@ -69,6 +69,24 @@ final class DocumentationPageTest extends IntegrationTestCase
         self::assertNotEmpty($payload['results']);
     }
 
+    /**
+     * The side menu's panel has no payload of its own - the menu mounts it
+     * with no props - so this route is the only way it learns what the manual
+     * contains.
+     */
+    public function testTheTreeIsServedForThePanel(): void
+    {
+        $this->signIn();
+        $this->client->request('GET', '/backend/documentation/tree');
+
+        self::assertResponseIsSuccessful();
+
+        $payload = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertNotEmpty($payload['tree']);
+        self::assertNotEmpty($payload['tree'][0]['pages']);
+    }
+
     public function testAScreenshotIsServed(): void
     {
         $this->signIn();
