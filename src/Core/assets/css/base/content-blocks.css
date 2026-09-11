@@ -349,6 +349,21 @@ pre .hljs-attribute {
     font-size: 1.15em;
 }
 
+/**
+ * Où s'arrête un saut d'ancre.
+ *
+ * Le sommaire pointe sur `#un-titre`, et le navigateur amène ce titre tout en
+ * haut de la fenêtre, c'est-a-dire derrière la barre collée : on atterrissait
+ * sur le deuxième paragraphe, sans avoir vu le titre qu'on venait de demander.
+ *
+ * `scroll-margin-top` déplace la ligne d'arrivée, pas l'élément : la mise en
+ * page ne bouge pas, seul le saut s'arrête plus bas. Le `1rem` est la même
+ * respiration que celle des colonnes collées.
+ */
+.doc-prose :is(h2, h3, h4) {
+    scroll-margin-top: calc(var(--aurora-topbar) + 1rem);
+}
+
 /* Le premier titre ouvre la page : rien au-dessus dont il faille le séparer. */
 .doc-prose > h2:first-child {
     margin-top: 0;
