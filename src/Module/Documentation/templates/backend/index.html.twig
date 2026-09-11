@@ -1,0 +1,25 @@
+{% extends '@Core/backend/layout.html.twig' %}
+
+{% block title %}{{ page.title }} - {{ parent() }}{% endblock %}
+
+{% block page_header_slot %}
+    {{ include('@Shared/components/page_header.html.twig', {
+        crumbs: [
+            {label: 'backend.nav.sections.documentation'|trans},
+            {label: 'backend.nav.documentation'|trans, href: path('backend_documentation')},
+            {label: page.rubric},
+            {label: page.title},
+        ],
+    }) }}
+{% endblock %}
+
+{% block body %}
+<div {{ vue_component('documentation/backend/documentation/DocumentationApp', {
+    page: page,
+    tree: tree,
+    neighbours: neighbours,
+    pagePathTemplate: pagePathTemplate,
+    imagePathTemplate: imagePathTemplate,
+    searchPath: searchPath,
+}) }} class="flex-1 min-w-0"></div>
+{% endblock %}

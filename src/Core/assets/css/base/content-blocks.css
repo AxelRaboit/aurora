@@ -319,3 +319,56 @@ pre .hljs-attribute {
     color: #60a5fa;
 }
 
+
+/*
+ * Le manuel du produit, rendu depuis les fichiers Markdown livrés avec lui.
+ *
+ * Une capture d'écran de mille six cents pixels posée nue dans un texte se
+ * lit comme un trou : le cadre et le fond disent que c'est une image de
+ * l'application et non la suite de la page. Le titre numéroté de chaque
+ * étape est détaché de ce qui précède, parce qu'une page de documentation
+ * se parcourt en sautant d'une étape à l'autre avant de se lire.
+ */
+.doc-prose figure {
+    margin: 1.75em 0;
+}
+
+.doc-prose figure img {
+    display: block;
+    width: 100%;
+    margin: 0;
+    border: 1px solid var(--th-line);
+    border-radius: 0.75rem;
+    background-color: var(--th-surface-2);
+}
+
+.doc-prose h2 {
+    margin-top: 2.25em;
+    padding-top: 1.25em;
+    border-top: 1px solid color-mix(in srgb, var(--th-line) 60%, transparent);
+    font-size: 1.15em;
+}
+
+/* Le premier titre ouvre la page : rien au-dessus dont il faille le séparer. */
+.doc-prose > h2:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.doc-prose :is(ul, ol) {
+    margin-top: 0.75em;
+}
+
+.doc-prose code {
+    padding: 0.15em 0.35em;
+    border-radius: 0.3rem;
+    background-color: var(--th-surface-2);
+    font-weight: 400;
+}
+
+/* Typography colle des guillemets autour du code en ligne. */
+.doc-prose code::before,
+.doc-prose code::after {
+    content: none;
+}
