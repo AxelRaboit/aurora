@@ -284,6 +284,84 @@ async function wideAncestor(locator, minWidth) {
 
 const FLOWS = {
   /**
+   * Le fond d'une zone, dans le panneau de la zone choisie.
+   *
+   * La page qui l'explique montrait la grille et promettait « ses réglages de
+   * surface » : ils n'étaient pas dans le cadre.
+   */
+  "fond-de-zone": async () => {
+    const post = process.env.DOC_POST_ID ?? "1";
+
+    await page.goto(`${BASE}/backend/editorial/posts/${post}/edit`, { waitUntil: "domcontentloaded" });
+    await wait(4000);
+    await page.getByRole("tab", { name: /^Contenu$/ }).first().click()
+      .catch(async () => { await page.getByRole("button", { name: /^Contenu$/ }).first().click(); });
+    await wait(2500);
+
+    // Sur la vignette de la zone : le sélecteur générique ne visait rien, et
+    // le panneau restait sur « Cliquez une zone ci-dessus ».
+    await page.getByText("Vidéo", { exact: true }).first().click();
+    await wait(2000);
+
+    const control = page.getByText("Fond", { exact: true }).first()
+      .locator('xpath=ancestor::div[contains(@class,"space-y-1.5")][1]');
+    await control.scrollIntoViewIfNeeded();
+    await wait(900);
+    await shotOf(control, "le-fond-d-une-zone", 16, 12);
+  },
+
+  /**
+   * L'onglet anti-robots, dans les réglages.
+   */
+  "captcha-reglages": async () => {
+    await page.goto(`${BASE}/backend/configuration/settings/captcha`, { waitUntil: "domcontentloaded" });
+    await wait(3500);
+    await shot("l-onglet-anti-robots");
+  },
+
+  /**
+   * Les champs personnalisés d'un type de contenu.
+   */
+  "champs-personnalises": async () => {
+    await page.goto(`${BASE}/backend/editorial/post-types`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+    await shot("la-liste-des-types");
+
+    // Les champs vivent dans l'écran du type, pas derrière un menu d'actions.
+    const block = page.locator("div")
+      .filter({ hasText: "Champs personnalisés" })
+      .filter({ has: page.getByText("Mettre en avant") })
+      .last();
+    await block.scrollIntoViewIfNeeded();
+    await wait(800);
+    await shotOf(block, "les-champs-d-un-type", 16, 12);
+
+    await page.getByRole("button", { name: "Ajouter un champ" }).first().click();
+    await wait(2000);
+    await shot("ajouter-un-champ");
+  },
+
+  /**
+   * Une entrée de menu : sa cible, et sa visibilité.
+   */
+  "entree-de-menu": async () => {
+    await page.goto(`${BASE}/backend/editorial/menus`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+
+    // Le menu de la navigation publique plutôt que celui des liens de compte :
+    // l'écran s'ouvre sur le premier, qui n'a que deux entrées spéciales et
+    // ne montre aucune des cibles que la page explique.
+    await page.getByRole("link", { name: /Navigation principale/ }).first().click()
+      .catch(async () => { await page.getByText("Navigation principale").first().click(); });
+    await wait(2500);
+    await shot("un-menu-et-ses-entrees");
+
+    await page.getByRole("button", { name: "Ajouter une entrée" }).first().click();
+    await wait(2500);
+    await shot("la-cible-d-une-entree");
+  },
+
+  /**
    * Un onglet de réglages par page qui en parle.
    *
    * Refaites toutes ensemble : les six captures dataient d'avant plusieurs

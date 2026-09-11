@@ -5,6 +5,40 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.119] - 2026-09-11
+
+### Documentation
+
+#### Les six dernières pages d'Éditorial
+Elles n'avaient qu'une vue d'ensemble chacune. Les champs personnalisés
+montrent maintenant la liste des champs d'un type avec leurs badges, puis la
+fenêtre qui en ajoute un. Les entrées de menu montrent le menu de la
+navigation publique et la fenêtre d'une entrée, où se lisent d'un coup sa
+cible, sa rubrique, son parent et sa visibilité. L'anti-robots montre son
+onglet de réglages.
+
+#### Quatre fonds nommés comme dans le code
+La page des fonds de zone listait les noms de code des quatre valeurs.
+L'écran affiche « Aucun », « Teinté », « Carte », « Accent », et le réglage
+s'appelle « Fond ». Une page qui nomme les choses autrement que l'écran est
+une page qu'on lit deux fois.
+
+Sa capture promettait « ses réglages de surface » et montrait la grille : la
+légende dit maintenant ce qu'on y voit.
+
+#### Le captcha reçoit l'adresse IP du visiteur
+L'écran le dit en jaune, la page ne le disait pas. C'est une donnée
+personnelle, le compte doit être celui du site, et la politique de
+confidentialité doit le mentionner. La page précise aussi que cette
+vérification s'ajoute au piège à robots, au filtre à liens, à la limite
+d'envois et à la modération : elle est la dernière ligne, pas la première.
+
+#### « Suit la langue » s'appelle « Par langue »
+Le badge de l'écran et le titre de la section disaient deux choses
+différentes.
+
+---
+
 ## [0.9.118] - 2026-09-11
 
 ### Documentation

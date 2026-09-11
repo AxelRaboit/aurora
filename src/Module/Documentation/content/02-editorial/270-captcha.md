@@ -11,12 +11,18 @@ Turnstile de Cloudflare, ou reCAPTCHA de Google. On en choisit un, on colle ses 
 
 Les clés sont les vôtres, pas celles d'Aurora : c'est votre compte qui voit le trafic et qui décide de la politique. Aucun service tiers n'est appelé tant que vous n'avez pas activé.
 
-![Les réglages du captcha](../../images/02-editorial/captcha-01-les-reglages-du-captcha.png)
+![L'onglet Anti-robots](../../images/02-editorial/captcha-reglages-01-l-onglet-anti-robots.png)
+
+## Une donnée personnelle
+
+Le service choisi **reçoit l'adresse IP du visiteur**. C'est une donnée personnelle : le compte doit être celui du site, et la politique de confidentialité doit le dire. L'écran le rappelle en jaune, au-dessus du choix du service.
 
 ## Sur quoi il s'applique
 
 - Les formulaires du site.
 - Les commentaires.
+
+C'est une vérification **en plus** de ce qui existe déjà : le piège à robots, le filtre à liens, la limite d'envois et la modération. Elle n'est pas la première ligne, elle est la dernière.
 
 Pas sur la connexion au back-office, qui est protégée autrement, par une limite de cinq tentatives par quart d'heure.
 
