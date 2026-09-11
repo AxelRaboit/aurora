@@ -7,6 +7,7 @@ namespace Aurora\Module\Ged\Document\Manager;
 use Aurora\Core\Sequence\SequenceGenerator;
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
 use Aurora\Core\Storage\Service\ImageVariantGenerator;
+use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
@@ -42,6 +43,7 @@ class DocumentManager implements DocumentManagerInterface
         protected readonly DocumentRepository $documentRepository,
         protected readonly GedDocumentUploader $uploader,
         protected readonly ImageVariantGenerator $variantGenerator,
+        protected readonly StorageManager $storageManager,
     ) {}
 
     public function create(DocumentInputInterface $input): DocumentInterface
@@ -79,7 +81,7 @@ class DocumentManager implements DocumentManagerInterface
         if ($fileChanged) {
             // Old variants are orphaned by the new file path - drop them on
             // disk before re-encoding the new source.
-            $this->variantGenerator->deleteVariants($previousVariants);
+            $this->variantGenerator->deleteVariants($this->storageManager->active(), $previousVariants);
             $this->regenerateVariantsIfImage($document);
         }
 
@@ -102,7 +104,7 @@ class DocumentManager implements DocumentManagerInterface
         $this->entityManager->remove($document);
         $this->entityManager->flush();
 
-        $this->variantGenerator->deleteVariants($variants);
+        $this->variantGenerator->deleteVariants($this->storageManager->active(), $variants);
         $this->deleteUnreferencedFiles($owned);
     }
 
@@ -154,7 +156,7 @@ class DocumentManager implements DocumentManagerInterface
 
         $this->entityManager->flush();
 
-        $this->variantGenerator->deleteVariants($variants);
+        $this->variantGenerator->deleteVariants($this->storageManager->active(), $variants);
         $this->deleteUnreferencedFiles($owned);
 
         return count($documents);
@@ -198,7 +200,7 @@ class DocumentManager implements DocumentManagerInterface
 
         // Old variants point at the pre-crop file path - drop them and
         // regenerate so srcset/object-fit consumers stay in sync.
-        $this->variantGenerator->deleteVariants($previousVariants);
+        $this->variantGenerator->deleteVariants($this->storageManager->active(), $previousVariants);
         $this->regenerateVariantsIfImage($document);
 
         $this->entityManager->flush();
@@ -391,7 +393,11 @@ class DocumentManager implements DocumentManagerInterface
             return;
         }
 
-        $variants = $this->variantGenerator->generate($filePath, (string) $document->getMimeType());
+        $variants = $this->variantGenerator->generate(
+            $this->storageManager->active(),
+            $filePath,
+            (string) $document->getMimeType(),
+        );
         $document->setVariants($variants);
     }
 

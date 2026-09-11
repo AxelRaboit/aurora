@@ -80,8 +80,8 @@ final readonly class LocalStorageAdapter implements StorageAdapterInterface, Loc
         try {
             $this->filesystem->mkdir(dirname($target));
             $this->filesystem->copy($sourceAbsolutePath, $target, true);
-        } catch (IOException $exception) {
-            throw StorageException::writeFailed($key, $exception->getMessage());
+        } catch (IOException $ioException) {
+            throw StorageException::writeFailed($key, $ioException->getMessage());
         }
     }
 
@@ -92,8 +92,8 @@ final readonly class LocalStorageAdapter implements StorageAdapterInterface, Loc
         try {
             $this->filesystem->mkdir(dirname($target));
             $this->filesystem->dumpFile($target, $contents);
-        } catch (IOException $exception) {
-            throw StorageException::writeFailed($key, $exception->getMessage());
+        } catch (IOException $ioException) {
+            throw StorageException::writeFailed($key, $ioException->getMessage());
         }
     }
 
@@ -129,8 +129,8 @@ final readonly class LocalStorageAdapter implements StorageAdapterInterface, Loc
         try {
             $this->filesystem->mkdir(dirname($targetAbsolutePath));
             $this->filesystem->copy($source, $targetAbsolutePath, true);
-        } catch (IOException $exception) {
-            throw StorageException::readFailed($key, $exception->getMessage());
+        } catch (IOException $ioException) {
+            throw StorageException::readFailed($key, $ioException->getMessage());
         }
     }
 
@@ -152,7 +152,7 @@ final readonly class LocalStorageAdapter implements StorageAdapterInterface, Loc
         }
 
         $this->filesystem->remove(array_map(
-            fn (string $key): string => $this->resolve($key),
+            $this->resolve(...),
             $keys,
         ));
     }
