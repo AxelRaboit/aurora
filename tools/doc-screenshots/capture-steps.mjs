@@ -252,6 +252,36 @@ async function removeDocument(title) {
   await wait(2000);
 }
 
+/**
+ * Ouvre le calendrier sur un mois qui contient les événements de la démo.
+ */
+async function openCalendar() {
+  await page.goto(`${BASE}/backend/planning/calendar`, { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Mois", exact: true }).first().waitFor({ timeout: 20000 });
+  await wait(2500);
+}
+
+/**
+ * Le plus petit ancêtre d'un élément qui soit au moins aussi large que dit.
+ *
+ * Une ligne de tableau n'a pas de sélecteur à elle : cadrer un rappel donne
+ * une vignette de quarante pixels, et cadrer son conteneur nommé donne la
+ * page entière. Remonter jusqu'à une largeur attendue trouve la ligne sans
+ * dépendre d'une classe de mise en page.
+ */
+async function wideAncestor(locator, minWidth) {
+  for (let up = 0; up < 8; up += 1) {
+    const candidate = 0 === up ? locator : locator.locator(`xpath=ancestor::*[${up}]`);
+    const box = await candidate.boundingBox();
+
+    if (box && box.width >= minWidth) {
+      return candidate;
+    }
+  }
+
+  throw new Error(`aucun ancêtre d'au moins ${minWidth} pixels de large`);
+}
+
 const FLOWS = {
   /**
    * La page que reçoit le client, sans compte.
@@ -1424,6 +1454,233 @@ const FLOWS = {
     // de plus dans la démo, et la bibliothèque photographiée finissait par
     // n'être qu'une pile de doublons.
     await removeDocument("Affiche du salon 2026");
+  },
+
+  /**
+   * Les quatre façons de regarder le même mois.
+   */
+  "les-quatre-vues": async () => {
+    await openCalendar();
+    await shot("la-vue-mois");
+
+    for (const [view, name] of [["Semaine", "la-vue-semaine"], ["Jour", "la-vue-jour"], ["Agenda", "la-vue-agenda"]]) {
+      await page.getByRole("button", { name: view, exact: true }).first().click();
+      await wait(2200);
+      await shot(name);
+    }
+  },
+
+  /**
+   * Les calendriers : la liste, la création, et ce que décocher change.
+   */
+  "agendas": async () => {
+    await openCalendar();
+
+    // Le conteneur qui porte à la fois l'intitulé et les calendriers : le plus
+    // profond des deux ne contenait que la ligne de titre.
+    const list = page.locator("div")
+      .filter({ hasText: "Mes calendriers" })
+      .filter({ has: page.getByRole("button", { name: "Astreinte", exact: true }) })
+      .last();
+    await list.scrollIntoViewIfNeeded();
+    await wait(700);
+    await shotOf(list, "la-liste-des-calendriers", 12, 10);
+
+    await page.getByRole("button", { name: "Nouveau calendrier" }).first().click();
+    await wait(1800);
+    await shot("creer-un-calendrier");
+
+    await page.getByRole("button", { name: "Annuler" }).first().click();
+    await wait(1200);
+  },
+
+  /**
+   * Un événement, du panneau vide à sa place dans le mois.
+   */
+  "un-evenement": async () => {
+    await openCalendar();
+
+    await page.getByRole("button", { name: "Nouvel événement" }).first().click();
+    await wait(2000);
+    await shot("le-panneau-d-un-evenement");
+
+    await page.getByPlaceholder("Un titre court").first().fill("Revue éditoriale de rentrée");
+    await page.getByPlaceholder("Une salle, une adresse, un lien").first().fill("Salle Vercors, ou en visio");
+    await page.getByPlaceholder("Une phrase pour situer").first().fill("Relire les brouillons en attente et trancher les publications de septembre.");
+    await wait(900);
+    await shot("l-evenement-rempli");
+  },
+
+  /**
+   * La récurrence, du choix courant au réglage détaillé.
+   */
+  "recurrences": async () => {
+    await openCalendar();
+
+    await page.getByRole("button", { name: "Nouvel événement" }).first().click();
+    await wait(2000);
+
+    // Le menu est un `select` natif : sa liste ouverte est dessinée par le
+    // système et ne se photographie pas. Ce qui compte se voit autrement -
+    // les quatre choix courants dans le menu fermé, puis le panneau que
+    // « Personnalisé… » déplie.
+    const menu = page.locator("select").filter({ has: page.locator('option:text-is("Ne se répète pas")') }).first();
+    await menu.scrollIntoViewIfNeeded();
+    await wait(700);
+    await shotOf(menu, "le-menu-de-recurrence", 16, 28);
+
+    await menu.selectOption("custom");
+    await wait(1200);
+
+    // Le bloc entier, menu compris : c'est le menu qui déplie le panneau, et
+    // les montrer séparément demanderait au lecteur de les recoller.
+    // Le deuxième ancêtre, pas le premier : `AppSelect` enveloppe son libellé
+    // et son champ dans un conteneur qui porte les mêmes classes que celui du
+    // bloc, et cadrer le premier ne montrait que le menu fermé.
+    const panel = menu.locator('xpath=ancestor::div[contains(@class,"gap-1.5")][2]');
+    await panel.scrollIntoViewIfNeeded();
+    await wait(700);
+    await shotOf(panel, "le-reglage-personnalise", 16, 10);
+  },
+
+  /**
+   * Les participants, et la réponse qu'ils donnent.
+   */
+  "invites": async () => {
+    await openCalendar();
+
+    // Un événement qui a déjà ses invités, plutôt qu'un champ vide : ce qui
+    // s'apprend ici, ce sont les réponses, et un formulaire neuf n'en a pas.
+    await page.getByText("Réunion générale", { exact: true }).first().click();
+    await wait(2500);
+    await shot("un-evenement-et-ses-invites");
+
+    // Le champ qui a servi à les inviter est dans la fenêtre de modification,
+    // pas dans la bulle : la bulle montre les réponses, le champ montre
+    // comment on invite.
+    await page.getByRole("button", { name: /Modifier/ }).first().click();
+    await wait(2500);
+
+    const field = page.getByPlaceholder("Inviter quelqu'un…").first();
+    await field.scrollIntoViewIfNeeded();
+    await wait(900);
+    await shotOf(field.locator('xpath=ancestor::div[contains(@class,"gap-1.5")][1]'), "le-champ-des-participants", 16, 10);
+  },
+
+  /**
+   * Les alertes d'un événement : quand, et par quel canal.
+   */
+  "alertes": async () => {
+    await openCalendar();
+
+    await page.getByText("Réunion générale", { exact: true }).first().click();
+    await wait(2000);
+    await page.getByRole("button", { name: /Modifier/ }).first().click();
+    await wait(2500);
+
+    const add = page.getByRole("button", { name: "Ajouter une alerte" }).first();
+    await add.scrollIntoViewIfNeeded();
+    await wait(700);
+    await shotOf(add.locator('xpath=ancestor::div[contains(@class,"flex-col")][1]'), "le-bloc-des-alertes", 16, 10);
+
+    await add.click();
+    await wait(1200);
+    await shotOf(add.locator('xpath=ancestor::div[contains(@class,"flex-col")][1]'), "une-alerte-ajoutee", 16, 10);
+  },
+
+  /**
+   * Les dates que les autres modules posent dans le calendrier.
+   */
+  "dates-des-autres-modules": async () => {
+    await openCalendar();
+
+    const entry = page.getByText(/Échéance facture/).first();
+    await entry.scrollIntoViewIfNeeded();
+    await wait(700);
+    await shotOf(entry, "une-echeance-venue-de-la-comptabilite", 24, 14);
+
+    await entry.click();
+    await wait(2000);
+    await shot("ce-qu-elle-dit");
+  },
+
+  /**
+   * Les rappels : ce qu'ils sont, et où ils s'affichent.
+   */
+  "rappels": async () => {
+    await openCalendar();
+
+    await page.getByRole("button", { name: "Nouveau rappel" }).first().click();
+    await wait(2000);
+    await shot("le-panneau-d-un-rappel");
+
+    await page.getByPlaceholder("Appeler le client, relire le brouillon…").first().fill("Relancer l'imprimeur pour les affiches");
+    await page.getByPlaceholder("Ce qu'il faut savoir pour le faire").first().fill("Devis reçu le 3, valable un mois.");
+    await wait(900);
+    await shot("le-rappel-rempli");
+
+    await page.getByRole("button", { name: "Annuler" }).first().click();
+    await wait(1200);
+
+    // La semaine, pas le jour : la ligne des rappels n'apparaît que les jours
+    // qui en portent, et celle-ci en montre trois d'un coup - un en retard,
+    // un fait, un à faire.
+    await page.getByRole("button", { name: "Semaine", exact: true }).first().click();
+    await wait(2500);
+
+    const row = await wideAncestor(page.getByText("Prendre le rendez-vous chez le dentiste").first(), 1040);
+    await shotOf(row, "la-ligne-des-rappels", 10, 0);
+  },
+
+  /**
+   * Partager un calendrier : à un compte, ou par une adresse secrète.
+   */
+  "partager-un-agenda": async () => {
+    await openCalendar();
+
+    // Partager à un compte se fait dans la fenêtre du calendrier, pas dans
+    // celle des liens : ce sont deux partages différents, et les confondre
+    // était le défaut de la page précédente.
+    const row = page.getByRole("button", { name: "Astreinte", exact: true }).first();
+    await row.hover();
+    await wait(600);
+    await page.getByRole("button", { name: "Modifier le calendrier" }).first().click();
+    await wait(2200);
+    await shot("la-fenetre-du-calendrier");
+
+    const shares = page.getByPlaceholder("Ajouter quelqu'un…").first();
+    await shares.scrollIntoViewIfNeeded();
+    await wait(800);
+    await shotOf(shares.locator('xpath=ancestor::div[contains(@class,"gap-1.5")][2]'), "partage-avec-un-compte", 16, 12);
+  },
+
+  /**
+   * Les liens de partage : une adresse secrète, pour lire sans compte.
+   *
+   * Photographié sur un calendrier qui en a déjà un, sinon la fenêtre ne
+   * montre que « Aucun lien » et le formulaire, c'est-à-dire la moitié de ce
+   * que la page doit expliquer.
+   */
+  "liens-de-partage": async () => {
+    await openCalendar();
+
+    const row = page.getByRole("button", { name: "Formations", exact: true }).first();
+    await row.hover();
+    await wait(600);
+    await page.getByRole("button", { name: "Partage par lien" }).first().click();
+    await wait(2200);
+    await shot("la-fenetre-des-liens");
+
+    await page.getByPlaceholder("Marie, studio photo").first().fill("Marie, pour la saison");
+    await wait(900);
+    await shot("un-lien-a-creer");
+
+    // Le second type, celui qui produit une adresse à coller dans une
+    // application d'agenda plutôt qu'une page à ouvrir.
+    const kind = page.locator("select").filter({ has: page.locator('option:text-is("Page web")') }).first();
+    await kind.selectOption({ label: "Abonnement (.ics)" });
+    await wait(1200);
+    await shotOf(await wideAncestor(kind, 420), "un-abonnement-plutot-qu-une-page", 16, 40);
   },
 
   /**

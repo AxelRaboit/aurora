@@ -155,7 +155,10 @@ backend:
       timezone_unknown: Ce fuseau horaire est inconnu.
       window_invalid: "La période demandée est invalide."
     reminders:
+      # L'intitulé de la bande, dans la grille.
       title: Rappels
+      # Le libellé du champ, dans la fenêtre.
+      title_label: Titre
       title_placeholder: "Appeler le client, relire le brouillon…"
       new: Nouveau rappel
       edit: Modifier le rappel
@@ -208,7 +211,10 @@ backend:
         1440: "1 jour avant"
         10080: "1 semaine avant"
     events:
-      title: Événements
+      # Le libellé du champ, au singulier : c'est un titre qu'on y écrit,
+      # pas une liste d'événements. La bande des rappels de la grille garde
+      # son intitulé à elle, `reminders.title`.
+      title: Titre
       new: Nouvel événement
       all_day: Toute la journée
       all_day_short: Journée

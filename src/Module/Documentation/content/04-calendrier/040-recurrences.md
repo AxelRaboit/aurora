@@ -1,25 +1,30 @@
 ---
 title: "Les récurrences"
-description: "Décrire la règle une fois, et la portée d'une modification."
+description: "Une règle plutôt que cinquante événements, et ce que modifier une occurrence veut dire."
 rubric: "Calendrier"
 ---
 Un événement qui se répète n'est pas cinquante événements : c'est une règle, et des exceptions.
 
-![Les récurrences](../../images/04-calendrier/planning-week.png)
+## Les quatre cas courants
 
-## La règle
+Chaque jour, chaque semaine, chaque mois, chaque année. Le menu les propose directement, parce que presque toutes les séries réelles sont l'une des quatre.
 
-Elle se décrit une fois - tous les lundis, le premier de chaque mois - avec une date de fin facultative. Les occurrences sont calculées à l'affichage, donc changer la règle change tout ce qui vient.
+![Le menu de récurrence](../../images/04-calendrier/recurrences-01-le-menu-de-recurrence.png)
 
-## Les quatre portées
+## Le reste
 
-Déplacer ou modifier une occurrence pose la question au moment d'enregistrer :
+« Personnalisé… » déplie l'intervalle, les jours de la semaine retenus, et la façon dont la série se termine : jamais, à une date, ou après un nombre d'occurrences.
 
-- Celle-ci seulement : l'occurrence devient une exception, le reste ne bouge pas.
-- Celle-ci et les suivantes : la règle est coupée en deux.
-- Toutes.
-- L'unique, quand l'événement ne se répète pas.
+![Le réglage personnalisé](../../images/04-calendrier/recurrences-02-le-reglage-personnalise.png)
+
+## Modifier une occurrence
+
+La question se pose au moment d'enregistrer, avec trois réponses :
+
+- Cette occurrence : elle devient une exception, les autres ne bougent pas.
+- Celle-ci et les suivantes : la règle est coupée en deux, le passé ne change pas.
+- Toute la série, occurrences déjà passées comprises.
 
 ## Supprimer
 
-La même question se pose. Supprimer une seule occurrence la retire de la série sans toucher aux autres : c'est une exception, pas une suppression.
+La même question, avec les mêmes trois réponses. Supprimer une seule occurrence la retire de la série sans toucher aux autres : c'est une exception, pas une suppression.
