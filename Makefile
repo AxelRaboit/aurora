@@ -77,6 +77,7 @@ deploy-prod: ## Deploy to production (requires a git tag on HEAD)
 	$(CONSOLE) app:translations:dump-js; \
 	$(PNPM) --dir=$(AURORA) run build; \
 	APP_ENV=prod APP_DEBUG=0 $(CONSOLE) cache:clear --env=prod; \
+	$(MAKE) --no-print-directory prune-cache-orphans; \
 	echo "✅ Deployed $$APP_VERSION"
 
 update: ## Update all dependencies
@@ -118,9 +119,38 @@ cc: ## Clear cache (dev)
 cc-dev: ## Clear cache (dev)
 	$(CONSOLE) cache:clear
 
+prune-cache-orphans: ## Remove the directories a failed cache:clear left behind in var/cache/
+	@# Symfony's Filesystem::remove() renames a directory to `.!<random>` before
+	@# deleting it. If deleting the CONTENTS throws, that exception escapes
+	@# before the rename-back, and the renamed directory is stranded. It is a
+	@# whole cache, so roughly 7 MB, and the next clear strands another one.
+	@#
+	@# The cause is always the same: a file inside that this user cannot unlink,
+	@# because the directory holding it is not group writable and belongs to
+	@# php-fpm. Hence the loud message rather than a silent skip when removal
+	@# fails again here: nothing else in a deploy would ever mention it, which
+	@# is how an installation reaches 775 MB of them without anyone noticing.
+	@orphans=$$(find var/cache -maxdepth 1 -type d -name '.!*' 2>/dev/null); \
+	if [ -z "$$orphans" ]; then \
+		exit 0; \
+	fi; \
+	count=$$(echo "$$orphans" | wc -l | tr -d ' '); \
+	size=$$(du -sh $$orphans 2>/dev/null | tail -1 | cut -f1); \
+	echo "🧹 $$count stranded cache director(ies) in var/cache/, about $$size"; \
+	echo "$$orphans" | xargs rm -rf 2>/dev/null || true; \
+	left=$$(find var/cache -maxdepth 1 -type d -name '.!*' 2>/dev/null | wc -l | tr -d ' '); \
+	if [ "$$left" != "0" ]; then \
+		echo "⚠️  $$left could not be removed: they hold files this user cannot unlink."; \
+		echo "   Cause: php-fpm created them without group write. Check that its"; \
+		echo "   service has UMask=0002, then remove them as root once."; \
+	else \
+		echo "   removed"; \
+	fi
+
 cc-prod: ## Clear and warm up production cache
 	@echo "Clearing and regenerating production cache..."
 	APP_ENV=prod APP_DEBUG=0 $(CONSOLE) cache:clear --env=prod
+	@$(MAKE) --no-print-directory prune-cache-orphans
 	@APP_ENV=prod APP_DEBUG=0 $(CONSOLE) about --env=prod >/dev/null 2>&1 || (echo "❌ Cache verification failed: application could not boot" && exit 1)
 	@echo "✅ Production cache regenerated successfully"
 

@@ -5,6 +5,45 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.129] - 2026-09-12
+
+### Corrigé
+
+#### Un déploiement pouvait abandonner un cache entier dans `var/cache/`, sans le dire
+Trouvé sur la production : 103 répertoires nommés `.!!scE`, `.!!wgp` et
+compagnie, 775 Mo au total, accumulés en douze jours. Personne ne les avait vus,
+parce que rien ne les signale et que l'application marche parfaitement avec.
+
+Le mécanisme, reproduit pour en être sûr. Pour supprimer un dossier, Symfony le
+renomme d'abord en `.!<aléatoire>`, puis vide son contenu, puis retire la
+coquille. Si le vidage lève une exception, elle s'échappe **avant** le
+renommage de secours prévu un peu plus bas, et le dossier renommé reste là. Un
+cache complet, environ 7 Mo, et le vidage suivant en abandonne un autre.
+
+La cause du vidage qui échoue est toujours la même : un fichier que l'utilisateur
+du déploiement ne peut pas supprimer, parce que le dossier qui le contient
+appartient à php-fpm sans droit d'écriture pour le groupe. C'est réglé côté
+serveur par un `UMask=0002` sur le service, mais ça ne réparait pas les débris
+déjà là et rien n'aurait signalé une rechute.
+
+`make cc-prod` et `make deploy-prod` retirent donc maintenant ce qui traîne, et
+disent ce qu'ils ont retiré. Quand ils n'y arrivent pas, ils le disent aussi,
+avec la cause et le geste : c'est le seul moment où quelqu'un regarde.
+
+La cible `make prune-cache-orphans` existe aussi seule. Elle ne dit rien quand
+il n'y a rien, ce qui est le cas normal.
+
+### Dans aurora-client
+
+Rien à répercuter, la cible vient du Makefile d'aurora-core. Au prochain
+déploiement, un message peut apparaître : c'est le ménage des déploiements
+précédents.
+
+Si l'avertissement « could not be removed » sort, c'est que php-fpm crée
+toujours des fichiers sans droit d'écriture pour le groupe. Vérifier
+`systemctl show php8.4-fpm -p UMask`, poser `UMask=0002` dans un drop-in, puis
+supprimer les débris une fois en root.
+
 ## [0.9.128] - 2026-09-12
 
 ### Ajouté
