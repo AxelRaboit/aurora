@@ -39,6 +39,7 @@ final readonly class GedModule implements ModuleInterface, ModuleNavViewProvider
             new NavPermission('ged.documents.create'),
             new NavPermission('ged.documents.edit'),
             new NavPermission('ged.documents.delete'),
+            new NavPermission('ged.documents.relocate'),
             new NavPermission('ged.categories.view'),
             new NavPermission('ged.categories.create'),
             new NavPermission('ged.categories.edit'),

@@ -1,13 +1,13 @@
 ---
 title: "Les groupes de réglages"
-description: "Treize onglets, et lequel ouvrir selon ce qu'on cherche."
+description: "Quatorze onglets, et lequel ouvrir selon ce qu'on cherche."
 rubric: "Configuration"
 ---
 Une centaine de réglages, rangés en onglets. Chacun tient sur un écran, et cette page dit lequel ouvrir.
 
 ![Les onglets de réglages](../../images/08-configuration/onglets-de-reglages-01-general.png)
 
-## Les treize
+## Les quatorze
 
 - **Général** : le nom du site, son adresse publique, l'e-mail de l'administrateur.
 - **Localisation** : langue, fuseau horaire, format de date.
@@ -22,6 +22,7 @@ Une centaine de réglages, rangés en onglets. Chacun tient sur un écran, et ce
 - **Notes** : la taille et la qualité des images déposées dans une note.
 - **Pexels** : la banque de photos libres de droits.
 - **Anti-robots** : la protection des formulaires publics.
+- **Stockage des fichiers** : où sont écrits vos fichiers, sur le serveur ou ailleurs.
 
 ## Deux onglets que vous ne verrez pas
 

@@ -9,11 +9,10 @@
 parameters:
     app.admin_email: '%env(ADMIN_EMAIL)%'
     app.mailer_from: '%env(MAILER_FROM)%'
-    # Tout fichier stocké par Aurora vit ICI - hors document root.
-    # Servi exclusivement via les controllers `*_serve` (voir
-    # docs/aurora-core/dev/storage_policy.md). Apache ne sert rien
-    # depuis ce dossier directement ; `mod_xsendfile` peut offload
-    # les bytes une fois l'auth check passé côté PHP.
+    # La racine du support local, hors document root. Ne pas l'injecter :
+    # tout passe par StorageAdapterInterface, et seuls LocalStorageAdapter
+    # et UploadsServeController lisent encore ce paramètre.
+    # Voir docs/aurora-core/dev/storage_backends.md.
     app.upload_dir: '%kernel.project_dir%/var/uploads'
 
 services:
@@ -31,6 +30,7 @@ services:
     # Auto-tag every registered front so the Registry collects them.
     # Auto-tag every menu location provider so the MenuLocationRegistry collects them.
     # Auto-tag every sequence prefix provider so the conflict listener validates uniqueness at boot.
+    # Auto-tag every storage adapter so StorageManager can index them by disk.
     _instanceof:
         Aurora\Core\Module\Contract\ModuleInterface:
             tags: [aurora.module]
@@ -62,6 +62,8 @@ services:
             tags: [aurora.entity_reference_provider]
         Aurora\Core\Scheduler\RecurringMessageProviderInterface:
             tags: [aurora.recurring_message_provider]
+        Aurora\Core\Storage\Adapter\StorageAdapterInterface:
+            tags: [aurora.storage_adapter]
 
     Aurora\Core\Scheduler\MainSchedule:
         arguments:
@@ -146,10 +148,6 @@ services:
     Aurora\Module\Configuration\Setting\Configuration\SettingDefinitionRegistry:
         arguments:
             $providers: !tagged_iterator aurora.configuration_tab_provider
-
-    Aurora\Module\Accounting\Contract\Service\ContractPdfGenerator:
-        arguments:
-            $uploadDir: '%app.upload_dir%'
 
     # Le manuel du produit, lu dans les fichiers qui l'accompagnent. Le
     # dossier est nommé depuis le bundle, pas depuis le projet client.

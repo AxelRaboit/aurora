@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Document\Entity;
 
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Timestampable\TimestampableTrait;
 use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategoryInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTagInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
+use Aurora\Module\Ged\Enum\DocumentTransferStateEnum;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -45,6 +47,35 @@ abstract class AbstractDocument implements DocumentInterface
     /** Relative path within var/uploads/ (e.g. ged/documents/2026/05/contract-abc.pdf). */
     #[ORM\Column(length: 255, nullable: true)]
     protected ?string $filePath = null;
+
+    /**
+     * Which backend actually holds the bytes of `filePath`.
+     *
+     * Carried per document rather than read from the settings, because the
+     * setting says where the NEXT file goes and says nothing about this one.
+     * Without this column, switching a backend would strand every file written
+     * before the switch, and there would be no way to move a document from one
+     * side to the other and back.
+     */
+    #[ORM\Column(length: 20, enumType: StorageDiskEnum::class, options: ['default' => 'local'])]
+    protected StorageDiskEnum $storageDisk = StorageDiskEnum::Local;
+
+    /**
+     * Where a move between backends stands, and the lock that guards it.
+     * See {@see DocumentTransferStateEnum}.
+     */
+    #[ORM\Column(length: 20, enumType: DocumentTransferStateEnum::class, options: ['default' => 'idle'])]
+    protected DocumentTransferStateEnum $storageTransferState = DocumentTransferStateEnum::Idle;
+
+    /**
+     * Why the last move gave up, in the words the backend used.
+     *
+     * Shown to whoever pressed the button. A move that fails silently is a
+     * button that appears broken, and the message a storage API returns is
+     * usually the only clue about which of the many possible causes it was.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    protected ?string $storageTransferError = null;
 
     /** Filename on disk (slug + extension). */
     #[ORM\Column(length: 255, nullable: true)]
@@ -211,6 +242,42 @@ abstract class AbstractDocument implements DocumentInterface
     public function setFilePath(?string $filePath): static
     {
         $this->filePath = $filePath;
+
+        return $this;
+    }
+
+    public function getStorageDisk(): StorageDiskEnum
+    {
+        return $this->storageDisk;
+    }
+
+    public function setStorageDisk(StorageDiskEnum $storageDisk): static
+    {
+        $this->storageDisk = $storageDisk;
+
+        return $this;
+    }
+
+    public function getStorageTransferState(): DocumentTransferStateEnum
+    {
+        return $this->storageTransferState;
+    }
+
+    public function setStorageTransferState(DocumentTransferStateEnum $state): static
+    {
+        $this->storageTransferState = $state;
+
+        return $this;
+    }
+
+    public function getStorageTransferError(): ?string
+    {
+        return $this->storageTransferError;
+    }
+
+    public function setStorageTransferError(?string $error): static
+    {
+        $this->storageTransferError = $error;
 
         return $this;
     }

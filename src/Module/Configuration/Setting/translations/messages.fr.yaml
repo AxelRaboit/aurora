@@ -32,7 +32,59 @@ backend:
       captcha_description: "Vérification des commentaires et des formulaires : service, clés et activation."
       notes: Notes
       notes_description: 'Paramètres du module Notes Markdown : taille / qualité des images uploadées.'
+      storage: Stockage des fichiers
+      storage_description: "Où sont écrits les fichiers de l'application : le disque du serveur, ou un stockage objet Cloudflare R2."
       modules: Modules
+    storage:
+      intro: "Par défaut, les fichiers que vous déposez sont écrits sur le disque du serveur. Vous pouvez à la place les confier à un stockage objet Cloudflare R2, sur votre propre compte."
+      when_useful: "Utile surtout si vous stockez beaucoup, ou de gros fichiers. En dessous de quelques giga-octets, le disque du serveur fait très bien l'affaire et demande moins de réglages."
+      how_title: Comment obtenir les identifiants
+      how_step_bucket: "Dans le tableau de bord Cloudflare, ouvrez R2 et créez un compartiment, ou choisissez-en un existant."
+      how_step_token: "Créez un jeton d'API avec la permission « Object Read & Write », limitée à ce seul compartiment. La lecture seule ne suffit pas : l'application doit pouvoir écrire."
+      how_step_copy: "Copiez l'identifiant de clé et la clé secrète. Cloudflare ne les affiche qu'une fois."
+      how_link: Ouvrir la documentation Cloudflare R2
+      endpoint_label: Adresse du compte
+      endpoint_hint: "L'URL du compte, sans le nom du compartiment à la fin. La console en affiche une avec le compartiment ajouté : la coller telle quelle le ferait apparaître deux fois."
+      bucket_label: Compartiment
+      bucket_hint: Le nom du compartiment, seul.
+      access_key_label: Identifiant de clé
+      secret_key_label: Clé secrète
+      key_stored: Une valeur est enregistrée. Laissez vide pour la conserver.
+      key_hint: Copiée depuis Cloudflare au moment de la création du jeton.
+      public_url_label: Domaine public
+      public_url_hint: "Facultatif. Le nom de domaine que vous avez branché sur le compartiment, si vous en avez branché un. Sans lui, les fichiers restent servis par l'application."
+      delivery_title: Comment les fichiers sont servis
+      delivery_hint: "L'adresse d'un document ne change jamais, quel que soit ce choix. Seule change la façon dont l'application y répond."
+      delivery_proxy: Par l'application
+      delivery_proxy_hint: "Les octets traversent le serveur. Le plus simple, et vos règles d'accès continuent de s'appliquer."
+      delivery_presigned: Par lien signé temporaire
+      delivery_presigned_hint: "Les octets vont directement du stockage au visiteur, et les fichiers restent privés."
+      delivery_public_url: Par le domaine public
+      delivery_public_url_hint: "Le plus rapide, mis en cache. Les fichiers deviennent lisibles par quiconque connaît leur adresse."
+      test_button: Tester la connexion
+      test_intro: "Le test écrit un fichier témoin, le relit, vérifie qu'il est bien là, puis le supprime. C'est la seule façon de savoir qu'un jeton a vraiment le droit d'écrire."
+      test_passed: "Connexion vérifiée le {date}."
+      test_never: "Jamais testée. Le test est nécessaire avant de pouvoir basculer le stockage."
+      active_disk_label: Écrire les nouveaux fichiers sur
+      disk_local: Le disque du serveur
+      disk_r2: Cloudflare R2
+      switch_blocked: Testez la connexion avant de pouvoir basculer.
+      switch_hint: "Ne concerne que les fichiers à venir. Ceux déjà en place ne bougent pas."
+      probe:
+        write: écriture
+        read_back: relecture
+        exists: présence
+        metadata: taille et date
+        listing: visible dans la liste
+        cleanup: nettoyage
+      hints:
+        incomplete: "Il manque une information. Renseignez l'adresse du compte, le compartiment et les deux clés."
+        signature: "La clé secrète ne correspond pas à l'identifiant de clé. Les deux ne s'affichent qu'à la création du jeton : en recréer un est plus rapide que de chercher."
+        denied: "Cloudflare répond mais refuse. Vérifiez que le jeton porte « Object Read & Write » et non la lecture seule, et qu'il couvre bien ce compartiment."
+        no_bucket: "Ce compartiment n'existe pas à cette adresse. Attention : l'adresse du compte ne doit pas contenir le nom du compartiment à la fin."
+        unreachable: "L'adresse ne répond pas. Vérifiez-la, et vérifiez que le serveur peut l'atteindre."
+      errors:
+        verification_required: Testez la connexion avant de basculer le stockage.
     appearance:
       color_presets:
         title: Palette du sélecteur de couleurs

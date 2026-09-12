@@ -7,6 +7,7 @@ namespace Aurora\Module\Ged\Document\Command;
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
 use Aurora\Core\Storage\Enum\StorageAreaEnum;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,6 +37,7 @@ final class GenerateThumbnailsCommand extends Command
         private readonly DocumentRepository $documentRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly PdfThumbnailGenerator $thumbnailGenerator,
+        private readonly StorageManager $storageManager,
     ) {
         parent::__construct();
     }
@@ -76,7 +78,12 @@ final class GenerateThumbnailsCommand extends Command
 
             $thumbDir = $this->thumbDirFor($document);
             $basename = pathinfo($document->getFileName() ?? (string) $document->getId(), PATHINFO_FILENAME);
-            $thumbPath = $this->thumbnailGenerator->generate($filePath, $thumbDir, $basename);
+            $thumbPath = $this->thumbnailGenerator->generate(
+                $this->storageManager->active(),
+                $filePath,
+                $thumbDir,
+                $basename,
+            );
 
             if (null === $thumbPath) {
                 $io->warning(sprintf('Failed for #%d (%s)', $document->getId(), $document->getTitle()));

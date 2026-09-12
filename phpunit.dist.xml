@@ -26,6 +26,20 @@
         </testsuite>
     </testsuites>
 
+    <!--
+        The R2 suite talks to a real Cloudflare bucket. It skips itself when
+        the credentials are absent, which covers CI, but a developer who has
+        them in `.env.local` would otherwise pay eight seconds of network and a
+        handful of billed operations on every single run of the suite.
+
+        So it is opt-in, through `make test-r2`.
+    -->
+    <groups>
+        <exclude>
+            <group>r2</group>
+        </exclude>
+    </groups>
+
     <source ignoreSuppressionOfDeprecations="true"
             ignoreIndirectDeprecations="true"
             restrictNotices="true"

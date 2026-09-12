@@ -5,6 +5,369 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.133] - 2026-09-12
+
+### Modifié
+
+#### La documentation technique de la couche de stockage
+`docs/aurora-core/dev/storage_backends.md` : le contrat, les trois verbes de
+`LocalWorkspace` et pourquoi les confondre fait disparaître un dérivé, comment
+ajouter un support, ce qui se facture sur un stockage objet, et les deux pièges
+qui ne se voient qu'en production.
+
+CLAUDE.md §5bis décrivait le modèle d'avant et citait un dossier appartenant à
+un module supprimé. Il pointe désormais vers la doc et tient les règles dures.
+
+Le paramètre `app.upload_dir` renvoyait vers `docs/aurora-core/dev/storage_policy.md`,
+qui n'a jamais existé.
+
+#### La mémoire distribuée aux clients disait le contraire du code
+`convention_storage_var_uploads` demandait d'injecter
+`%app.upload_dir%/<categorie>`, ce qui est exactement ce que la couche a
+retiré. Elle part chez les projets clients, donc elle comptait. Elle décrit
+maintenant `StorageManager` et `LocalWorkspace`, et liste comme anti-patterns
+les gestes qu'elle recommandait.
+
+### Dans aurora-client
+
+Rien à répercuter, mais la consigne change pour tout nouveau stockage : injecter
+`StorageManager` plutôt que `%app.upload_dir%`. La mémoire partagée, lue depuis
+`vendor/axelraboit/aurora/`, le dit désormais.
+
+## [0.9.132] - 2026-09-12
+
+### Modifié
+
+#### Les derniers fichiers hors médiathèque passent par la couche de stockage
+Les photos de profil et les PDF des contrats signés étaient les deux dernières
+choses écrites directement sur le disque. Elles suivent maintenant le même
+chemin que le reste, donc le réglage de stockage vaut pour tout ce que
+l'application écrit, et non plus pour la médiathèque seule.
+
+Un contrat reste servi par l'application, derrière l'authentification, quel que
+soit le mode de livraison choisi. Une pièce juridique ne s'expose pas par un
+lien public, même sur une installation qui sert ses images ainsi.
+
+Deux détails qui auraient cassé des fichiers existants et qui ne l'ont pas
+fait : la base ne stocke que le nom d'une photo de profil, jamais son dossier,
+et ce partage reste tel quel ; le dossier des contrats garde son nom. Renommer
+l'un ou l'autre aurait rendu introuvable tout ce qui a été écrit avant.
+
+La suppression d'une photo interroge les deux supports plutôt que le support
+actif. Une photo déposée avant une bascule vit encore de l'autre côté, et
+demander sa suppression au mauvais endroit ne fait rien, en silence.
+
+#### `StorageAreaEnum` décrit enfin ce qui existe
+Quatre cas sur cinq ne servaient plus : `media`, `ocr` et `photo` appartenaient
+à des modules retirés, et `users` n'a jamais correspondu à la réalité puisque
+les photos de profil vont dans `profile-photos`. Seul leur propre test citait
+encore leurs valeurs, ce qui est la forme exacte d'une constante que personne
+n'utilise.
+
+Restent trois cas, qui sont trois dossiers réels. Le test qui les garde dit
+maintenant pourquoi : ce sont des préfixes de chemin, et en renommer un rend
+introuvable tout ce qui a été écrit avant.
+
+### Dans aurora-client
+
+Aucune migration, aucun fichier déplacé, rien à répercuter sauf pour un projet
+qui étend une de ces classes :
+
+- `ContractPdfGenerator` : `absolutePathFor()` et `root()` disparaissent, au
+  profit de `keyFor()`, `exists()`, `readStream()` et `withLocalCopy()`. Le
+  service ne reçoit plus de dossier d'upload.
+- `UserProfilePhotoManager` : reçoit un `StorageManager` à la place du
+  `Filesystem` et du dossier d'upload.
+- `StorageAreaEnum` : quatre cas retirés. Un projet qui en nommait un ne
+  compilera plus, ce qui est préférable au silence.
+
+## [0.9.131] - 2026-09-12
+
+### Ajouté
+
+#### Le manuel décrit le stockage des fichiers
+Deux pages : celle des réglages, dans Configuration, et celle du déplacement
+d'un document, dans Médiathèque. Elles disent aussi quand **ne pas** s'en
+servir, ce qui manque à la plupart des manuels : en dessous de quelques
+giga-octets, le disque du serveur fait l'affaire et demande moins de réglages.
+
+### Corrigé
+
+#### La page des groupes de réglages annonçait treize onglets
+Il y en a quatorze depuis la 0.9.129. Rien n'échoue quand une page compte mal,
+et personne ne l'aurait vu.
+
+### Interne
+
+#### Une règle et un skill pour que la documentation suive
+Demandé le 12/09/2026. Toute évolution visible met à jour le manuel, **et les
+pages voisines qu'elle a rendues fausses**, et les captures des écrans
+touchés. Ce deuxième point est celui qu'on saute, et c'est exactement ce qui
+s'était produit avec la page des onglets.
+
+La capture du nouvel onglet vide ses deux premiers champs avant la prise de
+vue. L'écran affiche la configuration réellement en vigueur, identifiants de
+compte compris : sur la machine d'un développeur ayant branché un vrai
+compartiment, la capture aurait emporté son identifiant Cloudflare vers un
+dépôt public et une page ouverte à tous.
+
+## [0.9.130] - 2026-09-12
+
+### Ajouté
+
+#### Déplacer un document d'un stockage à l'autre, d'un clic
+Une action dans le menu de chaque document : l'envoyer vers le stockage
+distant, ou le rapatrier sur le serveur. Une pastille sur chaque ligne dit où
+il vit, et l'action disparaît complètement tant qu'aucun second stockage n'a
+été configuré et testé, parce qu'une action qui ne peut qu'échouer est pire
+qu'une action absente.
+
+**Ce qui se déplace, c'est le document**, pas le fichier : ses octets, sa
+vignette, ses trois variantes, et le fichier de chacune de ses versions. Un
+document dont la moitié serait restée de l'autre côté aurait une colonne qui
+ment.
+
+**L'ordre est copier, vérifier, enregistrer, supprimer**, et jamais un autre.
+Un processus interrompu à n'importe quel moment laisse le document intact et
+lisible là où il était. Ce qu'il laisse de l'autre côté est au pire une copie
+que personne ne référence, et que la tentative suivante écrase, puisque les
+clés sont identiques des deux côtés. Cette identité est aussi ce qui rend une
+relance sans danger.
+
+**La suppression à la source demande la permission.** Deux documents peuvent
+pointer sur le même chemin, et une version partage volontairement le fichier du
+document courant : la copie source n'est retirée que si plus aucune ligne
+restée de ce côté ne la nomme. La question se pose par support, sans quoi elle
+répondrait « encore utilisée » à propos des lignes qui viennent justement de
+partir.
+
+**Un déplacement en cours refuse le suivant.** L'état affiché sert de verrou :
+il est pris par une écriture conditionnelle, donc un second clic trouve la
+porte fermée au lieu de recopier les mêmes octets et de courir avec le premier
+pour savoir quelle suppression gagne. Utiliser l'état visible plutôt qu'un
+verrou caché est délibéré : deux mécanismes qui disent la même chose finissent
+par se contredire, et c'est l'invisible qui reste faux.
+
+**Petit tout de suite, gros en arrière-plan.** En dessous de 8 Mo cumulés, le
+déplacement se fait dans la requête et la ligne se met à jour sous les yeux.
+Au dessus, un message part sur le worker : un navigateur n'a pas à être tenu
+ouvert sur un compartiment distant.
+
+Un échec est lisible : l'état passe en « déplacement échoué », le motif est
+conservé et affiché au survol, et l'action reste relançable. Un déplacement qui
+échoue en silence est un bouton qui a l'air cassé.
+
+Le geste existe aux trois endroits où on peut vouloir le faire : le menu d'une
+ligne, le bouton sur la page d'un document, et la barre de sélection pour en
+déplacer plusieurs. Le lot rend des comptes plutôt qu'un succès à plat, parce
+qu'une sélection est légitimement un mélange : certains déjà à destination, un
+autre pris par un déplacement en cours, un troisième refusé. Dire « c'est fait »
+là-dessus serait un mensonge, dire « ça a échoué » en serait un autre.
+
+Un filtre par emplacement complète la liste, utile dès qu'une bibliothèque vit
+des deux côtés.
+
+### Dans aurora-client
+
+**Une migration**, jouée par `make aurora-update` : deux colonnes sur
+`core_ged_documents`, l'état du transfert et le motif du dernier échec.
+
+**Un nouveau privilège**, `ged.documents.relocate`, à accorder aux personnes
+concernées. Volontairement distinct de `ged.documents.edit` : déplacer des
+octets d'un support à l'autre dépense du transfert et des requêtes sur le
+compte de quelqu'un, ce qui n'est pas la même permission que corriger une
+faute dans un titre.
+
+Rien d'autre à répercuter, et rien ne change tant qu'aucun second stockage
+n'est configuré.
+
+## [0.9.129] - 2026-09-12
+
+### Ajouté
+
+#### Un écran pour choisir où sont écrits les fichiers
+Le stockage objet posé en 0.9.128 existait sans que personne puisse l'allumer.
+Il y a désormais un onglet **Stockage des fichiers** dans les réglages : les
+identifiants du compte, le compartiment, un bouton pour tester, et le choix du
+support.
+
+Les deux clés sont chiffrées en base, comme la clé Pexels et les mots de passe
+des points de montage. Elles ne repartent jamais vers le navigateur : l'écran
+sait qu'une valeur est enregistrée, pas laquelle.
+
+L'environnement du serveur reste prioritaire, champ par champ. Un opérateur qui
+préfère garder ses secrets hors d'une base sauvegardée chaque nuit peut le
+faire, sans perdre le compartiment qu'un administrateur aurait saisi dans
+l'écran.
+
+**Basculer demande d'avoir testé.** Le test écrit un fichier témoin, le relit,
+vérifie qu'il apparaît dans la liste, puis le supprime. Lire quatre chaînes non
+vides ne prouve rien, et la panne que tout le monde rencontre est un jeton en
+lecture seule, qui a l'air parfaitement configuré jusqu'à la première écriture.
+Changer d'adresse, de compartiment ou de clé annule la vérification
+précédente : elle portait sur une autre configuration.
+
+#### La GED sait où vivent ses fichiers
+Chaque document et chaque version portent maintenant le support qui détient
+leurs octets. C'est ce qui permet à un document écrit avant une bascule de
+rester lisible après, et à deux documents de vivre de chaque côté sans que rien
+ne s'en aperçoive.
+
+Le réglage dit où va le **prochain** fichier ; un fichier déjà écrit dit
+lui-même où il est. Suppression, recadrage, variantes, purge des versions : tout
+passe désormais par le support du fichier concerné, pas par le support actif.
+
+#### Trois façons de servir un fichier distant
+Par l'application, par lien signé temporaire, ou par un domaine public branché
+sur le compartiment.
+
+**L'adresse d'un document ne change jamais**, quel que soit ce choix, ni quand
+le fichier change de support. Ce n'est pas un détail de confort : l'éditeur
+inscrit l'adresse d'une image dans le corps de la publication, donc une adresse
+qui suivrait son fichier casserait toutes les pages qui l'ont intégrée. Seule
+change la réponse de `/uploads/{chemin}`.
+
+Servir par l'application se fait par morceaux et non d'un bloc : ce mode existe
+pour les installations qui veulent garder leurs règles d'accès, et ce sont les
+mêmes qui servent des fichiers trop gros pour tenir en mémoire.
+
+### Corrigé
+
+#### Deux failles trouvées en branchant l'écran sur un vrai compartiment
+La complétude de la configuration était jugée sur les seuls réglages en base.
+Un opérateur ayant mis ses identifiants dans l'environnement, ce que la
+documentation propose, n'aurait jamais pu basculer : l'écran l'aurait refusé au
+motif qu'il manquait des informations qu'il avait pourtant fournies.
+
+Et l'obligation d'avoir testé n'existait qu'au niveau du contrôleur. Une
+fixture, une commande ou une extension cliente pouvait pointer l'application
+vers un compartiment que rien n'avait jamais joint. Le garde-fou est descendu
+là où la réponse est lue, donc il vaut pour tout le monde.
+
+### Dans aurora-client
+
+**Une migration**, jouée par `make aurora-update` : une colonne `storage_disk`
+sur `core_ged_documents` et `core_ged_document_versions`, défaut `local`. Rien
+ne bouge : elle enregistre un fait, elle ne le change pas.
+
+Rien d'autre à répercuter, et rien ne change tant que personne n'ouvre le nouvel
+onglet. Le stockage par défaut reste le disque du serveur.
+
+À répercuter seulement si le projet étend une de ces classes :
+
+- `DocumentInterface` et `DocumentVersionInterface` gagnent `getStorageDisk()`
+  et `setStorageDisk()`. Une entité cliente qui étend `AbstractDocument` les a
+  déjà ; une implémentation partant de l'interface doit les ajouter.
+- `DocumentManager::deleteUnreferencedFiles()` prend un second argument, le
+  support concerné.
+- `StorageManager` prend un `ActiveStorageDiskProviderInterface` en second
+  argument de constructeur.
+
+## [0.9.128] - 2026-09-12
+
+### Ajouté
+
+#### Un second support de stockage : Cloudflare R2
+La couche posée en 0.9.127 n'avait qu'une implémentation, le disque. Elle en a
+une seconde, qui parle à R2 par son API compatible S3. Rien ne s'en sert
+encore : la GED écrit toujours sur le disque, et R2 ne s'allumera qu'avec
+l'écran de configuration, à venir. Ce qui est là est l'adaptateur, éprouvé.
+
+Le SDK retenu est `async-aws/simple-s3`, 2,2 Mo installés là où le SDK AWS en
+pèse plus de dix. Aurora est un bundle que chaque client installe : le poids se
+paie chez eux.
+
+#### La commande `aurora:storage:doctor`
+Elle ne vérifie pas la configuration, elle l'utilise : elle écrit un objet
+témoin, le relit, compare les octets, confirme que le listing le voit, puis le
+supprime, et rapporte chaque étape séparément. Lire quatre chaînes non vides
+dans l'environnement ne prouve rien, et la panne que tout le monde rencontre
+est un jeton en lecture seule ou limité au mauvais bucket, ce qui a l'air
+parfaitement configuré jusqu'à la première écriture.
+
+Les échecs courants reçoivent la chose à aller changer plutôt que le message de
+l'API, qui ne nomme aucune des causes. Le témoin est supprimé dans un `finally`,
+donc un support qui sait écrire mais pas supprimer le dit aussi.
+
+### Corrigé
+
+#### La taille d'un fichier était fausse pour les types que Cloudflare compresse
+Trouvé en branchant l'adaptateur sur un vrai bucket. Cloudflare gzippe à la
+volée les types compressibles, et une réponse gzippée n'a pas de
+`Content-Length` et porte un ETag faible. Demander ses métadonnées à un objet
+par une requête `HEAD` renvoyait donc zéro octet pour un `text/plain`, et la
+bonne taille pour un PNG.
+
+Une taille fausse ne se voit pas tout de suite : elle se serait vue plus tard,
+à la migration, quand la vérification aurait comparé la taille locale à une
+taille distante nulle. Les métadonnées viennent maintenant d'un listing réduit
+à la clé cherchée, qui rapporte ce que l'objet pèse dans le bucket et non ce
+que la réponse pèse sur le fil.
+
+### Dans aurora-client
+
+Rien à répercuter. Aucune migration, aucune signature changée, et le stockage
+par défaut reste le disque.
+
+Pour essayer R2 sur une installation : `R2_ENDPOINT`, `R2_BUCKET`,
+`R2_ACCESS_KEY_ID` et `R2_SECRET_ACCESS_KEY` dans `.env.local` ou dans
+l'environnement du serveur, jamais dans un fichier versionné, puis
+`php bin/console aurora:storage:doctor --disk=r2`. L'endpoint est l'URL du
+compte **sans** le bucket à la fin : la console en affiche une avec le bucket
+ajouté, et la coller telle quelle met le bucket deux fois dans chaque requête.
+
+## [0.9.127] - 2026-09-11
+
+### Modifié
+
+#### Les fichiers ne passent plus par le dossier d'upload, mais par une couche de stockage
+Huit classes lisaient `app.upload_dir` et joignaient un chemin à la main. Changer
+de support voulait dire les toucher toutes, et l'outillage image et PDF en
+dessous prend des noms de fichiers, pas des flux.
+
+`StorageAdapterInterface` est maintenant le seul chemin vers les octets. Une clé
+y est le chemin relatif que la base stocke déjà, inchangé : brancher un autre
+support plus tard ne réécrira aucune ligne. `LocalStorageAdapter` fait ce
+qu'Aurora a toujours fait, au même endroit et aux mêmes fichiers, et c'est lui
+qui tourne dans les tests, sans identifiants à fournir.
+
+`LocalWorkspace` prête un vrai chemin à GD, `pdftoppm` et Ghostscript. Trois
+verbes, parce que « j'ai besoin d'un chemin » cache trois intentions et que les
+confondre est la façon dont une vignette cesse silencieusement d'être
+enregistrée : regarder sans modifier, modifier sur place, ou créer un nouvel
+objet. Sur le disque, les trois prêtent le fichier stocké lui-même : aucune
+copie, aucun temporaire, exactement les performances d'avant.
+
+`aurora:ged:prune-orphans` parcourait le dossier puis interrogeait chaque
+fichier pour sa taille et sa date. Il fait désormais un seul listing, qui porte
+ces deux informations, et supprime en un appel.
+
+Rien ne change pour qui utilise l'application : mêmes fichiers, mêmes adresses,
+même comportement.
+
+#### `UploadPathResolver` est supprimé
+Reliquat de la fusion Media vers GED. Plus aucun appelant, ni dans le core ni
+dans aurora-client, et son `is_file()` tournait à chaque appel pour une garantie
+que personne ne demandait.
+
+### Dans aurora-client
+
+Aucune migration, aucune donnée touchée. À répercuter seulement si le projet
+étend une de ces classes :
+
+- `DocumentManager` prend un `StorageManager` en dernier argument. Un manager
+  client qui redéclare le constructeur doit le passer.
+- `ImageVariantGenerator::generate()` et `deleteVariants()`, ainsi que
+  `PdfThumbnailGenerator::generate()`, prennent un `StorageAdapterInterface` en
+  premier argument. Le bon, dans la plupart des cas, est
+  `$storageManager->active()`.
+- `GedDocumentUploader` ne reçoit plus `Filesystem` ni le dossier d'upload, mais
+  un `StorageManager` et un `LocalWorkspace`.
+- `UploadPathResolver` n'existe plus. Un appelant qui a besoin d'un chemin local
+  passe par `LocalWorkspace`, qui le prête pour la durée du travail.
+
+Un projet qui n'étend aucune de ces classes n'a rien à faire.
+
 ## [0.9.126] - 2026-09-11
 
 ### Corrigé

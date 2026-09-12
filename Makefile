@@ -320,6 +320,14 @@ test-backend-unit: ## Run backend unit tests
 test-backend-integration: db-test ## Run backend integration tests
 	$(PHP_BIN) $(AURORA)/bin/phpunit --testdox --testsuite=Integration
 
+test-r2: ## Run the R2 integration tests against a real bucket (needs R2_* in .env.local)
+	@# Symfony deliberately ignores .env.local when APP_ENV=test, so that the
+	@# suite gives everyone the same result. The credentials therefore have to
+	@# be put in the environment here, or these tests would skip themselves on
+	@# the very machine that has them.
+	@set -a; [ -f .env.local ] && . ./.env.local; set +a; \
+		$(PHP_BIN) $(AURORA)/bin/phpunit --testdox --group r2
+
 test-frontend: translation ## Run frontend unit tests (Vitest)
 	$(PNPM) --dir=$(AURORA) run test
 

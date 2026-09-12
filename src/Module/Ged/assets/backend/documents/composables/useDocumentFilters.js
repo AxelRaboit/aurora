@@ -6,6 +6,9 @@ export function useDocumentFilters(reload) {
     const filterFolderId = ref(null);
     const filterStatus = ref(null);
     const filterMimeGroup = ref(null);
+    // Only ever set on installations with a second backend; the screen hides
+    // the control otherwise, and an unset filter costs nothing here.
+    const filterStorageDisk = ref(null);
 
     const hasActiveFilter = computed(
         () =>
@@ -14,7 +17,8 @@ export function useDocumentFilters(reload) {
                 filterTagId.value ||
                 filterFolderId.value ||
                 filterStatus.value ||
-                filterMimeGroup.value
+                filterMimeGroup.value ||
+                filterStorageDisk.value
             ),
     );
 
@@ -24,6 +28,7 @@ export function useDocumentFilters(reload) {
         folderId: filterFolderId.value || undefined,
         status: filterStatus.value || undefined,
         mimeGroup: filterMimeGroup.value || undefined,
+        storageDisk: filterStorageDisk.value || undefined,
     });
 
     function applyFilter() {
@@ -36,6 +41,7 @@ export function useDocumentFilters(reload) {
         filterFolderId.value = null;
         filterStatus.value = null;
         filterMimeGroup.value = null;
+        filterStorageDisk.value = null;
         reload();
     }
 
@@ -45,6 +51,7 @@ export function useDocumentFilters(reload) {
         filterFolderId,
         filterStatus,
         filterMimeGroup,
+        filterStorageDisk,
         hasActiveFilter,
         extraParams,
         applyFilter,

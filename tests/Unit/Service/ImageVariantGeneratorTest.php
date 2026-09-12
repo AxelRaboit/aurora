@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Service;
 
+use Aurora\Core\Storage\Adapter\LocalStorageAdapter;
 use Aurora\Core\Storage\Service\ImageVariantGenerator;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
@@ -12,6 +14,7 @@ use Symfony\Component\Filesystem\Path;
 final class ImageVariantGeneratorTest extends TestCase
 {
     private string $sandbox;
+    private LocalStorageAdapter $adapter;
     private Filesystem $filesystem;
     private ImageVariantGenerator $generator;
 
@@ -20,7 +23,8 @@ final class ImageVariantGeneratorTest extends TestCase
         $this->sandbox = Path::join(sys_get_temp_dir(), 'aurora-variant-'.uniqid());
         $this->filesystem = new Filesystem();
         $this->filesystem->mkdir($this->sandbox);
-        $this->generator = new ImageVariantGenerator($this->filesystem, $this->sandbox);
+        $this->adapter = new LocalStorageAdapter($this->filesystem, $this->sandbox);
+        $this->generator = new ImageVariantGenerator(new LocalWorkspace($this->filesystem));
     }
 
     protected function tearDown(): void
@@ -34,7 +38,7 @@ final class ImageVariantGeneratorTest extends TestCase
     {
         $relative = $this->createPngFixture('big.png', 2400, 1600);
 
-        $variants = $this->generator->generate($relative, 'image/png');
+        $variants = $this->generator->generate($this->adapter, $relative, 'image/png');
 
         self::assertSame(['thumbnail', 'medium', 'large'], array_keys($variants));
         foreach ($variants as $name => $variantPath) {
@@ -50,7 +54,7 @@ final class ImageVariantGeneratorTest extends TestCase
         // the public download path never falls back to the raw original.
         $relative = $this->createPngFixture('small.png', 100, 100);
 
-        $variants = $this->generator->generate($relative, 'image/png');
+        $variants = $this->generator->generate($this->adapter, $relative, 'image/png');
 
         self::assertSame(['large'], array_keys($variants));
         self::assertFileExists(Path::join($this->sandbox, $variants['large']));
@@ -60,7 +64,7 @@ final class ImageVariantGeneratorTest extends TestCase
     {
         $relative = $this->createPngFixture('medium.png', 500, 500);
 
-        $variants = $this->generator->generate($relative, 'image/png');
+        $variants = $this->generator->generate($this->adapter, $relative, 'image/png');
 
         self::assertSame(['thumbnail', 'large'], array_keys($variants));
         self::assertFileExists(Path::join($this->sandbox, $variants['thumbnail']));
@@ -71,14 +75,14 @@ final class ImageVariantGeneratorTest extends TestCase
     {
         $relative = $this->createPngFixture('any.png', 2000, 2000);
 
-        $variants = $this->generator->generate($relative, 'application/pdf');
+        $variants = $this->generator->generate($this->adapter, $relative, 'application/pdf');
 
         self::assertSame([], $variants);
     }
 
     public function testReturnsEmptyWhenSourceFileMissing(): void
     {
-        $variants = $this->generator->generate('does-not-exist.png', 'image/png');
+        $variants = $this->generator->generate($this->adapter, 'does-not-exist.png', 'image/png');
 
         self::assertSame([], $variants);
     }
@@ -87,7 +91,7 @@ final class ImageVariantGeneratorTest extends TestCase
     {
         $relative = $this->createPngFixture('huge.png', 3000, 3000);
 
-        $variants = $this->generator->generate($relative, 'image/png');
+        $variants = $this->generator->generate($this->adapter, $relative, 'image/png');
 
         foreach ($variants as $variantPath) {
             self::assertStringEndsWith('.webp', $variantPath);
@@ -97,10 +101,10 @@ final class ImageVariantGeneratorTest extends TestCase
     public function testDeleteVariantsRemovesFiles(): void
     {
         $relative = $this->createPngFixture('cleanup.png', 2000, 2000);
-        $variants = $this->generator->generate($relative, 'image/png');
+        $variants = $this->generator->generate($this->adapter, $relative, 'image/png');
         self::assertNotEmpty($variants);
 
-        $this->generator->deleteVariants($variants);
+        $this->generator->deleteVariants($this->adapter, $variants);
 
         foreach ($variants as $variantPath) {
             self::assertFileDoesNotExist(Path::join($this->sandbox, $variantPath));
@@ -109,7 +113,7 @@ final class ImageVariantGeneratorTest extends TestCase
 
     public function testDeleteVariantsIgnoresMissingFiles(): void
     {
-        $this->generator->deleteVariants(['thumbnail' => 'variants/thumbnail/nope.webp']);
+        $this->generator->deleteVariants($this->adapter, ['thumbnail' => 'variants/thumbnail/nope.webp']);
 
         $this->expectNotToPerformAssertions();
     }

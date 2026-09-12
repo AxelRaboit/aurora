@@ -7,6 +7,13 @@ metadata:
 
 # Convention : audit docs/mémoires avant chaque commit
 
+> **Portée** : cette convention vise la documentation **technique**, celle
+> que lit un développeur (`docs/`, `.claude/memory/`). Le manuel affiché dans
+> `/backend/documentation`, qui s'adresse à la personne qui se sert du
+> logiciel, a sa propre règle et ses captures :
+> [[convention_documentation_a_jour]]. Les deux s'appliquent, sur des cibles
+> différentes.
+
 ## Règle
 
 **Avant chaque commit**, pour chaque fichier modifié, vérifier si une doc

@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Platform\User\Manager;
 
+use Aurora\Core\Storage\Enum\StorageAreaEnum;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
+use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
 use Aurora\Module\Platform\User\Entity\User;
+use Aurora\Module\Platform\User\Service\UserProfilePhotoUrlGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Filesystem\Path;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
@@ -31,10 +32,21 @@ class UserProfilePhotoManager implements UserProfilePhotoManagerInterface
         protected readonly EntityManagerInterface $entityManager,
         protected readonly SluggerInterface $slugger,
         protected readonly AuditLogger $auditLogger,
-        protected readonly Filesystem $filesystem,
-        #[Autowire('%app.upload_dir%/profile-photos')]
-        protected readonly string $uploadDir,
+        protected readonly StorageManager $storageManager,
     ) {}
+
+    /**
+     * The stored value is the bare filename, and has always been.
+     *
+     * The prefix lives here and in {@see UserProfilePhotoUrlGenerator},
+     * never in the column. Writing the full key into the database would be
+     * tidier and would also make every photo taken before that change
+     * unreachable, so the split stays.
+     */
+    protected function keyFor(string $filename): string
+    {
+        return sprintf('%s/%s', StorageAreaEnum::ProfilePhotos->value, $filename);
+    }
 
     public function upload(User $user, UploadedFile $file): void
     {
@@ -48,17 +60,18 @@ class UserProfilePhotoManager implements UserProfilePhotoManagerInterface
             throw new InvalidArgumentException('backend.users.photo.errors.invalid_type');
         }
 
-        if (!$this->filesystem->exists($this->uploadDir)) {
-            $this->filesystem->mkdir($this->uploadDir, 0o755);
-        }
-
         $this->removeFile($user->getProfilePhotoPath());
 
         $extension = $file->guessExtension() ?? $file->getClientOriginalExtension();
         $base = $this->slugger->slug((string) $user->getId())->lower();
         $newFilename = sprintf('%s-%s.%s', $base, uniqid(), $extension);
 
-        $file->move($this->uploadDir, $newFilename);
+        // PHP already put the upload somewhere on this machine; handing that
+        // path over rather than moving it first means one copy instead of two.
+        $this->storageManager->active()->writeFromLocalFile(
+            $this->keyFor($newFilename),
+            $file->getPathname(),
+        );
 
         $user->setProfilePhotoPath($newFilename);
         $this->entityManager->flush();
@@ -80,15 +93,24 @@ class UserProfilePhotoManager implements UserProfilePhotoManagerInterface
         $this->auditLogger->log('users', 'photo_removed', 'User', $user->getId(), ['filename' => $path]);
     }
 
-    private function removeFile(?string $relativePath): void
+    /**
+     * Removed from wherever it is rather than from wherever new files go.
+     *
+     * A photo taken before the storage was switched still sits on the old
+     * backend, and asking the active one to delete it would quietly do
+     * nothing. Both are asked, which costs a call and cannot leave a file
+     * behind.
+     */
+    private function removeFile(?string $filename): void
     {
-        if (null === $relativePath) {
+        if (null === $filename) {
             return;
         }
 
-        $absolute = Path::join($this->uploadDir, $relativePath);
-        if ($this->filesystem->exists($absolute)) {
-            $this->filesystem->remove($absolute);
+        $key = $this->keyFor($filename);
+
+        foreach (StorageDiskEnum::cases() as $disk) {
+            $this->storageManager->forDisk($disk)->delete($key);
         }
     }
 }

@@ -1,5 +1,13 @@
 import { useI18n } from "vue-i18n";
-import { Download, Eye, Pencil, QrCode, Trash2 } from "lucide-vue-next";
+import {
+    CloudUpload,
+    Download,
+    Eye,
+    HardDriveDownload,
+    Pencil,
+    QrCode,
+    Trash2,
+} from "lucide-vue-next";
 
 /**
  * What one document offers, which depends on whether it has a file at all.
@@ -12,6 +20,12 @@ import { Download, Eye, Pencil, QrCode, Trash2 } from "lucide-vue-next";
  *
  * Download carries `href` and stays a link: it is a navigation, and the browser
  * is what should handle it.
+ *
+ * Moving a document between storage backends is offered here rather than as a
+ * screen of its own: it is a property of one document, like its folder, and
+ * belongs where the other per-document verbs are. It is absent entirely until
+ * a second backend exists, which keeps the menu honest for the installations
+ * that will never have one.
  */
 export function useDocumentRowActions({
     can,
@@ -19,6 +33,8 @@ export function useDocumentRowActions({
     openQr,
     openEdit,
     confirmDelete,
+    relocate = null,
+    relocationAvailable = false,
 }) {
     const { t } = useI18n();
 
@@ -70,6 +86,32 @@ export function useDocumentRowActions({
                     "backend.ged.documents.row_actions.edit_description",
                 ),
                 onSelect: () => openEdit(doc),
+            });
+        }
+
+        // Only when a second backend has actually been configured and reached.
+        // Offering a destination that does not exist is an action that can only
+        // fail, and the reader has no way to know why.
+        if (relocationAvailable && relocate && can("ged.documents.relocate")) {
+            const toRemote = doc.storageDisk !== "r2";
+            const pending = doc.storageTransferState === "pending";
+
+            actions.push({
+                key: "relocate",
+                color: "default",
+                icon: toRemote ? CloudUpload : HardDriveDownload,
+                title: t(
+                    toRemote
+                        ? "backend.ged.documents.row_actions.relocate_to_remote"
+                        : "backend.ged.documents.row_actions.relocate_to_local",
+                ),
+                description: pending
+                    ? t("backend.ged.documents.row_actions.relocate_pending")
+                    : t(
+                          "backend.ged.documents.row_actions.relocate_description",
+                      ),
+                disabled: pending,
+                onSelect: () => relocate(doc, toRemote ? "r2" : "local"),
             });
         }
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Aurora\Core\Storage\Service;
 
+use Aurora\Core\Storage\Adapter\StorageAdapterInterface;
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use GdImage;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
 final readonly class ImageVariantGenerator
@@ -19,9 +19,7 @@ final readonly class ImageVariantGenerator
     ];
 
     public function __construct(
-        private Filesystem $filesystem,
-        #[Autowire(param: 'app.upload_dir')]
-        private string $uploadDir,
+        private LocalWorkspace $workspace,
     ) {}
 
     /**
@@ -29,20 +27,35 @@ final readonly class ImageVariantGenerator
      * Variants are generated as WebP when supported (better compression, universal browser support).
      * GIFs keep their original format to preserve animation.
      *
-     * @return array<string, string> variant name → relative path (under uploads/)
+     * @return array<string, string> variant name → key of the stored variant
      */
-    public function generate(string $sourceRelativePath, string $mimeType): array
+    public function generate(StorageAdapterInterface $adapter, string $sourceKey, string $mimeType): array
     {
         $mime = MimeTypeEnum::tryFrom($mimeType);
         if (!$mime?->isRasterImage()) {
             return [];
         }
 
-        $sourceAbsolute = Path::join($this->uploadDir, $sourceRelativePath);
-        if (!is_file($sourceAbsolute)) {
+        if (!$adapter->exists($sourceKey)) {
             return [];
         }
 
+        $work = fn (string $sourceAbsolute): array => $this->generateFrom($adapter, $sourceKey, $sourceAbsolute, $mime);
+
+        // Only JPEG sources are rewritten in place (re-encoded at quality 85 to
+        // strip metadata), so only they need storing back afterwards. Asking
+        // for a writable copy of a PNG would mean uploading an untouched file
+        // on a backend that bills per write.
+        return $mime->isJpeg()
+            ? $this->workspace->writable($adapter, $sourceKey, $work)
+            : $this->workspace->readable($adapter, $sourceKey, $work);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function generateFrom(StorageAdapterInterface $adapter, string $sourceKey, string $sourceAbsolute, MimeTypeEnum $mime): array
+    {
         $source = $this->load($sourceAbsolute, $mime);
         if (!$source instanceof GdImage) {
             return [];
@@ -50,8 +63,8 @@ final readonly class ImageVariantGenerator
 
         $sourceWidth = imagesx($source);
         $sourceHeight = imagesy($source);
-        $extension = pathinfo($sourceRelativePath, PATHINFO_EXTENSION);
-        $baseName = pathinfo($sourceRelativePath, PATHINFO_FILENAME);
+        $extension = pathinfo($sourceKey, PATHINFO_EXTENSION);
+        $baseName = pathinfo($sourceKey, PATHINFO_FILENAME);
 
         $useWebP = function_exists('imagewebp') && !$mime->supportsAnimation();
         $variantMime = $useWebP ? MimeTypeEnum::Webp : $mime;
@@ -84,15 +97,14 @@ final readonly class ImageVariantGenerator
 
             imagecopyresampled($targetImage, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
 
-            $variantRelative = Path::join(dirname($sourceRelativePath), 'variants', $variantName, sprintf('%s.%s', $baseName, $variantExtension));
-            $variantAbsolute = Path::join($this->uploadDir, $variantRelative);
+            $variantKey = Path::join(dirname($sourceKey), 'variants', $variantName, sprintf('%s.%s', $baseName, $variantExtension));
 
-            $this->filesystem->mkdir(dirname($variantAbsolute));
-
-            $this->save($targetImage, $variantAbsolute, $variantMime);
+            $this->workspace->target($adapter, $variantKey, function (string $output) use ($targetImage, $variantMime): void {
+                $this->save($targetImage, $output, $variantMime);
+            });
             imagedestroy($targetImage);
 
-            $generated[$variantName] = $variantRelative;
+            $generated[$variantName] = $variantKey;
         }
 
         imagedestroy($source);
@@ -103,14 +115,11 @@ final readonly class ImageVariantGenerator
     /**
      * @param array<string, string> $variants
      */
-    public function deleteVariants(array $variants): void
+    public function deleteVariants(StorageAdapterInterface $adapter, array $variants): void
     {
-        // Filesystem::remove() accepts an array and silently skips missing
-        // entries - no need for the per-file is_file() guard.
-        $this->filesystem->remove(array_map(
-            fn (string $relativePath): string => Path::join($this->uploadDir, $relativePath),
-            $variants,
-        ));
+        // One call rather than one per variant: a backend that bills per
+        // request charges for each, and every deleted document has three.
+        $adapter->deleteMany(array_values($variants));
     }
 
     /** @return array{0: int, 1: int} */

@@ -44,6 +44,12 @@ class DocumentSerializer implements DocumentSerializerInterface
             'fileName' => $document->getFileName(),
             'originalName' => $document->getOriginalName(),
             'fileUrl' => $this->documentUrlGenerator->publicUrl($document),
+            // Which backend holds these bytes, and whether a move is under
+            // way. The address above is the same either way, so this is the
+            // only thing that tells a reader where their file actually lives.
+            'storageDisk' => $document->getStorageDisk()->value,
+            'storageTransferState' => $document->getStorageTransferState()->value,
+            'storageTransferError' => $document->getStorageTransferError(),
             // Where the picture came from, for a stock photo. Null for
             // anything uploaded, and read-only: the GED screen shows the
             // credit, it does not invent one.

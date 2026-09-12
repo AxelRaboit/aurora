@@ -8,6 +8,7 @@ use Aurora\Module\Accounting\Contract\Access\Repository\ContractAccessLinkReposi
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateInput;
 use Aurora\Module\Accounting\Contract\Dto\ContractTemplateVersionInput;
 use Aurora\Module\Accounting\Contract\Entity\Contract;
+use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplate;
 use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
 use Aurora\Module\Accounting\Contract\Enum\ContractTemplateKindEnum;
@@ -31,7 +32,6 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\Mime\Email;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-use function hash_file;
 use function is_file;
 use function json_decode;
 use function preg_match;
@@ -119,17 +119,16 @@ final class ContractPdfTest extends IntegrationTestCase
         self::assertNotNull($contract->getPdfGeneratedAt());
         self::assertMatchesRegularExpression('#^contracts/\d{4}/[A-Z]+-\d{4}-\d{4}\.pdf$#', (string) $contract->getPdfPath());
 
-        $absolute = $this->pdf->absolutePathFor($contract);
-        self::assertTrue(is_file($absolute), 'The countersignature has to leave a file on disk.');
+        self::assertTrue($this->pdf->exists($contract), 'The countersignature has to leave a file behind.');
 
         // The file's own hash, distinct from the document's: two artefacts, two
-        // hashes, so a PDF swapped on disk is detectable even though the
+        // hashes, so a PDF swapped in storage is detectable even though the
         // contract still verifies against its own seal.
-        self::assertSame(hash_file('sha256', $absolute), $contract->getPdfHash());
+        self::assertSame(hash('sha256', $this->readPdf($contract)), $contract->getPdfHash());
         self::assertNotSame($contract->getContentHash(), $contract->getPdfHash());
 
         // A real PDF, not an HTML page with the wrong extension.
-        self::assertStringStartsWith('%PDF-', (string) file_get_contents($absolute));
+        self::assertStringStartsWith('%PDF-', $this->readPdf($contract));
     }
 
     /**
@@ -162,7 +161,7 @@ final class ContractPdfTest extends IntegrationTestCase
     public function testThePdfCarriesTheEvidenceAndBothSignatures(): void
     {
         $contract = $this->concludedContract();
-        $bytes = (string) file_get_contents($this->pdf->absolutePathFor($contract));
+        $bytes = $this->readPdf($contract);
 
         // dompdf compresses its streams, so the text is not greppable in the
         // output. What is checkable without a PDF parser is that both
@@ -239,6 +238,23 @@ final class ContractPdfTest extends IntegrationTestCase
         }
 
         self::assertTrue($attached, 'The concluded mail has to carry the signed PDF.');
+    }
+
+    /**
+     * The stored bytes, whichever backend holds them.
+     *
+     * Reads through the generator rather than off the disk: these tests used
+     * to assume the file was one `is_file()` away, which stopped being true
+     * the moment a contract could live on a remote backend.
+     */
+    private function readPdf(ContractInterface $contract): string
+    {
+        $bytes = '';
+        foreach ($this->pdf->readStream($contract) as $chunk) {
+            $bytes .= $chunk;
+        }
+
+        return $bytes;
     }
 
     private function concludedContract(): Contract

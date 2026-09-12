@@ -18,6 +18,7 @@ backend:
           create: Create documents
           edit: Edit documents
           delete: Delete documents
+          relocate: Move documents between storage backends
         categories:
           view: View categories
           create: Create categories
@@ -78,6 +79,9 @@ backend:
         download_failed: The photo could not be downloaded. Try again in a moment.
         terms_required: The terms of service must be accepted to enable the integration.
         key_required: An API key is required to enable the integration.
+        unknown_disk: No such storage location.
+        relocation_busy: A move is already under way for this document.
+        relocation_failed: The move failed. The document stayed where it was.
     bootstrap:
       categories:
         inline_uploads: Editorial media
@@ -89,6 +93,22 @@ backend:
         qr_description: Shows a QR code pointing at this document.
         edit_description: Title, category, tags, folder.
         delete_description: Removes the document and its file. There is no undo.
+        relocate_to_remote: Move to remote storage
+        relocate_to_local: Bring back to the server
+        relocate_description: "Moves the file, its variants and its history. Its address does not change."
+        relocate_pending: A move is already under way for this document.
+      storage:
+        local: Server
+        remote: Remote
+        moving: Moving
+        failed: Move failed
+        hint: "File stored: {place}."
+      relocation:
+        done: Document moved.
+        queued: Move started. It continues in the background.
+        already_there: This document is already there.
+        bulk_done: "{done} document(s) moved, {skipped} left as they were."
+        bulk_partial: "{done} document(s) moved, {failed} failed."
       reference: Reference
       title: Title
       description: Description
