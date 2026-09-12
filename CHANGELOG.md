@@ -5,6 +5,29 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.135] - 2026-09-12
+
+### Corrigé
+
+#### `make aurora-update` effaçait le balayage des caches orphelins du client
+Le gabarit `.claude/client_template/Makefile` est la source de `sync-makefile`,
+et les dix-sept lignes ajoutées le 11/09/2026 à la cible `cc-prod` n'y avaient
+jamais été reportées. Chaque propagation écrasait donc le Makefile du client et
+supprimait la protection, silencieusement, puisque le fichier est annoncé comme
+généré.
+
+C'est arrivé deux fois d'affilée, sur 0.9.133 puis sur 0.9.134. Sans ces lignes,
+chaque `cache:clear` en production peut laisser derrière lui un dossier
+`.!!xxx` que personne ne voit tant que `var/cache` n'a pas atteint plusieurs
+centaines de méga-octets.
+
+Le gabarit porte maintenant la cible complète, à l'octet près.
+
+### Dans aurora-client
+Rien à faire : la prochaine synchronisation remet les lignes en place.
+
+---
+
 ## [0.9.134] - 2026-09-12
 
 ### Ajouté
