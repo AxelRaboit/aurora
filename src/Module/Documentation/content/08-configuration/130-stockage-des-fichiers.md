@@ -25,11 +25,11 @@ Cloudflare affiche l'identifiant de clé et la clé secrète **une seule fois**,
 
 ## Ce que l'écran demande
 
-L'**adresse du compte** est l'URL sans le nom du compartiment à la fin. La console Cloudflare en affiche une avec le compartiment ajouté, et coller cette chaîne entière est l'erreur la plus courante : le compartiment se retrouverait deux fois dans chaque requête. Si vous le faites, l'écran retire la partie en trop au moment d'enregistrer. Vous n'avez rien à faire.
+L'**adresse du compte** est l'URL sans le nom du compartiment à la fin. La console Cloudflare en affiche une avec le compartiment ajouté, et coller cette chaîne entière est l'erreur la plus courante : le compartiment se retrouverait deux fois dans chaque requête. Si vous le faites, l'écran retire la partie en trop au moment d'enregistrer, et le champ vous réaffiche l'adresse nettoyée. Vous n'avez rien à faire.
 
 Le **compartiment** se saisit seul, dans son propre champ.
 
-L'**identifiant de clé** fait 32 caractères et la **clé secrète** 64. Si vous en collez une d'une autre longueur, l'écran refuse d'enregistrer et vous dit lequel des deux champs est en cause. Sans cela, l'erreur ne serait venue que de Cloudflare, au moment du test, sous une forme qui ne nomme ni le champ ni l'écran.
+L'**identifiant de clé** fait 32 caractères et la **clé secrète** 64. Si vous en collez une d'une autre longueur, l'écran refuse d'enregistrer et vous dit lequel des deux champs est en cause, en gardant ce que vous avez déjà saisi : il n'y a que le champ fautif à reprendre. Sans cela, l'erreur ne serait venue que de Cloudflare, au moment du test, sous une forme qui ne nomme ni le champ ni l'écran.
 
 Le **domaine public** est facultatif. C'est le nom de domaine que vous auriez branché sur le compartiment. Sans lui, les fichiers continuent d'être servis par l'application, ce qui fonctionne très bien.
 

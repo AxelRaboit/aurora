@@ -78,11 +78,14 @@ final class StorageSettingsController extends AbstractController
 
         $problems = $submitted->shapeProblems();
 
+        // Deliberately without a `state`: nothing has been written yet, so
+        // there is no new state to send, and a screen handed one would
+        // refresh itself - which on this form means blanking the two
+        // write-only key fields. Someone who mistyped one key should not have
+        // to paste both again. The refusal on an unverified switch below does
+        // carry a state, because by then the credentials really were saved.
         if ([] !== $problems) {
-            return $this->jsonFailure(
-                'backend.settings.storage.errors.'.$problems[0],
-                extra: ['state' => $this->settings->state()],
-            );
+            return $this->jsonFailure('backend.settings.storage.errors.'.$problems[0]);
         }
 
         $this->settings->save(

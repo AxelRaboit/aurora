@@ -130,11 +130,14 @@ onMounted(async () => {
 /**
  * Saves, and returns the state on success or null when the server refused.
  *
- * The refusal carries a translation key naming the field: a key of the wrong
- * length, an address with the bucket pasted on the end. Reading `success`
- * rather than the mere presence of a response matters, because a refusal is
- * an object too - treating it as state used to announce a save that had not
- * happened.
+ * Reading `success` rather than the mere presence of a response matters,
+ * because a refusal is an object too - treating it as state used to announce
+ * a save that had not happened.
+ *
+ * A refusal only carries a state when something really was written, and the
+ * screen refreshes only then. That distinction is what lets someone who
+ * mistyped one key fix it without pasting both again: the key fields are
+ * write-only, so refreshing the form empties them.
  */
 async function persist() {
     const response = await request(SETTINGS_PATH, payload(), { noGuard: true });

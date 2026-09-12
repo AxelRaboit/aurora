@@ -57,7 +57,6 @@ backend:
       errors:
         verification_required: Pruebe la conexión antes de cambiar el almacenamiento.
         endpoint_not_https: "La dirección de la cuenta debe empezar por https://."
-        endpoint_contains_bucket: "La dirección de la cuenta termina con el nombre del contenedor. Quítelo: la aplicación lo añade por su cuenta y aparecería dos veces."
         access_key_length: "El identificador de clave debe tener 32 caracteres. Este no los tiene: suele ser otro valor de la página de Cloudflare, o una copia incompleta."
         secret_key_length: "La clave secreta debe tener 64 caracteres. Esta no los tiene: suele ser una copia incompleta."
   parameters:

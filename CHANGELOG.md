@@ -5,6 +5,28 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.137] - 2026-09-12
+
+### Corrigé
+
+#### Un refus des réglages du stockage vidait les deux champs de clé
+Le refus renvoyait l'état courant, l'écran s'y rafraîchissait, et les deux
+champs de clé étant en écriture seule, ils repartaient vides. Se tromper sur
+l'un obligeait donc à recoller les deux, à chaque essai.
+
+Un refus ne porte plus d'état quand rien n'a été écrit, et l'écran ne se
+rafraîchit que lorsqu'il en reçoit un. Le refus sur la bascule non testée, lui,
+en porte toujours un : à ce moment-là les identifiants ont bien été enregistrés.
+
+#### Une vérification qui ne pouvait pas se déclencher
+Le message signalant un compartiment collé au bout de l'adresse du compte
+n'était atteignable par aucun appelant : tous normalisent l'adresse avant de
+poser la question, donc le défaut est réparé avant d'être cherché. Le contrôle
+et ses trois traductions sont retirés, et la raison est écrite à côté de ceux
+qui restent.
+
+---
+
 ## [0.9.136] - 2026-09-12
 
 ### Corrigé

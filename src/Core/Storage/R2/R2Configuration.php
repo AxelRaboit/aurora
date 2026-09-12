@@ -87,10 +87,15 @@ final readonly class R2Configuration
      *
      * Returns translation keys under `backend.settings.storage.errors.`, empty
      * when nothing is obviously wrong. These are the mistakes R2 would reject
-     * anyway, and its answers are opaque: a 24-character key comes back as
-     * `InvalidArgument`, a doubled bucket as a 400 whose URL has to be read
-     * character by character to see the repetition. Catching them here means
-     * the message names the field.
+     * anyway, and its answer is opaque: a 24-character key comes back as
+     * `InvalidArgument` inside a URL, naming neither the field nor the screen.
+     * Catching them here means the message names the field.
+     *
+     * A bucket pasted onto the endpoint is not listed, on purpose. It is
+     * repaired by {@see withNormalisedEndpoint()} rather than reported, and
+     * every caller normalises before asking - so a problem raised for it could
+     * never fire. Refusing what can be fixed would be worse behaviour and
+     * worse code.
      *
      * Only shapes that cannot work are listed. Whether a well-formed
      * credential is the right one is not knowable without asking Cloudflare,
@@ -104,10 +109,6 @@ final readonly class R2Configuration
 
         if ('' !== $this->endpoint && !str_starts_with($this->endpoint, 'https://')) {
             $problems[] = 'endpoint_not_https';
-        }
-
-        if ('' !== $this->bucket && $this->endpoint !== $this->withNormalisedEndpoint()->endpoint) {
-            $problems[] = 'endpoint_contains_bucket';
         }
 
         if ('' !== $this->accessKeyId && self::ACCESS_KEY_LENGTH !== mb_strlen($this->accessKeyId)) {

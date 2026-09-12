@@ -86,7 +86,6 @@ backend:
       errors:
         verification_required: Test the connection before switching the storage.
         endpoint_not_https: "The account address must start with https://."
-        endpoint_contains_bucket: "The account address ends with the bucket name. Remove it: the application appends it itself, and it would appear twice."
         access_key_length: "The access key id must be 32 characters long. This one is not, which usually means another value from the Cloudflare page, or an incomplete copy."
         secret_key_length: "The secret access key must be 64 characters long. This one is not, which usually means an incomplete copy."
     appearance:
