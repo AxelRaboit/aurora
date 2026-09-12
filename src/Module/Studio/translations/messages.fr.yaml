@@ -3,6 +3,8 @@ backend:
         studio: Studio
         studio_backend: Studio
         studio_backend_description: "Ce que vous vendez et ce que vous livrez à un client : les clients, les contrats, et les présentations."
+        studio_decks: Présentations
+        studio_decks_description: Construire des jeux de slides, les classer et les dupliquer.
     nav:
         sections:
             studio: Studio
@@ -12,6 +14,8 @@ backend:
         studio_customers_description: Les sociétés avec qui vous contractez, et leur bloc d'identité légale.
         studio_contracts: Contrats
         studio_contracts_description: Les contrats préparés, scellés et signés.
+        studio_decks: Présentations
+        studio_decks_description: Les jeux de slides que vous montrez, classés et réutilisables.
     audit:
         actions:
             studio:
@@ -62,6 +66,13 @@ backend:
                     delete: Supprimer un contrat
                     send: 'Envoyer un contrat au client'
                     countersign: 'Contresigner un contrat'
+                decks:
+                    view: Consulter les présentations
+                    create: Créer une présentation
+                    edit: Modifier une présentation
+                    delete: Supprimer une présentation
+                deck_categories:
+                    manage: Gérer les rubriques de présentation
     studio:
         signatures:
             role:
@@ -352,6 +363,44 @@ backend:
                 contract_amends_reference: Référence du contrat modifié
                 contract_amends_effective_date: Date d'effet du contrat modifié
                 contract_amends_rank: Rang de l'avenant
+        decks:
+            create: Créer une présentation
+            created: Présentation créée
+            updated: Présentation mise à jour
+            deleted: Présentation supprimée
+            duplicated: Présentation dupliquée
+            duplicate: Dupliquer
+            duplicate_hint: Copie les slides, sans le client.
+            copy_of: '%title% (copie)'
+            title_column: Titre
+            title_placeholder: Audit du site, octobre
+            description_placeholder: Une ligne, lue dans la liste.
+            description: Description
+            category: Rubrique
+            customer: Client
+            slides: Slides
+            uncategorised: Sans rubrique
+            no_customer: Aucun client
+            all_categories: Toutes les rubriques
+            filter_by_category: Filtrer par rubrique
+            search_placeholder: Rechercher une présentation…
+            empty_title: Aucune présentation
+            empty_description: Une présentation est un jeu de slides que vous montrez à quelqu'un. Créez la première.
+            delete_confirm: 'Supprimer « {title} » et toutes ses slides ?'
+            errors:
+                title_required: Le titre est obligatoire.
+                title_too_long: Le titre est trop long.
+            layouts:
+                title: Titre
+                bullets: Titre et puces
+                image: Image pleine page
+                split: Deux colonnes
+                quote: Citation
+                section: Intercalaire
+            categories:
+                errors:
+                    name_required: Le nom est obligatoire.
+                    color_invalid: La couleur doit être au format hexadécimal, par exemple #6366f1.
         customers:
             title: Clients
             add: Ajouter un client

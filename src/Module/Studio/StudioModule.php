@@ -58,6 +58,11 @@ final readonly class StudioModule implements ModuleInterface, ModuleToggleProvid
             new NavPermission('studio.contracts.delete'),
             new NavPermission('studio.contracts.send'),
             new NavPermission('studio.contracts.countersign'),
+            new NavPermission('studio.decks.view'),
+            new NavPermission('studio.decks.create'),
+            new NavPermission('studio.decks.edit'),
+            new NavPermission('studio.decks.delete'),
+            new NavPermission('studio.deck_categories.manage'),
         ];
     }
 
@@ -80,6 +85,10 @@ final readonly class StudioModule implements ModuleInterface, ModuleToggleProvid
             $items[] = $this->contractTemplatesNavItem();
         }
 
+        if ($this->studioContext->areDecksEnabled()) {
+            $items[] = $this->decksNavItem();
+        }
+
         if ([] === $items) {
             return [];
         }
@@ -93,6 +102,7 @@ final readonly class StudioModule implements ModuleInterface, ModuleToggleProvid
             $this->customersNavItem(),
             $this->contractsNavItem(),
             $this->contractTemplatesNavItem(),
+            $this->decksNavItem(),
         ], priority: 45)];
     }
 
@@ -102,6 +112,7 @@ final readonly class StudioModule implements ModuleInterface, ModuleToggleProvid
             ModuleParameterEnum::StudioBackend->toToggle(),
             ModuleParameterEnum::StudioCustomers->toToggle(),
             ModuleParameterEnum::StudioContracts->toToggle(),
+            ModuleParameterEnum::StudioDecks->toToggle(),
         ];
     }
 
@@ -124,6 +135,17 @@ final readonly class StudioModule implements ModuleInterface, ModuleToggleProvid
             'scroll-text',
             requiredPrivilege: 'studio.contract_templates.view',
             descriptionKey: 'backend.nav.studio_contract_templates_description',
+        );
+    }
+
+    private function decksNavItem(): NavItem
+    {
+        return new NavItem(
+            'backend_studio_decks',
+            'backend.nav.studio_decks',
+            'presentation',
+            requiredPrivilege: 'studio.decks.view',
+            descriptionKey: 'backend.nav.studio_decks_description',
         );
     }
 

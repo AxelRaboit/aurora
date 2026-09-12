@@ -5,6 +5,44 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.143] - 2026-09-12
+
+### Ajouté
+
+#### Les présentations, dans Studio
+Un jeu de slides se construit, se classe et se duplique. C'est le sous-module
+que le renommage rendait possible : **une présentation peut nommer le client
+pour qui elle a été écrite**, et un module n'a pas le droit de porter une
+relation vers l'entité d'un autre module. Soit les deux vivent ensemble, soit
+le lien n'existe pas.
+
+Le champ client est facultatif, et cette nullabilité est le vrai choix : une
+trame de stratégie écrite pour soi n'a pas de client, et l'exiger aurait rendu
+impossible le cas interne le plus courant. Supprimer un client ne supprime pas
+la présentation qu'on lui a montrée.
+
+**Six gabarits fixes plutôt qu'un canevas libre** : titre, titre et puces,
+image pleine page, deux colonnes, citation, intercalaire. Un deck d'audit ou de
+stratégie, c'est cela à quatre-vingt-dix pour cent, et le placement libre aurait
+voulu dire construire un outil de design. Le contenu d'une slide est du JSON
+filtré en liste blanche contre les emplacements que son gabarit déclare, comme
+la grille de contenu d'Editorial.
+
+Dupliquer copie les slides et **laisse le client derrière** : « repartir de
+celle-ci » veut presque toujours dire la même forme pour quelqu'un d'autre, et
+emporter le client est la façon dont un deck finit présenté à une société avec
+le nom d'une autre dessus.
+
+Le sous-module a son propre interrupteur, `modules_studio_decks`, indépendant
+des clients et des contrats : on peut avoir les présentations sans rien vendre.
+
+### Migration
+
+Trois tables neuves, `core_decks`, `core_deck_slides` et
+`core_deck_categories`. Rien d'existant n'est touché. Le lien vers un client
+est `ON DELETE SET NULL`, celui d'une slide vers son deck `ON DELETE CASCADE` :
+une slide n'a pas de vie hors du deck, une présentation en a une hors du client.
+
 ## [0.9.142] - 2026-09-12
 
 ### Modifié

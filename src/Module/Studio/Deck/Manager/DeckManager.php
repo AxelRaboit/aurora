@@ -1,0 +1,156 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Aurora\Module\Studio\Deck\Manager;
+
+use Aurora\Module\Studio\Deck\Entity\Deck;
+use Aurora\Module\Studio\Deck\Entity\DeckInterface;
+use Aurora\Module\Studio\Deck\Entity\Slide;
+use Aurora\Module\Studio\Deck\Entity\SlideInterface;
+use Aurora\Module\Studio\Deck\Enum\SlideLayoutEnum;
+use Doctrine\ORM\EntityManagerInterface;
+
+use function array_key_exists;
+use function is_array;
+use function is_int;
+use function is_string;
+
+/**
+ * Everything that writes a deck goes through here.
+ *
+ * One place that knows how a deck and its slides are wired together, for the
+ * same reason `ContractTemplateDuplicator` insists on it: a second
+ * implementation drifts the first time somebody adds a field, and it drifts
+ * silently - the copy simply missing something nobody looks for.
+ */
+class DeckManager
+{
+    public function __construct(protected readonly EntityManagerInterface $entityManager) {}
+
+    public function create(string $title): DeckInterface
+    {
+        $deck = new Deck();
+        $deck->setTitle($title);
+
+        $this->entityManager->persist($deck);
+
+        return $deck;
+    }
+
+    /**
+     * Add a slide at the end of the deck.
+     *
+     * The position is computed from what is already there rather than from a
+     * counter on the deck: the counter would be a second statement of the same
+     * fact, and the day a slide is deleted the two disagree.
+     */
+    public function addSlide(DeckInterface $deck, SlideLayoutEnum $layout): SlideInterface
+    {
+        $slide = new Slide();
+        $slide->setLayout($layout);
+        $slide->setPosition($this->nextPosition($deck));
+
+        $deck->addSlide($slide);
+        $this->entityManager->persist($slide);
+
+        return $slide;
+    }
+
+    /**
+     * Write a slide's content, keeping only the slots its layout declares.
+     *
+     * The whitelist is the layout's own `slots()`, so a new field is one edit
+     * in one place. Anything else that arrives is dropped rather than refused:
+     * a stale form posting a slot the layout lost is not an error worth
+     * showing a reader, it is a field that no longer exists.
+     *
+     * @param array<string, mixed> $content
+     */
+    public function writeContent(SlideInterface $slide, array $content): SlideInterface
+    {
+        $clean = [];
+
+        foreach ($slide->getLayout()->slots() as $slot) {
+            if (!array_key_exists($slot, $content)) {
+                continue;
+            }
+
+            $value = $content[$slot];
+
+            // `mediaId` is the one slot that is not text: it points at a
+            // document in the library, and a string there would silently fail
+            // to resolve at render.
+            if ('mediaId' === $slot) {
+                if (is_int($value)) {
+                    $clean[$slot] = $value;
+                }
+
+                continue;
+            }
+
+            if ('bullets' === $slot) {
+                if (is_array($value)) {
+                    $clean[$slot] = array_values(array_filter($value, is_string(...)));
+                }
+
+                continue;
+            }
+
+            if (is_string($value)) {
+                $clean[$slot] = $value;
+            }
+        }
+
+        $slide->setContent($clean);
+
+        return $slide;
+    }
+
+    /**
+     * Put the slides in the order given, by id.
+     *
+     * Ids the deck does not hold are ignored rather than refused: a reorder
+     * arriving after somebody else deleted a slide should still place the
+     * others, not fail whole.
+     *
+     * @param list<int> $orderedIds
+     */
+    public function reorderSlides(DeckInterface $deck, array $orderedIds): void
+    {
+        $byId = [];
+        foreach ($deck->getSlides() as $slide) {
+            $byId[$slide->getId()] = $slide;
+        }
+
+        $position = 0;
+        foreach ($orderedIds as $id) {
+            if (!isset($byId[$id])) {
+                continue;
+            }
+
+            $byId[$id]->setPosition($position);
+            ++$position;
+            unset($byId[$id]);
+        }
+
+        // Whatever the payload did not mention keeps its relative order, after
+        // the rest: a slide must never lose its place because a client sent a
+        // partial list.
+        foreach ($byId as $slide) {
+            $slide->setPosition($position);
+            ++$position;
+        }
+    }
+
+    private function nextPosition(DeckInterface $deck): int
+    {
+        $highest = -1;
+
+        foreach ($deck->getSlides() as $slide) {
+            $highest = max($highest, $slide->getPosition());
+        }
+
+        return $highest + 1;
+    }
+}

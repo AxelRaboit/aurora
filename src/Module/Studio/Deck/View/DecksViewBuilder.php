@@ -1,0 +1,133 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Aurora\Module\Studio\Deck\View;
+
+use Aurora\Core\Routing\PathTemplateGenerator;
+use Aurora\Module\Studio\Customer\Entity\CustomerInterface;
+use Aurora\Module\Studio\Customer\Repository\CustomerRepository;
+use Aurora\Module\Studio\Deck\Entity\DeckInterface;
+use Aurora\Module\Studio\Deck\Enum\SlideLayoutEnum;
+use Aurora\Module\Studio\Deck\Repository\DeckCategoryRepository;
+use Aurora\Module\Studio\Deck\Repository\DeckRepository;
+use Aurora\Module\Studio\Deck\Serializer\DeckSerializer;
+use Aurora\Module\Studio\StudioContext;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+final readonly class DecksViewBuilder
+{
+    public function __construct(
+        private DeckRepository $deckRepository,
+        private DeckCategoryRepository $categoryRepository,
+        private CustomerRepository $customerRepository,
+        private DeckSerializer $serializer,
+        private StudioContext $studioContext,
+        private PathTemplateGenerator $pathTemplates,
+        private UrlGeneratorInterface $urlGenerator,
+    ) {}
+
+    /**
+     * The list, whole, filtered in the page.
+     *
+     * Same sizing call as the customer list: a deck is looked for by eye among
+     * a few dozen, and a round trip per keystroke would answer slower than the
+     * page already can. The paginated shape is one repository method away.
+     *
+     * @return array<string, mixed>
+     */
+    public function indexView(): array
+    {
+        $counts = $this->deckRepository->countSlidesByDeck();
+
+        return [
+            'decks' => array_map(
+                fn (DeckInterface $deck): array => $this->serializer->summary($deck, $counts[$deck->getId()] ?? 0),
+                $this->deckRepository->findAllForList(),
+            ),
+            'categories' => array_map(
+                $this->serializer->category(...),
+                $this->categoryRepository->findOrdered(),
+            ),
+            'customers' => $this->customerOptions(),
+            'layouts' => $this->layoutOptions(),
+            ...$this->paths(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function deckPayload(DeckInterface $deck): array
+    {
+        return ['deck' => $this->serializer->full($deck)];
+    }
+
+    /**
+     * The categories alone, for the answer to a category write.
+     *
+     * The whole index view would rebuild the deck list and the customer list
+     * to send back a handful of rows the page already has.
+     *
+     * @return array<string, mixed>
+     */
+    public function categoriesPayload(): array
+    {
+        return [
+            'categories' => array_map(
+                $this->serializer->category(...),
+                $this->categoryRepository->findOrdered(),
+            ),
+        ];
+    }
+
+    /**
+     * The customers a deck can name, or an empty list when the module is off.
+     *
+     * Empty rather than absent: the page draws the picker either way and an
+     * empty one reads as "nobody to pick", which is the truth when customers
+     * are switched off. A missing key would be a page crashing on a module
+     * somebody legitimately turned off.
+     *
+     * @return list<array{id: int, legalName: string}>
+     */
+    private function customerOptions(): array
+    {
+        if (!$this->studioContext->areCustomersEnabled()) {
+            return [];
+        }
+
+        return array_map(
+            static fn (CustomerInterface $customer): array => [
+                'id' => (int) $customer->getId(),
+                'legalName' => $customer->getLegalName(),
+            ],
+            $this->customerRepository->findAllOrdered(),
+        );
+    }
+
+    /** @return list<array{value: string, labelKey: string, slots: list<string>}> */
+    private function layoutOptions(): array
+    {
+        return array_map(
+            static fn (SlideLayoutEnum $layout): array => [
+                'value' => $layout->value,
+                'labelKey' => $layout->labelKey(),
+                'slots' => $layout->slots(),
+            ],
+            SlideLayoutEnum::cases(),
+        );
+    }
+
+    /** @return array<string, string> */
+    private function paths(): array
+    {
+        return [
+            'createPath' => $this->urlGenerator->generate('backend_studio_decks_create'),
+            'updatePath' => $this->pathTemplates->generate('backend_studio_decks_update', ['id' => '__id__']),
+            'deletePath' => $this->pathTemplates->generate('backend_studio_decks_delete', ['id' => '__id__']),
+            'duplicatePath' => $this->pathTemplates->generate('backend_studio_decks_duplicate', ['id' => '__id__']),
+            'categoryCreatePath' => $this->urlGenerator->generate('backend_studio_decks_category_create'),
+            'categoryUpdatePath' => $this->pathTemplates->generate('backend_studio_decks_category_update', ['id' => '__id__']),
+            'categoryDeletePath' => $this->pathTemplates->generate('backend_studio_decks_category_delete', ['id' => '__id__']),
+        ];
+    }
+}
