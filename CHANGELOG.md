@@ -26,32 +26,6 @@ Rien ne change à l'usage, hormis le mot dans le menu et dans l'onglet de
 réglages. Les sous-interrupteurs restent indépendants : on peut avoir les
 clients sans les contrats, comme avant.
 
-#### Dans aurora-client
-Aucune action. Les adresses publiques des contrats sont préfixées
-`/contracts`, pas `/backend/accounting` : les liens de signature déjà envoyés à
-des clients continuent de fonctionner.
-
-Un projet client qui aurait surchargé une classe du module doit suivre le
-namespace `Aurora\Module\Accounting` → `Aurora\Module\Studio`, et les
-privilèges `accounting.*` → `studio.*`.
-
-### Migration
-
-La base ne change pas de forme : aucune table ne portait le nom du module, ce
-sont `core_contracts`, `core_customers` et `core_contract_templates`. Ce qui
-porte le nom, ce sont des chaînes, et la migration les réécrit toutes :
-
-- les 3 interrupteurs et les 17 paramètres de `core_settings`, dont l'identité
-  du prestataire imprimée sur chaque contrat ;
-- l'onglet de réglages qui les regroupe ;
-- les privilèges, le masque de modules par utilisateur, et les sections et
-  entrées de menu masquées, tous rangés en colonnes JSON ;
-- le nom de section et les noms de route **à l'intérieur** de la valeur JSON
-  des quatre réglages `nav_*`, dont les clés, elles, ne changent pas. C'est le
-  seul endroit qu'un balayage sur les clés de réglages aurait manqué.
-
-## [0.9.140] - 2026-09-12
-
 ### Corrigé
 
 #### Un document déplacé vers le stockage distant devenait introuvable
@@ -92,10 +66,32 @@ Contrairement à la page publique, la modale précharge les métadonnées :
 quelqu'un qui ouvre un document a demandé ce document, et la durée fait partie
 de ce qu'il vient vérifier.
 
+### Migration
+
+La base ne change pas de forme : aucune table ne portait le nom du module, ce
+sont `core_contracts`, `core_customers` et `core_contract_templates`. Ce qui
+porte le nom, ce sont des chaînes, et la migration les réécrit toutes :
+
+- les 3 interrupteurs et les 17 paramètres de `core_settings`, dont l'identité
+  du prestataire imprimée sur chaque contrat ;
+- l'onglet de réglages qui les regroupe ;
+- les privilèges, le masque de modules par utilisateur, et les sections et
+  entrées de menu masquées, tous rangés en colonnes JSON ;
+- le nom de section et les noms de route **à l'intérieur** de la valeur JSON
+  des quatre réglages `nav_*`, dont les clés, elles, ne changent pas. C'est le
+  seul endroit qu'un balayage sur les clés de réglages aurait manqué.
+
 ### Dans aurora-client
-Rien à répercuter à la main. **Un document déplacé vers le stockage distant
-avant cette version redevient accessible sans rien faire** : ses octets étaient
-là, seule la recherche s'arrêtait trop tôt.
+Rien à répercuter à la main pour le stockage. **Un document déplacé vers le
+stockage distant avant cette version redevient accessible sans rien faire** :
+ses octets étaient là, seule la recherche s'arrêtait trop tôt.
+
+Pour le renommage, rien non plus dans le cas courant : les adresses publiques
+des contrats sont préfixées `/contracts`, pas `/backend/accounting`, donc les
+liens de signature déjà envoyés à des clients continuent de fonctionner. Un
+projet client qui aurait surchargé une classe du module doit en revanche suivre
+le namespace `Aurora\Module\Accounting` → `Aurora\Module\Studio` et les
+privilèges `accounting.*` → `studio.*`.
 
 ---
 
