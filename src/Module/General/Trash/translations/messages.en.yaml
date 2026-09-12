@@ -1,0 +1,13 @@
+backend:
+  trash:
+    title: "Trash"
+    intro: "Whatever was deleted waits here before it is erased for good."
+    read_only: "This page says where deleted items are. Restoring or erasing them happens in the screen that holds them."
+    retention: "A row leaves for good {days} days after it was deleted."
+    retention_off: "The automatic purge is off: nothing leaves on its own."
+    count: "1 item | {count} items"
+    empty_one: "Empty"
+    days_left: "Purged in 1 day | Purged in {count} days"
+    purge_due: "Purged tonight"
+    all_empty: "Every trash is empty."
+    all_empty_hint: "Anything deleted will show up here for as long as it is kept."

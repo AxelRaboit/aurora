@@ -286,6 +286,23 @@ class DocumentRepository extends ResolveTargetEntityRepository
     }
 
     /**
+     * When the oldest row now in the trash was deleted, null when it is empty.
+     *
+     * Read by the trash overview to say how long is left before the purge
+     * takes it. A date rather than a row: the overview shows neither.
+     */
+    public function oldestTrashedAt(): ?DateTimeImmutable
+    {
+        $value = $this->createQueryBuilder('d')
+            ->select('MIN(d.deletedAt)')
+            ->andWhere('d.deletedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null === $value ? null : new DateTimeImmutable((string) $value);
+    }
+
+    /**
      * The documents still in the library inside these folders.
      *
      * Used when a folder is deleted: what is already in the trash keeps the

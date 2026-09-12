@@ -209,6 +209,8 @@ backend:
     settings_description: "Application-wide settings and default preferences."
     themes: Themes
     themes_description: "Dress the site: colours, logo and favicon."
+    trash: Trash
+    trash_description: "What was deleted in each module, and how long it has left."
     users: Users
     users_description: "Manage accounts, their roles and the detail of their privileges."
     resize_hint: Drag to resize, double-click to reset

@@ -7,6 +7,7 @@ namespace Aurora\Module\Ged\DocumentFolder\Repository;
 use Aurora\Core\Repository\ResolveTargetEntityRepository;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolder;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Order;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -94,5 +95,23 @@ class DocumentFolderRepository extends ResolveTargetEntityRepository
             ->andWhere('f.trashedWithFolderId IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * When the oldest row now in the trash was deleted, null when it is empty.
+     *
+     * Read by the trash overview to say how long is left before the purge
+     * takes it. A date rather than a row: the overview shows neither.
+     */
+    public function oldestTrashedAt(): ?DateTimeImmutable
+    {
+        $value = $this->createQueryBuilder('f')
+            ->select('MIN(f.deletedAt)')
+            ->andWhere('f.deletedAt IS NOT NULL')
+            ->andWhere('f.trashedWithFolderId IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null === $value ? null : new DateTimeImmutable((string) $value);
     }
 }

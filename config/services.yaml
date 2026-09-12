@@ -54,6 +54,8 @@ services:
             tags: [aurora.search_provider]
         Aurora\Core\Dashboard\DashboardStatsProviderInterface:
             tags: [aurora.dashboard_stats_provider]
+        Aurora\Core\Trash\TrashSourceInterface:
+            tags: [aurora.trash_source]
         Aurora\Core\Search\BackendSearchProviderInterface:
             tags: [aurora.backend_search_provider]
         Aurora\Core\Content\BlockRendererInterface:

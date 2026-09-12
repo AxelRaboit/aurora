@@ -22,6 +22,8 @@ const { t } = useI18n();
 const { can } = usePrivileges();
 const props = defineProps({
     categories: { type: Object, default: () => ({}) },
+    /** Opens the page on its trash, for a link that points at it. */
+    trashed: { type: Boolean, default: false },
     search: { type: String, default: "" },
     createPath: { type: String, required: true },
     updatePath: { type: String, required: true },

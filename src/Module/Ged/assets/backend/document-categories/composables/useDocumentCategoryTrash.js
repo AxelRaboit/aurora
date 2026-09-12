@@ -19,7 +19,9 @@ export function useDocumentCategoryTrash(props, { reload }) {
     const { request: restoreRequest } = useRequest();
     const { request: destroyRequest } = useRequest();
 
-    const viewingTrash = ref(false);
+    // Can start open: the overview screen links straight to the trash it
+    // counted. Read once, after which the page owns which list is on screen.
+    const viewingTrash = ref(Boolean(props.trashed));
     const trashedTotal = ref(props.categories?.trashedTotal ?? 0);
 
     /** The category whose permanent deletion is awaiting confirmation. */

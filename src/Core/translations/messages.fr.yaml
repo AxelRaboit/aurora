@@ -209,6 +209,8 @@ backend:
     settings_description: "Réglages globaux de l'application et préférences par défaut."
     themes: Thèmes
     themes_description: "Habiller le site : couleurs, logo et favicon."
+    trash: Corbeille
+    trash_description: "Ce qui a été supprimé dans chaque module, et le temps qu'il lui reste."
     users: Utilisateurs
     users_description: "Gérer les comptes, leurs rôles et le détail de leurs privilèges."
     resize_hint: Glisser pour redimensionner, double-clic pour réinitialiser
