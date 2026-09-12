@@ -1,12 +1,11 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { toast } from "vue-sonner";
 import { useListPage } from "@/shared/composables/list/useListPage.js";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
-import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import { useEditDeleteActions } from "@/shared/composables/useEditDeleteActions.js";
 import { useDocumentCategoriesForm } from "./composables/useDocumentCategoriesForm.js";
+import { useDocumentCategoryTrash } from "./composables/useDocumentCategoryTrash.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSearchInput from "@/shared/components/form/input/AppSearchInput.vue";
@@ -38,10 +37,13 @@ const props = defineProps({
     emptyTrashPath: { type: String, default: "" },
 });
 
-// The trash is a view over the same listing, as it is for documents: same
-// payload, condition flipped, search still working inside it.
-const viewingTrash = ref(false);
-const trashedTotal = ref(props.categories?.trashedTotal ?? 0);
+const {
+    viewingTrash, trashedTotal, pendingForceDelete, confirmEmptyTrash, emptyingTrash,
+    toggleTrash, readTotals, restore: restoreCategory, askForceDelete, doForceDelete, emptyTrash,
+    // The arrow defers the read: `reset` comes from useListPage below, which
+    // needs these refs to exist before it is called.
+    // eslint-disable-next-line no-use-before-define
+} = useDocumentCategoryTrash(props, { reload: () => reset() });
 
 const { items, loading, page, totalPages, search: searchInput, onSearch, goToPage, reload: reset } = useListPage(
     props.listPath,
@@ -49,44 +51,9 @@ const { items, loading, page, totalPages, search: searchInput, onSearch, goToPag
         initialSearch: props.search,
         initialData: props.categories,
         extraParams: () => ({ trashed: viewingTrash.value ? 1 : undefined }),
-        onData: (data) => {
-            trashedTotal.value = data?.trashedTotal ?? trashedTotal.value;
-        },
+        onData: readTotals,
     },
 );
-
-function toggleTrash() {
-    viewingTrash.value = !viewingTrash.value;
-    reset();
-}
-
-const { request: trashRequest } = useRequest();
-
-function trashPath(template, id) {
-    return template.replace("__id__", String(id));
-}
-
-async function restoreCategory(category) {
-    const res = await trashRequest(trashPath(props.restorePath, category.id));
-    if (!res?.success) return;
-
-    toast.success(t("backend.ged.categories.trash.restored"));
-    await reset();
-}
-
-const pendingForceDelete = ref(null);
-
-async function doForceDelete() {
-    const category = pendingForceDelete.value;
-    if (!category) return;
-
-    const res = await trashRequest(trashPath(props.forceDeletePath, category.id));
-    pendingForceDelete.value = null;
-    if (!res?.success) return;
-
-    toast.success(t("backend.ged.categories.trash.deleted_forever"));
-    await reset();
-}
 
 const {
     showCreate, newCategory, createErrors, createLoading, openCreate, submitCreate,
@@ -127,7 +94,7 @@ function actionsFor(category) {
             icon: Trash2,
             title: t("backend.ged.categories.trash.delete_forever"),
             description: t("backend.ged.categories.trash.delete_forever_description"),
-            onSelect: () => { pendingForceDelete.value = category; },
+            onSelect: () => askForceDelete(category),
         },
     ];
 }
@@ -168,6 +135,15 @@ const columnCount = computed(() => 3 + Object.keys(props.extraFields).length);
         <div v-if="viewingTrash" class="flex flex-wrap items-center gap-3 bg-rose-500/10 border border-rose-400/30 rounded-xl px-4 py-2.5">
             <Trash2 class="w-4 h-4 text-rose-400 shrink-0" :stroke-width="2" />
             <p class="text-sm text-primary min-w-0">{{ t("backend.ged.categories.trash.banner") }}</p>
+            <AppButton
+                v-if="can('ged.categories.delete') && trashedTotal > 0"
+                size="sm"
+                variant="danger"
+                class="ml-auto"
+                v-on:click="confirmEmptyTrash = true"
+            >
+                <Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.categories.trash.empty") }}
+            </AppButton>
         </div>
 
         <div class="relative space-y-4">
@@ -265,6 +241,24 @@ const columnCount = computed(() => 3 + Object.keys(props.extraFields).length);
                 <AppModalFooter>
                     <AppButton variant="ghost" size="md" type="button" v-on:click="showEdit = false"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
                     <AppButton variant="primary" size="md" type="submit" :loading="editLoading"><Save class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.save") }}</AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <AppModal
+            :show="confirmEmptyTrash"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.ged.categories.trash.empty')"
+            :icon="Trash2"
+            v-on:close="confirmEmptyTrash = false"
+        >
+            <p class="text-sm text-primary">{{ t("backend.ged.categories.trash.empty_confirm", { count: trashedTotal }) }}</p>
+            <p class="text-sm text-secondary">{{ t("backend.ged.categories.trash.delete_forever_warning") }}</p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="confirmEmptyTrash = false"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
+                    <AppButton variant="danger" size="md" :loading="emptyingTrash" v-on:click="emptyTrash"><Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.categories.trash.empty") }}</AppButton>
                 </AppModalFooter>
             </template>
         </AppModal>

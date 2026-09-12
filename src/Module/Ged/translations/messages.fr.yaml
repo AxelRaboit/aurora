@@ -236,6 +236,9 @@ backend:
       delete_confirm: "Êtes-vous sûr de vouloir supprimer la catégorie « {name} » ?"
       delete_warning: Les documents liés ne seront pas supprimés.
       trash:
+        empty: Vider la corbeille
+        empty_confirm: "Supprimer définitivement les {count} catégories de la corbeille ?"
+        emptied: "{count} catégorie(s) supprimée(s) définitivement"
         title: Corbeille
         banner: Ces catégories sont supprimées. Les documents qu'elles portaient les retrouveront si vous les restaurez.
         restore: Restaurer

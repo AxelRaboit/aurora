@@ -236,6 +236,9 @@ backend:
       delete_confirm: "Are you sure you want to delete category « {name} »?"
       delete_warning: Linked documents will not be deleted.
       trash:
+        empty: Empty the trash
+        empty_confirm: "Permanently delete the {count} categories in the trash?"
+        emptied: "{count} category/categories permanently deleted"
         title: Trash
         banner: These categories are deleted. The documents that carried them will get them back if you restore them.
         restore: Restore
