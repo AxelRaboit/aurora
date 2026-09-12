@@ -102,7 +102,7 @@ final class VueTranslationKeyTest extends TestCase
     }
 
     /**
-     * Unlike resolves(), a branch counts: `const prefix = "backend.accounting.contracts"`
+     * Unlike resolves(), a branch counts: `const prefix = "backend.studio.contracts"`
      * is a real use of the catalogue, completed a line later.
      *
      * @param array<string, mixed> $catalogue

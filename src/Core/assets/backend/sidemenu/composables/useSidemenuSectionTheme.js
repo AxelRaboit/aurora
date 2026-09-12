@@ -33,7 +33,7 @@ import { isRef } from "vue";
  * sections looked like they had no colour while every other one did.
  * `SidemenuSectionThemeTest` now fails when a section ships without an entry.
  *
- * `accounting` (45) closes the list under notes (violet), so it takes emerald:
+ * `studio` (45) closes the list under notes (violet), so it takes emerald:
  * the furthest hue from a purple, and the one every ledger already reads in.
  */
 const SECTION_THEMES = {
@@ -44,7 +44,7 @@ const SECTION_THEMES = {
     editorial: makeTheme("rose"),
     ged: makeTheme("lime"),
     notes: makeTheme("violet"),
-    accounting: makeTheme("emerald"),
+    studio: makeTheme("emerald"),
     dev: makeTheme("orange"),
     // Ambre : le manuel ferme le menu, sous « Administration » en orange,
     // et une teinte voisine y lit comme une suite plutôt qu'une rupture.

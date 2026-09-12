@@ -48,23 +48,23 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     case CoreResetPasswordPrefix = 'core_reset_password_prefix';
     case CoreMediaFolderPrefix = 'core_media_folder_prefix';
     case CoreMenuItemPrefix = 'core_menu_item_prefix';
-    case AccountingContractPrefix = 'accounting_contract_prefix';
+    case StudioContractPrefix = 'studio_contract_prefix';
 
     // The provider's own identity, printed into every contract. Settings
     // rather than trame wording: it is the same block in every document, and
     // a bank change should not mean editing every trame.
-    case AccountingProviderName = 'accounting_provider_name';
-    case AccountingProviderRepresentative = 'accounting_provider_representative';
-    case AccountingProviderAddress = 'accounting_provider_address';
-    case AccountingProviderSiret = 'accounting_provider_siret';
-    case AccountingProviderApeCode = 'accounting_provider_ape_code';
-    case AccountingProviderVatMention = 'accounting_provider_vat_mention';
-    case AccountingProviderEmail = 'accounting_provider_email';
-    case AccountingProviderPhone = 'accounting_provider_phone';
-    case AccountingProviderBankHolder = 'accounting_provider_bank_holder';
-    case AccountingProviderBankIban = 'accounting_provider_bank_iban';
-    case AccountingProviderBankBic = 'accounting_provider_bank_bic';
-    case AccountingProviderBankName = 'accounting_provider_bank_name';
+    case StudioProviderName = 'studio_provider_name';
+    case StudioProviderRepresentative = 'studio_provider_representative';
+    case StudioProviderAddress = 'studio_provider_address';
+    case StudioProviderSiret = 'studio_provider_siret';
+    case StudioProviderApeCode = 'studio_provider_ape_code';
+    case StudioProviderVatMention = 'studio_provider_vat_mention';
+    case StudioProviderEmail = 'studio_provider_email';
+    case StudioProviderPhone = 'studio_provider_phone';
+    case StudioProviderBankHolder = 'studio_provider_bank_holder';
+    case StudioProviderBankIban = 'studio_provider_bank_iban';
+    case StudioProviderBankBic = 'studio_provider_bank_bic';
+    case StudioProviderBankName = 'studio_provider_bank_name';
 
     /**
      * How long a sealed contract has to be kept, and how hard the module
@@ -75,7 +75,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
      * than a constant because the right number depends on the trade, and
      * whoever answers for the archive is the one who should choose it.
      */
-    case AccountingContractRetentionYears = 'accounting_contract_retention_years';
+    case StudioContractRetentionYears = 'studio_contract_retention_years';
 
     /**
      * The automatic chasing of a contract sent and not signed.
@@ -85,11 +85,11 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
      * fresh address and revokes the previous one, exactly like a manual
      * resend, because that is the only way the mail can carry the door.
      */
-    case AccountingContractReminderEnabled = 'accounting_contract_reminder_enabled';
+    case StudioContractReminderEnabled = 'studio_contract_reminder_enabled';
 
-    case AccountingContractReminderDays = 'accounting_contract_reminder_days';
+    case StudioContractReminderDays = 'studio_contract_reminder_days';
 
-    case AccountingContractReminderMax = 'accounting_contract_reminder_max';
+    case StudioContractReminderMax = 'studio_contract_reminder_max';
     case NavSectionAliases = 'nav_section_aliases';
     case NavItemAliases = 'nav_item_aliases';
     case NavSectionOrder = 'nav_section_order';
@@ -154,23 +154,23 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreResetPasswordPrefix => 'backend.parameters.core_reset_password_prefix.label',
             self::CoreMediaFolderPrefix => 'backend.parameters.core_media_folder_prefix.label',
             self::CoreMenuItemPrefix => 'backend.parameters.core_menu_item_prefix.label',
-            self::AccountingContractPrefix => 'backend.parameters.accounting_contract_prefix.label',
-            self::AccountingProviderName => 'backend.parameters.accounting_provider_name.label',
-            self::AccountingProviderRepresentative => 'backend.parameters.accounting_provider_representative.label',
-            self::AccountingProviderAddress => 'backend.parameters.accounting_provider_address.label',
-            self::AccountingProviderSiret => 'backend.parameters.accounting_provider_siret.label',
-            self::AccountingProviderApeCode => 'backend.parameters.accounting_provider_ape_code.label',
-            self::AccountingProviderVatMention => 'backend.parameters.accounting_provider_vat_mention.label',
-            self::AccountingProviderEmail => 'backend.parameters.accounting_provider_email.label',
-            self::AccountingProviderPhone => 'backend.parameters.accounting_provider_phone.label',
-            self::AccountingProviderBankHolder => 'backend.parameters.accounting_provider_bank_holder.label',
-            self::AccountingProviderBankIban => 'backend.parameters.accounting_provider_bank_iban.label',
-            self::AccountingProviderBankBic => 'backend.parameters.accounting_provider_bank_bic.label',
-            self::AccountingProviderBankName => 'backend.parameters.accounting_provider_bank_name.label',
-            self::AccountingContractRetentionYears => 'backend.parameters.accounting_contract_retention_years.label',
-            self::AccountingContractReminderEnabled => 'backend.parameters.accounting_contract_reminder_enabled.label',
-            self::AccountingContractReminderDays => 'backend.parameters.accounting_contract_reminder_days.label',
-            self::AccountingContractReminderMax => 'backend.parameters.accounting_contract_reminder_max.label',
+            self::StudioContractPrefix => 'backend.parameters.studio_contract_prefix.label',
+            self::StudioProviderName => 'backend.parameters.studio_provider_name.label',
+            self::StudioProviderRepresentative => 'backend.parameters.studio_provider_representative.label',
+            self::StudioProviderAddress => 'backend.parameters.studio_provider_address.label',
+            self::StudioProviderSiret => 'backend.parameters.studio_provider_siret.label',
+            self::StudioProviderApeCode => 'backend.parameters.studio_provider_ape_code.label',
+            self::StudioProviderVatMention => 'backend.parameters.studio_provider_vat_mention.label',
+            self::StudioProviderEmail => 'backend.parameters.studio_provider_email.label',
+            self::StudioProviderPhone => 'backend.parameters.studio_provider_phone.label',
+            self::StudioProviderBankHolder => 'backend.parameters.studio_provider_bank_holder.label',
+            self::StudioProviderBankIban => 'backend.parameters.studio_provider_bank_iban.label',
+            self::StudioProviderBankBic => 'backend.parameters.studio_provider_bank_bic.label',
+            self::StudioProviderBankName => 'backend.parameters.studio_provider_bank_name.label',
+            self::StudioContractRetentionYears => 'backend.parameters.studio_contract_retention_years.label',
+            self::StudioContractReminderEnabled => 'backend.parameters.studio_contract_reminder_enabled.label',
+            self::StudioContractReminderDays => 'backend.parameters.studio_contract_reminder_days.label',
+            self::StudioContractReminderMax => 'backend.parameters.studio_contract_reminder_max.label',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.label',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.label',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.label',
@@ -220,23 +220,23 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreResetPasswordPrefix => 'backend.parameters.core_reset_password_prefix.description',
             self::CoreMediaFolderPrefix => 'backend.parameters.core_media_folder_prefix.description',
             self::CoreMenuItemPrefix => 'backend.parameters.core_menu_item_prefix.description',
-            self::AccountingContractPrefix => 'backend.parameters.accounting_contract_prefix.description',
-            self::AccountingProviderName => 'backend.parameters.accounting_provider_name.description',
-            self::AccountingProviderRepresentative => 'backend.parameters.accounting_provider_representative.description',
-            self::AccountingProviderAddress => 'backend.parameters.accounting_provider_address.description',
-            self::AccountingProviderSiret => 'backend.parameters.accounting_provider_siret.description',
-            self::AccountingProviderApeCode => 'backend.parameters.accounting_provider_ape_code.description',
-            self::AccountingProviderVatMention => 'backend.parameters.accounting_provider_vat_mention.description',
-            self::AccountingProviderEmail => 'backend.parameters.accounting_provider_email.description',
-            self::AccountingProviderPhone => 'backend.parameters.accounting_provider_phone.description',
-            self::AccountingProviderBankHolder => 'backend.parameters.accounting_provider_bank_holder.description',
-            self::AccountingProviderBankIban => 'backend.parameters.accounting_provider_bank_iban.description',
-            self::AccountingProviderBankBic => 'backend.parameters.accounting_provider_bank_bic.description',
-            self::AccountingProviderBankName => 'backend.parameters.accounting_provider_bank_name.description',
-            self::AccountingContractRetentionYears => 'backend.parameters.accounting_contract_retention_years.description',
-            self::AccountingContractReminderEnabled => 'backend.parameters.accounting_contract_reminder_enabled.description',
-            self::AccountingContractReminderDays => 'backend.parameters.accounting_contract_reminder_days.description',
-            self::AccountingContractReminderMax => 'backend.parameters.accounting_contract_reminder_max.description',
+            self::StudioContractPrefix => 'backend.parameters.studio_contract_prefix.description',
+            self::StudioProviderName => 'backend.parameters.studio_provider_name.description',
+            self::StudioProviderRepresentative => 'backend.parameters.studio_provider_representative.description',
+            self::StudioProviderAddress => 'backend.parameters.studio_provider_address.description',
+            self::StudioProviderSiret => 'backend.parameters.studio_provider_siret.description',
+            self::StudioProviderApeCode => 'backend.parameters.studio_provider_ape_code.description',
+            self::StudioProviderVatMention => 'backend.parameters.studio_provider_vat_mention.description',
+            self::StudioProviderEmail => 'backend.parameters.studio_provider_email.description',
+            self::StudioProviderPhone => 'backend.parameters.studio_provider_phone.description',
+            self::StudioProviderBankHolder => 'backend.parameters.studio_provider_bank_holder.description',
+            self::StudioProviderBankIban => 'backend.parameters.studio_provider_bank_iban.description',
+            self::StudioProviderBankBic => 'backend.parameters.studio_provider_bank_bic.description',
+            self::StudioProviderBankName => 'backend.parameters.studio_provider_bank_name.description',
+            self::StudioContractRetentionYears => 'backend.parameters.studio_contract_retention_years.description',
+            self::StudioContractReminderEnabled => 'backend.parameters.studio_contract_reminder_enabled.description',
+            self::StudioContractReminderDays => 'backend.parameters.studio_contract_reminder_days.description',
+            self::StudioContractReminderMax => 'backend.parameters.studio_contract_reminder_max.description',
             self::NavSectionAliases => 'backend.parameters.nav_section_aliases.description',
             self::NavItemAliases => 'backend.parameters.nav_item_aliases.description',
             self::NavSectionOrder => 'backend.parameters.nav_section_order.description',
@@ -292,23 +292,23 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::CoreResetPasswordPrefix => SequencePrefixEnum::ResetPasswordRequest->value,
             self::CoreMediaFolderPrefix => SequencePrefixEnum::MediaFolder->value,
             self::CoreMenuItemPrefix => SequencePrefixEnum::MenuItem->value,
-            self::AccountingContractPrefix => SequencePrefixEnum::Contract->value,
-            self::AccountingProviderName => '',
-            self::AccountingProviderRepresentative => '',
-            self::AccountingProviderAddress => '',
-            self::AccountingProviderSiret => '',
-            self::AccountingProviderApeCode => '',
-            self::AccountingProviderVatMention => '',
-            self::AccountingProviderEmail => '',
-            self::AccountingProviderPhone => '',
-            self::AccountingProviderBankHolder => '',
-            self::AccountingProviderBankIban => '',
-            self::AccountingProviderBankBic => '',
-            self::AccountingProviderBankName => '',
-            self::AccountingContractRetentionYears => '10',
-            self::AccountingContractReminderEnabled => '0',
-            self::AccountingContractReminderDays => '3',
-            self::AccountingContractReminderMax => '2',
+            self::StudioContractPrefix => SequencePrefixEnum::Contract->value,
+            self::StudioProviderName => '',
+            self::StudioProviderRepresentative => '',
+            self::StudioProviderAddress => '',
+            self::StudioProviderSiret => '',
+            self::StudioProviderApeCode => '',
+            self::StudioProviderVatMention => '',
+            self::StudioProviderEmail => '',
+            self::StudioProviderPhone => '',
+            self::StudioProviderBankHolder => '',
+            self::StudioProviderBankIban => '',
+            self::StudioProviderBankBic => '',
+            self::StudioProviderBankName => '',
+            self::StudioContractRetentionYears => '10',
+            self::StudioContractReminderEnabled => '0',
+            self::StudioContractReminderDays => '3',
+            self::StudioContractReminderMax => '2',
             self::NavSectionAliases => '{}',
             self::NavItemAliases => '{}',
             self::NavSectionOrder => '[]',
@@ -320,10 +320,10 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     public function getType(): string
     {
         return match ($this) {
-            self::PostsPerPage, self::MaxUploadSizeMb, self::PostRevisionsLimit, self::TrashAutoPurgeDays, self::FileVersionsLimit, self::AccountingContractRetentionYears, self::AccountingContractReminderDays, self::AccountingContractReminderMax => 'int',
+            self::PostsPerPage, self::MaxUploadSizeMb, self::PostRevisionsLimit, self::TrashAutoPurgeDays, self::FileVersionsLimit, self::StudioContractRetentionYears, self::StudioContractReminderDays, self::StudioContractReminderMax => 'int',
             self::HomepagePostId => 'post',
             self::DefaultFront, self::DefaultLocale, self::EmailLocale, self::Timezone => 'select',
-            self::CommentsEnabled, self::CommentModerationEnabled, self::MaintenanceMode, self::AdminRegistrationEnabled, self::AdminAccessRequestEnabled, self::FrontLoginEnabled, self::FrontRegistrationEnabled, self::SingleLocaleMode, self::MediaCreditVisible, self::AccountingContractReminderEnabled => 'bool',
+            self::CommentsEnabled, self::CommentModerationEnabled, self::MaintenanceMode, self::AdminRegistrationEnabled, self::AdminAccessRequestEnabled, self::FrontLoginEnabled, self::FrontRegistrationEnabled, self::SingleLocaleMode, self::MediaCreditVisible, self::StudioContractReminderEnabled => 'bool',
             self::LogoMediaId, self::FaviconMediaId, self::SeoDefaultOgImage => 'media',
             self::ColorPickerPresets => 'json',
             default => 'string',
@@ -333,7 +333,7 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
     public function isAdminAccessible(): bool
     {
         return match ($this->getGroup()) {
-            'general', 'reading', 'localization', 'branding', 'seo', 'system', 'email', 'sequences', 'media', 'navigation', 'appearance', 'accounting' => true,
+            'general', 'reading', 'localization', 'branding', 'seo', 'system', 'email', 'sequences', 'media', 'navigation', 'appearance', 'studio' => true,
             default => false,
         };
     }
@@ -348,8 +348,8 @@ enum ApplicationParameterEnum: string implements ApplicationParameterEnumInterfa
             self::MaintenanceMode, self::AdminRegistrationEnabled, self::AdminAccessRequestEnabled, self::FrontLoginEnabled, self::FrontRegistrationEnabled => 'system',
             self::LogoMediaId, self::FaviconMediaId => 'branding',
             self::SeoTitleTemplate, self::SeoDefaultDescription, self::SeoDefaultOgImage, self::SeoTwitterHandle => 'seo',
-            self::CoreUserPrefix, self::CoreMediaPrefix, self::CoreAccessRequestPrefix, self::CoreAuditLogPrefix, self::CoreResetPasswordPrefix, self::CoreMediaFolderPrefix, self::CoreMenuItemPrefix, self::AccountingContractPrefix => 'sequences',
-            self::AccountingProviderName, self::AccountingProviderRepresentative, self::AccountingProviderAddress, self::AccountingProviderSiret, self::AccountingProviderApeCode, self::AccountingProviderVatMention, self::AccountingProviderEmail, self::AccountingProviderPhone, self::AccountingProviderBankHolder, self::AccountingProviderBankIban, self::AccountingProviderBankBic, self::AccountingProviderBankName, self::AccountingContractRetentionYears, self::AccountingContractReminderEnabled, self::AccountingContractReminderDays, self::AccountingContractReminderMax => 'accounting',
+            self::CoreUserPrefix, self::CoreMediaPrefix, self::CoreAccessRequestPrefix, self::CoreAuditLogPrefix, self::CoreResetPasswordPrefix, self::CoreMediaFolderPrefix, self::CoreMenuItemPrefix, self::StudioContractPrefix => 'sequences',
+            self::StudioProviderName, self::StudioProviderRepresentative, self::StudioProviderAddress, self::StudioProviderSiret, self::StudioProviderApeCode, self::StudioProviderVatMention, self::StudioProviderEmail, self::StudioProviderPhone, self::StudioProviderBankHolder, self::StudioProviderBankIban, self::StudioProviderBankBic, self::StudioProviderBankName, self::StudioContractRetentionYears, self::StudioContractReminderEnabled, self::StudioContractReminderDays, self::StudioContractReminderMax => 'studio',
             self::EmailLocale => 'email',
             self::NavSectionAliases, self::NavItemAliases, self::NavSectionOrder, self::NavItemOrder => 'navigation',
             self::ColorPickerPresets => 'appearance',
