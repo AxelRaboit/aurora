@@ -23,8 +23,8 @@ backend:
       sequences: Séquences
       sequences_description: Préfixes des références auto-générées. Onglet réservé aux développeurs.
       navigation: Navigation
-      accounting: Comptabilité
-      accounting_description: "L'identité du prestataire imprimée dans chaque contrat : dénomination, SIRET, coordonnées bancaires."
+      studio: Studio
+      studio_description: "L'identité du prestataire imprimée dans chaque contrat : dénomination, SIRET, coordonnées bancaires."
       navigation_description: Personnalisez les noms des sections et des items du menu latéral.
       pexels: Pexels
       pexels_description: 'Banque de photos gratuites : activation, clé d''API et acceptation des conditions.'
@@ -282,55 +282,55 @@ backend:
     core_menu_item_prefix:
       label: Préfixe des références éléments de menu
       description: 'Préfixe de la référence auto-générée (ex: XXX). Laissez vide pour désactiver.'
-    accounting_contract_prefix:
+    studio_contract_prefix:
       label: Préfixe des références de contrat
       description: 'Préfixe des références de contrat. CTR par défaut, ce qui donne CTR-2026-0001.'
-    accounting_provider_name:
+    studio_provider_name:
       label: Dénomination du prestataire
       description: 'Le nom sous lequel vous contractez, tel qu''il s''imprime en tête du contrat.'
-    accounting_provider_representative:
+    studio_provider_representative:
       label: Nom et prénom
       description: 'La personne physique qui signe. Imprimée avec la dénomination.'
-    accounting_provider_address:
+    studio_provider_address:
       label: Adresse professionnelle
       description: 'Adresse complète, sur une ligne : elle apparaît dans le bloc d''identité du contrat.'
-    accounting_provider_siret:
+    studio_provider_siret:
       label: SIRET
       description: 'Le SIRET de l''établissement qui contracte.'
-    accounting_provider_ape_code:
+    studio_provider_ape_code:
       label: Code APE
       description: 'Code et libellé, par exemple 7021Z - conseil en relations publiques et communication.'
-    accounting_provider_vat_mention:
+    studio_provider_vat_mention:
       label: Mention de TVA
       description: 'La phrase exacte à imprimer, par exemple « non assujetti - TVA non applicable, art. 293 B du CGI ».'
-    accounting_provider_email:
+    studio_provider_email:
       label: Email
       description: 'L''adresse à laquelle le client vous écrit au titre du contrat.'
-    accounting_provider_phone:
+    studio_provider_phone:
       label: Téléphone
       description: 'Le numéro imprimé dans le bloc d''identité.'
-    accounting_provider_bank_holder:
+    studio_provider_bank_holder:
       label: Titulaire du compte
       description: 'Le nom du titulaire, tel qu''il figure sur le relevé.'
-    accounting_provider_bank_iban:
+    studio_provider_bank_iban:
       label: IBAN
       description: 'L''IBAN imprimé dans les conditions financières du contrat.'
-    accounting_provider_bank_bic:
+    studio_provider_bank_bic:
       label: BIC
       description: 'Le BIC de l''établissement.'
-    accounting_provider_bank_name:
+    studio_provider_bank_name:
       label: Banque
       description: 'Le nom de l''établissement, et son adresse si vous l''imprimez.'
-    accounting_contract_retention_years:
+    studio_contract_retention_years:
       label: Durée de conservation (années)
       description: 'Combien d''années un contrat scellé est conservé avant de pouvoir être supprimé. Cinq ans est le minimum légal, dix sont conseillés pour une prestation de services ; sous cinq, la valeur est ramenée à cinq.'
-    accounting_contract_reminder_enabled:
+    studio_contract_reminder_enabled:
       label: Relancer automatiquement
       description: 'Relance par email les contrats envoyés et non signés. Chaque relance crée une nouvelle adresse de signature et invalide la précédente, comme un renvoi manuel.'
-    accounting_contract_reminder_days:
+    studio_contract_reminder_days:
       label: Délai entre deux relances (jours)
       description: 'Nombre de jours sans réponse avant une relance. Compté depuis le dernier envoi, pas depuis le scellement.'
-    accounting_contract_reminder_max:
+    studio_contract_reminder_max:
       label: Nombre maximum de relances
       description: 'Au-delà, le contrat est laissé tranquille. Le silence est une réponse aussi.'
     nav_section_aliases:

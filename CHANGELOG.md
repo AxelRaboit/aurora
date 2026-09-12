@@ -5,6 +5,51 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.141] - 2026-09-12
+
+### Modifié
+
+#### Le module Comptabilité devient Studio
+« Comptabilité » nommait un coin du module et excluait le reste. Il contient
+les clients, les contrats, les trames et la signature, et il va contenir les
+présentations : ce qu'on vend à un client et ce qu'on lui livre.
+
+La question qui a payé le renommage est concrète : un jeu de slides est adressé
+à un client, et un module n'a pas le droit de porter une relation vers l'entité
+d'un autre module. Soit les deux vivent ensemble, soit la relation n'existe pas.
+
+La règle qui décide de ce qui entre est écrite dans le docblock du module :
+**Studio contient ce qu'on vend et ce qu'on livre. Pas les outils avec lesquels
+on le fabrique.** Les notes, la GED et le calendrier restent chez eux.
+
+Rien ne change à l'usage, hormis le mot dans le menu et dans l'onglet de
+réglages. Les sous-interrupteurs restent indépendants : on peut avoir les
+clients sans les contrats, comme avant.
+
+#### Dans aurora-client
+Aucune action. Les adresses publiques des contrats sont préfixées
+`/contracts`, pas `/backend/accounting` : les liens de signature déjà envoyés à
+des clients continuent de fonctionner.
+
+Un projet client qui aurait surchargé une classe du module doit suivre le
+namespace `Aurora\Module\Accounting` → `Aurora\Module\Studio`, et les
+privilèges `accounting.*` → `studio.*`.
+
+### Migration
+
+La base ne change pas de forme : aucune table ne portait le nom du module, ce
+sont `core_contracts`, `core_customers` et `core_contract_templates`. Ce qui
+porte le nom, ce sont des chaînes, et la migration les réécrit toutes :
+
+- les 3 interrupteurs et les 17 paramètres de `core_settings`, dont l'identité
+  du prestataire imprimée sur chaque contrat ;
+- l'onglet de réglages qui les regroupe ;
+- les privilèges, le masque de modules par utilisateur, et les sections et
+  entrées de menu masquées, tous rangés en colonnes JSON ;
+- le nom de section et les noms de route **à l'intérieur** de la valeur JSON
+  des quatre réglages `nav_*`, dont les clés, elles, ne changent pas. C'est le
+  seul endroit qu'un balayage sur les clés de réglages aurait manqué.
+
 ## [0.9.140] - 2026-09-12
 
 ### Corrigé

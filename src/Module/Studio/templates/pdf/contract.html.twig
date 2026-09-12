@@ -1,0 +1,241 @@
+{# The signed contract, as a file.
+
+   Its own stylesheet rather than the shared partial, and no flex or grid
+   anywhere: dompdf understands neither, and a layout that silently collapses
+   into a single column is worse in a legal document than one built from blocks
+   on purpose. Everything here is margins, tables and page breaks - the subset
+   that behaves identically in the PDF and in a print preview.
+
+   Two dompdf-specific things carry the pagination: `@page` for the margins, and
+   a fixed footer using `position: fixed`, which is the one place dompdf treats
+   as "repeat on every page". #}
+<!DOCTYPE html>
+<html lang="{{ contract.locale }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ contract.reference }}</title>
+    <style>
+        @page {
+            margin: 20mm 18mm 24mm 18mm;
+        }
+
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+            color: #111;
+        }
+
+        /* Fixed rather than repeated by hand: this is the one construct dompdf
+           renders on every page. */
+        .page-footer {
+            position: fixed;
+            bottom: -14mm;
+            left: 0;
+            right: 0;
+            font-size: 7pt;
+            color: #666;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 12pt;
+            text-align: center;
+            margin: 0 0 10mm;
+            letter-spacing: 0.5pt;
+        }
+
+        h2 {
+            font-size: 10pt;
+            margin: 7mm 0 2mm;
+        }
+
+        h3, h4 {
+            font-size: 9.5pt;
+            margin: 5mm 0 1.5mm;
+        }
+
+        p {
+            margin: 0 0 3mm;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin: 0 0 3mm 6mm;
+            padding: 0;
+        }
+
+        blockquote {
+            margin: 0 0 3mm;
+            padding-left: 3mm;
+            border-left: 0.5pt solid #999;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 0 4mm;
+            font-size: 8.5pt;
+        }
+
+        th, td {
+            border: 0.5pt solid #999;
+            padding: 1.5mm 2mm;
+            text-align: left;
+        }
+
+        hr {
+            border: 0;
+            border-top: 0.5pt solid #ccc;
+            margin: 6mm 0;
+        }
+
+        /* An annex starts on its own page: it is a document of its own, and in
+           a printed contract that is where the reader expects it. */
+        .document section + section {
+            page-break-before: always;
+        }
+
+        .seal {
+            margin-top: 10mm;
+            border: 0.5pt solid #999;
+            padding: 4mm;
+            font-size: 8pt;
+            page-break-inside: avoid;
+        }
+
+        .seal-title {
+            font-weight: bold;
+            margin: 0 0 2mm;
+        }
+
+        .seal td {
+            border: 0;
+            padding: 0.8mm 0;
+            vertical-align: top;
+        }
+
+        .seal td.label {
+            width: 38mm;
+            color: #555;
+        }
+
+        .seal .hash {
+            font-family: "DejaVu Sans Mono", monospace;
+            font-size: 7pt;
+            word-break: break-all;
+        }
+
+        .signatures {
+            margin-top: 8mm;
+            page-break-inside: avoid;
+        }
+
+        .signatures td {
+            border: 0;
+            width: 50%;
+            vertical-align: top;
+            padding: 0 3mm;
+        }
+
+        .signature-frame {
+            border-bottom: 0.5pt solid #333;
+            height: 22mm;
+            text-align: center;
+        }
+
+        .signature-frame img {
+            max-height: 20mm;
+        }
+
+        .signature-caption {
+            font-size: 7.5pt;
+            color: #444;
+            padding-top: 1.5mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-footer">
+        {{ 'studio.pdf.footer'|trans({'{reference}': contract.reference}, null, contract.locale) }}
+    </div>
+
+    {# The document, verbatim from what was sealed and hashed. #}
+    <div class="document">
+        {{ documentHtml|raw }}
+    </div>
+
+    {# The signatures, side by side, in the order they were given: the customer
+       signs and the provider countersigns. #}
+    <table class="signatures">
+        <tr>
+            {% for signature in signatures %}
+                <td>
+                    <div class="signature-frame">
+                        {% if signature.signatureImage %}
+                            <img src="{{ signature.signatureImage }}" alt="">
+                        {% endif %}
+                    </div>
+                    <div class="signature-caption">
+                        <strong>{{ ('studio.pdf.role.' ~ signature.role.value)|trans({}, null, contract.locale) }}</strong><br>
+                        {{ signature.declaredFullName }}<br>
+                        {{ 'studio.pdf.signed_at'|trans({
+                            '{place}': signature.declaredPlace,
+                            '{date}': signature.declaredDate|date('d/m/Y'),
+                        }, null, contract.locale) }}
+                    </div>
+                </td>
+            {% endfor %}
+        </tr>
+    </table>
+
+    {# The evidence, printed inside the document it belongs to.
+
+       This is what makes the file stand on its own: somebody holding only the
+       PDF can check the hash against the contract, see which address was used,
+       when the code was verified, and from where each signature came. Without
+       it the proof lives only in a database the reader has no access to. #}
+    <div class="seal">
+        <p class="seal-title">{{ 'studio.pdf.seal.title'|trans({}, null, contract.locale) }}</p>
+        <table>
+            <tr>
+                <td class="label">{{ 'studio.pdf.seal.reference'|trans({}, null, contract.locale) }}</td>
+                <td>{{ contract.reference }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ 'studio.pdf.seal.sealed_at'|trans({}, null, contract.locale) }}</td>
+                <td>{{ contract.frozenAt|date('d/m/Y H:i') }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ 'studio.pdf.seal.hash'|trans({}, null, contract.locale) }}</td>
+                <td class="hash">{{ contract.contentHash }} ({{ contract.hashAlgo }}, c{{ contract.canonicalVersion }})</td>
+            </tr>
+            {% for signature in signatures %}
+                <tr>
+                    <td class="label">
+                        {{ ('studio.pdf.role.' ~ signature.role.value)|trans({}, null, contract.locale) }}
+                    </td>
+                    <td>
+                        {{ 'studio.pdf.seal.observed'|trans({
+                            '{at}': signature.signedAt|date('d/m/Y H:i:s'),
+                            '{ip}': signature.ipAddress ?? '-',
+                        }, null, contract.locale) }}
+                        {% if signature.challengeVerifiedAt %}
+                            <br>{{ 'studio.pdf.seal.code_verified'|trans({
+                                '{at}': signature.challengeVerifiedAt|date('d/m/Y H:i:s'),
+                                '{email}': signature.contract.customer.contractualEmail,
+                            }, null, contract.locale) }}
+                        {% elseif signature.user %}
+                            <br>{{ 'studio.pdf.seal.authenticated'|trans({}, null, contract.locale) }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <p style="margin: 3mm 0 0; color: #555;">
+            {{ 'studio.pdf.seal.notice'|trans({}, null, contract.locale) }}
+        </p>
+    </div>
+</body>
+</html>
