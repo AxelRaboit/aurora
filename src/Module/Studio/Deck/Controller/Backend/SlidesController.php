@@ -12,7 +12,10 @@ use Aurora\Module\Studio\Deck\Entity\SlideInterface;
 use Aurora\Module\Studio\Deck\Enum\SlideLayoutEnum;
 use Aurora\Module\Studio\Deck\Manager\DeckManager;
 use Aurora\Module\Studio\Deck\Serializer\DeckSerializer;
+use Aurora\Module\Studio\Deck\Share\Entity\DeckShareLink;
+use Aurora\Module\Studio\Deck\Share\Repository\DeckShareLinkRepository;
 use Aurora\Module\Studio\Deck\View\DecksViewBuilder;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,6 +27,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use function is_array;
 use function is_int;
 use function is_string;
+use function mb_substr;
 
 /**
  * One deck's slides: the page that composes them, and the four writes it makes.
@@ -44,6 +48,7 @@ class SlidesController extends AbstractController
         protected readonly DeckManager $deckManager,
         protected readonly DeckSerializer $serializer,
         protected readonly DecksViewBuilder $viewBuilder,
+        protected readonly DeckShareLinkRepository $shareLinks,
         protected readonly EntityManagerInterface $entityManager,
     ) {}
 
@@ -150,6 +155,59 @@ class SlidesController extends AbstractController
         $this->entityManager->flush();
 
         return $this->jsonSuccess(['deck' => $this->serializer->full($deck)]);
+    }
+
+    /**
+     * Mint an address that opens this deck without an account.
+     *
+     * The privilege is `share`, not `edit`: handing a document to somebody
+     * outside the application is a different act from writing it, and an
+     * account allowed to correct a typo is not automatically allowed to
+     * publish the deck.
+     */
+    #[Route('/share/create', name: '_share_create', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('studio.decks.share')]
+    public function createShare(Deck $deck, Request $request): JsonResponse
+    {
+        $payload = $this->decodeJson($request);
+
+        $link = new DeckShareLink($deck);
+        $link->setLabel(is_string($payload['label'] ?? null) ? mb_substr($payload['label'], 0, 120) : '');
+
+        $days = is_int($payload['expiresInDays'] ?? null) ? $payload['expiresInDays'] : null;
+        if (null !== $days && $days > 0) {
+            $link->setExpiresAt(new DateTimeImmutable(sprintf('+%d days', $days)));
+        }
+
+        $this->entityManager->persist($link);
+        $this->entityManager->flush();
+
+        return $this->jsonSuccess($this->viewBuilder->sharePayload($deck));
+    }
+
+    /**
+     * Revoking stamps a date; it never deletes the row.
+     *
+     * "Who could open this, and until when" is a question worth being able to
+     * answer after the fact, and a deleted row answers nothing.
+     */
+    #[Route('/share/{linkId}/revoke', name: '_share_revoke', requirements: ['linkId' => '\d+'], methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('studio.decks.share')]
+    public function revokeShare(Deck $deck, int $linkId): JsonResponse
+    {
+        $link = $this->shareLinks->find($linkId);
+
+        // Checked against the deck in the address, like a slide: a link id from
+        // another deck must not be revocable through a deck the reader happens
+        // to hold.
+        if (null === $link || $link->getDeck()->getId() !== $deck->getId()) {
+            return $this->jsonNotFound();
+        }
+
+        $link->revoke(new DateTimeImmutable());
+        $this->entityManager->flush();
+
+        return $this->jsonSuccess($this->viewBuilder->sharePayload($deck));
     }
 
     /**

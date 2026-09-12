@@ -12,8 +12,12 @@ use Aurora\Module\Studio\Deck\Enum\SlideLayoutEnum;
 use Aurora\Module\Studio\Deck\Repository\DeckCategoryRepository;
 use Aurora\Module\Studio\Deck\Repository\DeckRepository;
 use Aurora\Module\Studio\Deck\Serializer\DeckSerializer;
+use Aurora\Module\Studio\Deck\Share\Entity\DeckShareLinkInterface;
+use Aurora\Module\Studio\Deck\Share\Repository\DeckShareLinkRepository;
 use Aurora\Module\Studio\StudioContext;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+use const DATE_ATOM;
 
 final readonly class DecksViewBuilder
 {
@@ -22,6 +26,7 @@ final readonly class DecksViewBuilder
         private DeckCategoryRepository $categoryRepository,
         private CustomerRepository $customerRepository,
         private DeckSerializer $serializer,
+        private DeckShareLinkRepository $shareLinks,
         private StudioContext $studioContext,
         private PathTemplateGenerator $pathTemplates,
         private UrlGeneratorInterface $urlGenerator,
@@ -71,6 +76,9 @@ final readonly class DecksViewBuilder
             'layouts' => $this->layoutOptions(),
             'backPath' => $this->urlGenerator->generate('backend_studio_decks'),
             'printPath' => $this->urlGenerator->generate('backend_studio_deck_print', ['id' => $deck->getId()]),
+            'shareCreatePath' => $this->urlGenerator->generate('backend_studio_deck_share_create', ['id' => $deck->getId()]),
+            'shareRevokePath' => $this->pathTemplates->generate('backend_studio_deck_share_revoke', ['id' => $deck->getId(), 'linkId' => '__linkId__']),
+            ...$this->sharePayload($deck),
             'slideCreatePath' => $this->urlGenerator->generate('backend_studio_deck_slide_create', ['id' => $deck->getId()]),
             'slideUpdatePath' => $this->pathTemplates->generate('backend_studio_deck_slide_update', ['id' => $deck->getId(), 'slideId' => '__slideId__']),
             'slideDeletePath' => $this->pathTemplates->generate('backend_studio_deck_slide_delete', ['id' => $deck->getId(), 'slideId' => '__slideId__']),
@@ -82,6 +90,37 @@ final readonly class DecksViewBuilder
     public function deckPayload(DeckInterface $deck): array
     {
         return ['deck' => $this->serializer->full($deck)];
+    }
+
+    /**
+     * One deck's share links, revoked ones included.
+     *
+     * The revoked are shown struck through rather than hidden: "this link no
+     * longer works" is exactly the answer somebody is looking for when they
+     * come back here after having sent one.
+     *
+     * @return array<string, mixed>
+     */
+    public function sharePayload(DeckInterface $deck): array
+    {
+        return [
+            'shareLinks' => array_map(
+                fn (DeckShareLinkInterface $link): array => [
+                    'id' => $link->getId(),
+                    'label' => $link->getLabel(),
+                    'url' => $this->urlGenerator->generate(
+                        'public_deck_show',
+                        ['token' => $link->getToken()],
+                        UrlGeneratorInterface::ABSOLUTE_URL,
+                    ),
+                    'expiresAt' => $link->getExpiresAt()?->format(DATE_ATOM),
+                    'revokedAt' => $link->getRevokedAt()?->format(DATE_ATOM),
+                    'lastUsedAt' => $link->getLastUsedAt()?->format(DATE_ATOM),
+                    'createdAt' => $link->getCreatedAt()->format(DATE_ATOM),
+                ],
+                $this->shareLinks->findForDeck($deck),
+            ),
+        ];
     }
 
     /**

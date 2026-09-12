@@ -71,6 +71,7 @@ backend:
                     create: Créer une présentation
                     edit: Modifier une présentation
                     delete: Supprimer une présentation
+                    share: Partager une présentation
                 deck_categories:
                     manage: Gérer les rubriques de présentation
     studio:
@@ -391,6 +392,27 @@ backend:
                 title_required: Le titre est obligatoire.
                 title_too_long: Le titre est trop long.
                 layout_unknown: Ce gabarit n'existe pas.
+            share: Partager
+            share_intro: Une adresse secrète qui ouvre cette présentation sans compte. Les notes d'orateur n'y sont jamais.
+            share_label: Intitulé
+            share_label_placeholder: Envoyé à Marie, le 12 septembre
+            share_expiry: Expiration
+            share_no_expiry: Sans expiration
+            share_days: '{count} jours'
+            share_create: Créer le lien
+            share_created: Lien créé
+            share_none: Aucun lien pour l'instant.
+            share_untitled: Lien sans intitulé
+            share_copy: Copier l'adresse
+            share_copied: Adresse copiée
+            share_copy_manually: Copiez l'adresse affichée, le navigateur a refusé le presse-papiers.
+            share_revoke: Révoquer
+            share_revoked: Révoqué
+            share_revoked_toast: Lien révoqué
+            share_expires_on: 'Expire le {date}'
+            share_last_used: 'Ouvert le {date}'
+            share_never_opened: Jamais ouvert
+            share_footer: Ce lien vous est personnel. Ne le transmettez pas.
             present: Présenter
             print: Imprimer
             print_hint: Utilisez l'impression du navigateur, puis « Enregistrer en PDF ». Une slide par page, en paysage.
