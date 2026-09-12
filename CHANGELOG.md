@@ -5,6 +5,100 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.141] - 2026-09-12
+
+### Modifié
+
+#### Le module Comptabilité devient Studio
+« Comptabilité » nommait un coin du module et excluait le reste. Il contient
+les clients, les contrats, les trames et la signature, et il va contenir les
+présentations : ce qu'on vend à un client et ce qu'on lui livre.
+
+La question qui a payé le renommage est concrète : un jeu de slides est adressé
+à un client, et un module n'a pas le droit de porter une relation vers l'entité
+d'un autre module. Soit les deux vivent ensemble, soit la relation n'existe pas.
+
+La règle qui décide de ce qui entre est écrite dans le docblock du module :
+**Studio contient ce qu'on vend et ce qu'on livre. Pas les outils avec lesquels
+on le fabrique.** Les notes, la GED et le calendrier restent chez eux.
+
+Rien ne change à l'usage, hormis le mot dans le menu et dans l'onglet de
+réglages. Les sous-interrupteurs restent indépendants : on peut avoir les
+clients sans les contrats, comme avant.
+
+#### Dans aurora-client
+Aucune action. Les adresses publiques des contrats sont préfixées
+`/contracts`, pas `/backend/accounting` : les liens de signature déjà envoyés à
+des clients continuent de fonctionner.
+
+Un projet client qui aurait surchargé une classe du module doit suivre le
+namespace `Aurora\Module\Accounting` → `Aurora\Module\Studio`, et les
+privilèges `accounting.*` → `studio.*`.
+
+### Migration
+
+La base ne change pas de forme : aucune table ne portait le nom du module, ce
+sont `core_contracts`, `core_customers` et `core_contract_templates`. Ce qui
+porte le nom, ce sont des chaînes, et la migration les réécrit toutes :
+
+- les 3 interrupteurs et les 17 paramètres de `core_settings`, dont l'identité
+  du prestataire imprimée sur chaque contrat ;
+- l'onglet de réglages qui les regroupe ;
+- les privilèges, le masque de modules par utilisateur, et les sections et
+  entrées de menu masquées, tous rangés en colonnes JSON ;
+- le nom de section et les noms de route **à l'intérieur** de la valeur JSON
+  des quatre réglages `nav_*`, dont les clés, elles, ne changent pas. C'est le
+  seul endroit qu'un balayage sur les clés de réglages aurait manqué.
+
+## [0.9.140] - 2026-09-12
+
+### Corrigé
+
+#### Un document déplacé vers le stockage distant devenait introuvable
+Le résolveur regardait le disque local, puis **le disque actif**, et s'arrêtait
+là. Quand les nouveaux fichiers vont sur le serveur et qu'un document a été
+déplacé à la main vers le compartiment, le disque actif est justement le local :
+le fichier n'était donc jamais cherché ailleurs, et toutes ses adresses
+répondaient 404.
+
+C'est pourtant la combinaison que le produit annonce comme normale, le
+commentaire de `isRelocationAvailable` le dit mot pour mot. Constaté en
+production le 12/09/2026 : quatre films et leurs quatre images d'attente,
+déplacés volontairement, disparus d'une page publique. Les octets n'ont jamais
+été en danger, rien n'allait les chercher.
+
+Le résolveur balaie maintenant tous les backends configurés. Le disque local
+reste interrogé en premier, par un appel système et non par une requête
+facturée, donc un fichier présent sur le serveur ne coûte toujours rien.
+
+Les adaptateurs répondent pour cela à une nouvelle question, `isReady()` : un
+backend jamais configuré est sauté au lieu d'être appelé, parce qu'une
+exception est la façon dont un backend *configuré* signale une vraie panne, et
+les deux ne doivent pas se ressembler.
+
+### Ajouté
+
+#### Savoir où vit un document, depuis la liste et depuis sa fiche
+Une colonne « Stockage » dans la vue liste de la médiathèque, avec la même
+pastille que la vue cartes, et la même information dans la modale de détail.
+Les deux disparaissent tant qu'un seul stockage existe.
+
+#### Un lecteur pour les vidéos et les sons dans la modale de détail
+Une vidéo tombait dans la branche générique et s'affichait comme une icône de
+fichier : le seul type dont l'intérêt est d'être lu, et l'écran n'offrait pas
+de le lire. Le son avait le même sort.
+
+Contrairement à la page publique, la modale précharge les métadonnées :
+quelqu'un qui ouvre un document a demandé ce document, et la durée fait partie
+de ce qu'il vient vérifier.
+
+### Dans aurora-client
+Rien à répercuter à la main. **Un document déplacé vers le stockage distant
+avant cette version redevient accessible sans rien faire** : ses octets étaient
+là, seule la recherche s'arrêtait trop tôt.
+
+---
+
 ## [0.9.140] - 2026-09-12
 
 ### Ajouté

@@ -261,7 +261,7 @@ my_module:
 > sur `../<package vendoré>/assets` quand `src/Module/<Module>/assets` n'existe
 > pas, et un alias qui pointe sur un dossier absent casse le build sans rien
 > dire d'utile. Un module dont les assets sont posés sous ses sous-domaines
-> (`src/Module/Accounting/Contract/assets/`, `.../Customer/assets/`) n'a pas
+> (`src/Module/Studio/Contract/assets/`, `.../Customer/assets/`) n'a pas
 > d'alias : ses composants s'importent par leur chemin, et ce qui est partagé
 > part dans `@shared`. Constaté sur Accounting en septembre 2026 : l'alias a été
 > ajouté puis retiré, et le composant réellement partagé (le pavé de signature)

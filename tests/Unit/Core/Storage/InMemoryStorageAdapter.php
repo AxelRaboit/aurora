@@ -33,11 +33,37 @@ final class InMemoryStorageAdapter implements StorageAdapterInterface
     /** Every key ever written, in order. */
     public array $writes = [];
 
+    /**
+     * Every key ever asked about, in order.
+     *
+     * Kept because on a real remote backend each of these is a billed
+     * request, and "was this one avoided" is a thing worth asserting.
+     *
+     * @var list<string>
+     */
+    public array $existsCalls = [];
+
+    /** Flip to false to stand in for a backend nobody configured. */
+    public bool $ready = true;
+
+    /**
+     * @param StorageDiskEnum $disk which disk this fake answers for. Defaults
+     *                              to the local case, which is harmless for
+     *                              the tests that never index by disk; pass
+     *                              R2 to stand on the other side of a move.
+     */
+    public function __construct(
+        private readonly StorageDiskEnum $disk = StorageDiskEnum::Local,
+    ) {}
+
     public function disk(): StorageDiskEnum
     {
-        // The enum holds only the disks Aurora ships. A fake borrowing the
-        // local case is harmless: nothing here indexes adapters by disk.
-        return StorageDiskEnum::Local;
+        return $this->disk;
+    }
+
+    public function isReady(): bool
+    {
+        return $this->ready;
     }
 
     public function writeFromLocalFile(string $key, string $sourceAbsolutePath): void
@@ -78,6 +104,8 @@ final class InMemoryStorageAdapter implements StorageAdapterInterface
 
     public function exists(string $key): bool
     {
+        $this->existsCalls[] = $key;
+
         return isset($this->objects[$key]);
     }
 

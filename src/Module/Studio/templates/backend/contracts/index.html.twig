@@ -1,0 +1,35 @@
+{% extends '@Core/backend/layout.html.twig' %}
+
+{% block title %}{{ 'backend.nav.studio_contracts'|trans }} - {{ parent() }}{% endblock %}
+
+{% block page_header_slot %}
+    {{ include('@Shared/components/page_header.html.twig', {
+        crumbs: [
+            {label: 'backend.nav.sections.studio'|trans},
+            {label: 'backend.nav.studio_contracts'|trans},
+        ],
+    }) }}
+{% endblock %}
+
+{% block body %}
+<div {{ vue_component('studio/backend/contracts/ContractsApp', {
+    contracts: contracts,
+    customers: customers,
+    bodies: bodies,
+    annexes: annexes,
+    locales: locales,
+    currencies: currencies,
+    createPath: createPath,
+    updatePath: updatePath,
+    deletePath: deletePath,
+    freezePath: freezePath,
+    sendPath: sendPath,
+    revokeLinkPath: revokeLinkPath,
+    countersignPath: countersignPath,
+    pdfPath: pdfPath,
+    showPath: showPath,
+    terminatePath: terminatePath,
+    terminationOrigins: terminationOrigins,
+    amendable: amendable,
+}) }} class="flex-1 min-w-0"></div>
+{% endblock %}

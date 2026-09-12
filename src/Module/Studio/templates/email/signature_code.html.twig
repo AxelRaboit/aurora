@@ -1,0 +1,12 @@
+{# The code, and nothing that would let somebody act on it without the link.
+
+   No contract reference in the subject and no address in the body: this mail
+   proves control of a mailbox, so it must not also be a second copy of the
+   door. Somebody reading only this cannot reach the document. #}
+<p>{{ 'studio.email.signature_code.intro'|trans }}</p>
+
+<p style="font-size: 28px; font-weight: bold; letter-spacing: 6px;">{{ code }}</p>
+
+<p>{{ 'studio.email.signature_code.validity'|trans({'{minutes}': minutes}) }}</p>
+
+<p>{{ 'studio.email.signature_code.warning'|trans }}</p>
