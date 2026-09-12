@@ -3,6 +3,8 @@ backend:
         studio: Studio
         studio_backend: Studio
         studio_backend_description: "What you sell and what you deliver to a client: customers, contracts and presentations."
+        studio_decks: Presentations
+        studio_decks_description: Build slide decks, file them and duplicate them.
     nav:
         sections:
             studio: Studio
@@ -12,6 +14,8 @@ backend:
         studio_customers_description: The companies you contract with, and their legal identity block.
         studio_contracts: Contracts
         studio_contracts_description: Contracts prepared, sealed and signed.
+        studio_decks: Presentations
+        studio_decks_description: The slide decks you show, filed and reusable.
     audit:
         actions:
             studio:
@@ -62,6 +66,13 @@ backend:
                     delete: Delete a contract
                     send: 'Send a contract to the customer'
                     countersign: 'Countersign a contract'
+                decks:
+                    view: View presentations
+                    create: Create a presentation
+                    edit: Edit a presentation
+                    delete: Delete a presentation
+                deck_categories:
+                    manage: Manage presentation categories
     studio:
         signatures:
             role:
@@ -352,6 +363,44 @@ backend:
                 contract_amends_reference: Amended contract reference
                 contract_amends_effective_date: Amended contract effective date
                 contract_amends_rank: Amendment number
+        decks:
+            create: New presentation
+            created: Presentation created
+            updated: Presentation updated
+            deleted: Presentation deleted
+            duplicated: Presentation duplicated
+            duplicate: Duplicate
+            duplicate_hint: Copies the slides, without the customer.
+            copy_of: '%title% (copy)'
+            title_column: Title
+            title_placeholder: Site audit, October
+            description_placeholder: One line, read in the list.
+            description: Description
+            category: Category
+            customer: Customer
+            slides: Slides
+            uncategorised: No category
+            no_customer: No customer
+            all_categories: All categories
+            filter_by_category: Filter by category
+            search_placeholder: Search a presentation…
+            empty_title: No presentation
+            empty_description: A presentation is a deck of slides you show somebody. Create the first one.
+            delete_confirm: 'Delete "{title}" and every one of its slides?'
+            errors:
+                title_required: The title is required.
+                title_too_long: The title is too long.
+            layouts:
+                title: Title
+                bullets: Title and bullets
+                image: Full-page image
+                split: Two columns
+                quote: Quote
+                section: Section divider
+            categories:
+                errors:
+                    name_required: The name is required.
+                    color_invalid: The colour must be a hex value, for example #6366f1.
         customers:
             title: Customers
             add: Add a customer

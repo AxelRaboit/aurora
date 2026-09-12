@@ -111,6 +111,12 @@ use Aurora\Module\Studio\Contract\Signature\Entity\ContractSignatureChallengeInt
 use Aurora\Module\Studio\Contract\Signature\Entity\ContractSignatureInterface;
 use Aurora\Module\Studio\Customer\Entity\Customer;
 use Aurora\Module\Studio\Customer\Entity\CustomerInterface;
+use Aurora\Module\Studio\Deck\Entity\Deck;
+use Aurora\Module\Studio\Deck\Entity\DeckCategory;
+use Aurora\Module\Studio\Deck\Entity\DeckCategoryInterface;
+use Aurora\Module\Studio\Deck\Entity\DeckInterface;
+use Aurora\Module\Studio\Deck\Entity\Slide;
+use Aurora\Module\Studio\Deck\Entity\SlideInterface;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Override;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -219,6 +225,9 @@ class AuroraBundle extends AbstractBundle
                     TaxonomyTermInterface::class => TaxonomyTerm::class,
                     TaxonomyTermTranslationInterface::class => TaxonomyTermTranslation::class,
                     CustomerInterface::class => Customer::class,
+                    DeckInterface::class => Deck::class,
+                    DeckCategoryInterface::class => DeckCategory::class,
+                    SlideInterface::class => Slide::class,
                     ContractInterface::class => Contract::class,
                     ContractAccessLinkInterface::class => ContractAccessLink::class,
                     ContractSignatureInterface::class => ContractSignature::class,

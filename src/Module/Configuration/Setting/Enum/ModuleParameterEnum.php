@@ -57,6 +57,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
     // Sub-modules - Studio
     case StudioCustomers = 'modules_studio_customers';
     case StudioContracts = 'modules_studio_contracts';
+    case StudioDecks = 'modules_studio_decks';
 
     public function getKey(): string
     {
@@ -97,6 +98,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::StudioBackend => 'backend.modules.studio_backend',
             self::StudioCustomers => 'backend.nav.studio_customers',
             self::StudioContracts => 'backend.nav.studio_contract_templates',
+            self::StudioDecks => 'backend.nav.studio_decks',
         };
     }
 
@@ -134,6 +136,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::StudioBackend => 'backend.modules.studio_backend_description',
             self::StudioCustomers => 'backend.nav.studio_customers_description',
             self::StudioContracts => 'backend.nav.studio_contract_templates_description',
+            self::StudioDecks => 'backend.nav.studio_decks_description',
         };
     }
 
@@ -165,7 +168,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::EditorialFrontend, self::EditorialPosts, self::EditorialPostTypes, self::EditorialTaxonomies, self::EditorialMenus, self::EditorialSeo, self::EditorialComments, self::EditorialForms => self::EditorialBackend,
             self::GedDocuments, self::GedCategories, self::GedTags, self::GedFolders, self::GedFrontend => self::GedBackend,
             self::NotesMarkdown => self::NotesBackend,
-            self::StudioCustomers, self::StudioContracts => self::StudioBackend,
+            self::StudioCustomers, self::StudioContracts, self::StudioDecks => self::StudioBackend,
             default => null,
         };
     }
@@ -218,6 +221,11 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             // customer. Templates without the customer screen would build
             // documents with nobody to address them to.
             self::StudioContracts => self::StudioCustomers->value,
+            // Decks hang off the module and nothing else. A deck may name the
+            // customer it was written for, but the field is nullable on
+            // purpose: a strategy deck written for oneself has no client, and
+            // requiring the customer screen would make that case impossible.
+            self::StudioDecks => self::StudioBackend->value,
             default => null,
         };
     }
