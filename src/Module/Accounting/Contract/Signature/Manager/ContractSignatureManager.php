@@ -254,13 +254,35 @@ class ContractSignatureManager implements ContractSignatureManagerInterface
 
         // The signed copy, attached. This is the mail the customer keeps, and a
         // link they would have to be logged in to follow is not a copy.
-        $attachments = $contract->hasPdf()
-            ? [[
-                'path' => $this->pdf->absolutePathFor($contract),
-                'name' => sprintf('%s.pdf', (string) $contract->getReference()),
-            ]]
-            : [];
+        //
+        // Sent from inside a borrowed local path rather than from a path held
+        // afterwards: the mail service attaches by filename, and on a remote
+        // backend the file only exists for the length of the callback. On the
+        // server's own disk nothing is copied and this costs nothing.
+        if ($contract->hasPdf()) {
+            $this->pdf->withLocalCopy($contract, function (string $path) use ($contract): void {
+                $this->sendConcludedMail($contract, [[
+                    'path' => $path,
+                    'name' => sprintf('%s.pdf', (string) $contract->getReference()),
+                ]]);
+            });
+        } else {
+            $this->sendConcludedMail($contract, []);
+        }
 
+        $this->mail->sendToAdmin(
+            subjectKey: 'accounting.email.concluded.subject',
+            template: '@Accounting/email/concluded.html.twig',
+            context: ['contract' => $contract],
+            subjectParams: ['{reference}' => (string) $contract->getReference()],
+        );
+    }
+
+    /**
+     * @param list<array{path: string, name?: string}> $attachments
+     */
+    protected function sendConcludedMail(ContractInterface $contract, array $attachments): void
+    {
         $this->mail->send(
             to: $contract->getCustomer()->getContractualEmail(),
             subjectKey: 'accounting.email.concluded.subject',
@@ -269,13 +291,6 @@ class ContractSignatureManager implements ContractSignatureManagerInterface
             locale: $contract->getLocale(),
             subjectParams: ['{reference}' => (string) $contract->getReference()],
             attachments: $attachments,
-        );
-
-        $this->mail->sendToAdmin(
-            subjectKey: 'accounting.email.concluded.subject',
-            template: '@Accounting/email/concluded.html.twig',
-            context: ['contract' => $contract],
-            subjectParams: ['{reference}' => (string) $contract->getReference()],
         );
     }
 

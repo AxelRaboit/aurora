@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Accounting\Contract\Service;
 
+use Aurora\Core\Storage\StorageManager;
+use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
 use Aurora\Module\Accounting\Contract\Exception\ContractPdfAlreadyGeneratedException;
 use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use RuntimeException;
-use Symfony\Component\Filesystem\Filesystem;
 use Twig\Environment;
 
-use function dirname;
-use function file_put_contents;
-use function hash_file;
-use function is_file;
 use function sprintf;
 
 /**
@@ -46,8 +43,8 @@ final readonly class ContractPdfGenerator
 
     public function __construct(
         private Environment $twig,
-        private Filesystem $filesystem,
-        private string $uploadDir,
+        private StorageManager $storageManager,
+        private LocalWorkspace $workspace,
     ) {}
 
     /**
@@ -75,28 +72,22 @@ final readonly class ContractPdfGenerator
         ]);
 
         $relative = $this->relativePathFor($contract);
-        $absolute = sprintf('%s/%s', $this->uploadDir, $relative);
+        $adapter = $this->storageManager->active();
 
-        // A path already holding a file is a collision this must not paper
+        // A key already holding a file is a collision this must not paper
         // over: the reference is unique, so reaching here means something is
         // wrong upstream and overwriting would destroy a signed document.
-        if (is_file($absolute)) {
+        if ($adapter->exists($relative)) {
             throw new RuntimeException(sprintf('A file already exists at %s.', $relative));
         }
 
-        $this->filesystem->mkdir(dirname($absolute));
+        $bytes = $this->render($html);
+        $adapter->write($relative, $bytes);
 
-        if (false === file_put_contents($absolute, $this->render($html))) {
-            throw new RuntimeException(sprintf('The contract PDF could not be written to %s.', $relative));
-        }
-
-        $hash = hash_file('sha256', $absolute);
-
-        if (false === $hash) {
-            throw new RuntimeException('The contract PDF was written but could not be hashed.');
-        }
-
-        return ['path' => $relative, 'hash' => $hash];
+        // Hashed from what was rendered rather than read back. Reading back
+        // would be a second call for the same bytes, and on a remote backend a
+        // billed one.
+        return ['path' => $relative, 'hash' => hash('sha256', $bytes)];
     }
 
     /**
@@ -122,14 +113,48 @@ final readonly class ContractPdfGenerator
         );
     }
 
-    public function absolutePathFor(ContractInterface $contract): string
+    /** The key a contract's PDF is stored under, generated or not. */
+    public function keyFor(ContractInterface $contract): string
     {
-        return sprintf('%s/%s', $this->uploadDir, $contract->getPdfPath() ?? $this->relativePathFor($contract));
+        return $contract->getPdfPath() ?? $this->relativePathFor($contract);
     }
 
-    public function root(): string
+    public function exists(ContractInterface $contract): bool
     {
-        return $this->uploadDir;
+        return $this->storageManager->active()->exists($this->keyFor($contract));
+    }
+
+    /**
+     * The bytes, a chunk at a time, for a response that hands them to a
+     * browser.
+     *
+     * @return iterable<string>
+     */
+    public function readStream(ContractInterface $contract): iterable
+    {
+        return $this->storageManager->active()->readStream($this->keyFor($contract));
+    }
+
+    /**
+     * Lends a real path for the length of `$work`.
+     *
+     * For the one caller that cannot take bytes: an email attachment goes
+     * through `attachFromPath`, and teaching the mail service to take a string
+     * would be a change to something every module uses, for one attachment.
+     *
+     * @template T
+     *
+     * @param callable(string): T $work
+     *
+     * @return T
+     */
+    public function withLocalCopy(ContractInterface $contract, callable $work): mixed
+    {
+        return $this->workspace->readable(
+            $this->storageManager->active(),
+            $this->keyFor($contract),
+            $work,
+        );
     }
 
     /**

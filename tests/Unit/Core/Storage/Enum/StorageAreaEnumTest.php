@@ -7,15 +7,26 @@ namespace Aurora\Tests\Unit\Core\Storage\Enum;
 use Aurora\Core\Storage\Enum\StorageAreaEnum;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * These values are path prefixes, not labels.
+ *
+ * Every file Aurora has ever stored lives under one of them, so renaming a
+ * case strands everything written before the rename, silently and with no
+ * error anywhere. That is what this test is for: not to restate the enum, but
+ * to make a rename fail here rather than in a support message six months
+ * later.
+ */
 final class StorageAreaEnumTest extends TestCase
 {
-    public function testCases(): void
+    public function testTheValuesAreTheStoredPathsAndMustNotChange(): void
     {
-        self::assertSame('media', StorageAreaEnum::Media->value);
-        self::assertSame('ocr', StorageAreaEnum::Ocr->value);
-        self::assertSame('photo', StorageAreaEnum::Photo->value);
-        self::assertSame('users', StorageAreaEnum::Users->value);
         self::assertSame('ged', StorageAreaEnum::Ged->value);
-        self::assertCount(5, StorageAreaEnum::cases());
+        self::assertSame('profile-photos', StorageAreaEnum::ProfilePhotos->value);
+        self::assertSame('contracts', StorageAreaEnum::Contracts->value);
+    }
+
+    public function testNoCaseWasAddedWithoutBeingConsidered(): void
+    {
+        self::assertCount(3, StorageAreaEnum::cases());
     }
 }

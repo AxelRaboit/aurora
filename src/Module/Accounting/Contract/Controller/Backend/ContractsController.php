@@ -25,11 +25,12 @@ use Aurora\Module\Accounting\Contract\Signature\Manager\ContractSignatureManager
 use Aurora\Module\Accounting\Contract\Termination\Dto\ContractTerminationInputFactoryInterface;
 use Aurora\Module\Accounting\Contract\View\ContractsViewBuilder;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
-use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -241,18 +242,32 @@ class ContractsController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        try {
-            return $this->fileServer->serve(
-                $this->pdfGenerator->absolutePathFor($contract),
-                $this->pdfGenerator->root(),
-                downloadName: sprintf('%s.pdf', (string) $contract->getReference()),
-            );
-        } catch (RuntimeException) {
-            // A row that names a file the disk does not have. A 404 rather than
-            // a 500: the contract exists, its copy does not, and the page that
+        if (!$this->pdfGenerator->exists($contract)) {
+            // A row that names a file no backend holds. A 404 rather than a
+            // 500: the contract exists, its copy does not, and the page that
             // linked here is what needs to say so.
             throw $this->createNotFoundException();
         }
+
+        // Streamed through the application rather than redirected, whatever the
+        // storage settings say. A signed contract is not a public asset: the
+        // only way it stays behind this route's authorisation is if the bytes
+        // keep coming through it.
+        $response = new StreamedResponse(function () use ($contract): void {
+            foreach ($this->pdfGenerator->readStream($contract) as $chunk) {
+                echo $chunk;
+                flush();
+            }
+        });
+
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            sprintf('%s.pdf', (string) $contract->getReference()),
+        ));
+        $response->setPrivate();
+
+        return $response;
     }
 
     /**
