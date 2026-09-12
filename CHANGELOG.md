@@ -51,6 +51,16 @@ Un échec est lisible : l'état passe en « déplacement échoué », le motif e
 conservé et affiché au survol, et l'action reste relançable. Un déplacement qui
 échoue en silence est un bouton qui a l'air cassé.
 
+Le geste existe aux trois endroits où on peut vouloir le faire : le menu d'une
+ligne, le bouton sur la page d'un document, et la barre de sélection pour en
+déplacer plusieurs. Le lot rend des comptes plutôt qu'un succès à plat, parce
+qu'une sélection est légitimement un mélange : certains déjà à destination, un
+autre pris par un déplacement en cours, un troisième refusé. Dire « c'est fait »
+là-dessus serait un mensonge, dire « ça a échoué » en serait un autre.
+
+Un filtre par emplacement complète la liste, utile dès qu'une bibliothèque vit
+des deux côtés.
+
 ### Dans aurora-client
 
 **Une migration**, jouée par `make aurora-update` : deux colonnes sur

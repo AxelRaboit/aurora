@@ -66,10 +66,67 @@ export function useDocumentBulkActions(
         toast.success(t("backend.ged.documents.bulk_moved"));
     }
 
+    const { request: bulkStorageRequest } = useRequest();
+    const bulkRelocating = ref(false);
+
+    /**
+     * Moves a whole selection to one backend.
+     *
+     * Reports what actually happened rather than a flat success. A selection
+     * is legitimately a mix: some documents already there, one held by a move
+     * still running, one whose backend refused. Saying "done" over that would
+     * be a lie, and the reader would find out later.
+     */
+    async function bulkRelocate(disk) {
+        if (!props.bulkStoragePath || !selectedIds.value.size) return;
+
+        bulkRelocating.value = true;
+        try {
+            const res = await bulkStorageRequest(props.bulkStoragePath, {
+                ids: [...selectedIds.value],
+                disk,
+            });
+            if (!res) return;
+            if (!res.success) {
+                toast.error(t("shared.common.error"));
+
+                return;
+            }
+
+            const done = (res.moved ?? 0) + (res.queued ?? 0);
+            const skipped = (res.alreadyThere ?? 0) + (res.busy ?? 0);
+            const failed = res.failed ?? 0;
+
+            if (failed > 0) {
+                toast.error(
+                    t("backend.ged.documents.relocation.bulk_partial", {
+                        done,
+                        failed,
+                    }),
+                );
+            } else {
+                toast.success(
+                    t("backend.ged.documents.relocation.bulk_done", {
+                        done,
+                        skipped,
+                    }),
+                );
+            }
+
+            clearSelection();
+            isSelecting.value = false;
+            await reload?.();
+        } finally {
+            bulkRelocating.value = false;
+        }
+    }
+
     return {
         doBulkDelete,
         bulkMoveTargetId,
         openBulkMove,
         bulkMove,
+        bulkRelocate,
+        bulkRelocating,
     };
 }

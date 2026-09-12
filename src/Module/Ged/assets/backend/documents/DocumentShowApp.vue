@@ -1,10 +1,13 @@
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
 import { useDateFormat } from "@/shared/composables/format/useDateFormat.js";
 import { useDocumentsForm, DOCUMENT_STATUS_BADGE } from "./composables/useDocumentsForm.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
+import DocumentStorageChip from "@ged/backend/documents/components/DocumentStorageChip.vue";
+import { CloudUpload, HardDriveDownload } from "lucide-vue-next";
+import { useDocumentRelocation } from "./composables/useDocumentRelocation.js";
 import AppBadge from "@/shared/components/feedback/AppBadge.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
@@ -29,9 +32,24 @@ const props = defineProps({
     deletePath: { type: String, required: true },
     cropPath: { type: String, required: true },
     listPath: { type: String, required: true },
+    storagePath: { type: String, default: "" },
+    storageRelocationAvailable: { type: Boolean, default: false },
 });
 
 const doc = ref({ ...props.document });
+
+// The composable patches a list; here there is one document, so it is handed a
+// list of one and reads the result back out. Cheaper than a second code path
+// that could drift from the one the list screen uses.
+const singleton = computed({
+    get: () => [doc.value],
+    set: (rows) => {
+        doc.value = rows[0];
+    },
+});
+const { relocate, relocatingId } = useDocumentRelocation(props, singleton);
+
+const relocationTarget = computed(() => (doc.value.storageDisk === "r2" ? "local" : "r2"));
 const cropTarget = ref(null);
 
 function onCropped(updatedDoc) {
@@ -82,6 +100,29 @@ function isPdf(mimeType) {
                 <ArrowLeft class="w-4 h-4" :stroke-width="2" /> {{ t("backend.ged.documents.back_to_list") }}
             </a>
             <div class="flex items-center gap-2">
+                <DocumentStorageChip
+                    v-if="storageRelocationAvailable"
+                    :disk="doc.storageDisk"
+                    :state="doc.storageTransferState"
+                    :error="doc.storageTransferError"
+                />
+                <AppButton
+                    v-if="storageRelocationAvailable && can('ged.documents.relocate')"
+                    variant="secondary"
+                    size="md"
+                    :loading="relocatingId === doc.id"
+                    :disabled="doc.storageTransferState === 'pending'"
+                    v-on:click="relocate(doc, relocationTarget)"
+                >
+                    <component
+                        :is="relocationTarget === 'r2' ? CloudUpload : HardDriveDownload"
+                        class="w-3.5 h-3.5"
+                        :stroke-width="2"
+                    />
+                    {{ t(relocationTarget === "r2"
+                        ? "backend.ged.documents.row_actions.relocate_to_remote"
+                        : "backend.ged.documents.row_actions.relocate_to_local") }}
+                </AppButton>
                 <AppButton v-if="can('ged.documents.edit')" variant="secondary" size="md" v-on:click="openEditDoc">
                     <Pencil class="w-4 h-4" :stroke-width="2" /> {{ t("shared.common.edit") }}
                 </AppButton>

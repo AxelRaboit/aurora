@@ -37,7 +37,7 @@ import { useDocumentCrop } from "./composables/useDocumentCrop.js";
 import { useMultiSelection } from "@/shared/composables/list/useMultiSelection.js";
 import AppTab from "@/shared/components/nav/AppTab.vue";
 import AppLoader from "@/shared/components/feedback/AppLoader.vue";
-import { Plus, Eye, Pencil, Trash2, Save, FileText, Paperclip, Upload, X, Folder, Download, QrCode, LayoutGrid, List, SortAsc, SortDesc, CheckSquare, Square, Copy, Crop, ExternalLink, Home, Layers, Star, ChevronRight, ChevronDown, Move } from "lucide-vue-next";
+import { Plus, Eye, Pencil, Trash2, Save, FileText, Paperclip, Upload, X, Folder, Download, QrCode, LayoutGrid, List, SortAsc, SortDesc, CheckSquare, Square, Copy, Crop, ExternalLink, Home, Layers, Star, ChevronRight, ChevronDown, Move, CloudUpload, HardDriveDownload } from "lucide-vue-next";
 import ImageCropperModal from "@/shared/components/overlay/ImageCropperModal.vue";
 import AppImagePreview from "@/shared/components/display/AppImagePreview.vue";
 import AppImage from "@/shared/components/display/AppImage.vue";
@@ -71,6 +71,7 @@ const props = defineProps({
     movePath: { type: String, default: "" },
     bulkMovePath: { type: String, default: "" },
     storagePath: { type: String, default: "" },
+    bulkStoragePath: { type: String, default: "" },
     storageRelocationAvailable: { type: Boolean, default: false },
     folderCreatePath: { type: String, default: "" },
     folderEditPath: { type: String, default: "" },
@@ -196,7 +197,7 @@ const documentActions = useDocumentRowActions({
     relocationAvailable: props.storageRelocationAvailable,
 });
 
-const { doBulkDelete, bulkMoveTargetId, openBulkMove, bulkMove } = useDocumentBulkActions(
+const { doBulkDelete, bulkMoveTargetId, openBulkMove, bulkMove, bulkRelocate, bulkRelocating } = useDocumentBulkActions(
     props, items, selectedIds, isSelecting, clearSelection, currentFolderId, reset,
 );
 
@@ -305,6 +306,26 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                             <Move class="w-3.5 h-3.5" :stroke-width="2" />
                             {{ t("backend.ged.documents.move") }}
                         </AppButton>
+                        <template v-if="storageRelocationAvailable && can('ged.documents.relocate')">
+                            <AppButton
+                                size="sm"
+                                variant="ghost"
+                                :loading="bulkRelocating"
+                                v-on:click="bulkRelocate('r2')"
+                            >
+                                <CloudUpload class="w-3.5 h-3.5" :stroke-width="2" />
+                                {{ t("backend.ged.documents.row_actions.relocate_to_remote") }}
+                            </AppButton>
+                            <AppButton
+                                size="sm"
+                                variant="ghost"
+                                :loading="bulkRelocating"
+                                v-on:click="bulkRelocate('local')"
+                            >
+                                <HardDriveDownload class="w-3.5 h-3.5" :stroke-width="2" />
+                                {{ t("backend.ged.documents.row_actions.relocate_to_local") }}
+                            </AppButton>
+                        </template>
                         <AppButton v-if="can('ged.documents.delete')" size="sm" variant="danger" v-on:click="doBulkDelete">
                             <Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.delete") }}
                         </AppButton>

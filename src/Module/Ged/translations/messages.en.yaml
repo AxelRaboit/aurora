@@ -107,6 +107,8 @@ backend:
         done: Document moved.
         queued: Move started. It continues in the background.
         already_there: This document is already there.
+        bulk_done: "{done} document(s) moved, {skipped} left as they were."
+        bulk_partial: "{done} document(s) moved, {failed} failed."
       reference: Reference
       title: Title
       description: Description

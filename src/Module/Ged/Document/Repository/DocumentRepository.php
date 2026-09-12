@@ -34,6 +34,7 @@ class DocumentRepository extends ResolveTargetEntityRepository
         ?DocumentStatusEnum $status = null,
         ?MimeGroupEnum $mimeGroup = null,
         bool $rootOnly = false,
+        ?StorageDiskEnum $storageDisk = null,
     ): array {
         $qb = $this->createQueryBuilder('d')
             ->leftJoin('d.category', 'c')
@@ -77,6 +78,11 @@ class DocumentRepository extends ResolveTargetEntityRepository
         if ($mimeGroup instanceof MimeGroupEnum) {
             $mimeGroup->applyTo($qb, 'd');
             $mimeGroup->applyTo($countQb, 'd');
+        }
+
+        if ($storageDisk instanceof StorageDiskEnum) {
+            $qb->andWhere('d.storageDisk = :storageDisk')->setParameter('storageDisk', $storageDisk);
+            $countQb->andWhere('d.storageDisk = :storageDisk')->setParameter('storageDisk', $storageDisk);
         }
 
         $result = $this->paginate($qb, $countQb, $page, $limit);

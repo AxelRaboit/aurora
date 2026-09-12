@@ -107,6 +107,8 @@ backend:
         done: Document déplacé.
         queued: Déplacement lancé. Il se poursuit en arrière-plan.
         already_there: Ce document est déjà à cet emplacement.
+        bulk_done: "{done} document(s) déplacé(s), {skipped} laissé(s) tel(s) quel(s)."
+        bulk_partial: "{done} document(s) déplacé(s), {failed} en échec."
       reference: Référence
       title: Titre
       description: Description
