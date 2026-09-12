@@ -11,6 +11,7 @@ use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTagInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
 use Aurora\Module\Ged\Enum\DocumentTransferStateEnum;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Collection;
 
 interface DocumentInterface extends TimestampableInterface
@@ -127,4 +128,11 @@ interface DocumentInterface extends TimestampableInterface
     public function getAttributionUrl(): ?string;
 
     public function setAttributionUrl(?string $attributionUrl): static;
+
+    public function getDeletedAt(): ?DateTimeImmutable;
+
+    public function setDeletedAt(?DateTimeImmutable $deletedAt): static;
+
+    /** Whether this document sits in the trash rather than in the library. */
+    public function isTrashed(): bool;
 }

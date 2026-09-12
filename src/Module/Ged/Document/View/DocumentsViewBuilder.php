@@ -62,6 +62,10 @@ final readonly class DocumentsViewBuilder
             'deletePath' => $this->urlGenerator->generate('backend_ged_documents_delete', ['id' => '__id__']),
             'cropPath' => $this->urlGenerator->generate('backend_ged_documents_crop', ['id' => '__id__']),
             'bulkDeletePath' => $this->urlGenerator->generate('backend_ged_documents_bulk_delete'),
+            'restorePath' => $this->urlGenerator->generate('backend_ged_documents_restore', ['id' => '__id__']),
+            'forceDeletePath' => $this->urlGenerator->generate('backend_ged_documents_force_delete', ['id' => '__id__']),
+            'bulkRestorePath' => $this->urlGenerator->generate('backend_ged_documents_bulk_restore'),
+            'emptyTrashPath' => $this->urlGenerator->generate('backend_ged_documents_empty_trash'),
             'listPath' => $this->urlGenerator->generate('backend_ged_documents_list'),
             // Media-style move endpoints (single + bulk) - power the sidebar
             // drag&drop and the bulk-move modal. The dedicated /backend/ged/folders
@@ -97,6 +101,7 @@ final readonly class DocumentsViewBuilder
         ?MimeGroupEnum $mimeGroup = null,
         bool $rootOnly = false,
         ?StorageDiskEnum $storageDisk = null,
+        bool $trashed = false,
     ): array {
         $result = $this->documentRepository->findPaginated(
             $pagination->page,
@@ -108,6 +113,7 @@ final readonly class DocumentsViewBuilder
             mimeGroup: $mimeGroup,
             rootOnly: $rootOnly,
             storageDisk: $storageDisk,
+            trashed: $trashed,
         );
 
         return [
@@ -119,6 +125,10 @@ final readonly class DocumentsViewBuilder
             // Sidebar refreshes counts on every navigation so the badges next
             // to folder names stay in sync after moves / deletes / uploads.
             'folders' => $this->serializeFoldersWithCounts(),
+            // Sent on every page, trash or not: it is what the trash filter
+            // shows as a badge, and what tells the screen to offer the filter
+            // at all rather than pointing at an empty room.
+            'trashedTotal' => $this->documentRepository->countTrashed(),
         ];
     }
 

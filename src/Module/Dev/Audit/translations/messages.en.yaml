@@ -62,7 +62,9 @@ backend:
         document:
           created: Document created
           updated: Document updated
-          deleted: Document deleted
+          trashed: Document moved to trash
+          restored: Document restored
+          deleted: Document permanently deleted
           cropped: Document cropped
           moved: Document moved
         folder:

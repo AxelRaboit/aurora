@@ -22,7 +22,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class DocumentDeletionErasesFilesTest extends IntegrationTestCase
 {
-    public function testDeletingADocumentErasesItsFileAndItsVersionFiles(): void
+    public function testDestroyingADocumentErasesItsFileAndItsVersionFiles(): void
     {
         static::createClient();
         $container = static::getContainer();
@@ -59,10 +59,47 @@ final class DocumentDeletionErasesFilesTest extends IntegrationTestCase
         self::assertFileExists($liveFile);
         self::assertFileExists($previousFile);
 
+        // Trashing first, because that is now what the delete button does, and
+        // the bytes have to survive it: this is the half a restore depends on.
         $manager->delete($document);
+
+        self::assertTrue($document->isTrashed());
+        self::assertFileExists($liveFile);
+        self::assertFileExists($previousFile);
+
+        $manager->forceDelete($document);
 
         self::assertFileDoesNotExist($liveFile);
         self::assertFileDoesNotExist($previousFile);
+    }
+
+    public function testRestoringATrashedDocumentBringsItBackWithItsFile(): void
+    {
+        static::createClient();
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $manager = $container->get(DocumentManagerInterface::class);
+        $uploadDir = (string) $container->getParameter('app.upload_dir');
+
+        $livePath = 'ged/9999/01/restore-'.uniqid().'.png';
+        $liveFile = $this->writePng($uploadDir, $livePath);
+
+        $document = (new Document())
+            ->setTitle('Restore probe')
+            ->setStatus(DocumentStatusEnum::Draft)
+            ->setFilePath($livePath)
+            ->setFileName(basename($livePath))
+            ->setOriginalName('probe.png')
+            ->setMimeType('image/png')
+            ->setSize(1);
+        $entityManager->persist($document);
+        $entityManager->flush();
+
+        $manager->delete($document);
+        $manager->restore($document);
+
+        self::assertFalse($document->isTrashed());
+        self::assertFileExists($liveFile);
     }
 
     private function writePng(string $uploadDir, string $relativePath): string

@@ -26,6 +26,7 @@ use Aurora\Module\Ged\DocumentFolder\Repository\DocumentFolderRepository;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTagInterface;
 use Aurora\Module\Ged\DocumentTag\Repository\DocumentTagRepository;
 use Aurora\Module\Ged\Setting\GedSettingEnum;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 
@@ -108,7 +109,46 @@ class DocumentManager implements DocumentManagerInterface
         $this->auditUpdated($document);
     }
 
+    /**
+     * Moves a document to the trash.
+     *
+     * The row stays, and so do the bytes: this is the gesture somebody makes
+     * by mistake, on a file that may exist nowhere else. What actually frees
+     * the disk is {@see forceDelete()}, reached from the trash or by the
+     * purge once the retention window has passed.
+     */
     public function delete(DocumentInterface $document): void
+    {
+        if ($document->isTrashed()) {
+            return;
+        }
+
+        $document->setDeletedAt(new DateTimeImmutable());
+        $this->entityManager->flush();
+
+        $this->auditTrashed($document);
+    }
+
+    public function restore(DocumentInterface $document): void
+    {
+        if (!$document->isTrashed()) {
+            return;
+        }
+
+        $document->setDeletedAt(null);
+        $this->entityManager->flush();
+
+        $this->auditRestored($document);
+    }
+
+    /**
+     * Deletes a document for good, bytes included.
+     *
+     * The variants go through the disk that holds them, and the original file
+     * only if no other row still points at it: a document can share its file
+     * with another after a copy, and one deletion must not blank the other.
+     */
+    public function forceDelete(DocumentInterface $document): void
     {
         $this->auditDeleted($document);
 
@@ -121,6 +161,16 @@ class DocumentManager implements DocumentManagerInterface
 
         $this->variantGenerator->deleteVariants($this->storageManager->forDisk($disk), $variants);
         $this->deleteUnreferencedFiles($owned, $disk);
+    }
+
+    public function emptyTrash(): int
+    {
+        return $this->destroy($this->documentRepository->findAllTrashed());
+    }
+
+    public function purgeTrashedBefore(DateTimeImmutable $cutoff): int
+    {
+        return $this->destroy($this->documentRepository->findTrashedBefore($cutoff));
     }
 
     public function move(DocumentInterface $document, ?DocumentFolderInterface $folder): void
@@ -161,10 +211,69 @@ class DocumentManager implements DocumentManagerInterface
         }
 
         $documents = $this->documentRepository->findBy(['id' => $ids]);
-        $owned = $this->collectOwnedFiles($documents);
+        $trashed = 0;
 
-        // Grouped by disk: a selection can span both backends, and each file
-        // has to be removed through the one that actually holds it.
+        foreach ($documents as $document) {
+            if ($document->isTrashed()) {
+                continue;
+            }
+
+            $document->setDeletedAt(new DateTimeImmutable());
+            ++$trashed;
+        }
+
+        $this->entityManager->flush();
+
+        foreach ($documents as $document) {
+            $this->auditTrashed($document);
+        }
+
+        return $trashed;
+    }
+
+    public function bulkRestore(array $ids): int
+    {
+        if ([] === $ids) {
+            return 0;
+        }
+
+        $documents = $this->documentRepository->findBy(['id' => $ids]);
+        $restored = 0;
+
+        foreach ($documents as $document) {
+            if (!$document->isTrashed()) {
+                continue;
+            }
+
+            $document->setDeletedAt(null);
+            ++$restored;
+        }
+
+        $this->entityManager->flush();
+
+        foreach ($documents as $document) {
+            $this->auditRestored($document);
+        }
+
+        return $restored;
+    }
+
+    /**
+     * Destroys a set of documents, rows and bytes.
+     *
+     * Grouped by disk: a selection can span both backends, and each file has
+     * to be removed through the one that actually holds it. Shared by the
+     * trash's own buttons and by the purge, so the two can never drift into
+     * deleting different things.
+     *
+     * @param list<Document> $documents
+     */
+    protected function destroy(array $documents): int
+    {
+        if ([] === $documents) {
+            return 0;
+        }
+
         $variantsByDisk = [];
         $pathsByDisk = [];
         foreach ($documents as $document) {
@@ -451,6 +560,16 @@ class DocumentManager implements DocumentManagerInterface
     protected function auditUpdated(DocumentInterface $document): void
     {
         $this->auditLogger->log('ged', 'document.updated', 'Document', $document->getId(), $this->auditPayload($document));
+    }
+
+    protected function auditTrashed(DocumentInterface $document): void
+    {
+        $this->auditLogger->log('ged', 'document.trashed', 'Document', $document->getId(), $this->auditPayload($document));
+    }
+
+    protected function auditRestored(DocumentInterface $document): void
+    {
+        $this->auditLogger->log('ged', 'document.restored', 'Document', $document->getId(), $this->auditPayload($document));
     }
 
     protected function auditDeleted(DocumentInterface $document): void
