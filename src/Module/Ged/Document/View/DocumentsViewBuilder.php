@@ -12,6 +12,7 @@ use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\Document\Serializer\DocumentSerializerInterface;
 use Aurora\Module\Ged\DocumentCategory\Repository\DocumentCategoryRepository;
 use Aurora\Module\Ged\DocumentCategory\Serializer\DocumentCategorySerializerInterface;
+use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentFolder\Repository\DocumentFolderRepository;
 use Aurora\Module\Ged\DocumentFolder\Serializer\DocumentFolderSerializerInterface;
 use Aurora\Module\Ged\DocumentTag\Repository\DocumentTagRepository;
@@ -148,6 +149,18 @@ final readonly class DocumentsViewBuilder
         return [
             'success' => true,
             'folders' => $this->serializeFoldersWithCounts(),
+            // Only the folders trashed on their own: one deleted with its
+            // parent is part of that parent's branch, and offering to restore
+            // it separately would put it back under a folder that is still
+            // deleted.
+            'trashedFolders' => array_map(
+                static fn (DocumentFolderInterface $folder): array => [
+                    'id' => $folder->getId(),
+                    'name' => $folder->getName(),
+                    'deletedAt' => $folder->getDeletedAt()?->format(DATE_ATOM),
+                ],
+                $this->folderRepository->findTrashedRoots(),
+            ),
         ];
     }
 

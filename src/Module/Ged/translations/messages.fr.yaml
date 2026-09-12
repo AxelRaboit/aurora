@@ -133,6 +133,9 @@ backend:
       delete_warning: Le document part à la corbeille. Vous pourrez le restaurer tant qu'elle n'a pas été vidée.
       trash:
         title: Corbeille
+        folders_title: Dossiers en corbeille
+        folder_restored: Dossier restauré
+        folder_deleted_forever: Dossier supprimé définitivement
         banner: Ces documents sont supprimés. Leur fichier est conservé jusqu'à ce que la corbeille soit vidée.
         empty: Vider la corbeille
         empty_confirm: "Supprimer définitivement les {count} documents de la corbeille ?"
@@ -199,6 +202,10 @@ backend:
       new_folder: Nouveau dossier
       edit_folder: Modifier le dossier
       delete_folder_confirm: "Supprimer le dossier « {name} » ?"
+      delete_folder_cascade: Mettre le dossier et son contenu à la corbeille
+      delete_folder_cascade_hint: Les documents et sous-dossiers partent avec lui. Les restaurer remet tout en place.
+      delete_folder_only: Ne supprimer que le dossier
+      delete_folder_only_hint: Son contenu remonte à la racine. Restaurer le dossier le rendra vide.
       folder_name: Nom du dossier
       folder_name_placeholder: Nom du dossier…
       parent_folder: Dossier parent

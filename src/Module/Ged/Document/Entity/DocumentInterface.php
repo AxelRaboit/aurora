@@ -135,4 +135,9 @@ interface DocumentInterface extends TimestampableInterface
 
     /** Whether this document sits in the trash rather than in the library. */
     public function isTrashed(): bool;
+
+    /** The folder whose deletion took this document down, if any. */
+    public function getTrashedWithFolderId(): ?int;
+
+    public function setTrashedWithFolderId(?int $trashedWithFolderId): static;
 }

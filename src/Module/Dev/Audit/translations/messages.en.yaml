@@ -68,6 +68,8 @@ backend:
           cropped: Document cropped
           moved: Document moved
         folder:
+          trashed: Folder moved to trash
+          restored: Folder restored
           created: Folder created
           updated: Folder updated
           deleted: Folder deleted

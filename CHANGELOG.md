@@ -5,6 +5,36 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.148] - 2026-09-12
+
+### Ajouté
+
+#### Supprimer un dossier de la GED se choisit, et se défait
+Supprimer un dossier ne détruisait aucun document, mais il détruisait le
+rangement : les documents et les sous-dossiers remontaient à la racine, et
+l'information « ce document était là » était perdue pour de bon.
+
+La confirmation propose maintenant deux gestes. Par défaut, le dossier part à
+la corbeille avec son contenu, et le restaurer remet la branche exactement
+comme elle était, rangement compris. L'autre option garde l'ancien
+comportement, le contenu remonte à la racine, à ceci près que le dossier
+lui-même reste récupérable, vide.
+
+Pour que la restauration sache quoi remonter, chaque ligne qui tombe avec un
+dossier retient lequel l'a emportée. Restaurer un dossier ne ressuscite donc
+pas un document supprimé à la main la semaine précédente : il reste dans la
+corbeille, là où son propriétaire l'a mis.
+
+Deux conséquences volontaires : un dossier restauré dont le parent est encore
+en corbeille revient à la racine plutôt que sous un parent invisible, et
+supprimer définitivement un dossier libère ses documents à la racine au lieu de
+les détruire. Seul le vidage de la corbeille des documents les efface.
+
+Les dossiers en corbeille sont listés en bas du panneau latéral de la GED, avec
+restaurer et supprimer définitivement.
+
+---
+
 ## [0.9.147] - 2026-09-12
 
 ### Ajouté

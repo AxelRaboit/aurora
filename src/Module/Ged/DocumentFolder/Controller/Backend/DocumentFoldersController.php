@@ -62,10 +62,35 @@ final class DocumentFoldersController extends AbstractController
         return $this->jsonSuccess(['folder' => $this->serializer->serialize($folder), 'folders' => $this->allFolders()]);
     }
 
+    /**
+     * Moves a folder to the trash.
+     *
+     * `cascade` defaults to true: the caller that says nothing gets the
+     * reversible version, where the branch comes back as it was. A screen that
+     * wants the old behaviour - contents released at the root - has to ask for
+     * it, because that is the one a restore cannot undo.
+     */
     #[Route('/{id}/delete', name: '_delete', methods: [HttpMethodEnum::Post->value])]
-    public function delete(DocumentFolder $folder): JsonResponse
+    public function delete(DocumentFolder $folder, Request $request): JsonResponse
     {
-        $this->manager->delete($folder);
+        $payload = $this->decodeJson($request);
+        $this->manager->delete($folder, !array_key_exists('cascade', $payload) || (bool) $payload['cascade']);
+
+        return $this->jsonSuccess(['folders' => $this->allFolders()]);
+    }
+
+    #[Route('/{id}/restore', name: '_restore', methods: [HttpMethodEnum::Post->value])]
+    public function restore(DocumentFolder $folder): JsonResponse
+    {
+        $this->manager->restore($folder);
+
+        return $this->jsonSuccess(['folders' => $this->allFolders()]);
+    }
+
+    #[Route('/{id}/force-delete', name: '_force_delete', methods: [HttpMethodEnum::Post->value])]
+    public function forceDelete(DocumentFolder $folder): JsonResponse
+    {
+        $this->manager->forceDelete($folder);
 
         return $this->jsonSuccess(['folders' => $this->allFolders()]);
     }
