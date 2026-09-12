@@ -32,7 +32,7 @@ use Symfony\Component\Routing\Router;
  * leave a hole.
  *
  * A service and not only a Twig function, because half the screens build their
- * paths in a view builder rather than in a template. The accounting module did,
+ * paths in a view builder rather than in a template. The Studio module did,
  * called `generate()` straight, and its three screens answered 500 in dev and
  * in test for as long as the module existed - production hid it, because
  * `strict_requirements: null` there generates the hole without complaining.

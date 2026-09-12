@@ -23,8 +23,8 @@ backend:
       sequences: Sequences
       sequences_description: Prefixes for auto-generated references. Developer-only tab.
       navigation: Navigation
-      accounting: Accounting
-      accounting_description: "The provider identity printed into every contract: trading name, SIRET, bank details."
+      studio: Studio
+      studio_description: "The provider identity printed into every contract: trading name, SIRET, bank details."
       navigation_description: Customize sidemenu section and item names.
       pexels: Pexels
       pexels_description: 'Free stock photo library: enabling, API key and acceptance of the terms.'
@@ -282,55 +282,55 @@ backend:
     core_menu_item_prefix:
       label: Menu item reference prefix
       description: Auto-generated reference prefix (e.g. XXX). Leave empty to disable.
-    accounting_contract_prefix:
+    studio_contract_prefix:
       label: Contract reference prefix
       description: 'Prefix of contract references. CTR by default, which gives CTR-2026-0001.'
-    accounting_provider_name:
+    studio_provider_name:
       label: Provider's trading name
       description: 'The name you contract under, as it prints at the top of the contract.'
-    accounting_provider_representative:
+    studio_provider_representative:
       label: Name
       description: 'The individual who signs. Printed alongside the trading name.'
-    accounting_provider_address:
+    studio_provider_address:
       label: Business address
       description: 'The full address on one line: it appears in the contract''s identity block.'
-    accounting_provider_siret:
+    studio_provider_siret:
       label: SIRET
       description: 'The SIRET of the establishment that contracts.'
-    accounting_provider_ape_code:
+    studio_provider_ape_code:
       label: APE code
       description: 'Code and wording, for instance 7021Z - public relations and communication consultancy.'
-    accounting_provider_vat_mention:
+    studio_provider_vat_mention:
       label: VAT wording
       description: 'The exact sentence to print, for instance "not liable - VAT not applicable, art. 293 B of the CGI".'
-    accounting_provider_email:
+    studio_provider_email:
       label: Email
       description: 'The address a customer writes to under the contract.'
-    accounting_provider_phone:
+    studio_provider_phone:
       label: Phone
       description: 'The number printed in the identity block.'
-    accounting_provider_bank_holder:
+    studio_provider_bank_holder:
       label: Account holder
       description: 'The holder''s name, as it appears on the statement.'
-    accounting_provider_bank_iban:
+    studio_provider_bank_iban:
       label: IBAN
       description: 'The IBAN printed in the contract''s financial terms.'
-    accounting_provider_bank_bic:
+    studio_provider_bank_bic:
       label: BIC
       description: 'The bank''s BIC.'
-    accounting_provider_bank_name:
+    studio_provider_bank_name:
       label: Bank
       description: 'The bank''s name, and its address if you print it.'
-    accounting_contract_retention_years:
+    studio_contract_retention_years:
       label: Retention (years)
       description: 'How many years a sealed contract is kept before it can be deleted. Five years is the legal floor, ten are advised for a service provider; under five, the value is raised back to five.'
-    accounting_contract_reminder_enabled:
+    studio_contract_reminder_enabled:
       label: Chase automatically
       description: 'Emails a reminder for contracts sent and not signed. Every reminder mints a new signing address and invalidates the previous one, exactly like a manual resend.'
-    accounting_contract_reminder_days:
+    studio_contract_reminder_days:
       label: Days between reminders
       description: 'Days without an answer before a reminder goes out. Counted from the last send, not from the seal.'
-    accounting_contract_reminder_max:
+    studio_contract_reminder_max:
       label: Maximum number of reminders
       description: 'Past that, the contract is left alone. Silence is an answer too.'
     nav_section_aliases:

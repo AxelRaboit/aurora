@@ -48,7 +48,7 @@ final readonly class CoreConfigurationTabProvider implements ConfigurationTabPro
         'navigation' => 100,
         // After navigation: it belongs to one module, and only matters to
         // whoever sends contracts.
-        'accounting' => 110,
+        'studio' => 110,
     ];
 
     /**

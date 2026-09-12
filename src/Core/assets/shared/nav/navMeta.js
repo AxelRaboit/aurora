@@ -14,6 +14,7 @@
  * reads the icon names out of the PHP modules and fails if one is missing.
  */
 import {
+    Presentation,
     LayoutDashboard,
     LayoutTemplate,
     FileText,
@@ -72,6 +73,7 @@ import {
 } from "lucide-vue-next";
 
 export const ICON_MAP = {
+    presentation: Presentation,
     "layout-dashboard": LayoutDashboard,
     "layout-template": LayoutTemplate,
     "file-text": FileText,
@@ -145,7 +147,7 @@ export const MODULE_COLOR = {
     editorial: "rose",
     ged: "lime",
     media: "pink",
-    accounting: "emerald",
+    studio: "emerald",
     dev: "orange",
 };
 

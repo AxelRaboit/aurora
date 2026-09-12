@@ -5,7 +5,7 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
-## [0.9.141] - 2026-09-12
+## [0.9.148] - 2026-09-12
 
 ### Ajouté
 
@@ -32,6 +32,287 @@ les détruire. Seul le vidage de la corbeille des documents les efface.
 
 Les dossiers en corbeille sont listés en bas du panneau latéral de la GED, avec
 restaurer et supprimer définitivement.
+
+---
+
+## [0.9.147] - 2026-09-12
+
+### Ajouté
+
+#### Le manuel couvre les présentations
+Quatre pages dans la rubrique Studio : créer une présentation, composer les
+slides, présenter et imprimer, partager par une adresse secrète. Douze captures,
+prises sur l'instance de démonstration.
+
+Les fixtures portaient déjà deux présentations pour ça, dont une sans client,
+parce que c'est le cas interne ordinaire et non un cas dégradé.
+
+### Corrigé
+
+#### Le menu d'une ligne de présentation n'affichait rien et ne faisait rien
+Les trois actions étaient décrites avec les mauvaises clés : `label` au lieu de
+`title`, `onClick` au lieu de `onSelect`. La fenêtre montrait trois icônes sans
+texte, et **aucun des trois boutons ne se déclenchait** : ni modifier, ni
+dupliquer, ni supprimer.
+
+Trouvé en photographiant l'écran pour le manuel, ce qui est le genre de défaut
+qu'un test ne voit pas : le composant recevait un tableau valide, il n'y avait
+simplement rien dedans qu'il sache lire.
+
+## [0.9.146] - 2026-09-12
+
+### Ajouté
+
+#### Partager une présentation par une adresse secrète
+Un lien qui ouvre un deck sans compte, comme les Notes en ont un. Intitulé
+libre pour s'y retrouver des mois plus tard, expiration facultative, et la
+liste dit si le destinataire l'a ouvert et quand.
+
+**Les notes d'orateur ne partent jamais avec le lien**, et c'est le contrôleur
+qui les retire de la charge plutôt que le gabarit qui s'abstient de les
+afficher : un gabarit se modifie bien plus souvent qu'un sérialiseur.
+
+**Le jeton est stocké en clair**, comme celui des Notes et contrairement à
+celui d'un contrat. La différence est l'enjeu, pas un oubli : le jeton d'un
+contrat sépare une fuite de base d'une signature au nom de quelqu'un d'autre,
+tandis qu'un deck n'a rien à contrefaire. Une base de decks qui fuit a déjà
+fait fuiter les decks.
+
+**Révoquer appose une date, ça n'efface jamais la ligne.** « Qui pouvait ouvrir
+ceci, et jusqu'à quand » est une question à laquelle on veut pouvoir répondre
+après coup, et une ligne supprimée ne répond à rien. La liste montre donc les
+liens révoqués, estompés.
+
+Un lien inconnu, révoqué ou expiré donne la même réponse : le 404 d'une adresse
+qui n'existe pas. Dire laquelle des trois c'est confirmerait que l'adresse
+était bonne, ce qu'un jeton deviné ne doit surtout pas apprendre.
+
+Le privilège est `studio.decks.share` et non `edit` : remettre un document à
+quelqu'un hors de l'application n'est pas le même acte que l'écrire.
+
+### Migration
+
+Une table neuve, `core_deck_share_links`. Le lien vers le deck est
+`ON DELETE CASCADE` : une adresse vers un deck supprimé ne peut que répondre
+404, et la garder serait garder un secret pour rien.
+
+## [0.9.145] - 2026-09-12
+
+### Ajouté
+
+#### Présenter une présentation, et l'imprimer
+Le bouton « Présenter » ouvre le deck en plein écran, une slide à la fois.
+Flèches, espace, et les touches Page précédente et Page suivante qu'envoie une
+télécommande de présentation. Échap pour sortir. La slide est mise en boîte
+aux lettres plutôt qu'étirée : un cadre en 16/9 sur un vidéoprojecteur en 16/10
+a des bandes, et remplir l'écran rognerait un coin de ce que quelqu'un a écrit.
+
+**Les notes d'orateur ne sont pas dans le lecteur**, et c'est la raison pour
+laquelle elles sont une colonne et non un emplacement de gabarit : un seul
+écran est l'écran du public, donc tout ce qui y est dessiné est public.
+
+#### L'export, par l'impression du navigateur
+« Imprimer » ouvre une page qui ne porte que les slides, une par page, en
+paysage, et lance le dialogue d'impression. « Enregistrer en PDF » est dans le
+même dialogue.
+
+dompdf est pourtant déjà là, mais son propre commentaire dit à quoi il sert :
+un document légal à mise en page fixe, sans JavaScript, et il ne sait ni flex
+ni grid. Reconstruire les six gabarits une seconde fois dans ce sous-ensemble,
+puis tenir les deux versions d'accord, achèterait un export serveur que
+personne n'a demandé. Le navigateur qui a dessiné la slide imprime la slide
+qu'il a dessinée.
+
+Sa propre page plutôt qu'une feuille d'impression posée sur l'éditeur : masquer
+un back-office par sélecteur demande de connaître son balisage, puis de le
+connaître encore à chaque fois qu'il change.
+
+### Corrigé
+
+#### Les puces d'une slide n'avaient pas de puce
+La réinitialisation de Tailwind retire les marqueurs de toutes les listes, et
+une liste à puces sans puces se lit comme un paragraphe coupé.
+
+## [0.9.144] - 2026-09-12
+
+### Ajouté
+
+#### Composer les slides d'une présentation
+La page d'une présentation : les slides à gauche, celle qu'on écrit à droite,
+et son aperçu au-dessus du formulaire.
+
+**Pas de bouton Enregistrer, et c'est voulu.** Un deck s'écrit en sautant d'une
+slide à l'autre, et chaque saut est le moment où le travail sur celle qu'on
+quitte est fini. Enregistrer là ne demande rien à retenir ; un bouton serait
+une chose de plus à ne pas oublier avant de fermer l'onglet. La fermeture de
+l'onglet enregistre aussi.
+
+Le gabarit d'une slide peut changer en cours de route : une slide écrite en
+puces veut souvent devenir un intercalaire une fois que le deck a pris forme.
+Le contenu est alors filtré contre le **nouveau** gabarit, donc les
+emplacements qu'il n'a plus disparaissent.
+
+L'aperçu et les vignettes sont le même composant, au même rapport 16/9 fixe.
+C'est la raison d'être des gabarits : ce qu'on arrange ici est ce qui arrive au
+mur, et un aperçu qui se réagence serait un aperçu qui ment.
+
+L'ordre des slides se change par deux flèches plutôt qu'au glisser : un deck
+est une liste courte, et deux boutons marchent au clavier, sur un écran tactile
+et pour qui ne peut pas glisser. L'ordre part entier, donc le serveur n'a
+jamais à reconstituer un geste depuis une suite d'échanges.
+
+Les fixtures de démonstration portent deux présentations, dont une sans client,
+parce que c'est le cas interne ordinaire et non un cas dégradé.
+
+## [0.9.143] - 2026-09-12
+
+### Ajouté
+
+#### Les présentations, dans Studio
+Un jeu de slides se construit, se classe et se duplique. C'est le sous-module
+que le renommage rendait possible : **une présentation peut nommer le client
+pour qui elle a été écrite**, et un module n'a pas le droit de porter une
+relation vers l'entité d'un autre module. Soit les deux vivent ensemble, soit
+le lien n'existe pas.
+
+Le champ client est facultatif, et cette nullabilité est le vrai choix : une
+trame de stratégie écrite pour soi n'a pas de client, et l'exiger aurait rendu
+impossible le cas interne le plus courant. Supprimer un client ne supprime pas
+la présentation qu'on lui a montrée.
+
+**Six gabarits fixes plutôt qu'un canevas libre** : titre, titre et puces,
+image pleine page, deux colonnes, citation, intercalaire. Un deck d'audit ou de
+stratégie, c'est cela à quatre-vingt-dix pour cent, et le placement libre aurait
+voulu dire construire un outil de design. Le contenu d'une slide est du JSON
+filtré en liste blanche contre les emplacements que son gabarit déclare, comme
+la grille de contenu d'Editorial.
+
+Dupliquer copie les slides et **laisse le client derrière** : « repartir de
+celle-ci » veut presque toujours dire la même forme pour quelqu'un d'autre, et
+emporter le client est la façon dont un deck finit présenté à une société avec
+le nom d'une autre dessus.
+
+Le sous-module a son propre interrupteur, `modules_studio_decks`, indépendant
+des clients et des contrats : on peut avoir les présentations sans rien vendre.
+
+### Migration
+
+Trois tables neuves, `core_decks`, `core_deck_slides` et
+`core_deck_categories`. Rien d'existant n'est touché. Le lien vers un client
+est `ON DELETE SET NULL`, celui d'une slide vers son deck `ON DELETE CASCADE` :
+une slide n'a pas de vie hors du deck, une présentation en a une hors du client.
+
+## [0.9.142] - 2026-09-12
+
+### Modifié
+
+#### Le manuel suit le renommage du module
+La rubrique « Comptabilité » devient « Studio » : dossier, intitulés, et les
+huit renvois en prose du type « Comptabilité → Clients ». Une page de la
+rubrique Configuration citait aussi l'onglet de réglages, elle est corrigée.
+
+Les 210 captures sont reprises, pas seulement les 52 de la rubrique. Le menu
+latéral apparaît sur la plupart des écrans du manuel et il porte désormais le
+nouveau nom : choisir image par image aurait laissé un jeu de millésimes
+mélangés, ce qui est exactement la mécanique qui a déjà fait publier un écran
+périmé sous un texte neuf.
+
+Le diff est donc large et il dit la vérité : sur les 108 captures d'autres
+rubriques qui changent, treize ne changent que dans le menu, quatorze d'un
+poignée de pixels invisibles, et le reste montre ce que le produit a gagné
+depuis la dernière campagne, notamment l'onglet de stockage et la corbeille de
+la GED.
+
+Les outils de capture pointaient encore sur `/backend/accounting/` : corrigé,
+c'était un reste du renommage.
+
+## [0.9.141] - 2026-09-12
+
+### Modifié
+
+#### Le module Comptabilité devient Studio
+« Comptabilité » nommait un coin du module et excluait le reste. Il contient
+les clients, les contrats, les trames et la signature, et il va contenir les
+présentations : ce qu'on vend à un client et ce qu'on lui livre.
+
+La question qui a payé le renommage est concrète : un jeu de slides est adressé
+à un client, et un module n'a pas le droit de porter une relation vers l'entité
+d'un autre module. Soit les deux vivent ensemble, soit la relation n'existe pas.
+
+La règle qui décide de ce qui entre est écrite dans le docblock du module :
+**Studio contient ce qu'on vend et ce qu'on livre. Pas les outils avec lesquels
+on le fabrique.** Les notes, la GED et le calendrier restent chez eux.
+
+Rien ne change à l'usage, hormis le mot dans le menu et dans l'onglet de
+réglages. Les sous-interrupteurs restent indépendants : on peut avoir les
+clients sans les contrats, comme avant.
+
+### Corrigé
+
+#### Un document déplacé vers le stockage distant devenait introuvable
+Le résolveur regardait le disque local, puis **le disque actif**, et s'arrêtait
+là. Quand les nouveaux fichiers vont sur le serveur et qu'un document a été
+déplacé à la main vers le compartiment, le disque actif est justement le local :
+le fichier n'était donc jamais cherché ailleurs, et toutes ses adresses
+répondaient 404.
+
+C'est pourtant la combinaison que le produit annonce comme normale, le
+commentaire de `isRelocationAvailable` le dit mot pour mot. Constaté en
+production le 12/09/2026 : quatre films et leurs quatre images d'attente,
+déplacés volontairement, disparus d'une page publique. Les octets n'ont jamais
+été en danger, rien n'allait les chercher.
+
+Le résolveur balaie maintenant tous les backends configurés. Le disque local
+reste interrogé en premier, par un appel système et non par une requête
+facturée, donc un fichier présent sur le serveur ne coûte toujours rien.
+
+Les adaptateurs répondent pour cela à une nouvelle question, `isReady()` : un
+backend jamais configuré est sauté au lieu d'être appelé, parce qu'une
+exception est la façon dont un backend *configuré* signale une vraie panne, et
+les deux ne doivent pas se ressembler.
+
+### Ajouté
+
+#### Savoir où vit un document, depuis la liste et depuis sa fiche
+Une colonne « Stockage » dans la vue liste de la médiathèque, avec la même
+pastille que la vue cartes, et la même information dans la modale de détail.
+Les deux disparaissent tant qu'un seul stockage existe.
+
+#### Un lecteur pour les vidéos et les sons dans la modale de détail
+Une vidéo tombait dans la branche générique et s'affichait comme une icône de
+fichier : le seul type dont l'intérêt est d'être lu, et l'écran n'offrait pas
+de le lire. Le son avait le même sort.
+
+Contrairement à la page publique, la modale précharge les métadonnées :
+quelqu'un qui ouvre un document a demandé ce document, et la durée fait partie
+de ce qu'il vient vérifier.
+
+### Migration
+
+La base ne change pas de forme : aucune table ne portait le nom du module, ce
+sont `core_contracts`, `core_customers` et `core_contract_templates`. Ce qui
+porte le nom, ce sont des chaînes, et la migration les réécrit toutes :
+
+- les 3 interrupteurs et les 17 paramètres de `core_settings`, dont l'identité
+  du prestataire imprimée sur chaque contrat ;
+- l'onglet de réglages qui les regroupe ;
+- les privilèges, le masque de modules par utilisateur, et les sections et
+  entrées de menu masquées, tous rangés en colonnes JSON ;
+- le nom de section et les noms de route **à l'intérieur** de la valeur JSON
+  des quatre réglages `nav_*`, dont les clés, elles, ne changent pas. C'est le
+  seul endroit qu'un balayage sur les clés de réglages aurait manqué.
+
+### Dans aurora-client
+Rien à répercuter à la main pour le stockage. **Un document déplacé vers le
+stockage distant avant cette version redevient accessible sans rien faire** :
+ses octets étaient là, seule la recherche s'arrêtait trop tôt.
+
+Pour le renommage, rien non plus dans le cas courant : les adresses publiques
+des contrats sont préfixées `/contracts`, pas `/backend/accounting`, donc les
+liens de signature déjà envoyés à des clients continuent de fonctionner. Un
+projet client qui aurait surchargé une classe du module doit en revanche suivre
+le namespace `Aurora\Module\Accounting` → `Aurora\Module\Studio` et les
+privilèges `accounting.*` → `studio.*`.
 
 ---
 

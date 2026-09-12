@@ -11,22 +11,6 @@ use Aurora\Core\Locale\Entity\LocaleInterface;
 use Aurora\Core\Locale\Enum\LocaleEnum;
 use Aurora\Core\Notification\Entity\Notification;
 use Aurora\Core\Notification\Entity\NotificationInterface;
-use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLink;
-use Aurora\Module\Accounting\Contract\Access\Entity\ContractAccessLinkInterface;
-use Aurora\Module\Accounting\Contract\Entity\Contract;
-use Aurora\Module\Accounting\Contract\Entity\ContractInterface;
-use Aurora\Module\Accounting\Contract\Entity\ContractTemplate;
-use Aurora\Module\Accounting\Contract\Entity\ContractTemplateInterface;
-use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersion;
-use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionInterface;
-use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslation;
-use Aurora\Module\Accounting\Contract\Entity\ContractTemplateVersionTranslationInterface;
-use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignature;
-use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallenge;
-use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureChallengeInterface;
-use Aurora\Module\Accounting\Contract\Signature\Entity\ContractSignatureInterface;
-use Aurora\Module\Accounting\Customer\Entity\Customer;
-use Aurora\Module\Accounting\Customer\Entity\CustomerInterface;
 use Aurora\Module\Configuration\Setting\Entity\Setting;
 use Aurora\Module\Configuration\Setting\Entity\SettingInterface;
 use Aurora\Module\Configuration\Theme\Entity\Theme;
@@ -111,6 +95,30 @@ use Aurora\Module\Platform\Auth\Entity\ResetPasswordRequest;
 use Aurora\Module\Platform\Auth\Entity\ResetPasswordRequestInterface;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
 use Aurora\Module\Platform\User\Entity\User;
+use Aurora\Module\Studio\Contract\Access\Entity\ContractAccessLink;
+use Aurora\Module\Studio\Contract\Access\Entity\ContractAccessLinkInterface;
+use Aurora\Module\Studio\Contract\Entity\Contract;
+use Aurora\Module\Studio\Contract\Entity\ContractInterface;
+use Aurora\Module\Studio\Contract\Entity\ContractTemplate;
+use Aurora\Module\Studio\Contract\Entity\ContractTemplateInterface;
+use Aurora\Module\Studio\Contract\Entity\ContractTemplateVersion;
+use Aurora\Module\Studio\Contract\Entity\ContractTemplateVersionInterface;
+use Aurora\Module\Studio\Contract\Entity\ContractTemplateVersionTranslation;
+use Aurora\Module\Studio\Contract\Entity\ContractTemplateVersionTranslationInterface;
+use Aurora\Module\Studio\Contract\Signature\Entity\ContractSignature;
+use Aurora\Module\Studio\Contract\Signature\Entity\ContractSignatureChallenge;
+use Aurora\Module\Studio\Contract\Signature\Entity\ContractSignatureChallengeInterface;
+use Aurora\Module\Studio\Contract\Signature\Entity\ContractSignatureInterface;
+use Aurora\Module\Studio\Customer\Entity\Customer;
+use Aurora\Module\Studio\Customer\Entity\CustomerInterface;
+use Aurora\Module\Studio\Deck\Entity\Deck;
+use Aurora\Module\Studio\Deck\Entity\DeckCategory;
+use Aurora\Module\Studio\Deck\Entity\DeckCategoryInterface;
+use Aurora\Module\Studio\Deck\Entity\DeckInterface;
+use Aurora\Module\Studio\Deck\Entity\Slide;
+use Aurora\Module\Studio\Deck\Entity\SlideInterface;
+use Aurora\Module\Studio\Deck\Share\Entity\DeckShareLink;
+use Aurora\Module\Studio\Deck\Share\Entity\DeckShareLinkInterface;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Override;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -219,6 +227,10 @@ class AuroraBundle extends AbstractBundle
                     TaxonomyTermInterface::class => TaxonomyTerm::class,
                     TaxonomyTermTranslationInterface::class => TaxonomyTermTranslation::class,
                     CustomerInterface::class => Customer::class,
+                    DeckInterface::class => Deck::class,
+                    DeckCategoryInterface::class => DeckCategory::class,
+                    SlideInterface::class => Slide::class,
+                    DeckShareLinkInterface::class => DeckShareLink::class,
                     ContractInterface::class => Contract::class,
                     ContractAccessLinkInterface::class => ContractAccessLink::class,
                     ContractSignatureInterface::class => ContractSignature::class,

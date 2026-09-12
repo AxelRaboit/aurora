@@ -19,7 +19,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
     case GedBackend = 'modules_ged_backend';
     case PlanningBackend = 'modules_planning_backend';
     case NotesBackend = 'modules_notes_backend';
-    case AccountingBackend = 'modules_accounting_backend';
+    case StudioBackend = 'modules_studio_backend';
 
     // Top-level modules - frontend (public site)
 
@@ -54,9 +54,10 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
     case GedFrontend = 'modules_ged_frontend';
     case NotesMarkdown = 'modules_notes_markdown';
 
-    // Sub-modules - Accounting
-    case AccountingCustomers = 'modules_accounting_customers';
-    case AccountingContracts = 'modules_accounting_contracts';
+    // Sub-modules - Studio
+    case StudioCustomers = 'modules_studio_customers';
+    case StudioContracts = 'modules_studio_contracts';
+    case StudioDecks = 'modules_studio_decks';
 
     public function getKey(): string
     {
@@ -94,9 +95,10 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedFrontend => 'backend.modules.ged_frontend',
             self::NotesBackend => 'backend.modules.notes_backend',
             self::NotesMarkdown => 'backend.nav.notes_markdown',
-            self::AccountingBackend => 'backend.modules.accounting_backend',
-            self::AccountingCustomers => 'backend.nav.accounting_customers',
-            self::AccountingContracts => 'backend.nav.accounting_contract_templates',
+            self::StudioBackend => 'backend.modules.studio_backend',
+            self::StudioCustomers => 'backend.nav.studio_customers',
+            self::StudioContracts => 'backend.nav.studio_contract_templates',
+            self::StudioDecks => 'backend.nav.studio_decks',
         };
     }
 
@@ -131,9 +133,10 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedFrontend => 'backend.modules.ged_frontend_description',
             self::NotesBackend => 'backend.modules.notes_backend_description',
             self::NotesMarkdown => 'backend.nav.notes_markdown_description',
-            self::AccountingBackend => 'backend.modules.accounting_backend_description',
-            self::AccountingCustomers => 'backend.nav.accounting_customers_description',
-            self::AccountingContracts => 'backend.nav.accounting_contract_templates_description',
+            self::StudioBackend => 'backend.modules.studio_backend_description',
+            self::StudioCustomers => 'backend.nav.studio_customers_description',
+            self::StudioContracts => 'backend.nav.studio_contract_templates_description',
+            self::StudioDecks => 'backend.nav.studio_decks_description',
         };
     }
 
@@ -165,7 +168,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::EditorialFrontend, self::EditorialPosts, self::EditorialPostTypes, self::EditorialTaxonomies, self::EditorialMenus, self::EditorialSeo, self::EditorialComments, self::EditorialForms => self::EditorialBackend,
             self::GedDocuments, self::GedCategories, self::GedTags, self::GedFolders, self::GedFrontend => self::GedBackend,
             self::NotesMarkdown => self::NotesBackend,
-            self::AccountingCustomers, self::AccountingContracts => self::AccountingBackend,
+            self::StudioCustomers, self::StudioContracts, self::StudioDecks => self::StudioBackend,
             default => null,
         };
     }
@@ -212,12 +215,17 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedFolders => self::GedBackend->value,
             self::GedFrontend => self::GedBackend->value,
             self::NotesMarkdown => self::NotesBackend->value,
-            // Accounting sub-modules
-            self::AccountingCustomers => self::AccountingBackend->value,
+            // Studio sub-modules
+            self::StudioCustomers => self::StudioBackend->value,
             // A contract is signed with somebody, and that somebody is a
             // customer. Templates without the customer screen would build
             // documents with nobody to address them to.
-            self::AccountingContracts => self::AccountingCustomers->value,
+            self::StudioContracts => self::StudioCustomers->value,
+            // Decks hang off the module and nothing else. A deck may name the
+            // customer it was written for, but the field is nullable on
+            // purpose: a strategy deck written for oneself has no client, and
+            // requiring the customer screen would make that case impossible.
+            self::StudioDecks => self::StudioBackend->value,
             default => null,
         };
     }
@@ -274,7 +282,7 @@ enum ModuleParameterEnum: string implements ApplicationParameterEnumInterface
             self::GedBackend => 'ged',
             self::PlanningBackend => 'planning',
             self::NotesBackend => 'notes',
-            self::AccountingBackend => 'accounting',
+            self::StudioBackend => 'studio',
             default => null,
         };
     }
