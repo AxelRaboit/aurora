@@ -17,6 +17,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
 import { useDeckEditor } from "./composables/useDeckEditor.js";
+import { useDeckSharing } from "./composables/useDeckSharing.js";
 import SlideFrame from "./components/SlideFrame.vue";
 import DeckPlayer from "./components/DeckPlayer.vue";
 import AppButton from "@/shared/components/action/AppButton.vue";
@@ -30,15 +31,17 @@ import AppNoData from "@/shared/components/feedback/AppNoData.vue";
 import {
     ArrowDown,
     ArrowUp,
+    Copy,
     Play,
     Plus,
     Presentation,
     Printer,
+    Share2,
     Trash2,
     X,
 } from "lucide-vue-next";
 
-const { t } = useI18n();
+const { t, d } = useI18n();
 const { can } = usePrivileges();
 
 const props = defineProps({
@@ -49,6 +52,9 @@ const props = defineProps({
     slideDeletePath: { type: String, required: true },
     slideReorderPath: { type: String, required: true },
     printPath: { type: String, required: true },
+    shareLinks: { type: Array, default: () => [] },
+    shareCreatePath: { type: String, required: true },
+    shareRevokePath: { type: String, required: true },
 });
 
 const {
@@ -91,6 +97,19 @@ async function print() {
     await flushCurrent();
     window.open(`${props.printPath}?print=1`, "_blank", "noopener");
 }
+
+const {
+    sharing,
+    links,
+    newLabel,
+    expiresInDays,
+    creating,
+    createLink,
+    revoke,
+    copy,
+    copiedId,
+    isLive,
+} = useDeckSharing(props);
 
 const layoutOptions = props.layouts.map((layout) => ({
     value: layout.value,
@@ -137,6 +156,14 @@ onBeforeUnmount(() => {
             <AppButton variant="ghost" :disabled="!slides.length" v-on:click="print">
                 <Printer class="h-4 w-4" :stroke-width="2" />
                 {{ t("backend.studio.decks.print") }}
+            </AppButton>
+            <AppButton
+                v-if="can('studio.decks.share')"
+                variant="ghost"
+                v-on:click="sharing = true"
+            >
+                <Share2 class="h-4 w-4" :stroke-width="2" />
+                {{ t("backend.studio.decks.share") }}
             </AppButton>
         </div>
 
@@ -328,6 +355,94 @@ onBeforeUnmount(() => {
                 </template>
             </AppModal>
         </div>
+
+        <AppModal
+            :show="sharing"
+            max-width="lg"
+            :title="t('backend.studio.decks.share')"
+            :icon="Share2"
+            v-on:close="sharing = false"
+        >
+            <div class="space-y-4">
+                <p class="m-0 text-sm text-secondary">
+                    {{ t("backend.studio.decks.share_intro") }}
+                </p>
+
+                <div class="flex flex-wrap items-end gap-2">
+                    <AppInput
+                        v-model="newLabel"
+                        class="min-w-48 flex-1"
+                        :label="t('backend.studio.decks.share_label')"
+                        :placeholder="t('backend.studio.decks.share_label_placeholder')"
+                    />
+                    <AppSelect
+                        v-model="expiresInDays"
+                        class="w-44"
+                        :label="t('backend.studio.decks.share_expiry')"
+                        :options="[
+                            { value: '', label: t('backend.studio.decks.share_no_expiry') },
+                            { value: '7', label: t('backend.studio.decks.share_days', { count: 7 }) },
+                            { value: '30', label: t('backend.studio.decks.share_days', { count: 30 }) },
+                            { value: '90', label: t('backend.studio.decks.share_days', { count: 90 }) },
+                        ]"
+                    />
+                    <AppButton variant="primary" :loading="creating" v-on:click="createLink">
+                        <Plus class="h-3.5 w-3.5" :stroke-width="2" />
+                        {{ t("backend.studio.decks.share_create") }}
+                    </AppButton>
+                </div>
+
+                <p v-if="!links.length" class="m-0 text-sm text-muted">
+                    {{ t("backend.studio.decks.share_none") }}
+                </p>
+
+                <ul v-else class="m-0 flex list-none flex-col gap-2 p-0">
+                    <li
+                        v-for="link in links"
+                        :key="link.id"
+                        class="rounded-lg border border-line p-3"
+                        :class="isLive(link) ? '' : 'opacity-60'"
+                    >
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="min-w-0 text-sm font-medium text-primary">
+                                {{ link.label || t("backend.studio.decks.share_untitled") }}
+                            </span>
+                            <span class="flex shrink-0 gap-1">
+                                <AppIconButton
+                                    size="sm"
+                                    variant="ghost"
+                                    :title="t('backend.studio.decks.share_copy')"
+                                    v-on:click="copy(link)"
+                                >
+                                    <Copy class="h-3.5 w-3.5" :stroke-width="2" />
+                                </AppIconButton>
+                                <AppIconButton
+                                    v-if="isLive(link)"
+                                    size="sm"
+                                    variant="ghost"
+                                    :title="t('backend.studio.decks.share_revoke')"
+                                    v-on:click="revoke(link)"
+                                >
+                                    <X class="h-3.5 w-3.5" :stroke-width="2" />
+                                </AppIconButton>
+                            </span>
+                        </div>
+
+                        <p class="m-0 mt-1 truncate font-mono text-xs text-muted">
+                            {{ copiedId === link.id ? t("backend.studio.decks.share_copied") : link.url }}
+                        </p>
+
+                        <p class="m-0 mt-1 text-xs text-muted">
+                            <span v-if="link.revokedAt">{{ t("backend.studio.decks.share_revoked") }}</span>
+                            <span v-else-if="link.expiresAt">{{ t("backend.studio.decks.share_expires_on", { date: d(new Date(link.expiresAt), "short") }) }}</span>
+                            <span v-else>{{ t("backend.studio.decks.share_no_expiry") }}</span>
+                            <span v-if="link.lastUsedAt"> · {{ t("backend.studio.decks.share_last_used", { date: d(new Date(link.lastUsedAt), "short") }) }}</span>
+                            <span v-else> · {{ t("backend.studio.decks.share_never_opened") }}</span>
+                        </p>
+                    </li>
+                </ul>
+            </div>
+        </AppModal>
 
         <DeckPlayer
             v-if="playing"
