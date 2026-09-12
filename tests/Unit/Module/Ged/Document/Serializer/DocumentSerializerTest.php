@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Module\Ged\Document\Serializer;
 
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Testing\Concern\CreatesStorageUrlGenerators;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Serializer\DocumentSerializer;
@@ -11,6 +12,7 @@ use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategoryInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTagInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
+use Aurora\Module\Ged\Enum\DocumentTransferStateEnum;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
@@ -54,6 +56,10 @@ final class DocumentSerializerTest extends TestCase
         $document->method('getTitle')->willReturn($title);
         $document->method('getDescription')->willReturn($description);
         $document->method('getStatus')->willReturn($status);
+        // PHPUnit cannot invent a value for an enum return, and the serializer
+        // now reports where a document's bytes live.
+        $document->method('getStorageDisk')->willReturn(StorageDiskEnum::Local);
+        $document->method('getStorageTransferState')->willReturn(DocumentTransferStateEnum::Idle);
         $document->method('getCategory')->willReturn($category);
         $document->method('getFilePath')->willReturn($filePath);
         $document->method('getFileName')->willReturn($fileName);

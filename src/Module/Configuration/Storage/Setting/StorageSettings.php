@@ -70,6 +70,20 @@ final readonly class StorageSettings
         return $usable ? StorageDiskEnum::R2 : StorageDiskEnum::Local;
     }
 
+    /**
+     * Whether there is anywhere to move a document to.
+     *
+     * Not the same question as which disk is active. An administrator can
+     * configure and verify a bucket while leaving new files on the server's
+     * disk, and moving a document across is then perfectly sensible. What must
+     * not be offered is a move to a backend nothing has ever reached, which is
+     * an action that can only fail.
+     */
+    public function isRelocationAvailable(): bool
+    {
+        return $this->effectiveR2Configuration()->isComplete() && null !== $this->verifiedAt();
+    }
+
     public function deliveryMode(): StorageDeliveryModeEnum
     {
         return StorageDeliveryModeEnum::tryFrom(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Module\Ged\Document\Repository;
 
 use Aurora\Core\Repository\ResolveTargetEntityRepository;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Document\Entity\DocumentVersion;
 use Aurora\Module\Ged\Document\Entity\DocumentVersionInterface;
@@ -49,6 +50,34 @@ class DocumentVersionRepository extends ResolveTargetEntityRepository
             ->setFirstResult($limit)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Same question, asked of one backend only. See
+     * {@see DocumentRepository::filterPathsInUseOnDisk()} for why relocation
+     * cannot use the plain form.
+     *
+     * @param list<string> $paths
+     *
+     * @return list<string>
+     */
+    public function filterPathsInUseOnDisk(array $paths, StorageDiskEnum $disk): array
+    {
+        if ([] === $paths) {
+            return [];
+        }
+
+        /** @var list<array{filePath: string}> $rows */
+        $rows = $this->createQueryBuilder('v')
+            ->select('DISTINCT v.filePath')
+            ->where('v.filePath IN (:paths)')
+            ->andWhere('v.storageDisk = :disk')
+            ->setParameter('paths', $paths)
+            ->setParameter('disk', $disk)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (array $row): string => $row['filePath'], $rows);
     }
 
     /**

@@ -16,9 +16,16 @@ framework:
             failed: 'doctrine://default?queue_name=failed'
             scheduler_main: 'schedule://main'
 
-        # Module message routing is declared by each module's bundle
-        # (prependExtension), e.g. AuroraBillingBundle routes ProcessOcrJobMessage
-        # → async - so aurora-core's messenger config stays module-agnostic.
+        routing:
+            # Moving a document between storage backends. Small ones are done
+            # inline by the request that asked; this is for the rest, where a
+            # browser should not be made to wait on a bucket.
+            Aurora\Module\Ged\Document\Message\RelocateDocumentMessage: async
+
+        # Modules used to declare their own routing from their bundle's
+        # prependExtension, back when each shipped as a separate package. The
+        # split was abandoned, so routing for this monorepo's modules is
+        # declared above.
 
 when@test:
     framework:

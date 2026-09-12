@@ -18,6 +18,7 @@ backend:
           create: Créer des documents
           edit: Modifier les documents
           delete: Supprimer les documents
+          relocate: Déplacer les documents entre stockages
         categories:
           view: Voir les catégories
           create: Créer des catégories
@@ -78,6 +79,9 @@ backend:
         download_failed: La photo n'a pas pu être téléchargée. Réessayez dans un instant.
         terms_required: Les conditions d'utilisation doivent être acceptées pour activer l'intégration.
         key_required: Une clé d'API est nécessaire pour activer l'intégration.
+        unknown_disk: Cet emplacement de stockage n'existe pas.
+        relocation_busy: Un déplacement est déjà en cours pour ce document.
+        relocation_failed: Le déplacement a échoué. Le document est resté où il était.
     bootstrap:
       categories:
         inline_uploads: Médias éditoriaux
@@ -89,6 +93,20 @@ backend:
         qr_description: Affiche un QR code menant à ce document.
         edit_description: Titre, catégorie, étiquettes, dossier.
         delete_description: Supprime le document et son fichier. Sans retour possible.
+        relocate_to_remote: Envoyer vers le stockage distant
+        relocate_to_local: Rapatrier sur le serveur
+        relocate_description: "Déplace le fichier, ses variantes et son historique. Son adresse ne change pas."
+        relocate_pending: Un déplacement est déjà en cours pour ce document.
+      storage:
+        local: Serveur
+        remote: Distant
+        moving: Déplacement
+        failed: Déplacement échoué
+        hint: "Fichier stocké : {place}."
+      relocation:
+        done: Document déplacé.
+        queued: Déplacement lancé. Il se poursuit en arrière-plan.
+        already_there: Ce document est déjà à cet emplacement.
       reference: Référence
       title: Titre
       description: Description

@@ -6,6 +6,7 @@ namespace Aurora\Module\Ged\Document\View;
 
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
 use Aurora\Core\Validation\Dto\PaginationRequest;
+use Aurora\Module\Configuration\Storage\Setting\StorageSettings;
 use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\Document\Serializer\DocumentSerializerInterface;
 use Aurora\Module\Ged\DocumentCategory\Repository\DocumentCategoryRepository;
@@ -29,6 +30,7 @@ final readonly class DocumentsViewBuilder
         private DocumentFolderRepository $folderRepository,
         private DocumentFolderSerializerInterface $folderSerializer,
         private UrlGeneratorInterface $urlGenerator,
+        private StorageSettings $storageSettings,
     ) {}
 
     public function indexView(PaginationRequest $pagination): array
@@ -64,6 +66,12 @@ final readonly class DocumentsViewBuilder
             // drag&drop and the bulk-move modal. The dedicated /backend/ged/folders
             // page remains untouched and continues to handle folder-tree management.
             'movePath' => $this->urlGenerator->generate('backend_ged_documents_move', ['id' => '__id__']),
+            'storagePath' => $this->urlGenerator->generate('backend_ged_documents_storage', ['id' => '__id__']),
+            // Whether the screen may offer to move a document at all. There is
+            // nowhere to move it to until an administrator has configured a
+            // second backend, and an action that can only fail is worse than
+            // no action.
+            'storageRelocationAvailable' => $this->storageSettings->isRelocationAvailable(),
             'bulkMovePath' => $this->urlGenerator->generate('backend_ged_documents_bulk_move'),
             // Sidebar folder CRUD reuses the existing /backend/ged/folders endpoints,
             // so create/edit/delete behave identically across both pages.

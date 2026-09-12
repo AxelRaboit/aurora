@@ -32,6 +32,7 @@ import { useDocumentSidebarTree } from "./composables/useDocumentSidebarTree.js"
 import { useDocumentDragSource } from "./composables/useDocumentDragSource.js";
 import { onPanelRequest } from "@/shared/nav/modulePanelBridge.js";
 import { useDocumentBulkActions } from "./composables/useDocumentBulkActions.js";
+import { useDocumentRelocation } from "./composables/useDocumentRelocation.js";
 import { useDocumentCrop } from "./composables/useDocumentCrop.js";
 import { useMultiSelection } from "@/shared/composables/list/useMultiSelection.js";
 import AppTab from "@/shared/components/nav/AppTab.vue";
@@ -45,6 +46,7 @@ import AppFilePreview from "@/shared/components/display/AppFilePreview.vue";
 import AppOverlayIconButton from "@/shared/components/action/AppOverlayIconButton.vue";
 import AppSelectionCheck from "@/shared/components/feedback/AppSelectionCheck.vue";
 import DocumentTagChip from "@ged/backend/documents/components/DocumentTagChip.vue";
+import DocumentStorageChip from "@ged/backend/documents/components/DocumentStorageChip.vue";
 
 const { t } = useI18n();
 const { can } = usePrivileges();
@@ -68,6 +70,8 @@ const props = defineProps({
     cropPath: { type: String, default: "" },
     movePath: { type: String, default: "" },
     bulkMovePath: { type: String, default: "" },
+    storagePath: { type: String, default: "" },
+    storageRelocationAvailable: { type: Boolean, default: false },
     folderCreatePath: { type: String, default: "" },
     folderEditPath: { type: String, default: "" },
     folderDeletePath: { type: String, default: "" },
@@ -180,12 +184,16 @@ onUnmounted(() => {
 // Two sets on this screen: what a document offers, and what a folder in the
 // tree does. Both were written twice - once for the cards, once for the table -
 // so the two copies could already disagree.
+const { relocate } = useDocumentRelocation(props, items);
+
 const documentActions = useDocumentRowActions({
     can,
     viewDoc,
     openQr,
     openEdit,
     confirmDelete,
+    relocate,
+    relocationAvailable: props.storageRelocationAvailable,
 });
 
 const { doBulkDelete, bulkMoveTargetId, openBulkMove, bulkMove } = useDocumentBulkActions(
@@ -417,7 +425,13 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                                 <div v-if="doc.folderName" class="text-xs text-accent-400/80 truncate flex items-center gap-1">
                                     <Folder class="w-2.5 h-2.5 shrink-0" :stroke-width="2" />{{ doc.folderName }}
                                 </div>
-                                <div v-if="doc.tags?.length" class="flex flex-wrap gap-1 pt-0.5">
+                                <div v-if="doc.tags?.length || storageRelocationAvailable" class="flex flex-wrap items-center gap-1 pt-0.5">
+                                    <DocumentStorageChip
+                                        v-if="storageRelocationAvailable"
+                                        :disk="doc.storageDisk"
+                                        :state="doc.storageTransferState"
+                                        :error="doc.storageTransferError"
+                                    />
                                     <DocumentTagChip v-for="tag in doc.tags" :key="tag.id" :tag="tag" />
                                 </div>
                             </div>
@@ -470,7 +484,13 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                                         <span v-if="doc.categoryName" class="text-xs text-muted">{{ doc.categoryName }}</span>
                                         <span v-if="doc.fileSize" class="text-xs text-muted tabular-nums">{{ formatSize(doc.fileSize) }}</span>
                                     </div>
-                                    <div v-if="doc.tags?.length" class="flex flex-wrap gap-1 mt-1.5">
+                                    <div v-if="doc.tags?.length || storageRelocationAvailable" class="flex flex-wrap items-center gap-1 mt-1.5">
+                                        <DocumentStorageChip
+                                            v-if="storageRelocationAvailable"
+                                            :disk="doc.storageDisk"
+                                            :state="doc.storageTransferState"
+                                            :error="doc.storageTransferError"
+                                        />
                                         <DocumentTagChip v-for="tag in doc.tags" :key="tag.id" :tag="tag" />
                                     </div>
                                 </div>

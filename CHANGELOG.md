@@ -5,6 +5,66 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.130] - 2026-09-12
+
+### Ajouté
+
+#### Déplacer un document d'un stockage à l'autre, d'un clic
+Une action dans le menu de chaque document : l'envoyer vers le stockage
+distant, ou le rapatrier sur le serveur. Une pastille sur chaque ligne dit où
+il vit, et l'action disparaît complètement tant qu'aucun second stockage n'a
+été configuré et testé, parce qu'une action qui ne peut qu'échouer est pire
+qu'une action absente.
+
+**Ce qui se déplace, c'est le document**, pas le fichier : ses octets, sa
+vignette, ses trois variantes, et le fichier de chacune de ses versions. Un
+document dont la moitié serait restée de l'autre côté aurait une colonne qui
+ment.
+
+**L'ordre est copier, vérifier, enregistrer, supprimer**, et jamais un autre.
+Un processus interrompu à n'importe quel moment laisse le document intact et
+lisible là où il était. Ce qu'il laisse de l'autre côté est au pire une copie
+que personne ne référence, et que la tentative suivante écrase, puisque les
+clés sont identiques des deux côtés. Cette identité est aussi ce qui rend une
+relance sans danger.
+
+**La suppression à la source demande la permission.** Deux documents peuvent
+pointer sur le même chemin, et une version partage volontairement le fichier du
+document courant : la copie source n'est retirée que si plus aucune ligne
+restée de ce côté ne la nomme. La question se pose par support, sans quoi elle
+répondrait « encore utilisée » à propos des lignes qui viennent justement de
+partir.
+
+**Un déplacement en cours refuse le suivant.** L'état affiché sert de verrou :
+il est pris par une écriture conditionnelle, donc un second clic trouve la
+porte fermée au lieu de recopier les mêmes octets et de courir avec le premier
+pour savoir quelle suppression gagne. Utiliser l'état visible plutôt qu'un
+verrou caché est délibéré : deux mécanismes qui disent la même chose finissent
+par se contredire, et c'est l'invisible qui reste faux.
+
+**Petit tout de suite, gros en arrière-plan.** En dessous de 8 Mo cumulés, le
+déplacement se fait dans la requête et la ligne se met à jour sous les yeux.
+Au dessus, un message part sur le worker : un navigateur n'a pas à être tenu
+ouvert sur un compartiment distant.
+
+Un échec est lisible : l'état passe en « déplacement échoué », le motif est
+conservé et affiché au survol, et l'action reste relançable. Un déplacement qui
+échoue en silence est un bouton qui a l'air cassé.
+
+### Dans aurora-client
+
+**Une migration**, jouée par `make aurora-update` : deux colonnes sur
+`core_ged_documents`, l'état du transfert et le motif du dernier échec.
+
+**Un nouveau privilège**, `ged.documents.relocate`, à accorder aux personnes
+concernées. Volontairement distinct de `ged.documents.edit` : déplacer des
+octets d'un support à l'autre dépense du transfert et des requêtes sur le
+compte de quelqu'un, ce qui n'est pas la même permission que corriger une
+faute dans un titre.
+
+Rien d'autre à répercuter, et rien ne change tant qu'aucun second stockage
+n'est configuré.
+
 ## [0.9.129] - 2026-09-12
 
 ### Ajouté
