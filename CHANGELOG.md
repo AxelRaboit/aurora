@@ -5,6 +5,30 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.147] - 2026-09-12
+
+### Ajouté
+
+#### Le manuel couvre les présentations
+Quatre pages dans la rubrique Studio : créer une présentation, composer les
+slides, présenter et imprimer, partager par une adresse secrète. Douze captures,
+prises sur l'instance de démonstration.
+
+Les fixtures portaient déjà deux présentations pour ça, dont une sans client,
+parce que c'est le cas interne ordinaire et non un cas dégradé.
+
+### Corrigé
+
+#### Le menu d'une ligne de présentation n'affichait rien et ne faisait rien
+Les trois actions étaient décrites avec les mauvaises clés : `label` au lieu de
+`title`, `onClick` au lieu de `onSelect`. La fenêtre montrait trois icônes sans
+texte, et **aucun des trois boutons ne se déclenchait** : ni modifier, ni
+dupliquer, ni supprimer.
+
+Trouvé en photographiant l'écran pour le manuel, ce qui est le genre de défaut
+qu'un test ne voit pas : le composant recevait un tableau valide, il n'y avait
+simplement rien dedans qu'il sache lire.
+
 ## [0.9.146] - 2026-09-12
 
 ### Ajouté

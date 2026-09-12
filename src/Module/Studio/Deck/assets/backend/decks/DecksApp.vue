@@ -90,28 +90,36 @@ function actionsFor(deck) {
 
     if (can("studio.decks.edit")) {
         actions.push({
-            label: t("shared.common.edit"),
+            key: "edit",
+            color: "accent",
             icon: Pencil,
-            onClick: () => openEdit(deck),
+            title: t("shared.common.edit"),
+            description: t("backend.studio.decks.edit_hint"),
+            onSelect: () => openEdit(deck),
         });
     }
 
     if (can("studio.decks.create")) {
         actions.push({
-            label: t("backend.studio.decks.duplicate"),
-            description: t("backend.studio.decks.duplicate_hint"),
+            key: "duplicate",
             icon: Copy,
-            loading: duplicatingId.value === deck.id,
-            onClick: () => duplicate(deck),
+            title: t("backend.studio.decks.duplicate"),
+            description: t("backend.studio.decks.duplicate_hint"),
+            disabled: duplicatingId.value === deck.id,
+            onSelect: () => duplicate(deck),
         });
     }
 
+    // Last, as everywhere: the one that takes something away is read after the
+    // ones that do not.
     if (can("studio.decks.delete")) {
         actions.push({
-            label: t("shared.common.delete"),
+            key: "delete",
+            color: "rose",
             icon: Trash2,
-            variant: "danger",
-            onClick: () => confirmDelete(deck),
+            title: t("shared.common.delete"),
+            description: t("backend.studio.decks.delete_hint"),
+            onSelect: () => confirmDelete(deck),
         });
     }
 

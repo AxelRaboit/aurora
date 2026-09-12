@@ -372,6 +372,8 @@ backend:
             duplicated: Présentation dupliquée
             duplicate: Dupliquer
             duplicate_hint: Copie les slides, sans le client.
+            edit_hint: Le titre, la rubrique et le client.
+            delete_hint: La présentation et toutes ses slides.
             copy_of: '%title% (copie)'
             title_column: Titre
             title_placeholder: Audit du site, octobre
