@@ -5,7 +5,7 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
-## [0.9.153] - 2026-09-13
+## [0.9.154] - 2026-09-13
 
 ### Corrigé
 
