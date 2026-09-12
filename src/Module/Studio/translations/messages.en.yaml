@@ -391,6 +391,11 @@ backend:
                 title_required: The title is required.
                 title_too_long: The title is too long.
                 layout_unknown: That layout does not exist.
+            present: Present
+            print: Print
+            print_hint: Use the browser's print dialog, then "Save as PDF". One slide per page, landscape.
+            previous_slide: Previous slide
+            next_slide: Next slide
             layout: Layout
             add_slide: Add a slide
             slide_added: Slide added
