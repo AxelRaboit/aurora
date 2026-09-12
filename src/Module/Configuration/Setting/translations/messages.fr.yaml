@@ -62,6 +62,14 @@ backend:
       delivery_public_url: Par le domaine public
       delivery_public_url_hint: "Le plus rapide, mis en cache. Les fichiers deviennent lisibles par quiconque connaît leur adresse."
       test_button: Tester la connexion
+      banner_none: "Aucun stockage distant configuré. Les fichiers sont écrits sur le disque du serveur."
+      banner_untested: "Configuration renseignée mais jamais testée. Lancez le test avant de vous en servir."
+      banner_connected: "Connecté à Cloudflare R2, compartiment « {bucket} », vérifié le {date}. Les nouveaux fichiers vont sur : {target}."
+      banner_from_environment: "Cette configuration vient de l'environnement du serveur, pas de cet écran."
+      disconnect_button: "Débrancher le stockage"
+      disconnect_confirm: "Les deux clés seront effacées, ainsi que l'adresse et le compartiment. Les nouveaux fichiers repartiront sur le disque du serveur."
+      disconnect_warning: "Cloudflare n'affiche une clé qu'à sa création : pour revenir en arrière il faudra créer un nouveau jeton, pas retrouver celui-ci."
+      disconnected: "Stockage distant débranché."
       test_intro: "Le test écrit un fichier témoin, le relit, vérifie qu'il est bien là, puis le supprime. C'est la seule façon de savoir qu'un jeton a vraiment le droit d'écrire."
       test_passed: "Connexion vérifiée le {date}."
       test_never: "Jamais testée. Le test est nécessaire avant de pouvoir basculer le stockage."
@@ -85,8 +93,9 @@ backend:
         unreachable: "L'adresse ne répond pas. Vérifiez-la, et vérifiez que le serveur peut l'atteindre."
       errors:
         verification_required: Testez la connexion avant de basculer le stockage.
+        documents_still_remote: "Impossible de débrancher : un document est encore sur le stockage distant. | Impossible de débrancher : {count} documents sont encore sur le stockage distant. Rapatriez-les d'abord, sinon leurs fichiers deviendraient inaccessibles."
+        configured_by_environment: "Cette configuration est posée dans l'environnement du serveur. Retirez-y les variables R2 : cet écran ne peut pas les effacer."
         endpoint_not_https: "L'adresse du compte doit commencer par https://."
-        endpoint_contains_bucket: "L'adresse du compte se termine par le nom du compartiment. Retirez-le : l'application l'ajoute elle-même, et il apparaîtrait deux fois."
         access_key_length: "L'identifiant de clé doit faire 32 caractères. Celui-ci n'en fait pas autant : c'est probablement une autre valeur de la page Cloudflare, ou une copie incomplète."
         secret_key_length: "La clé secrète doit faire 64 caractères. Celle-ci n'en fait pas autant : c'est probablement une copie incomplète."
     appearance:
