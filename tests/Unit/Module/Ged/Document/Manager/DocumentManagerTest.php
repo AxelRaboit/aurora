@@ -12,6 +12,7 @@ use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\ImageVariantGenerator;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\Service\VideoPosterGenerator;
 use Aurora\Core\Storage\StorageManager;
 use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Aurora\Module\Configuration\Setting\Repository\SettingRepository;
@@ -95,6 +96,7 @@ final class DocumentManagerTest extends TestCase
             new GedDocumentUploader(
                 new AsciiSlugger(),
                 new PdfThumbnailGenerator($workspace),
+                new VideoPosterGenerator($workspace),
                 new ImageCropper($filesystem),
                 $storageManager,
                 $workspace,

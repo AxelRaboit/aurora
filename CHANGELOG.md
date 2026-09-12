@@ -5,6 +5,51 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.134] - 2026-09-12
+
+### Ajouté
+
+#### Une vidéo de la médiathèque a maintenant une image d'attente
+Un lecteur `preload="none"` sans poster est un rectangle noir à « 0:00 » : tant
+que personne n'a cliqué, le navigateur n'a aucune image et ignore jusqu'aux
+proportions du film, donc il dessine sa boîte par défaut, large et courte. Une
+vidéo verticale y ressemblait à une bande écrasée.
+
+Le thème savait afficher un poster depuis le début, et `GridViewBuilder` allait
+le chercher dans `thumbnail_path`. Personne ne remplissait cette colonne pour
+une vidéo : seul le PDF y avait droit.
+
+**C'est le navigateur qui fabrique l'image**, au moment du dépôt, en décodant
+le fichier qu'il s'apprête à envoyer. Rien à installer sur le serveur, et la
+capture ne peut échouer que sur une vidéo qu'aucun visiteur n'aurait pu lire de
+toute façon. Les dimensions du film voyagent avec elle.
+
+`ffmpeg` reste branché pour les dépôts qui ne passent par aucun navigateur,
+l'API, une fixture, un import en console, et pour le rattrapage par
+`aurora:ged:thumbnails:generate`, désormais étendue aux vidéos. Il n'est jamais
+requis : l'installer coûte près de deux cents paquets, pilotes GPU et moteur de
+reconnaissance vocale compris, sur chaque serveur qui héberge une Aurora.
+
+La balise `<video>` porte aussi `width` et `height`, pour que la boîte ait la
+bonne forme même sans poster.
+
+### Corrigé
+
+#### Le formulaire de la médiathèque perdait la vignette qu'il venait de recevoir
+`/upload` renvoyait `thumbnailPath`, mais le formulaire ne le recopiait nulle
+part et ne le renvoyait donc pas au moment d'enregistrer. Un PDF déposé par
+l'écran repartait sans sa vignette, alors qu'elle avait bien été produite et
+écrite sur le disque. Le champ fait maintenant l'aller-retour comme `filePath`,
+et le sérialiseur l'expose pour que l'édition n'efface pas ce qui existe.
+
+### Dans aurora-client
+Rien à répercuter à la main. Les vidéos déjà en base n'ont pas de poster :
+`php bin/console aurora:ged:thumbnails:generate` en produit un si `ffmpeg` est
+présent sur le serveur, sinon il suffit de redéposer le fichier depuis la
+médiathèque.
+
+---
+
 ## [0.9.133] - 2026-09-12
 
 ### Modifié

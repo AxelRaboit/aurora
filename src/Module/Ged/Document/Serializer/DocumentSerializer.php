@@ -71,6 +71,11 @@ class DocumentSerializer implements DocumentSerializerInterface
             // For native image MIMEs, fall back to the source file itself
             // so the list UI can always show *something*.
             'thumbnailUrl' => $this->resolveThumbnailUrl($document),
+            // The stored key behind that URL. The edit form carries it back
+            // untouched on submit, the way `filePath` is carried: without it
+            // a document re-saved from the screen would silently lose the
+            // still it already had.
+            'thumbnailPath' => $document->getThumbnailPath(),
             'tagIds' => $document->getTags()->map(static fn ($tag): ?int => $tag->getId())->toArray(),
             'tags' => $document->getTags()->map(static fn ($tag): array => ['id' => $tag->getId(), 'name' => $tag->getName(), 'color' => $tag->getColor()])->toArray(),
             'folderId' => $folder?->getId(),

@@ -591,12 +591,55 @@ final class GridViewBuilderTest extends IntegrationTestCase
      * Flushed rather than only persisted: the builder resolves ids through the
      * repository, so the row has to exist and to have an id.
      */
-    private function document(string $mimeType, ?string $filePath): int
+    /**
+     * The film's own size travels with it, so the player can reserve the right
+     * shape before a byte is fetched.
+     *
+     * This is what stops an unplayed portrait film from rendering as a squat
+     * black rectangle: with `preload="none"` and neither poster nor ratio, a
+     * browser falls back to its 300x150 default.
+     */
+    public function testAHostedFilmCarriesItsDimensions(): void
+    {
+        $film = $this->document('video/mp4', 'ged/2026/09/reel.mp4', 404, 720);
+
+        $grid = $this->gridViewBuilder->buildForEditor(
+            ['enabled' => true, 'zones' => [['id' => 'z1', 'type' => 'video', 'mediaId' => $film]]],
+            [],
+            'fr',
+        );
+
+        self::assertSame(404, $grid['zones'][0]['file']['width']);
+        self::assertSame(720, $grid['zones'][0]['file']['height']);
+    }
+
+    /**
+     * A film stored before the dimensions were recorded keeps its nulls. The
+     * template asks for both before writing either, so half a ratio never
+     * reaches the markup.
+     */
+    public function testAFilmWithoutDimensionsKeepsThemNull(): void
+    {
+        $film = $this->document('video/mp4', 'ged/2026/09/legacy.mp4');
+
+        $grid = $this->gridViewBuilder->buildForEditor(
+            ['enabled' => true, 'zones' => [['id' => 'z1', 'type' => 'video', 'mediaId' => $film]]],
+            [],
+            'fr',
+        );
+
+        self::assertNull($grid['zones'][0]['file']['width']);
+        self::assertNull($grid['zones'][0]['file']['height']);
+    }
+
+    private function document(string $mimeType, ?string $filePath, ?int $width = null, ?int $height = null): int
     {
         $document = new Document();
         $document->setTitle('Média');
         $document->setMimeType($mimeType);
         $document->setFilePath($filePath);
+        $document->setWidth($width);
+        $document->setHeight($height);
 
         $this->entityManager->persist($document);
         $this->entityManager->flush();

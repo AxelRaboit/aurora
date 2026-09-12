@@ -262,13 +262,21 @@
                `preload="none"` because a portfolio page can carry several and
                a visitor watches one - metadata alone would be a request per
                film before anyone asked for any. The poster is what stands in
-               until then. #}
+               until then.
+
+               `width`/`height` are the film's own pixel size, and they are
+               there for the shape rather than the size: with `h-auto w-full`
+               the CSS decides how big the player is, while the attributes
+               give the browser a ratio to reserve before anything loads. A
+               player with neither poster nor ratio falls back to 300x150 and
+               a portrait film renders as a squat black box. #}
             <div class="not-prose overflow-hidden rounded-lg">
                 <video
                     class="block h-auto w-full"
                     controls
                     playsinline
                     preload="none"
+                    {% if zone.file.width and zone.file.height %}width="{{ zone.file.width }}" height="{{ zone.file.height }}"{% endif %}
                     {% if zone.file.poster %}poster="{{ zone.file.poster }}"{% endif %}
                 >
                     <source src="{{ zone.file.url }}" type="{{ zone.file.mimeType }}">

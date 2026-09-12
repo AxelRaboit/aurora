@@ -16,7 +16,7 @@ Onze types, et le bon choix se fait moins sur l'apparence que sur ce que la zone
 ## Les zones qui montrent
 
 - **Image** : une image de la bibliothèque, avec son cadrage et son ratio.
-- **Vidéo** : une vidéo hébergée ou une adresse externe.
+- **Vidéo** : une vidéo hébergée ou une adresse externe. Une vidéo hébergée s'affiche avec son image d'attente, prise dans le film au dépôt.
 - **Séparateur** : une respiration, pas un trait décoratif.
 
 ## Les zones qui pointent ailleurs

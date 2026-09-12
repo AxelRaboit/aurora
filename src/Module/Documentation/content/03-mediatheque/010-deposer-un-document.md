@@ -33,6 +33,16 @@ Un fichier à la fois, pris sur l'ordinateur. Vingt méga-octets au maximum, et 
 
 ![Le formulaire rempli](../../images/03-mediatheque/deposer-un-document-04-avant-d-enregistrer.png)
 
+## Le cas de la vidéo
+
+Une vidéo déposée ici repart avec une image d'attente, prise dans le film lui-même à la première seconde. C'est elle que le visiteur voit avant de cliquer sur lecture.
+
+Sans elle, le lecteur d'une page est un rectangle noir : tant que personne n'a cliqué, le navigateur n'a téléchargé aucune image et ne connaît même pas les proportions du film. Il dessine donc sa boîte par défaut, large et courte, ce qui va particulièrement mal à une vidéo verticale.
+
+**L'image est fabriquée par votre navigateur**, au moment où vous choisissez le fichier, avant l'envoi. Rien n'est à installer sur le serveur. Le dépôt d'une vidéo prend une seconde de plus, le temps de la décoder.
+
+Si votre navigateur n'y arrive pas, le dépôt se fait quand même : la vidéo est simplement enregistrée sans image d'attente, comme avant.
+
 ## Après l'enregistrement
 
 Le document prend une référence, et le fichier stocké reçoit un suffixe unique : deux photos nommées « photo.jpg » ne se recouvrent pas. Le nom d'origine, lui, est conservé.
