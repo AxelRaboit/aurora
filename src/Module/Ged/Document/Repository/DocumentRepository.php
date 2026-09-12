@@ -11,6 +11,7 @@ use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Order;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -35,13 +36,21 @@ class DocumentRepository extends ResolveTargetEntityRepository
         ?MimeGroupEnum $mimeGroup = null,
         bool $rootOnly = false,
         ?StorageDiskEnum $storageDisk = null,
+        bool $trashed = false,
     ): array {
         $qb = $this->createQueryBuilder('d')
             ->leftJoin('d.category', 'c')
             ->leftJoin('d.folder', 'folder')
             ->addSelect('c', 'folder')
-            ->orderBy('d.createdAt', Order::Descending->value);
+            ->orderBy($trashed ? 'd.deletedAt' : 'd.createdAt', Order::Descending->value);
         $countQb = $this->createQueryBuilder('d')->select('COUNT(d.id)');
+
+        // The trash is the same listing with the condition flipped, not a
+        // second finder: every filter above keeps working inside it, and a
+        // document can only ever be on one side of this line.
+        $trashCondition = $trashed ? 'd.deletedAt IS NOT NULL' : 'd.deletedAt IS NULL';
+        $qb->andWhere($trashCondition);
+        $countQb->andWhere($trashCondition);
 
         if (null !== $search && '' !== $search) {
             $pattern = '%'.mb_strtolower($search).'%';
@@ -203,6 +212,7 @@ class DocumentRepository extends ResolveTargetEntityRepository
 
         return $this->createQueryBuilder('d')
             ->where('LOWER(d.title) LIKE :pattern OR LOWER(d.originalName) LIKE :pattern')
+            ->andWhere('d.deletedAt IS NULL')
             ->setParameter('pattern', $pattern)
             ->setMaxResults($limit)
             ->getQuery()
@@ -218,6 +228,7 @@ class DocumentRepository extends ResolveTargetEntityRepository
     {
         return (int) $this->createQueryBuilder('d')
             ->select('COALESCE(SUM(d.size), 0)')
+            ->where('d.deletedAt IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -229,6 +240,7 @@ class DocumentRepository extends ResolveTargetEntityRepository
     {
         $rows = $this->createQueryBuilder('d')
             ->select('d.mimeType AS mimeType, COUNT(d.id) AS cnt')
+            ->where('d.deletedAt IS NULL')
             ->groupBy('d.mimeType')
             ->getQuery()
             ->getArrayResult();
@@ -244,6 +256,7 @@ class DocumentRepository extends ResolveTargetEntityRepository
         $rows = $this->createQueryBuilder('d')
             ->select('IDENTITY(d.folder) AS folderId, COUNT(d.id) AS cnt')
             ->where('d.folder IS NOT NULL')
+            ->andWhere('d.deletedAt IS NULL')
             ->groupBy('d.folder')
             ->getQuery()
             ->getArrayResult();
@@ -254,6 +267,46 @@ class DocumentRepository extends ResolveTargetEntityRepository
         }
 
         return $map;
+    }
+
+    /**
+     * How many documents are sitting in the trash.
+     *
+     * Read for the badge on the listing's trash filter, so the answer has to
+     * be a count rather than a page: the point is to say that something is in
+     * there without loading it.
+     */
+    public function countTrashed(): int
+    {
+        return (int) $this->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->where('d.deletedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /** @return list<Document> */
+    public function findAllTrashed(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.deletedAt IS NOT NULL')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Documents trashed long enough ago to be purged.
+     *
+     * @return list<Document>
+     */
+    public function findTrashedBefore(DateTimeImmutable $cutoff): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.deletedAt IS NOT NULL')
+            ->andWhere('d.deletedAt < :cutoff')
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getResult();
     }
 
     /**

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useListPage } from "@/shared/composables/list/useListPage.js";
 import { useQrCode } from "@/shared/composables/overlay/useQrCode.js";
@@ -7,6 +7,7 @@ import { useClipboard } from "@/shared/composables/useClipboard.js";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
 import AppRowActions from "@/shared/components/action/AppRowActions.vue";
 import { useDocumentRowActions } from "./composables/useDocumentRowActions.js";
+import { useDocumentTrash } from "./composables/useDocumentTrash.js";
 import { useDocumentsForm, DOCUMENT_STATUS_BADGE } from "./composables/useDocumentsForm.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
@@ -37,7 +38,7 @@ import { useDocumentCrop } from "./composables/useDocumentCrop.js";
 import { useMultiSelection } from "@/shared/composables/list/useMultiSelection.js";
 import AppTab from "@/shared/components/nav/AppTab.vue";
 import AppLoader from "@/shared/components/feedback/AppLoader.vue";
-import { Plus, Eye, Pencil, Trash2, Save, FileText, Paperclip, Upload, X, Folder, Download, QrCode, LayoutGrid, List, SortAsc, SortDesc, CheckSquare, Square, Copy, Crop, ExternalLink, Home, Layers, Star, ChevronRight, ChevronDown, Move, CloudUpload, HardDriveDownload } from "lucide-vue-next";
+import { Plus, Eye, Pencil, Trash2, Save, FileText, Paperclip, Upload, X, Folder, Download, QrCode, LayoutGrid, List, SortAsc, SortDesc, CheckSquare, Square, Copy, Crop, ExternalLink, Home, Layers, Star, ChevronRight, ChevronDown, Move, CloudUpload, HardDriveDownload, RotateCcw } from "lucide-vue-next";
 import ImageCropperModal from "@/shared/components/overlay/ImageCropperModal.vue";
 import AppImagePreview from "@/shared/components/display/AppImagePreview.vue";
 import AppImage from "@/shared/components/display/AppImage.vue";
@@ -77,6 +78,10 @@ const props = defineProps({
     folderEditPath: { type: String, default: "" },
     folderDeletePath: { type: String, default: "" },
     folderMovePath: { type: String, default: "" },
+    restorePath: { type: String, default: "" },
+    forceDeletePath: { type: String, default: "" },
+    bulkRestorePath: { type: String, default: "" },
+    emptyTrashPath: { type: String, default: "" },
 });
 
 const categoryOptions = props.categories.map((c) => ({ value: c.id, label: c.name }));
@@ -93,6 +98,7 @@ function permalinkFor(doc) {
 
 const {
     filterCategoryId, filterTagId, filterStatus, filterMimeGroup,
+    viewingTrash, toggleTrash,
     hasActiveFilter, extraParams: filterExtraParams, applyFilter, resetFilters,
     // The arrow defers the read: `reset` comes from useListPage, which needs
     // these refs to exist before it is called.
@@ -117,6 +123,15 @@ const {
     // eslint-disable-next-line no-use-before-define -- same cycle as above.
 } = useDocumentNavigation(props, () => reset(), clearSelection);
 
+// How many documents are in the trash, refreshed by every listing response so
+// the toolbar badge follows a deletion or a restore without a second request.
+const trashedTotal = ref(props.documents?.trashedTotal ?? 0);
+
+function onDocumentsListResponse(data) {
+    trashedTotal.value = data?.trashedTotal ?? trashedTotal.value;
+    onListResponse(data);
+}
+
 // Sidebar (folderId / rootOnly) drives the folder filter - strip the legacy
 // chip's folderId from the existing useDocumentFilters payload to avoid
 // double-writing the same query param.
@@ -132,7 +147,7 @@ const { items, loading, page, totalPages, search: searchInput, onSearch, goToPag
         initialSearch: props.search,
         initialData: props.documents,
         extraParams: combinedExtraParams,
-        onData: onListResponse,
+        onData: onDocumentsListResponse,
     },
 );
 
@@ -187,6 +202,12 @@ onUnmounted(() => {
 // so the two copies could already disagree.
 const { relocate } = useDocumentRelocation(props, items);
 
+const {
+    pendingForceDelete, confirmEmptyTrash, emptyingTrash,
+    restore: restoreDocument, askForceDelete, doForceDelete, bulkRestore, emptyTrash,
+     
+} = useDocumentTrash(props, { selectedIds, clearSelection, reload: () => reset() });
+
 const documentActions = useDocumentRowActions({
     can,
     viewDoc,
@@ -195,6 +216,9 @@ const documentActions = useDocumentRowActions({
     confirmDelete,
     relocate,
     relocationAvailable: props.storageRelocationAvailable,
+    viewingTrash,
+    restore: restoreDocument,
+    askForceDelete,
 });
 
 const { doBulkDelete, bulkMoveTargetId, openBulkMove, bulkMove, bulkRelocate, bulkRelocating } = useDocumentBulkActions(
@@ -234,6 +258,17 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                     <AppSearchInput v-model="searchInput" :placeholder="t('backend.ged.documents.search_placeholder')" v-on:search="onSearch" />
                 </div>
                 <AppButton
+                    v-if="can('ged.documents.delete') && (trashedTotal > 0 || viewingTrash)"
+                    :variant="viewingTrash ? 'primary' : 'ghost'"
+                    size="md"
+                    class="w-full sm:w-auto"
+                    v-on:click="toggleTrash()"
+                >
+                    <Trash2 class="w-3.5 h-3.5" :stroke-width="2" />
+                    {{ t("backend.ged.documents.trash.title") }}
+                    <span v-if="trashedTotal" class="ml-1 tabular-nums">({{ trashedTotal }})</span>
+                </AppButton>
+                <AppButton
                     v-if="can('ged.documents.create')"
                     variant="primary"
                     size="md"
@@ -249,6 +284,21 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
             <!-- Sidebar -->
 
             <main class="flex-1 min-w-0 space-y-4">
+                <!-- Trash banner: says what this view is, and what leaving it costs -->
+                <div v-if="viewingTrash" class="flex flex-wrap items-center gap-3 bg-rose-500/10 border border-rose-400/30 rounded-xl px-4 py-2.5">
+                    <Trash2 class="w-4 h-4 text-rose-400 shrink-0" :stroke-width="2" />
+                    <p class="text-sm text-primary min-w-0">{{ t("backend.ged.documents.trash.banner") }}</p>
+                    <AppButton
+                        v-if="can('ged.documents.delete') && trashedTotal > 0"
+                        size="sm"
+                        variant="danger"
+                        class="ml-auto"
+                        v-on:click="confirmEmptyTrash = true"
+                    >
+                        <Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.documents.trash.empty") }}
+                    </AppButton>
+                </div>
+
                 <!-- Filters -->
                 <div v-if="categories.length || tags.length" class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                     <AppMultiselect
@@ -301,7 +351,12 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                 <!-- Selection bar -->
                 <div v-if="selectedIds.size" class="flex flex-wrap items-center gap-2 bg-accent-500/10 border border-accent-400/30 rounded-xl px-4 py-2.5">
                     <span class="text-sm font-medium text-accent-400">{{ selectedIds.size }} {{ t("shared.common.selected") }}</span>
-                    <div class="flex gap-2 ml-auto flex-wrap">
+                    <div v-if="viewingTrash" class="flex gap-2 ml-auto flex-wrap">
+                        <AppButton v-if="can('ged.documents.delete')" size="sm" variant="ghost" v-on:click="bulkRestore">
+                            <RotateCcw class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.documents.trash.restore") }}
+                        </AppButton>
+                    </div>
+                    <div v-else class="flex gap-2 ml-auto flex-wrap">
                         <AppButton size="sm" variant="ghost" v-on:click="() => { bulkMoveTargetId = null; openBulkMove = true; }">
                             <Move class="w-3.5 h-3.5" :stroke-width="2" />
                             {{ t("backend.ged.documents.move") }}
@@ -805,6 +860,44 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                 <AppModalFooter>
                     <AppButton variant="ghost" size="md" v-on:click="pendingDelete = null"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
                     <AppButton variant="danger" size="md" :loading="deleteLoading" v-on:click="doDelete"><Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.delete") }}</AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <!-- Permanent deletion modal: the only irreversible action on this screen -->
+        <AppModal
+            :show="!!pendingForceDelete"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.ged.documents.trash.delete_forever')"
+            :icon="Trash2"
+            v-on:close="pendingForceDelete = null"
+        >
+            <p class="text-sm text-primary">{{ t("backend.ged.documents.trash.delete_forever_confirm", { title: pendingForceDelete?.title ?? "" }) }}</p>
+            <p class="text-sm text-secondary">{{ t("backend.ged.documents.trash.delete_forever_warning") }}</p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="pendingForceDelete = null"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
+                    <AppButton variant="danger" size="md" v-on:click="doForceDelete"><Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.documents.trash.delete_forever") }}</AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <!-- Empty trash modal -->
+        <AppModal
+            :show="confirmEmptyTrash"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.ged.documents.trash.empty')"
+            :icon="Trash2"
+            v-on:close="confirmEmptyTrash = false"
+        >
+            <p class="text-sm text-primary">{{ t("backend.ged.documents.trash.empty_confirm", { count: trashedTotal }) }}</p>
+            <p class="text-sm text-secondary">{{ t("backend.ged.documents.trash.delete_forever_warning") }}</p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="confirmEmptyTrash = false"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
+                    <AppButton variant="danger" size="md" :loading="emptyingTrash" v-on:click="emptyTrash"><Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.documents.trash.empty") }}</AppButton>
                 </AppModalFooter>
             </template>
         </AppModal>

@@ -11,6 +11,7 @@ use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTagInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
 use Aurora\Module\Ged\Enum\DocumentTransferStateEnum;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -27,6 +28,17 @@ abstract class AbstractDocument implements DocumentInterface
 
     #[ORM\Column(length: 200)]
     protected string $title;
+
+    /**
+     * When the document was moved to the trash.
+     *
+     * Null for a document in the library. The file on disk is deliberately
+     * left alone while this is set: a trashed document must be restorable,
+     * and deleting the bytes at the same time as the row would make the
+     * restore a promise nothing can keep. The bytes go when the purge does.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?DateTimeImmutable $deletedAt = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $description = null;
@@ -502,5 +514,22 @@ abstract class AbstractDocument implements DocumentInterface
         $this->attributionUrl = $attributionUrl;
 
         return $this;
+    }
+
+    public function getDeletedAt(): ?DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?DateTimeImmutable $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+
+    public function isTrashed(): bool
+    {
+        return $this->deletedAt instanceof DateTimeImmutable;
     }
 }
