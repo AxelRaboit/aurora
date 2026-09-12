@@ -44,6 +44,7 @@ shared:
   chart:
     share: "{count} of {total} ({percent}%)"
   common:
+    help: Help
     list_view: List view
     grid_view: Card view
     search: Search
@@ -147,6 +148,29 @@ shared:
 # module-specific tools injected via `extraTools` stay in that module's
 # own messages.en.yaml.
 backend:
+  help:
+    storage:
+      delivery_mode:
+        title: How files are served
+        intro: "This choice does not change where your files are stored, only the route they take to reach a visitor."
+        address_title: The address never changes
+        address_body: "Whichever mode you pick, a document keeps the same address. A link pasted into an article, an email or another site keeps working if you change your mind later."
+        proxy_title: Through the application
+        proxy_body: "The bytes pass through your server on their way to the visitor. It is the simplest option, and your access rules keep applying: a draft document stays invisible. In exchange, your server does the work on every download."
+        presigned_title: Through a temporary signed link
+        presigned_body: "The application builds a link valid for a few minutes and sends the visitor to it. The bytes go straight from the storage to their browser without touching your server, and the files stay private. The link expires, so it cannot be shared for long."
+        public_url_title: Through the public domain
+        public_url_body: "Files are served by the domain you attached to the bucket, and cached close to the visitor. It is the fastest option. In exchange, anyone who knows a file's address can read it, including a document you thought was restricted."
+        choosing_title: Which one to take
+        choosing_body: "Stay on \"through the application\" until something bothers you. Move to the signed link if your server struggles with large files. Only take the public domain for files anyone may read without it mattering."
+      connection:
+        title: The remote storage connection
+        what_is_tested_title: What the test checks
+        what_is_tested_body: "It writes a real witness file into the bucket, reads it back, checks it shows up in the listing, then deletes it. Four filled fields prove nothing: only a real write shows the token is allowed to write."
+        what_is_stored_title: What is stored
+        what_is_stored_body: "The account address, the bucket and the two keys, the latter encrypted. They are never shown back to you: the fields only say that a value exists."
+        disconnecting_title: Disconnecting
+        disconnecting_body: "The \"Disconnect storage\" button erases both keys, forgets the address and the bucket, cancels the verification and brings new files back onto the server's disk. Documents already sent to the remote storage stay there: bring them back first, or they become unreachable."
   documentation:
     enlarge: Enlarge the screenshot
     rubrics: Sections

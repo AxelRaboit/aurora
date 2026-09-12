@@ -2,11 +2,15 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
-import { CheckCircle2, ExternalLink, PlugZap, Save, XCircle } from "lucide-vue-next";
+import { CheckCircle2, ExternalLink, PlugZap, Save, Unplug, X, XCircle } from "lucide-vue-next";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppLoader from "@/shared/components/feedback/AppLoader.vue";
+import AppMessage from "@/shared/components/feedback/AppMessage.vue";
+import AppHelp from "@/shared/components/overlay/AppHelp.vue";
+import AppModal from "@/shared/components/overlay/AppModal.vue";
+import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import { HttpMethod } from "@/shared/utils/http/httpMethod.js";
 
@@ -43,7 +47,11 @@ const bucket = ref("");
 const publicBaseUrl = ref("");
 const hasAccessKeyId = ref(false);
 const hasSecretAccessKey = ref(false);
+const isComplete = ref(false);
+const fromEnvironment = ref(false);
 const verifiedAt = ref(null);
+const disconnecting = ref(false);
+const confirmingDisconnect = ref(false);
 
 // Never pre-filled from the server: write-only from here on. Left empty, the
 // save keeps whatever is stored.
@@ -58,6 +66,7 @@ const probe = ref(null);
  * the click rather than reported after it.
  */
 const canSwitchToR2 = computed(() => null !== verifiedAt.value);
+
 
 // R2 is offered only once a probe has passed. Withheld rather than shown
 // disabled: AppSelect has no disabled state, and an option that cannot be
@@ -88,6 +97,51 @@ const verifiedOn = computed(() => {
 
     return Number.isNaN(date.getTime()) ? verifiedAt.value : date.toLocaleString();
 });
+/**
+ * The one line that answers "is this thing on?" without reading the form.
+ *
+ * Four fields filled and a date somewhere down the page do not answer it: the
+ * fields show dots for stored keys, and the date sits next to a button. The
+ * banner states the connection, which bucket, and where new files go - the
+ * three things one comes to this screen to check.
+ */
+const connection = computed(() => {
+    if (!isComplete.value) {
+        return { variant: "info", key: "banner_none" };
+    }
+
+    if (null === verifiedAt.value) {
+        return { variant: "warning", key: "banner_untested" };
+    }
+
+    return { variant: "success", key: "banner_connected" };
+});
+
+// Built outside the `t()` call: a ternary between its parentheses reads as a
+// translation key to the guard that checks every key resolves, and the string
+// "local" is not one.
+const activeDiskLabel = computed(() =>
+    t(`backend.settings.storage.disk_${activeDisk.value}`),
+);
+
+const connectionMessage = computed(() =>
+    t(`backend.settings.storage.${connection.value.key}`, {
+        bucket: bucket.value,
+        date: verifiedOn.value,
+        target: activeDiskLabel.value,
+    }),
+);
+
+/**
+ * Nothing to disconnect from until something is stored, and nothing this
+ * screen can do about a configuration the server's environment supplies:
+ * those variables are unset where they are set, not here. Offering the button
+ * anyway would be offering a button that cannot work.
+ */
+const canDisconnect = computed(
+    () => !fromEnvironment.value && (isComplete.value || null !== verifiedAt.value),
+);
+
 
 function apply(state) {
     if (!state) return;
@@ -98,6 +152,8 @@ function apply(state) {
     publicBaseUrl.value = state.publicBaseUrl ?? "";
     hasAccessKeyId.value = true === state.hasAccessKeyId;
     hasSecretAccessKey.value = true === state.hasSecretAccessKey;
+    isComplete.value = true === state.isComplete;
+    fromEnvironment.value = true === state.fromEnvironment;
     verifiedAt.value = state.verifiedAt ?? null;
     accessKeyId.value = "";
     secretAccessKey.value = "";
@@ -191,12 +247,58 @@ async function test() {
     }
 }
 
+/**
+ * Forgets the remote backend, after asking - it erases two credentials that
+ * Cloudflare only ever showed once, so getting them back means creating a new
+ * token, not remembering.
+ *
+ * The server refuses while documents still live there and says how many. That
+ * check belongs there rather than here: the screen would be asking a question
+ * whose answer can change between the asking and the click.
+ */
+async function disconnect() {
+    disconnecting.value = true;
+    try {
+        const response = await request(`${SETTINGS_PATH}/disconnect`, {}, { noGuard: true });
+        if (!response) return;
+
+        if (false === response.success) {
+            toast.error(
+                t(response.error ?? "shared.common.error", { count: response.remaining ?? 0 }),
+            );
+
+            return;
+        }
+
+        probe.value = null;
+        apply(response);
+        confirmingDisconnect.value = false;
+        toast.success(t("backend.settings.storage.disconnected"));
+    } finally {
+        disconnecting.value = false;
+    }
+}
+
 defineExpose({ save, apply, canSwitchToR2 });
 </script>
 
 <template>
     <div class="relative space-y-6">
         <AppLoader :active="loading" />
+
+        <!-- First thing on the screen, because it answers the question that
+             brought most people here. -->
+        <AppMessage v-if="!loading" :variant="connection.variant">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <span>
+                    {{ connectionMessage }}
+                    <template v-if="fromEnvironment">
+                        {{ t("backend.settings.storage.banner_from_environment") }}
+                    </template>
+                </span>
+                <AppHelp topic="storage.connection" />
+            </div>
+        </AppMessage>
 
         <section class="space-y-2">
             <p class="text-sm text-secondary">{{ t("backend.settings.storage.intro") }}</p>
@@ -291,6 +393,7 @@ defineExpose({ save, apply, canSwitchToR2 });
                 :options="deliveryOptions"
                 :label="t('backend.settings.storage.delivery_title')"
                 :hint="deliveryHint"
+                help="storage.delivery_mode"
             />
             <p class="text-xs text-muted">{{ t("backend.settings.storage.delivery_hint") }}</p>
 
@@ -302,10 +405,45 @@ defineExpose({ save, apply, canSwitchToR2 });
             />
         </section>
 
-        <div class="flex justify-end">
+        <div class="flex flex-wrap items-center justify-end gap-3">
+            <!-- Far from the save button, and only when there is something to
+                 disconnect from. It erases both keys, which nothing else on
+                 this screen can do. -->
+            <AppButton
+                v-if="canDisconnect"
+                variant="danger"
+                size="md"
+                class="mr-auto"
+                v-on:click="confirmingDisconnect = true"
+            >
+                <Unplug class="w-3.5 h-3.5" :stroke-width="2" />
+                {{ t("backend.settings.storage.disconnect_button") }}
+            </AppButton>
             <AppButton variant="primary" size="md" :loading="saving" v-on:click="save">
                 <Save class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.save") }}
             </AppButton>
         </div>
+
+        <AppModal
+            :show="confirmingDisconnect"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.settings.storage.disconnect_button')"
+            :icon="Unplug"
+            v-on:close="confirmingDisconnect = false"
+        >
+            <p class="text-sm text-primary">{{ t("backend.settings.storage.disconnect_confirm") }}</p>
+            <p class="text-sm text-secondary">{{ t("backend.settings.storage.disconnect_warning") }}</p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="confirmingDisconnect = false">
+                        <X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}
+                    </AppButton>
+                    <AppButton variant="danger" size="md" :loading="disconnecting" v-on:click="disconnect">
+                        <Unplug class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.settings.storage.disconnect_button") }}
+                    </AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
     </div>
 </template>

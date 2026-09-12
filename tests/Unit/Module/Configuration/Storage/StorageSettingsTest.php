@@ -177,6 +177,86 @@ final class StorageSettingsTest extends TestCase
         );
     }
 
+    /**
+     * Disconnecting is the one thing the save form cannot do: it only ever
+     * sends a key somebody typed, so an empty field there means "keep what is
+     * stored" and nothing ever means "forget it".
+     */
+    public function testDisconnectingForgetsEverything(): void
+    {
+        $settings = $this->settings();
+        $settings->save(
+            StorageDiskEnum::Local,
+            StorageDeliveryModeEnum::Proxy,
+            'https://account.r2.cloudflarestorage.com',
+            'bucket',
+            'key',
+            'secret',
+            '',
+        );
+        $settings->markVerified();
+
+        $settings->disconnectR2();
+
+        $state = $settings->state();
+        self::assertSame('', $state['endpoint']);
+        self::assertSame('', $state['bucket']);
+        self::assertFalse($state['hasAccessKeyId']);
+        self::assertFalse($state['hasSecretAccessKey']);
+        self::assertFalse($state['isComplete']);
+        self::assertSame(StorageDiskEnum::Local->value, $state['activeDisk']);
+    }
+
+    /**
+     * The verification goes with the credentials. Keeping a green mark for
+     * keys that no longer exist would offer a move to a backend nothing can
+     * reach.
+     */
+    public function testDisconnectingCancelsTheVerification(): void
+    {
+        $settings = $this->settings();
+        $settings->save(
+            StorageDiskEnum::Local,
+            StorageDeliveryModeEnum::Proxy,
+            'https://account.r2.cloudflarestorage.com',
+            'bucket',
+            'key',
+            'secret',
+            '',
+        );
+        $settings->markVerified();
+        self::assertNotNull($settings->verifiedAt());
+
+        $settings->disconnectR2();
+
+        self::assertNull($settings->verifiedAt());
+        self::assertFalse($settings->isRelocationAvailable());
+    }
+
+    /**
+     * A configuration held in the server's environment cannot be removed from
+     * a screen, and the screen has to know that: clearing the rows underneath
+     * would leave the form looking untouched, which reads as a button that
+     * does nothing.
+     */
+    public function testAnEnvironmentConfigurationIsReportedAsSuch(): void
+    {
+        self::assertTrue($this->settings(environment: $this->completeEnvironment())->isConfiguredByEnvironment());
+        self::assertFalse($this->settings()->isConfiguredByEnvironment());
+    }
+
+    public function testDisconnectingDoesNotSilenceTheEnvironment(): void
+    {
+        $settings = $this->settings(environment: $this->completeEnvironment());
+
+        $settings->disconnectR2();
+
+        // The rows are gone, the environment is not, and `state()` reports
+        // what the application will actually use.
+        self::assertTrue($settings->state()['isComplete']);
+        self::assertTrue($settings->state()['fromEnvironment']);
+    }
+
     private function settings(?EnvR2ConfigurationProvider $environment = null): StorageSettings
     {
         $this->rows = [];

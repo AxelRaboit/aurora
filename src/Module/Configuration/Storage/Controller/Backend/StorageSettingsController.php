@@ -14,6 +14,7 @@ use Aurora\Core\Storage\Probe\StorageProbe;
 use Aurora\Core\Storage\R2\R2Configuration;
 use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Configuration\Storage\Setting\StorageSettings;
+use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,6 +41,7 @@ final class StorageSettingsController extends AbstractController
         private readonly StorageSettings $settings,
         private readonly StorageManager $storageManager,
         private readonly StorageProbe $probe,
+        private readonly DocumentRepository $documentRepository,
     ) {}
 
     #[Route('', name: '_show', methods: [HttpMethodEnum::Get->value])]
@@ -128,6 +130,43 @@ final class StorageSettingsController extends AbstractController
      * Runs the probe against a backend and, when it passes, records that it
      * did so the toggle unlocks.
      */
+    /**
+     * Forgets the remote backend: both keys, the address, the bucket, the
+     * verification, and new files go back to the server's disk.
+     *
+     * Refused while documents still live there, and that is the whole point of
+     * the route existing rather than a field being blankable. The stored
+     * credentials are the only way back to those bytes: erase them with rows
+     * still pointing at the bucket and every one of those documents becomes a
+     * broken link that nothing on the screen can explain. Bring them home
+     * first, one by one or in bulk, then disconnect.
+     */
+    #[Route('/disconnect', name: '_disconnect', methods: [HttpMethodEnum::Post->value])]
+    public function disconnect(): JsonResponse
+    {
+        // Nothing here can unset a server's environment variable, and the
+        // environment wins over the settings table field by field. Clearing
+        // the rows would leave the screen looking untouched, which reads as a
+        // button that does nothing rather than as a configuration held
+        // somewhere else.
+        if ($this->settings->isConfiguredByEnvironment()) {
+            return $this->jsonFailure('backend.settings.storage.errors.configured_by_environment');
+        }
+
+        $remaining = $this->documentRepository->countOnDisk(StorageDiskEnum::R2);
+
+        if ($remaining > 0) {
+            return $this->jsonFailure(
+                'backend.settings.storage.errors.documents_still_remote',
+                extra: ['remaining' => $remaining],
+            );
+        }
+
+        $this->settings->disconnectR2();
+
+        return $this->jsonSuccess($this->settings->state());
+    }
+
     #[Route('/test', name: '_test', methods: [HttpMethodEnum::Post->value])]
     public function test(Request $request): JsonResponse
     {

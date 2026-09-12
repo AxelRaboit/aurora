@@ -44,6 +44,7 @@ shared:
   chart:
     share: "{count} sur {total} ({percent} %)"
   common:
+    help: Aide
     list_view: Vue liste
     grid_view: Vue cartes
     search: Rechercher
@@ -147,6 +148,29 @@ shared:
 # AppBlockEditor. Les libellés des outils spécifiques à un module,
 # injectés via `extraTools`, restent dans son propre messages.fr.yaml.
 backend:
+  help:
+    storage:
+      delivery_mode:
+        title: Comment les fichiers sont servis
+        intro: "Ce choix ne change pas où vos fichiers sont stockés, seulement le chemin qu'ils empruntent pour arriver au visiteur."
+        address_title: L'adresse ne change jamais
+        address_body: "Quel que soit le mode, l'adresse d'un document reste la même. Un lien collé dans un article, un courriel ou un autre site continue de fonctionner si vous changez d'avis plus tard."
+        proxy_title: Par l'application
+        proxy_body: "Les octets passent par votre serveur avant d'atteindre le visiteur. C'est le plus simple, et vos règles d'accès continuent de s'appliquer : un document en brouillon reste invisible. En contrepartie, votre serveur fait le travail à chaque téléchargement."
+        presigned_title: Par lien signé temporaire
+        presigned_body: "L'application fabrique un lien valable quelques minutes et renvoie le visiteur dessus. Les octets vont directement du stockage à son navigateur, sans passer par votre serveur, et les fichiers restent privés. Le lien expire, donc il ne peut pas être partagé durablement."
+        public_url_title: Par le domaine public
+        public_url_body: "Les fichiers sont servis par le domaine que vous avez branché sur le compartiment, et mis en cache au plus près du visiteur. C'est le plus rapide. En revanche, quiconque connaît l'adresse d'un fichier peut le lire, y compris un document que vous pensiez réservé."
+        choosing_title: Lequel prendre
+        choosing_body: "Restez sur « par l'application » tant que rien ne vous gêne. Passez au lien signé si votre serveur peine sur de gros fichiers. Ne prenez le domaine public que pour des fichiers dont la lecture par n'importe qui ne pose aucun problème."
+      connection:
+        title: La connexion au stockage distant
+        what_is_tested_title: Ce que le test vérifie
+        what_is_tested_body: "Il écrit un vrai fichier témoin dans le compartiment, le relit, vérifie qu'il apparaît dans la liste, puis le supprime. Quatre champs remplis ne prouvent rien : seule une écriture réelle montre que le jeton a le droit d'écrire."
+        what_is_stored_title: Ce qui est enregistré
+        what_is_stored_body: "L'adresse du compte, le compartiment et les deux clés, ces dernières chiffrées. Elles ne vous sont jamais réaffichées : les champs indiquent seulement qu'une valeur existe."
+        disconnecting_title: Se débrancher
+        disconnecting_body: "Le bouton « Débrancher le stockage » efface les deux clés, oublie l'adresse et le compartiment, annule la vérification et ramène les nouveaux fichiers sur le disque du serveur. Les documents déjà déposés sur le stockage distant y restent : rapatriez-les avant, sinon ils deviendront inaccessibles."
   documentation:
     enlarge: Agrandir la capture
     rubrics: Rubriques

@@ -18,6 +18,8 @@ const props = defineProps({
      */
     hint: { type: String, default: '' },
     required: { type: Boolean, default: false },
+    /** Topic id from `helpTopics.js`, surfaced next to the label. */
+    help: { type: String, default: '' },
     readonly: { type: Boolean, default: false },
     toggleable: { type: Boolean, default: false },
     /**
@@ -64,7 +66,7 @@ defineExpose({
         v-on:input="$emit('update:modelValue', $event.target.value)"
     >
     <div v-else class="flex flex-col gap-1.5">
-        <AppFieldLabel :label="label" :required="required" />
+        <AppFieldLabel :label="label" :required="required" :help="help" />
         <div class="relative">
             <div v-if="$slots.prefix" class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted">
                 <slot name="prefix" />

@@ -62,6 +62,14 @@ backend:
       delivery_public_url: Through the public hostname
       delivery_public_url_hint: "Fastest, and cached. Files become readable by anyone holding the address."
       test_button: Test the connection
+      banner_none: "No remote storage configured. Files are written to the server's disk."
+      banner_untested: "Configuration filled in but never tested. Run the test before relying on it."
+      banner_connected: "Connected to Cloudflare R2, bucket “{bucket}”, verified on {date}. New files go to: {target}."
+      banner_from_environment: "This configuration comes from the server's environment, not from this screen."
+      disconnect_button: "Disconnect storage"
+      disconnect_confirm: "Both keys will be erased, along with the address and the bucket. New files will go back to the server's disk."
+      disconnect_warning: "Cloudflare only shows a key when it is created: going back means creating a new token, not finding this one again."
+      disconnected: "Remote storage disconnected."
       test_intro: "The test writes a witness file, reads it back, checks it is there, then deletes it. It is the only way to know a token may really write."
       test_passed: "Connection verified on {date}."
       test_never: "Never tested. The test is required before the storage can be switched."
@@ -85,6 +93,8 @@ backend:
         unreachable: "The address did not answer. Check it, and check this server can reach it."
       errors:
         verification_required: Test the connection before switching the storage.
+        documents_still_remote: "Cannot disconnect: one document still lives on the remote storage. | Cannot disconnect: {count} documents still live on the remote storage. Bring them back first, or their files would become unreachable."
+        configured_by_environment: "This configuration is set in the server's environment. Remove the R2 variables there: this screen cannot erase them."
         endpoint_not_https: "The account address must start with https://."
         access_key_length: "The access key id must be 32 characters long. This one is not, which usually means another value from the Cloudflare page, or an incomplete copy."
         secret_key_length: "The secret access key must be 64 characters long. This one is not, which usually means an incomplete copy."

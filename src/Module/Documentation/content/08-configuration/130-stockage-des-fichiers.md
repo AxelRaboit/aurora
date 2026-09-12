@@ -33,6 +33,14 @@ L'**identifiant de clé** fait 32 caractères et la **clé secrète** 64. Si vou
 
 Le **domaine public** est facultatif. C'est le nom de domaine que vous auriez branché sur le compartiment. Sans lui, les fichiers continuent d'être servis par l'application, ce qui fonctionne très bien.
 
+## Le bandeau en haut de l'écran
+
+Une ligne, tout en haut, dit si le stockage distant est branché, sur quel compartiment, quand il a été vérifié, et où partent les nouveaux fichiers. C'est la réponse à la question qui amène le plus souvent sur cet écran, sans avoir à lire le formulaire.
+
+Le point d'interrogation à côté ouvre le détail : ce que le test vérifie, ce qui est enregistré, et comment se débrancher.
+
+Si la configuration vient de l'environnement du serveur plutôt que de cet écran, le bandeau le dit. Dans ce cas, les champs affichent ce que le serveur impose et les modifier ici ne change rien.
+
 ## Tester avant de basculer
 
 Le bouton **Tester la connexion** est obligatoire, et c'est volontaire. Il ne relit pas vos réglages : il écrit un vrai fichier témoin, le relit, vérifie qu'il apparaît dans la liste, puis le supprime.
@@ -42,6 +50,16 @@ C'est la seule façon de savoir qu'un jeton a réellement le droit d'écrire. Qu
 Chaque étape est rapportée séparément, parce que « ça ne marche pas » ne dit rien alors que « l'écriture est passée, la relecture a échoué » désigne le problème. Quand une étape échoue, l'écran affiche la chose à aller changer plutôt que le message brut du service, qui ne nomme aucune des causes possibles.
 
 Modifier l'adresse, le compartiment ou une clé annule le test précédent : il portait sur une autre configuration.
+
+## Se débrancher
+
+Le bouton **Débrancher le stockage**, en bas à gauche, efface les deux clés, oublie l'adresse et le compartiment, annule la vérification et ramène les nouveaux fichiers sur le disque du serveur.
+
+C'est le seul geste qui efface une clé. Laisser un champ de clé vide veut dire « garde celle qui est enregistrée », jamais « oublie-la ».
+
+**Rapatriez vos documents avant.** L'écran refuse de se débrancher tant qu'un document vit encore sur le stockage distant, et vous dit combien il en reste : les clés sont le seul chemin vers ces fichiers, les effacer les rendrait inaccessibles.
+
+Cloudflare n'affiche une clé qu'à sa création. Revenir en arrière demande donc de créer un nouveau jeton, pas de retrouver celui-ci.
 
 ## Ce que la bascule change, et ce qu'elle ne change pas
 

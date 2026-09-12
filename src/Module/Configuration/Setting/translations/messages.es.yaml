@@ -33,6 +33,14 @@ backend:
       delivery_public_url: A través del dominio público
       delivery_public_url_hint: "Lo más rápido, y en caché. Los archivos pasan a ser legibles por cualquiera que conozca su dirección."
       test_button: Probar la conexión
+      banner_none: "Ningún almacenamiento remoto configurado. Los archivos se escriben en el disco del servidor."
+      banner_untested: "Configuración rellenada pero nunca probada. Ejecute la prueba antes de usarla."
+      banner_connected: "Conectado a Cloudflare R2, contenedor «{bucket}», verificado el {date}. Los archivos nuevos van a: {target}."
+      banner_from_environment: "Esta configuración viene del entorno del servidor, no de esta pantalla."
+      disconnect_button: "Desconectar el almacenamiento"
+      disconnect_confirm: "Se borrarán ambas claves, junto con la dirección y el contenedor. Los archivos nuevos volverán al disco del servidor."
+      disconnect_warning: "Cloudflare solo muestra una clave al crearla: volver atrás obliga a crear un token nuevo, no a recuperar este."
+      disconnected: "Almacenamiento remoto desconectado."
       test_intro: "La prueba escribe un archivo testigo, lo vuelve a leer, comprueba que está, y lo borra. Es la única forma de saber que un token puede escribir de verdad."
       test_passed: "Conexión verificada el {date}."
       test_never: "Nunca probada. La prueba es necesaria antes de poder cambiar el almacenamiento."
@@ -56,6 +64,8 @@ backend:
         unreachable: "La dirección no responde. Compruébela, y compruebe que el servidor puede alcanzarla."
       errors:
         verification_required: Pruebe la conexión antes de cambiar el almacenamiento.
+        documents_still_remote: "No se puede desconectar: un documento sigue en el almacenamiento remoto. | No se puede desconectar: {count} documentos siguen en el almacenamiento remoto. Recupérelos antes o sus archivos quedarían inaccesibles."
+        configured_by_environment: "Esta configuración está puesta en el entorno del servidor. Quite allí las variables R2: esta pantalla no puede borrarlas."
         endpoint_not_https: "La dirección de la cuenta debe empezar por https://."
         access_key_length: "El identificador de clave debe tener 32 caracteres. Este no los tiene: suele ser otro valor de la página de Cloudflare, o una copia incompleta."
         secret_key_length: "La clave secreta debe tener 64 caracteres. Esta no los tiene: suele ser una copia incompleta."

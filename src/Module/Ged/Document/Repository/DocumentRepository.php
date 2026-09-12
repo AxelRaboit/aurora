@@ -99,6 +99,24 @@ class DocumentRepository extends ResolveTargetEntityRepository
      * @return list<Document>
      */
     /**
+     * How many documents currently live on a given backend.
+     *
+     * Asked before letting an administrator disconnect a remote storage: the
+     * credentials are the only way back to those bytes, and forgetting them
+     * while rows still point there turns every one of those documents into a
+     * broken link, with nothing left to say which.
+     */
+    public function countOnDisk(StorageDiskEnum $disk): int
+    {
+        return (int) $this->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->where('d.storageDisk = :disk')
+            ->setParameter('disk', $disk)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
      * Same question, asked of one backend only.
      *
      * Relocation needs it because the paths do not change when a document

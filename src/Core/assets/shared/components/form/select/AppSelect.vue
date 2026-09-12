@@ -8,6 +8,8 @@ const props = defineProps({
     /** Help text under the control - explains the field, unlike `error` which reports it. */
     hint: { type: String, default: '' },
     required: { type: Boolean, default: false },
+    /** Topic id from `helpTopics.js`, surfaced next to the label. */
+    help: { type: String, default: '' },
     placeholder: { type: String, default: '' },
     // Array of { value, label } OR object { value: label } - leave empty to use slot
     options: { type: [Array, Object], default: null },
@@ -21,7 +23,7 @@ const isArrayOpts = (v) => Array.isArray(v) && v.length > 0;
 
 <template>
     <div class="flex flex-col gap-1.5">
-        <AppFieldLabel :label="label" :required="required" />
+        <AppFieldLabel :label="label" :required="required" :help="help" />
         <select
             :value="modelValue"
             class="block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-primary focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition"
