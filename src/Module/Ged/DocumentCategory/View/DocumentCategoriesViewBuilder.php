@@ -25,13 +25,16 @@ final readonly class DocumentCategoriesViewBuilder
             'createPath' => $this->urlGenerator->generate('backend_ged_categories_create'),
             'updatePath' => $this->urlGenerator->generate('backend_ged_categories_update', ['id' => '__id__']),
             'deletePath' => $this->urlGenerator->generate('backend_ged_categories_delete', ['id' => '__id__']),
+            'restorePath' => $this->urlGenerator->generate('backend_ged_categories_restore', ['id' => '__id__']),
+            'forceDeletePath' => $this->urlGenerator->generate('backend_ged_categories_force_delete', ['id' => '__id__']),
+            'emptyTrashPath' => $this->urlGenerator->generate('backend_ged_categories_empty_trash'),
             'listPath' => $this->urlGenerator->generate('backend_ged_categories_list'),
         ];
     }
 
-    public function buildListPayload(PaginationRequest $pagination): array
+    public function buildListPayload(PaginationRequest $pagination, bool $trashed = false): array
     {
-        $result = $this->categoryRepository->findPaginated($pagination->page, search: $pagination->search);
+        $result = $this->categoryRepository->findPaginated($pagination->page, search: $pagination->search, trashed: $trashed);
 
         return [
             'success' => true,
@@ -39,6 +42,9 @@ final readonly class DocumentCategoriesViewBuilder
             'total' => $result['total'],
             'page' => $result['page'],
             'totalPages' => $result['totalPages'],
+            // Sent on every page so the screen knows whether to offer the
+            // trash at all, and what number to put on it.
+            'trashedTotal' => $this->categoryRepository->countTrashed(),
         ];
     }
 }

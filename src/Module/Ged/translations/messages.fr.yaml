@@ -235,6 +235,20 @@ backend:
       empty: Aucune catégorie pour le moment
       delete_confirm: "Êtes-vous sûr de vouloir supprimer la catégorie « {name} » ?"
       delete_warning: Les documents liés ne seront pas supprimés.
+      trash:
+        empty: Vider la corbeille
+        empty_confirm: "Supprimer définitivement les {count} catégories de la corbeille ?"
+        emptied: "{count} catégorie(s) supprimée(s) définitivement"
+        title: Corbeille
+        banner: Ces catégories sont supprimées. Les documents qu'elles portaient les retrouveront si vous les restaurez.
+        restore: Restaurer
+        restore_description: Remet la catégorie dans la liste, avec les documents qui la portaient.
+        restored: Catégorie restaurée
+        delete_forever: Supprimer définitivement
+        delete_forever_description: Supprime la catégorie. Les documents qui la portaient n'en auront plus.
+        delete_forever_confirm: "Supprimer définitivement la catégorie « {name} » ?"
+        delete_forever_warning: Les documents liés ne seront pas supprimés, mais ils perdront cette catégorie. Cette action est irréversible.
+        deleted_forever: Catégorie supprimée définitivement
       name_placeholder: Nom de la catégorie…
       description_placeholder: Description optionnelle…
       errors:

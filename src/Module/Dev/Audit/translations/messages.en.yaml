@@ -74,9 +74,11 @@ backend:
           updated: Folder updated
           deleted: Folder deleted
         category:
+          trashed: Category moved to trash
+          restored: Category restored
           created: Category created
           updated: Category updated
-          deleted: Category deleted
+          deleted: Category permanently deleted
         tag:
           created: Tag created
           updated: Tag updated

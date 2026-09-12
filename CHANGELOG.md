@@ -5,6 +5,31 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.149] - 2026-09-12
+
+### Ajouté
+
+#### Supprimer une catégorie de la GED se défait aussi
+Comme pour les dossiers, supprimer une catégorie ne détruisait aucun document :
+elle leur retirait simplement leur classement, silencieusement et sans retour.
+
+La suppression met maintenant la catégorie à la corbeille. Les documents
+continuent de la porter, ce qui est précisément ce qui permet à la restauration
+de rendre le classement. Un bouton Corbeille apparaît dans la barre de la page
+Catégories dès qu'il y a quelque chose dedans, et une catégorie en corbeille
+n'offre plus que deux gestes : la restaurer, ou la supprimer définitivement,
+avec sa propre confirmation.
+
+Un détail invisible mais nécessaire : le slug d'une catégorie est unique, et
+une catégorie en corbeille ne doit pas garder un nom en otage. L'unicité est
+donc devenue partielle, côté base : un nom est pris seulement par une catégorie
+qui est réellement dans la liste. Une catégorie en attente garde son slug, tel
+quel et lisible, et deux « factures » peuvent cohabiter dans la corbeille. À la
+restauration, le slug n'est recalculé que si quelqu'un l'a pris entre-temps,
+auquel cas la catégorie revient en « factures-2 » au lieu d'échouer.
+
+---
+
 ## [0.9.148] - 2026-09-12
 
 ### Ajouté

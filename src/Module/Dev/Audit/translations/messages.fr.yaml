@@ -74,9 +74,11 @@ backend:
           updated: Dossier modifié
           deleted: Dossier supprimé
         category:
+          trashed: Catégorie mise à la corbeille
+          restored: Catégorie restaurée
           created: Catégorie créée
           updated: Catégorie modifiée
-          deleted: Catégorie supprimée
+          deleted: Catégorie supprimée définitivement
         tag:
           created: Tag créé
           updated: Tag modifié
