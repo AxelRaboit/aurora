@@ -110,7 +110,11 @@ defineProps({
 .sf-subtitle { margin: 0; font-size: 4cqw; opacity: 0.7; }
 .sf-section { margin: 0; font-size: 7cqw; font-weight: 600; text-align: center; }
 .sf-heading { margin: 0; font-size: 6cqw; font-weight: 600; }
-.sf-list { margin: 0; padding-left: 5cqw; font-size: 4cqw; line-height: 1.5; }
+/* `list-style` rétabli explicitement : la réinitialisation de Tailwind retire
+   les marqueurs de toutes les listes, et une liste à puces sans puces se lit
+   comme un paragraphe coupé. */
+.sf-list { margin: 0; padding-left: 5cqw; font-size: 4cqw; line-height: 1.5; list-style: disc outside; }
+.sf-list li { margin-bottom: 1cqw; }
 .sf-quote { margin: 0; font-size: 6cqw; font-style: italic; line-height: 1.3; }
 .sf-attribution { margin: 0; font-size: 3.5cqw; opacity: 0.7; }
 .sf-caption { margin: 0; font-size: 3.5cqw; opacity: 0.7; }

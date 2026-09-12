@@ -391,6 +391,11 @@ backend:
                 title_required: Le titre est obligatoire.
                 title_too_long: Le titre est trop long.
                 layout_unknown: Ce gabarit n'existe pas.
+            present: Présenter
+            print: Imprimer
+            print_hint: Utilisez l'impression du navigateur, puis « Enregistrer en PDF ». Une slide par page, en paysage.
+            previous_slide: Slide précédente
+            next_slide: Slide suivante
             layout: Gabarit
             add_slide: Ajouter une slide
             slide_added: Slide ajoutée
