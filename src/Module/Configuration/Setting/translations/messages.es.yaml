@@ -2,8 +2,60 @@ backend:
   settings:
     disable_anyway: Desactivar de todos modos
     tabs:
+      storage: Almacenamiento de archivos
+      storage_description: "Dónde escribe sus archivos la aplicación: el disco del servidor, o el almacenamiento de objetos Cloudflare R2."
       captcha: Antirrobots
       captcha_description: "Verificación de comentarios y formularios: servicio, claves y activación."
+    storage:
+      intro: "De forma predeterminada, los archivos que sube se escriben en el disco del servidor. Puede confiarlos en su lugar al almacenamiento de objetos Cloudflare R2, en su propia cuenta."
+      when_useful: "Merece la pena sobre todo si almacena mucho, o archivos grandes. Por debajo de unos pocos gigabytes, el disco del servidor basta y no necesita configuración."
+      how_title: Cómo obtener las credenciales
+      how_step_bucket: "En el panel de Cloudflare, abra R2 y cree un contenedor, o elija uno existente."
+      how_step_token: "Cree un token de API con el permiso «Object Read & Write», limitado a ese único contenedor. Solo lectura no basta: la aplicación debe poder escribir."
+      how_step_copy: "Copie el identificador de clave y la clave secreta. Cloudflare solo los muestra una vez."
+      how_link: Abrir la documentación de Cloudflare R2
+      endpoint_label: Dirección de la cuenta
+      endpoint_hint: "La URL de la cuenta, sin el nombre del contenedor al final. La consola muestra una con el contenedor añadido: pegarla tal cual lo pondría dos veces."
+      bucket_label: Contenedor
+      bucket_hint: El nombre del contenedor, solo.
+      access_key_label: Identificador de clave
+      secret_key_label: Clave secreta
+      key_stored: Hay un valor guardado. Déjelo vacío para conservarlo.
+      key_hint: Copiada de Cloudflare al crear el token.
+      public_url_label: Dominio público
+      public_url_hint: "Opcional. El dominio que haya vinculado al contenedor, si lo ha hecho. Sin él, los archivos los sigue sirviendo la aplicación."
+      delivery_title: Cómo se sirven los archivos
+      delivery_hint: "La dirección de un documento nunca cambia, elija lo que elija. Solo cambia cómo responde la aplicación."
+      delivery_proxy: A través de la aplicación
+      delivery_proxy_hint: "Los bytes atraviesan el servidor. Lo más sencillo, y sus reglas de acceso siguen aplicándose."
+      delivery_presigned: Mediante enlace firmado temporal
+      delivery_presigned_hint: "Los bytes van directamente del almacenamiento al visitante, y los archivos siguen siendo privados."
+      delivery_public_url: A través del dominio público
+      delivery_public_url_hint: "Lo más rápido, y en caché. Los archivos pasan a ser legibles por cualquiera que conozca su dirección."
+      test_button: Probar la conexión
+      test_intro: "La prueba escribe un archivo testigo, lo vuelve a leer, comprueba que está, y lo borra. Es la única forma de saber que un token puede escribir de verdad."
+      test_passed: "Conexión verificada el {date}."
+      test_never: "Nunca probada. La prueba es necesaria antes de poder cambiar el almacenamiento."
+      active_disk_label: Escribir los archivos nuevos en
+      disk_local: El disco del servidor
+      disk_r2: Cloudflare R2
+      switch_blocked: Pruebe la conexión antes de cambiar.
+      switch_hint: "Solo afecta a los archivos futuros. Los ya almacenados no se mueven."
+      probe:
+        write: escritura
+        read_back: relectura
+        exists: presencia
+        metadata: tamaño y fecha
+        listing: visible en la lista
+        cleanup: limpieza
+      hints:
+        incomplete: "Falta algún dato. Rellene la dirección de la cuenta, el contenedor y ambas claves."
+        signature: "La clave secreta no corresponde al identificador de clave. Ambos se muestran una sola vez, al crear el token: crear uno nuevo es más rápido que buscar."
+        denied: "Cloudflare responde pero rechaza. Compruebe que el token lleva «Object Read & Write» y no solo lectura, y que su alcance incluye este contenedor."
+        no_bucket: "Ese contenedor no existe en esta dirección. Atención: la dirección de la cuenta no debe terminar con el nombre del contenedor."
+        unreachable: "La dirección no responde. Compruébela, y compruebe que el servidor puede alcanzarla."
+      errors:
+        verification_required: Pruebe la conexión antes de cambiar el almacenamiento.
   parameters:
     media_credit_visible:
       label: Mostrar el crédito de las fotos

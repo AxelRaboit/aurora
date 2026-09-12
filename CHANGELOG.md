@@ -5,6 +5,88 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.129] - 2026-09-12
+
+### Ajouté
+
+#### Un écran pour choisir où sont écrits les fichiers
+Le stockage objet posé en 0.9.128 existait sans que personne puisse l'allumer.
+Il y a désormais un onglet **Stockage des fichiers** dans les réglages : les
+identifiants du compte, le compartiment, un bouton pour tester, et le choix du
+support.
+
+Les deux clés sont chiffrées en base, comme la clé Pexels et les mots de passe
+des points de montage. Elles ne repartent jamais vers le navigateur : l'écran
+sait qu'une valeur est enregistrée, pas laquelle.
+
+L'environnement du serveur reste prioritaire, champ par champ. Un opérateur qui
+préfère garder ses secrets hors d'une base sauvegardée chaque nuit peut le
+faire, sans perdre le compartiment qu'un administrateur aurait saisi dans
+l'écran.
+
+**Basculer demande d'avoir testé.** Le test écrit un fichier témoin, le relit,
+vérifie qu'il apparaît dans la liste, puis le supprime. Lire quatre chaînes non
+vides ne prouve rien, et la panne que tout le monde rencontre est un jeton en
+lecture seule, qui a l'air parfaitement configuré jusqu'à la première écriture.
+Changer d'adresse, de compartiment ou de clé annule la vérification
+précédente : elle portait sur une autre configuration.
+
+#### La GED sait où vivent ses fichiers
+Chaque document et chaque version portent maintenant le support qui détient
+leurs octets. C'est ce qui permet à un document écrit avant une bascule de
+rester lisible après, et à deux documents de vivre de chaque côté sans que rien
+ne s'en aperçoive.
+
+Le réglage dit où va le **prochain** fichier ; un fichier déjà écrit dit
+lui-même où il est. Suppression, recadrage, variantes, purge des versions : tout
+passe désormais par le support du fichier concerné, pas par le support actif.
+
+#### Trois façons de servir un fichier distant
+Par l'application, par lien signé temporaire, ou par un domaine public branché
+sur le compartiment.
+
+**L'adresse d'un document ne change jamais**, quel que soit ce choix, ni quand
+le fichier change de support. Ce n'est pas un détail de confort : l'éditeur
+inscrit l'adresse d'une image dans le corps de la publication, donc une adresse
+qui suivrait son fichier casserait toutes les pages qui l'ont intégrée. Seule
+change la réponse de `/uploads/{chemin}`.
+
+Servir par l'application se fait par morceaux et non d'un bloc : ce mode existe
+pour les installations qui veulent garder leurs règles d'accès, et ce sont les
+mêmes qui servent des fichiers trop gros pour tenir en mémoire.
+
+### Corrigé
+
+#### Deux failles trouvées en branchant l'écran sur un vrai compartiment
+La complétude de la configuration était jugée sur les seuls réglages en base.
+Un opérateur ayant mis ses identifiants dans l'environnement, ce que la
+documentation propose, n'aurait jamais pu basculer : l'écran l'aurait refusé au
+motif qu'il manquait des informations qu'il avait pourtant fournies.
+
+Et l'obligation d'avoir testé n'existait qu'au niveau du contrôleur. Une
+fixture, une commande ou une extension cliente pouvait pointer l'application
+vers un compartiment que rien n'avait jamais joint. Le garde-fou est descendu
+là où la réponse est lue, donc il vaut pour tout le monde.
+
+### Dans aurora-client
+
+**Une migration**, jouée par `make aurora-update` : une colonne `storage_disk`
+sur `core_ged_documents` et `core_ged_document_versions`, défaut `local`. Rien
+ne bouge : elle enregistre un fait, elle ne le change pas.
+
+Rien d'autre à répercuter, et rien ne change tant que personne n'ouvre le nouvel
+onglet. Le stockage par défaut reste le disque du serveur.
+
+À répercuter seulement si le projet étend une de ces classes :
+
+- `DocumentInterface` et `DocumentVersionInterface` gagnent `getStorageDisk()`
+  et `setStorageDisk()`. Une entité cliente qui étend `AbstractDocument` les a
+  déjà ; une implémentation partant de l'interface doit les ajouter.
+- `DocumentManager::deleteUnreferencedFiles()` prend un second argument, le
+  support concerné.
+- `StorageManager` prend un `ActiveStorageDiskProviderInterface` en second
+  argument de constructeur.
+
 ## [0.9.128] - 2026-09-12
 
 ### Ajouté
