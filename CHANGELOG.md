@@ -5,6 +5,35 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.133] - 2026-09-12
+
+### Modifié
+
+#### La documentation technique de la couche de stockage
+`docs/aurora-core/dev/storage_backends.md` : le contrat, les trois verbes de
+`LocalWorkspace` et pourquoi les confondre fait disparaître un dérivé, comment
+ajouter un support, ce qui se facture sur un stockage objet, et les deux pièges
+qui ne se voient qu'en production.
+
+CLAUDE.md §5bis décrivait le modèle d'avant et citait un dossier appartenant à
+un module supprimé. Il pointe désormais vers la doc et tient les règles dures.
+
+Le paramètre `app.upload_dir` renvoyait vers `docs/aurora-core/dev/storage_policy.md`,
+qui n'a jamais existé.
+
+#### La mémoire distribuée aux clients disait le contraire du code
+`convention_storage_var_uploads` demandait d'injecter
+`%app.upload_dir%/<categorie>`, ce qui est exactement ce que la couche a
+retiré. Elle part chez les projets clients, donc elle comptait. Elle décrit
+maintenant `StorageManager` et `LocalWorkspace`, et liste comme anti-patterns
+les gestes qu'elle recommandait.
+
+### Dans aurora-client
+
+Rien à répercuter, mais la consigne change pour tout nouveau stockage : injecter
+`StorageManager` plutôt que `%app.upload_dir%`. La mémoire partagée, lue depuis
+`vendor/axelraboit/aurora/`, le dit désormais.
+
 ## [0.9.132] - 2026-09-12
 
 ### Modifié
