@@ -25,6 +25,7 @@ import AppIconButton from "@/shared/components/action/AppIconButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
 import AppSelect from "@/shared/components/form/select/AppSelect.vue";
 import AppTextarea from "@/shared/components/form/input/AppTextarea.vue";
+import AppImagePickerField from "@/shared/components/form/file/AppImagePickerField.vue";
 import AppModal from "@/shared/components/overlay/AppModal.vue";
 import AppModalFooter from "@/shared/components/overlay/AppModalFooter.vue";
 import AppNoData from "@/shared/components/feedback/AppNoData.vue";
@@ -117,6 +118,28 @@ const layoutOptions = props.layouts.map((layout) => ({
 }));
 
 const labelFor = (slot) => t(`backend.studio.decks.slots.${slot}`);
+
+/**
+ * The picture slot, as the picker speaks it.
+ *
+ * The model stores an id and nothing else; the picker wants `{id, url}` and the
+ * frame wants the address to draw. The write therefore puts both in the
+ * content, and the manager drops the address on save: `mediaUrl` is not one of
+ * the layout's slots, so it never reaches the database. The address of a
+ * picture changes when its file does, and a copy of it kept in the slide would
+ * be a second truth to maintain.
+ */
+const picture = () => ({
+    id: selected.value?.content.mediaId ?? null,
+    url: selected.value?.content.mediaUrl ?? null,
+});
+
+function writePicture(value) {
+    if (!selected.value) return;
+
+    writeSlot("mediaId", value?.id ?? null);
+    writeSlot("mediaUrl", value?.url ?? null);
+}
 
 /** Bullets are a list in the model and one line per bullet in the form. */
 const bulletsText = () => (selected.value?.content.bullets ?? []).join("\n");
@@ -309,8 +332,16 @@ onBeforeUnmount(() => {
                                 :disabled="!editable"
                                 v-on:update:model-value="(value) => writeSlot(slot, value)"
                             />
+                            <AppImagePickerField
+                                v-else-if="slot === 'mediaId'"
+                                :model-value="picture()"
+                                :label="labelFor(slot)"
+                                :hint="t('backend.studio.decks.image_hint')"
+                                :size="160"
+                                v-on:update:model-value="writePicture"
+                            />
                             <AppInput
-                                v-else-if="slot !== 'mediaId'"
+                                v-else
                                 :model-value="selected.content[slot] ?? ''"
                                 :label="labelFor(slot)"
                                 :placeholder="t('backend.studio.decks.prose_placeholder')"
