@@ -5,6 +5,30 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.142] - 2026-09-12
+
+### Modifié
+
+#### Le manuel suit le renommage du module
+La rubrique « Comptabilité » devient « Studio » : dossier, intitulés, et les
+huit renvois en prose du type « Comptabilité → Clients ». Une page de la
+rubrique Configuration citait aussi l'onglet de réglages, elle est corrigée.
+
+Les 210 captures sont reprises, pas seulement les 52 de la rubrique. Le menu
+latéral apparaît sur la plupart des écrans du manuel et il porte désormais le
+nouveau nom : choisir image par image aurait laissé un jeu de millésimes
+mélangés, ce qui est exactement la mécanique qui a déjà fait publier un écran
+périmé sous un texte neuf.
+
+Le diff est donc large et il dit la vérité : sur les 108 captures d'autres
+rubriques qui changent, treize ne changent que dans le menu, quatorze d'un
+poignée de pixels invisibles, et le reste montre ce que le produit a gagné
+depuis la dernière campagne, notamment l'onglet de stockage et la corbeille de
+la GED.
+
+Les outils de capture pointaient encore sur `/backend/accounting/` : corrigé,
+c'était un reste du renommage.
+
 ## [0.9.141] - 2026-09-12
 
 ### Modifié

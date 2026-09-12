@@ -18,7 +18,7 @@ Une centaine de réglages, rangés en onglets. Chacun tient sur un écran, et ce
 - **Emails** : la langue des messages sortants.
 - **Système** : maintenance, inscriptions, connexions.
 - **Navigation** : renommer et réordonner le menu latéral.
-- **Comptabilité** : l'identité du prestataire et les règles de contrat.
+- **Studio** : l'identité du prestataire et les règles de contrat.
 - **Notes** : la taille et la qualité des images déposées dans une note.
 - **Pexels** : la banque de photos libres de droits.
 - **Anti-robots** : la protection des formulaires publics.
