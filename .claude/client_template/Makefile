@@ -167,6 +167,23 @@ cc-dev: ## Clear cache (dev)
 cc-prod: ## Clear and warm up production cache
 	@echo "Clearing and regenerating production cache..."
 	APP_ENV=prod APP_DEBUG=0 $(CONSOLE) cache:clear --env=prod
+	# cache:clear renames the outgoing cache directory to `.!!xxx`, then deletes
+	# it recursively. That delete fails on any file another user owns without
+	# group write - typically an entry the www-data Messenger worker wrote while
+	# its systemd unit still ran with the default UMask=0022 - and the renamed
+	# directory then survives. One more per clear, invisible until var/cache is
+	# hundreds of megabytes. Sweep whatever is left so it cannot pile up again.
+	@orphans=$$(find var/cache -maxdepth 1 -name '.!!*' | wc -l | tr -d ' '); \
+	if [ "$$orphans" -gt 0 ]; then \
+		echo "⚠️  cache:clear left $$orphans stale cache director(ies) behind - removing them"; \
+		find var/cache -maxdepth 1 -name '.!!*' -exec rm -rf {} + 2>/dev/null || true; \
+		find var/cache -maxdepth 1 -name '.!!*' -exec sudo -n rm -rf {} + 2>/dev/null || true; \
+		if [ "$$(find var/cache -maxdepth 1 -name '.!!*' | wc -l | tr -d ' ')" -gt 0 ]; then \
+			echo "   still there - remove them by hand: sudo rm -rf var/cache/.!!*"; \
+		else \
+			echo "   removed - a service writing to var/cache is missing UMask=0002 in its systemd unit"; \
+		fi; \
+	fi
 	@APP_ENV=prod APP_DEBUG=0 $(CONSOLE) about --env=prod >/dev/null 2>&1 || (echo "❌ Cache verification failed: application could not boot" && exit 1)
 	@echo "✅ Production cache regenerated successfully"
 
