@@ -5,6 +5,27 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.150] - 2026-09-12
+
+### Ajouté
+
+#### Le gabarit « image pleine page » accepte enfin une image
+C'était le seul des six gabarits incomplet : son emplacement existait dans le
+modèle, mais l'éditeur n'offrait aucun moyen de le remplir. Il porte maintenant
+le sélecteur partagé, qui puise dans la médiathèque ou dépose un fichier depuis
+la machine.
+
+L'adresse de l'image est **calculée, jamais stockée** : la slide ne garde que
+l'identifiant du document. L'adresse change quand le fichier change, et une
+copie gardée dans la slide serait une seconde vérité à tenir. Le gestionnaire
+la jette d'ailleurs tout seul, puisqu'elle ne fait pas partie des emplacements
+que le gabarit déclare.
+
+Les images d'une présentation sont résolues **en une requête** plutôt qu'une par
+slide, et la variante « large » est préférée à l'original. L'image est cadrée en
+`contain` : une capture rognée pour remplir le cadre perd justement le coin
+qu'on voulait montrer.
+
 ## [0.9.149] - 2026-09-12
 
 ### Ajouté
