@@ -13,5 +13,15 @@ interface DocumentCategoryManagerInterface
 
     public function update(DocumentCategoryInterface $category, DocumentCategoryInputInterface $input): void;
 
+    /** Moves a category to the trash, documents still pointing at it. */
     public function delete(DocumentCategoryInterface $category): void;
+
+    /** Brings a trashed category back, under a slug that is free again. */
+    public function restore(DocumentCategoryInterface $category): void;
+
+    /** Deletes a category for good: its documents lose it. */
+    public function forceDelete(DocumentCategoryInterface $category): void;
+
+    /** Destroys every category in the trash. Returns how many went. */
+    public function emptyTrash(): int;
 }

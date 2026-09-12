@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Aurora\Module\Ged\DocumentCategory\Entity;
 
 use Aurora\Core\Timestampable\TimestampableTrait;
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -22,6 +23,10 @@ abstract class AbstractDocumentCategory implements DocumentCategoryInterface
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $description = null;
+
+    /** When the category was moved to the trash. */
+    #[ORM\Column(nullable: true)]
+    protected ?DateTimeImmutable $deletedAt = null;
 
     public function getName(): string
     {
@@ -57,5 +62,22 @@ abstract class AbstractDocumentCategory implements DocumentCategoryInterface
         $this->description = $description;
 
         return $this;
+    }
+
+    public function getDeletedAt(): ?DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?DateTimeImmutable $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+
+    public function isTrashed(): bool
+    {
+        return $this->deletedAt instanceof DateTimeImmutable;
     }
 }

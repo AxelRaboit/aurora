@@ -1,8 +1,10 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { toast } from "vue-sonner";
 import { useListPage } from "@/shared/composables/list/useListPage.js";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
+import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import { useEditDeleteActions } from "@/shared/composables/useEditDeleteActions.js";
 import { useDocumentCategoriesForm } from "./composables/useDocumentCategoriesForm.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
@@ -15,7 +17,7 @@ import AppPagination from "@/shared/components/nav/AppPagination.vue";
 import AppRowActions from "@/shared/components/action/AppRowActions.vue";
 import AppNoData from "@/shared/components/feedback/AppNoData.vue";
 import AppLoader from "@/shared/components/feedback/AppLoader.vue";
-import { Plus, Pencil, Trash2, Save, X, Tag } from "lucide-vue-next";
+import { Plus, Pencil, Trash2, Save, X, Tag, RotateCcw } from "lucide-vue-next";
 
 const { t } = useI18n();
 const { can } = usePrivileges();
@@ -31,11 +33,60 @@ const props = defineProps({
     // fills the three scoped slots below; this component stays untouched, so
     // an aurora-core update never conflicts with it.
     extraFields: { type: Object, default: () => ({}) },
+    restorePath: { type: String, default: "" },
+    forceDeletePath: { type: String, default: "" },
+    emptyTrashPath: { type: String, default: "" },
 });
 
+// The trash is a view over the same listing, as it is for documents: same
+// payload, condition flipped, search still working inside it.
+const viewingTrash = ref(false);
+const trashedTotal = ref(props.categories?.trashedTotal ?? 0);
+
 const { items, loading, page, totalPages, search: searchInput, onSearch, goToPage, reload: reset } = useListPage(
-    props.listPath, { initialSearch: props.search, initialData: props.categories },
+    props.listPath,
+    {
+        initialSearch: props.search,
+        initialData: props.categories,
+        extraParams: () => ({ trashed: viewingTrash.value ? 1 : undefined }),
+        onData: (data) => {
+            trashedTotal.value = data?.trashedTotal ?? trashedTotal.value;
+        },
+    },
 );
+
+function toggleTrash() {
+    viewingTrash.value = !viewingTrash.value;
+    reset();
+}
+
+const { request: trashRequest } = useRequest();
+
+function trashPath(template, id) {
+    return template.replace("__id__", String(id));
+}
+
+async function restoreCategory(category) {
+    const res = await trashRequest(trashPath(props.restorePath, category.id));
+    if (!res?.success) return;
+
+    toast.success(t("backend.ged.categories.trash.restored"));
+    await reset();
+}
+
+const pendingForceDelete = ref(null);
+
+async function doForceDelete() {
+    const category = pendingForceDelete.value;
+    if (!category) return;
+
+    const res = await trashRequest(trashPath(props.forceDeletePath, category.id));
+    pendingForceDelete.value = null;
+    if (!res?.success) return;
+
+    toast.success(t("backend.ged.categories.trash.deleted_forever"));
+    await reset();
+}
 
 const {
     showCreate, newCategory, createErrors, createLoading, openCreate, submitCreate,
@@ -43,7 +94,7 @@ const {
     pendingDelete, deleteLoading, confirmDelete, doDelete,
 } = useDocumentCategoriesForm(props.createPath, props.updatePath, props.deletePath, reset, props.extraFields);
 
-const actionsFor = useEditDeleteActions({
+const libraryActionsFor = useEditDeleteActions({
     can,
     editPermission: "ged.categories.edit",
     deletePermission: "ged.categories.delete",
@@ -52,6 +103,34 @@ const actionsFor = useEditDeleteActions({
     editDescription: "backend.ged.categories.row_actions.edit_description",
     deleteDescription: "backend.ged.categories.row_actions.delete_description",
 });
+
+/**
+ * A trashed category offers two verbs and no third: editing something on its
+ * way out is an offer the screen should not make.
+ */
+function actionsFor(category) {
+    if (!viewingTrash.value) return libraryActionsFor(category);
+    if (!can("ged.categories.delete")) return [];
+
+    return [
+        {
+            key: "restore",
+            color: "accent",
+            icon: RotateCcw,
+            title: t("backend.ged.categories.trash.restore"),
+            description: t("backend.ged.categories.trash.restore_description"),
+            onSelect: () => restoreCategory(category),
+        },
+        {
+            key: "force-delete",
+            color: "rose",
+            icon: Trash2,
+            title: t("backend.ged.categories.trash.delete_forever"),
+            description: t("backend.ged.categories.trash.delete_forever_description"),
+            onSelect: () => { pendingForceDelete.value = category; },
+        },
+    ];
+}
 
 // Name + slug + actions, plus whatever the client added - otherwise the empty
 // row stops spanning the table the moment an extra column exists.
@@ -64,7 +143,18 @@ const columnCount = computed(() => 3 + Object.keys(props.extraFields).length);
             <AppSearchInput v-model="searchInput" :placeholder="t('backend.ged.categories.search_placeholder')" v-on:search="onSearch" />
             <template #actions>
                 <AppButton
-                    v-if="can('ged.categories.create')"
+                    v-if="can('ged.categories.delete') && (trashedTotal > 0 || viewingTrash)"
+                    :variant="viewingTrash ? 'primary' : 'ghost'"
+                    size="md"
+                    class="w-full sm:w-auto"
+                    v-on:click="toggleTrash"
+                >
+                    <Trash2 class="w-3.5 h-3.5" :stroke-width="2" />
+                    {{ t("backend.ged.categories.trash.title") }}
+                    <span v-if="trashedTotal" class="ml-1 tabular-nums">({{ trashedTotal }})</span>
+                </AppButton>
+                <AppButton
+                    v-if="!viewingTrash && can('ged.categories.create')"
                     variant="primary"
                     size="md"
                     class="w-full sm:w-auto"
@@ -74,6 +164,11 @@ const columnCount = computed(() => 3 + Object.keys(props.extraFields).length);
                 </AppButton>
             </template>
         </AppListToolbar>
+
+        <div v-if="viewingTrash" class="flex flex-wrap items-center gap-3 bg-rose-500/10 border border-rose-400/30 rounded-xl px-4 py-2.5">
+            <Trash2 class="w-4 h-4 text-rose-400 shrink-0" :stroke-width="2" />
+            <p class="text-sm text-primary min-w-0">{{ t("backend.ged.categories.trash.banner") }}</p>
+        </div>
 
         <div class="relative space-y-4">
             <!-- Mobile cards -->
@@ -170,6 +265,24 @@ const columnCount = computed(() => 3 + Object.keys(props.extraFields).length);
                 <AppModalFooter>
                     <AppButton variant="ghost" size="md" type="button" v-on:click="showEdit = false"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
                     <AppButton variant="primary" size="md" type="submit" :loading="editLoading"><Save class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.save") }}</AppButton>
+                </AppModalFooter>
+            </template>
+        </AppModal>
+
+        <AppModal
+            :show="!!pendingForceDelete"
+            max-width="sm"
+            :closeable="false"
+            :title="t('backend.ged.categories.trash.delete_forever')"
+            :icon="Trash2"
+            v-on:close="pendingForceDelete = null"
+        >
+            <p class="text-sm text-primary">{{ t("backend.ged.categories.trash.delete_forever_confirm", { name: pendingForceDelete?.name ?? "" }) }}</p>
+            <p class="text-sm text-secondary">{{ t("backend.ged.categories.trash.delete_forever_warning") }}</p>
+            <template #footer>
+                <AppModalFooter>
+                    <AppButton variant="ghost" size="md" v-on:click="pendingForceDelete = null"><X class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("shared.common.cancel") }}</AppButton>
+                    <AppButton variant="danger" size="md" v-on:click="doForceDelete"><Trash2 class="w-3.5 h-3.5" :stroke-width="2" /> {{ t("backend.ged.categories.trash.delete_forever") }}</AppButton>
                 </AppModalFooter>
             </template>
         </AppModal>

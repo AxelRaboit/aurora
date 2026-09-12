@@ -43,9 +43,9 @@ final class DocumentCategoriesController extends AbstractController
     }
 
     #[Route('/list', name: '_list', methods: [HttpMethodEnum::Get->value])]
-    public function list(PaginationRequest $pagination): JsonResponse
+    public function list(PaginationRequest $pagination, Request $request): JsonResponse
     {
-        return $this->json($this->viewBuilder->buildListPayload($pagination));
+        return $this->json($this->viewBuilder->buildListPayload($pagination, $request->query->getBoolean('trashed')));
     }
 
     #[Route('/create', name: '_create', methods: [HttpMethodEnum::Post->value])]
@@ -61,6 +61,31 @@ final class DocumentCategoriesController extends AbstractController
         $category = $this->manager->create($input);
 
         return $this->jsonSuccess(['category' => $this->serializer->serialize($category)]);
+    }
+
+    #[Route('/{id}/restore', name: '_restore', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.categories.delete')]
+    public function restore(DocumentCategory $category): JsonResponse
+    {
+        $this->manager->restore($category);
+
+        return $this->jsonSuccess();
+    }
+
+    #[Route('/{id}/force-delete', name: '_force_delete', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.categories.delete')]
+    public function forceDelete(DocumentCategory $category): JsonResponse
+    {
+        $this->manager->forceDelete($category);
+
+        return $this->jsonSuccess();
+    }
+
+    #[Route('/empty-trash', name: '_empty_trash', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.categories.delete')]
+    public function emptyTrash(): JsonResponse
+    {
+        return $this->jsonSuccess(['deleted' => $this->manager->emptyTrash()]);
     }
 
     #[Route('/{id}/update', name: '_update', methods: [HttpMethodEnum::Post->value])]
