@@ -230,28 +230,48 @@ php bin/console doctrine:migrations:diff
 
 ## 5bis. Storage des fichiers
 
-**Tous les fichiers uploadés/générés vivent sous `var/uploads/`**, hors
-document root. Aucun fichier n'est servable directement par Apache -
-chaque accès passe par un controller PHP via la route catch-all
-`/uploads/{path}` (`UploadsServeController` côté `Core/Storage/`) qui
-délègue à `Aurora\Core\Storage\BinaryFileServer` (path-traversal guard
-+ `BinaryFileResponse` + X-Sendfile).
+**Ne jamais lire `app.upload_dir`.** Tout ce qu'Aurora écrit passe par
+`StorageAdapterInterface`, obtenu via `StorageManager`. Deux classes lisent
+encore le paramètre et ce sont les seules qui en ont le droit :
+`LocalStorageAdapter`, qui *est* le disque, et `UploadsServeController`, qui
+sert les octets.
 
-Conventions :
-- `app.upload_dir` pointe sur `%kernel.project_dir%/var/uploads`
-- Sous-dossier par module : `var/uploads/media/`, `var/uploads/profile-photos/`,
-  `var/uploads/notes-markdown/`, etc.
-- Entités exposent `getPublicUrl()` retournant la forme `/uploads/<path>`
-  (URL stable que la route Symfony intercepte - pas de fuite du
-  storage backend dans l'URL côté front)
-- Auth granulaire : pour gater une catégorie (factures OCR, PDF
-  signés, notes per-user), définir une route plus spécifique sous
-  `/backend/<module>/files/...` qui prend précédence sur le catch-all
-- Prod : `mod_xsendfile` offload les bytes une fois l'auth check PHP
-  passé. Voir `docs/aurora-client/deployment/apache_xsendfile.md`
+**Doc canonique** : [`docs/aurora-core/dev/storage_backends.md`](docs/aurora-core/dev/storage_backends.md)
+(contrat, `LocalWorkspace` et ses trois verbes, ajout d'un support, ce qui se
+facture, pièges vérifiés en production).
 
-Mémoire de référence : `aurora-shared/convention_storage_var_uploads.md`.
-Mémoire shared (distribuée aux clients) :
+Résumé des règles dures :
+
+- **Une clé** est le chemin relatif que la base stocke déjà. Elle ne change
+  pas quand un fichier change de support.
+- **Écrire** demande `active()`. **Lire ou supprimer** demande
+  `forDisk($entite->getStorageDisk())` : le réglage dit où va le *prochain*
+  fichier, un fichier écrit dit lui-même où il est.
+- **Le code qui exige un nom de fichier** (GD, `pdftoppm`, pièce jointe)
+  passe par `LocalWorkspace`, jamais par une concaténation. Trois verbes,
+  `readable` / `writable` / `target`, et les confondre est la façon dont un
+  dérivé cesse silencieusement d'être enregistré.
+- **`list()` rend les métadonnées** avec les clés, et `deleteMany()` groupe :
+  sur un stockage objet, chaque requête se facture.
+- **Les valeurs de `StorageAreaEnum` et `StorageDiskEnum` sont des chemins et
+  des colonnes.** Ajouter et retirer, jamais renommer.
+
+L'URL publique reste `/uploads/{path}` dans tous les cas, y compris quand le
+fichier vit ailleurs : l'éditeur inscrit cette adresse dans le corps des
+publications, donc elle ne doit pas suivre son fichier. `UploadsServeController`
+sert, redirige vers un lien signé ou vers un domaine public selon le réglage.
+
+Auth granulaire : pour gater une catégorie (PDF signés, notes per-user),
+définir une route plus spécifique sous `/backend/<module>/…` qui prend
+précédence sur le catch-all. Les contrats font ainsi, et restent servis par
+l'application quel que soit le mode de livraison.
+
+Prod : `mod_xsendfile` offload les octets une fois l'auth PHP passée, sur le
+support local. Voir `docs/aurora-client/deployment/apache_xsendfile.md`.
+
+Mémoires : [`pattern_storage_adapter`](.claude/memory/aurora-core/architecture/pattern_storage_adapter.md),
+[`pitfall_r2_head_metadata`](.claude/memory/aurora-core/architecture/pitfall_r2_head_metadata.md),
+et la mémoire shared distribuée aux clients
 [`convention_storage_var_uploads.md`](.claude/memory/aurora-shared/convention_storage_var_uploads.md).
 
 ---

@@ -5,6 +5,82 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.133] - 2026-09-12
+
+### Modifié
+
+#### La documentation technique de la couche de stockage
+`docs/aurora-core/dev/storage_backends.md` : le contrat, les trois verbes de
+`LocalWorkspace` et pourquoi les confondre fait disparaître un dérivé, comment
+ajouter un support, ce qui se facture sur un stockage objet, et les deux pièges
+qui ne se voient qu'en production.
+
+CLAUDE.md §5bis décrivait le modèle d'avant et citait un dossier appartenant à
+un module supprimé. Il pointe désormais vers la doc et tient les règles dures.
+
+Le paramètre `app.upload_dir` renvoyait vers `docs/aurora-core/dev/storage_policy.md`,
+qui n'a jamais existé.
+
+#### La mémoire distribuée aux clients disait le contraire du code
+`convention_storage_var_uploads` demandait d'injecter
+`%app.upload_dir%/<categorie>`, ce qui est exactement ce que la couche a
+retiré. Elle part chez les projets clients, donc elle comptait. Elle décrit
+maintenant `StorageManager` et `LocalWorkspace`, et liste comme anti-patterns
+les gestes qu'elle recommandait.
+
+### Dans aurora-client
+
+Rien à répercuter, mais la consigne change pour tout nouveau stockage : injecter
+`StorageManager` plutôt que `%app.upload_dir%`. La mémoire partagée, lue depuis
+`vendor/axelraboit/aurora/`, le dit désormais.
+
+## [0.9.132] - 2026-09-12
+
+### Modifié
+
+#### Les derniers fichiers hors médiathèque passent par la couche de stockage
+Les photos de profil et les PDF des contrats signés étaient les deux dernières
+choses écrites directement sur le disque. Elles suivent maintenant le même
+chemin que le reste, donc le réglage de stockage vaut pour tout ce que
+l'application écrit, et non plus pour la médiathèque seule.
+
+Un contrat reste servi par l'application, derrière l'authentification, quel que
+soit le mode de livraison choisi. Une pièce juridique ne s'expose pas par un
+lien public, même sur une installation qui sert ses images ainsi.
+
+Deux détails qui auraient cassé des fichiers existants et qui ne l'ont pas
+fait : la base ne stocke que le nom d'une photo de profil, jamais son dossier,
+et ce partage reste tel quel ; le dossier des contrats garde son nom. Renommer
+l'un ou l'autre aurait rendu introuvable tout ce qui a été écrit avant.
+
+La suppression d'une photo interroge les deux supports plutôt que le support
+actif. Une photo déposée avant une bascule vit encore de l'autre côté, et
+demander sa suppression au mauvais endroit ne fait rien, en silence.
+
+#### `StorageAreaEnum` décrit enfin ce qui existe
+Quatre cas sur cinq ne servaient plus : `media`, `ocr` et `photo` appartenaient
+à des modules retirés, et `users` n'a jamais correspondu à la réalité puisque
+les photos de profil vont dans `profile-photos`. Seul leur propre test citait
+encore leurs valeurs, ce qui est la forme exacte d'une constante que personne
+n'utilise.
+
+Restent trois cas, qui sont trois dossiers réels. Le test qui les garde dit
+maintenant pourquoi : ce sont des préfixes de chemin, et en renommer un rend
+introuvable tout ce qui a été écrit avant.
+
+### Dans aurora-client
+
+Aucune migration, aucun fichier déplacé, rien à répercuter sauf pour un projet
+qui étend une de ces classes :
+
+- `ContractPdfGenerator` : `absolutePathFor()` et `root()` disparaissent, au
+  profit de `keyFor()`, `exists()`, `readStream()` et `withLocalCopy()`. Le
+  service ne reçoit plus de dossier d'upload.
+- `UserProfilePhotoManager` : reçoit un `StorageManager` à la place du
+  `Filesystem` et du dossier d'upload.
+- `StorageAreaEnum` : quatre cas retirés. Un projet qui en nommait un ne
+  compilera plus, ce qui est préférable au silence.
+
 ## [0.9.131] - 2026-09-12
 
 ### Ajouté

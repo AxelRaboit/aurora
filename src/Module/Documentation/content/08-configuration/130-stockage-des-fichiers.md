@@ -47,6 +47,12 @@ Elle ne concerne que les **fichiers à venir**. Ceux déjà déposés ne bougent
 
 L'adresse d'un document **ne change jamais**, quel que soit son emplacement ou la façon dont vous choisissez de le servir. C'est important : une image insérée dans une publication garde son adresse dans le texte, et un fichier qui déménage ne casse aucune page.
 
+## Ce que « les fichiers » recouvre
+
+Tout ce que l'application écrit : les documents de la médiathèque avec leurs vignettes et leurs variantes, les photos de profil, et les PDF des contrats signés.
+
+Ce dernier point mérite d'être su. Un contrat scellé est une pièce juridique, et ce réglage décide où sa copie est écrite. Elle reste servie par l'application, derrière l'authentification, quel que soit le mode de livraison choisi ci-dessous : un contrat n'est jamais exposé par un lien public, même quand les images le sont.
+
 ## Comment les fichiers sont servis
 
 Trois choix, et seule la réponse de l'application change.
