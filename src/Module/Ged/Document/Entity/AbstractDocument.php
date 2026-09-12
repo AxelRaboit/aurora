@@ -40,6 +40,16 @@ abstract class AbstractDocument implements DocumentInterface
     #[ORM\Column(nullable: true)]
     protected ?DateTimeImmutable $deletedAt = null;
 
+    /**
+     * The folder whose deletion took this document down with it.
+     *
+     * Null when it was trashed on its own. Restoring a folder brings back what
+     * carries its id here, so a document deleted by hand last week stays where
+     * its owner put it.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?int $trashedWithFolderId = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $description = null;
 
@@ -531,5 +541,17 @@ abstract class AbstractDocument implements DocumentInterface
     public function isTrashed(): bool
     {
         return $this->deletedAt instanceof DateTimeImmutable;
+    }
+
+    public function getTrashedWithFolderId(): ?int
+    {
+        return $this->trashedWithFolderId;
+    }
+
+    public function setTrashedWithFolderId(?int $trashedWithFolderId): static
+    {
+        $this->trashedWithFolderId = $trashedWithFolderId;
+
+        return $this;
     }
 }

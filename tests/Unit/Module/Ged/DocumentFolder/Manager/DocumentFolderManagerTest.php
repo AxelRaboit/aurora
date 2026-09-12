@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Aurora\Tests\Unit\Module\Ged\DocumentFolder\Manager;
 
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
+use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\DocumentFolder\Dto\DocumentFolderInputInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolder;
 use Aurora\Module\Ged\DocumentFolder\Manager\DocumentFolderManager;
 use Aurora\Module\Ged\DocumentFolder\Repository\DocumentFolderRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
@@ -18,15 +20,18 @@ final class DocumentFolderManagerTest extends TestCase
 {
     private EntityManagerInterface $entityManager;
     private DocumentFolderRepository $folderRepository;
+    private DocumentRepository $documentRepository;
     private DocumentFolderManager $manager;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->folderRepository = $this->createMock(DocumentFolderRepository::class);
+        $this->documentRepository = $this->createMock(DocumentRepository::class);
         $this->manager = new DocumentFolderManager(
             $this->entityManager,
             $this->folderRepository,
+            $this->documentRepository,
             $this->createStub(AuditLogger::class),
         );
     }
@@ -112,15 +117,68 @@ final class DocumentFolderManagerTest extends TestCase
         $this->manager->update(new DocumentFolder(), $this->makeInput('X'));
     }
 
-    public function testDeleteCallsRemoveAndFlush(): void
+    public function testDeleteTrashesTheFolderWithoutRemovingIt(): void
     {
         $folder = new DocumentFolder();
         $folder->setName('ToDelete');
 
-        $this->entityManager->expects(self::once())->method('remove')->with($folder);
+        $this->entityManager->expects(self::never())->method('remove');
         $this->entityManager->expects(self::atLeastOnce())->method('flush');
 
         $this->manager->delete($folder);
+
+        self::assertTrue($folder->isTrashed());
+        self::assertNull($folder->getTrashedWithFolderId());
+    }
+
+    public function testDeleteWithoutCascadeReleasesTheChildrenToTheRoot(): void
+    {
+        $parent = new DocumentFolder();
+        $parent->setName('Parent');
+        $child = new DocumentFolder();
+        $child->setName('Child')->setParent($parent);
+        $parent->getChildren()->add($child);
+
+        $this->manager->delete($parent, false);
+
+        self::assertTrue($parent->isTrashed());
+        self::assertFalse($child->isTrashed());
+        self::assertNull($child->getParent());
+    }
+
+    public function testRestoreBringsBackWhatFellWithTheFolder(): void
+    {
+        $folder = new DocumentFolder();
+        $folder->setName('Branch');
+        $fallen = new DocumentFolder();
+        $fallen->setName('Fallen')->setDeletedAt(new DateTimeImmutable())->setTrashedWithFolderId(0);
+
+        $this->folderRepository->method('findTrashedWith')->willReturn([$fallen]);
+        $this->documentRepository->method('findTrashedWith')->willReturn([]);
+
+        $this->manager->delete($folder);
+        $this->manager->restore($folder);
+
+        self::assertFalse($folder->isTrashed());
+        self::assertFalse($fallen->isTrashed());
+        self::assertNull($fallen->getTrashedWithFolderId());
+    }
+
+    public function testForceDeleteReleasesWhatFellWithTheFolderInsteadOfDestroyingIt(): void
+    {
+        $folder = new DocumentFolder();
+        $folder->setName('Gone');
+        $fallen = new DocumentFolder();
+        $fallen->setName('Fallen')->setParent($folder)->setDeletedAt(new DateTimeImmutable())->setTrashedWithFolderId(0);
+
+        $this->folderRepository->method('findTrashedWith')->willReturn([$fallen]);
+        $this->documentRepository->method('findTrashedWith')->willReturn([]);
+        $this->entityManager->expects(self::once())->method('remove')->with($folder);
+
+        $this->manager->forceDelete($folder);
+
+        self::assertFalse($fallen->isTrashed());
+        self::assertNull($fallen->getParent());
     }
 
     public function testMoveReparentsFolderToNewParent(): void

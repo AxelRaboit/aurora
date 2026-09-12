@@ -68,6 +68,8 @@ backend:
           cropped: Document recadré
           moved: Document déplacé
         folder:
+          trashed: Dossier mis à la corbeille
+          restored: Dossier restauré
           created: Dossier créé
           updated: Dossier modifié
           deleted: Dossier supprimé
