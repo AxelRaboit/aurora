@@ -41,9 +41,9 @@ final class GedModuleTest extends TestCase
         self::assertSame('ged', $this->makeModule()->getId());
     }
 
-    public function testGetPermissionsCountsTen(): void
+    public function testGetPermissionsCountsEleven(): void
     {
-        self::assertCount(10, $this->makeModule()->getPermissions());
+        self::assertCount(11, $this->makeModule()->getPermissions());
     }
 
     public function testGetNavSectionsReturnsEmptyWhenBackendDisabled(): void

@@ -7,6 +7,7 @@ namespace Aurora\Module\Ged\Document\Repository;
 use Aurora\Core\Repository\ResolveTargetEntityRepository;
 use Aurora\Core\Repository\Trait\PaginationTrait;
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Module\Ged\Document\Entity\DocumentInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
@@ -33,6 +34,7 @@ class DocumentRepository extends ResolveTargetEntityRepository
         ?DocumentStatusEnum $status = null,
         ?MimeGroupEnum $mimeGroup = null,
         bool $rootOnly = false,
+        ?StorageDiskEnum $storageDisk = null,
     ): array {
         $qb = $this->createQueryBuilder('d')
             ->leftJoin('d.category', 'c')
@@ -78,6 +80,11 @@ class DocumentRepository extends ResolveTargetEntityRepository
             $mimeGroup->applyTo($countQb, 'd');
         }
 
+        if ($storageDisk instanceof StorageDiskEnum) {
+            $qb->andWhere('d.storageDisk = :storageDisk')->setParameter('storageDisk', $storageDisk);
+            $countQb->andWhere('d.storageDisk = :storageDisk')->setParameter('storageDisk', $storageDisk);
+        }
+
         $result = $this->paginate($qb, $countQb, $page, $limit);
         $this->hydrateDocumentTags($result['items']);
 
@@ -91,6 +98,47 @@ class DocumentRepository extends ResolveTargetEntityRepository
      *
      * @return list<Document>
      */
+    /**
+     * Same question, asked of one backend only.
+     *
+     * Relocation needs it because the paths do not change when a document
+     * moves: only the disk does. Asking the plain question after a move would
+     * answer "still in use" for every path, since the rows now point at the
+     * same paths on the other side, and nothing would ever be freed at the
+     * source.
+     *
+     * @param list<string> $paths
+     *
+     * @return list<string>
+     */
+    public function filterPathsInUseOnDisk(array $paths, StorageDiskEnum $disk): array
+    {
+        if ([] === $paths) {
+            return [];
+        }
+
+        /** @var list<array{filePath: string|null, thumbnailPath: string|null}> $rows */
+        $rows = $this->createQueryBuilder('d')
+            ->select('d.filePath', 'd.thumbnailPath')
+            ->where('d.filePath IN (:paths) OR d.thumbnailPath IN (:paths)')
+            ->andWhere('d.storageDisk = :disk')
+            ->setParameter('paths', $paths)
+            ->setParameter('disk', $disk)
+            ->getQuery()
+            ->getResult();
+
+        $inUse = [];
+        foreach ($rows as $row) {
+            foreach ([$row['filePath'], $row['thumbnailPath']] as $path) {
+                if (null !== $path && in_array($path, $paths, true)) {
+                    $inUse[$path] = true;
+                }
+            }
+        }
+
+        return array_keys($inUse);
+    }
+
     /**
      * Of the given relative paths, the ones still pointed at by a surviving
      * document row - through either `filePath` or `thumbnailPath`.

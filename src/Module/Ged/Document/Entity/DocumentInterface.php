@@ -10,6 +10,7 @@ use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategoryInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentTag\Entity\DocumentTagInterface;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
+use Aurora\Module\Ged\Enum\DocumentTransferStateEnum;
 use Doctrine\Common\Collections\Collection;
 
 interface DocumentInterface extends TimestampableInterface
@@ -43,6 +44,14 @@ interface DocumentInterface extends TimestampableInterface
     public function getStorageDisk(): StorageDiskEnum;
 
     public function setStorageDisk(StorageDiskEnum $storageDisk): static;
+
+    public function getStorageTransferState(): DocumentTransferStateEnum;
+
+    public function setStorageTransferState(DocumentTransferStateEnum $state): static;
+
+    public function getStorageTransferError(): ?string;
+
+    public function setStorageTransferError(?string $error): static;
 
     public function getFileName(): ?string;
 

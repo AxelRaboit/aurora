@@ -8,25 +8,32 @@ use Aurora\Core\Enum\HttpMethodEnum;
 use Aurora\Core\Http\JsonRequestTrait;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Validation\Dto\PaginationRequest;
 use Aurora\Core\Validation\Service\PayloadValidator;
+use Aurora\Module\Configuration\Storage\Setting\StorageSettings;
 use Aurora\Module\Ged\Document\Dto\DocumentInputFactoryInterface;
 use Aurora\Module\Ged\Document\Entity\Document;
 use Aurora\Module\Ged\Document\Manager\DocumentManagerInterface;
+use Aurora\Module\Ged\Document\Message\RelocateDocumentMessage;
+use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\Document\Repository\DocumentVersionRepository;
 use Aurora\Module\Ged\Document\Serializer\DocumentSerializerInterface;
 use Aurora\Module\Ged\Document\Serializer\DocumentVersionSerializerInterface;
+use Aurora\Module\Ged\Document\Service\DocumentRelocator;
 use Aurora\Module\Ged\Document\Service\DocumentUsageService;
 use Aurora\Module\Ged\Document\Service\GedDocumentUploader;
 use Aurora\Module\Ged\Document\Service\InlineImageUploader;
 use Aurora\Module\Ged\Document\View\DocumentsViewBuilder;
 use Aurora\Module\Ged\DocumentFolder\Repository\DocumentFolderRepository;
 use Aurora\Module\Ged\Enum\DocumentStatusEnum;
+use Aurora\Module\Ged\Enum\DocumentTransferStateEnum;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -37,6 +44,15 @@ final class DocumentsController extends AbstractController
 {
     use JsonRequestTrait;
     use JsonResponseTrait;
+
+    /**
+     * Above this, a move goes to a worker rather than holding the request.
+     *
+     * Chosen so the common case stays instant: an image and its variants sit
+     * far below, a scanned contract usually too. It is a video, or a document
+     * with a long history of versions, that crosses it.
+     */
+    private const int INLINE_RELOCATION_LIMIT_BYTES = 8 * 1024 * 1024;
 
     public function __construct(
         private readonly DocumentSerializerInterface $serializer,
@@ -51,6 +67,10 @@ final class DocumentsController extends AbstractController
         private readonly DocumentUsageService $usageService,
         private readonly DocumentFolderRepository $folderRepository,
         private readonly InlineImageUploader $inlineImageUploader,
+        private readonly DocumentRelocator $relocator,
+        private readonly MessageBusInterface $messageBus,
+        private readonly StorageSettings $storageSettings,
+        private readonly DocumentRepository $documentRepository,
     ) {}
 
     #[Route('', name: '', methods: [HttpMethodEnum::Get->value])]
@@ -74,7 +94,10 @@ final class DocumentsController extends AbstractController
         // (backwards-compatible with the filter-only callers).
         $rootOnly = $request->query->getBoolean('rootOnly');
 
-        return $this->json($this->viewBuilder->buildListPayload($pagination, $categoryId, $tagId, $folderId, $status, $mimeGroup, $rootOnly));
+        $diskValue = $request->query->getString('storageDisk');
+        $storageDisk = '' !== $diskValue ? StorageDiskEnum::tryFrom($diskValue) : null;
+
+        return $this->json($this->viewBuilder->buildListPayload($pagination, $categoryId, $tagId, $folderId, $status, $mimeGroup, $rootOnly, $storageDisk));
     }
 
     /**
@@ -108,6 +131,8 @@ final class DocumentsController extends AbstractController
             'deletePath' => $this->urlGenerator->generate('backend_ged_documents_delete', ['id' => $document->getId()]),
             'cropPath' => $this->urlGenerator->generate('backend_ged_documents_crop', ['id' => $document->getId()]),
             'listPath' => $this->urlGenerator->generate('backend_ged_documents'),
+            'storagePath' => $this->urlGenerator->generate('backend_ged_documents_storage', ['id' => $document->getId()]),
+            'storageRelocationAvailable' => $this->storageSettings->isRelocationAvailable(),
         ]);
     }
 
@@ -219,6 +244,113 @@ final class DocumentsController extends AbstractController
         $this->manager->bulkMove($ids, $folder);
 
         return $this->jsonSuccess();
+    }
+
+    /**
+     * Moves one document's bytes to the other storage backend.
+     *
+     * Small ones are done inline, so the row updates while the reader is still
+     * looking at it. Above the threshold the work is handed to a worker: a
+     * browser should not be held open on a bucket, and a request that times out
+     * half way through a copy is the one case the ordering in
+     * {@see DocumentRelocator} cannot make pretty.
+     *
+     * Its own privilege rather than `edit`: moving bytes between backends
+     * spends transfer and request budget on somebody's account, which is not
+     * the same permission as fixing a typo in a title.
+     */
+    #[Route('/{id}/storage', name: '_storage', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.documents.relocate')]
+    public function relocate(Document $document, Request $request): JsonResponse
+    {
+        $payload = $this->decodeJson($request);
+        $target = StorageDiskEnum::tryFrom((string) ($payload['disk'] ?? ''));
+
+        if (!$target instanceof StorageDiskEnum) {
+            return $this->jsonFailure('backend.ged.documents.errors.unknown_disk');
+        }
+
+        if (DocumentTransferStateEnum::Pending === $document->getStorageTransferState()) {
+            return $this->jsonFailure('backend.ged.documents.errors.relocation_busy');
+        }
+
+        if ($this->relocator->weigh($document) > self::INLINE_RELOCATION_LIMIT_BYTES) {
+            $this->messageBus->dispatch(new RelocateDocumentMessage((int) $document->getId(), $target));
+
+            return $this->jsonSuccess(['queued' => true, 'state' => DocumentTransferStateEnum::Pending->value]);
+        }
+
+        $relocation = $this->relocator->relocate($document, $target);
+
+        if ($relocation->busy) {
+            return $this->jsonFailure('backend.ged.documents.errors.relocation_busy');
+        }
+
+        if (!$relocation->ok) {
+            return $this->jsonFailure('backend.ged.documents.errors.relocation_failed', extra: [
+                'reason' => $relocation->error,
+            ]);
+        }
+
+        return $this->jsonSuccess([
+            'queued' => false,
+            'disk' => $document->getStorageDisk()->value,
+            'state' => $document->getStorageTransferState()->value,
+            'filesMoved' => $relocation->filesMoved,
+            'alreadyThere' => $relocation->alreadyThere,
+        ]);
+    }
+
+    /**
+     * The same move, over a selection.
+     *
+     * Reports counts rather than a single success, because a selection can
+     * legitimately be a mix: some documents already where they were asked to
+     * go, one held by a move still running, one whose backend refused. Telling
+     * the reader "done" over that would be a lie, and telling them "failed"
+     * would be another.
+     */
+    #[Route('/bulk-storage', name: '_bulk_storage', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.documents.relocate')]
+    public function bulkRelocate(Request $request): JsonResponse
+    {
+        $payload = $this->decodeJson($request);
+        $target = StorageDiskEnum::tryFrom((string) ($payload['disk'] ?? ''));
+
+        if (!$target instanceof StorageDiskEnum) {
+            return $this->jsonFailure('backend.ged.documents.errors.unknown_disk');
+        }
+
+        /** @var list<int> $ids */
+        $ids = array_values(array_filter(array_map(intval(...), (array) ($payload['ids'] ?? []))));
+
+        $counts = ['moved' => 0, 'queued' => 0, 'alreadyThere' => 0, 'busy' => 0, 'failed' => 0];
+
+        foreach ($ids as $id) {
+            $document = $this->documentRepository->find($id);
+
+            if (null === $document) {
+                continue;
+            }
+
+            if ($this->relocator->weigh($document) > self::INLINE_RELOCATION_LIMIT_BYTES) {
+                $this->messageBus->dispatch(new RelocateDocumentMessage($id, $target));
+                ++$counts['queued'];
+
+                continue;
+            }
+
+            $relocation = $this->relocator->relocate($document, $target);
+
+            ++$counts[match (true) {
+                $relocation->alreadyThere => 'alreadyThere',
+                $relocation->busy => 'busy',
+                $relocation->ok => 'moved',
+                default => 'failed',
+            }];
+        }
+
+        return $this->jsonSuccess($counts);
     }
 
     /**
