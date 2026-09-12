@@ -5,6 +5,35 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.139] - 2026-09-12
+
+### Corrigé
+
+#### Chaque déploiement effaçait la configuration du stockage distant
+`aurora:application-parameter` tourne à chaque `make deploy-prod` et supprime
+toute ligne de réglage dont aucun fournisseur ne se porte garant. Les huit
+lignes du stockage, adresse, compartiment, les deux clés et la date de
+vérification, n'étaient déclarées nulle part.
+
+Constaté en production le 12/09/2026 : un compartiment configuré et vérifié à
+09h33 a été effacé par le déploiement de 10h29, sans un mot, et le site est
+reparti sur le disque du serveur.
+
+C'est la deuxième fois que ce piège se referme, après la clé d'API Pexels. Un
+onglet qui écrit ses propres lignes doit déclarer un
+`OwnedSettingProviderInterface`, et rien ne le rappelait.
+
+Un test le rappelle maintenant : toute énumération `*SettingEnum` qui n'est pas
+dessinée par l'écran générique doit être revendiquée par un fournisseur, sinon
+la suite échoue en nommant les clés qui seront supprimées. Vérifié en retirant
+le fournisseur : le test tombe et liste les huit.
+
+### Dans aurora-client
+Rien à faire dans le code. **Une configuration de stockage distant perdue lors
+d'un déploiement antérieur est à ressaisir**, clés comprises, puis à vérifier.
+
+---
+
 ## [0.9.138] - 2026-09-12
 
 ### Ajouté
