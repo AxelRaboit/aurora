@@ -35,7 +35,7 @@ final readonly class DocumentsViewBuilder
         private StorageSettings $storageSettings,
     ) {}
 
-    public function indexView(PaginationRequest $pagination): array
+    public function indexView(PaginationRequest $pagination, bool $trashed = false): array
     {
         $categories = array_map(
             $this->categorySerializer->serialize(...),
@@ -50,7 +50,11 @@ final readonly class DocumentsViewBuilder
         $folders = $this->serializeFoldersWithCounts();
 
         return [
-            'documents' => $this->buildListPayload($pagination),
+            // The first page is built for the view the reader is landing on,
+            // so a link into the trash does not show the library for the time
+            // of one fetch.
+            'documents' => $this->buildListPayload($pagination, trashed: $trashed),
+            'trashed' => $trashed,
             'categories' => $categories,
             'tags' => $tags,
             'folders' => $folders,

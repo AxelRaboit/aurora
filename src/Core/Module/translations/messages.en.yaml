@@ -12,6 +12,8 @@ backend:
           view: Access the dashboard
         search:
           view: Use global search
+        trash:
+          view: See the global trash
       platform:
         users:
           manage: Manage users

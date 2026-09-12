@@ -74,10 +74,17 @@ final class DocumentsController extends AbstractController
         private readonly DocumentRepository $documentRepository,
     ) {}
 
+    /**
+     * `?trashed=1` opens the page on its trash rather than on the library, so
+     * the overview screen can link straight to what it counted.
+     */
     #[Route('', name: '', methods: [HttpMethodEnum::Get->value])]
-    public function index(PaginationRequest $pagination): Response
+    public function index(Request $request, PaginationRequest $pagination): Response
     {
-        return $this->render('@Ged/backend/documents/index.html.twig', $this->viewBuilder->indexView($pagination));
+        return $this->render(
+            '@Ged/backend/documents/index.html.twig',
+            $this->viewBuilder->indexView($pagination, $request->query->getBoolean('trashed')),
+        );
     }
 
     #[Route('/list', name: '_list', methods: [HttpMethodEnum::Get->value])]

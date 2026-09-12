@@ -12,6 +12,8 @@ backend:
           view: Accéder au tableau de bord
         search:
           view: Utiliser la recherche globale
+        trash:
+          view: Voir la corbeille globale
       platform:
         users:
           manage: Gérer les utilisateurs

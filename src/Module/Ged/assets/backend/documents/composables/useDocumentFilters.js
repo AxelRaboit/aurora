@@ -1,6 +1,6 @@
 import { ref, computed } from "vue";
 
-export function useDocumentFilters(reload) {
+export function useDocumentFilters(reload, { trashed = false } = {}) {
     const filterCategoryId = ref(null);
     const filterTagId = ref(null);
     const filterFolderId = ref(null);
@@ -12,7 +12,10 @@ export function useDocumentFilters(reload) {
     // The trash is a view over the same listing, not a filter: it stays out of
     // `hasActiveFilter` and out of `resetFilters` on purpose, so clearing the
     // filters inside the trash clears the filters and leaves you in the trash.
-    const viewingTrash = ref(false);
+    //
+    // It can start open, which is how the overview screen links to what it
+    // counted. Read once, not watched: from then on the page owns the view.
+    const viewingTrash = ref(Boolean(trashed));
 
     const hasActiveFilter = computed(
         () =>

@@ -1,0 +1,13 @@
+backend:
+  trash:
+    title: "Corbeille"
+    intro: "Ce qui a été supprimé attend ici avant d'être effacé pour de bon."
+    read_only: "Cette page dit où sont les éléments supprimés. On les restaure, ou on les efface, depuis l'écran qui les contient."
+    retention: "Une ligne part définitivement {days} jours après sa suppression."
+    retention_off: "La purge automatique est désactivée : rien ne part tout seul."
+    count: "1 élément | {count} éléments"
+    empty_one: "Vide"
+    days_left: "Purge dans 1 jour | Purge dans {count} jours"
+    purge_due: "Purge cette nuit"
+    all_empty: "Aucune corbeille ne contient quoi que ce soit."
+    all_empty_hint: "Ce qui sera supprimé apparaîtra ici, le temps de sa rétention."
