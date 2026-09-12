@@ -53,6 +53,22 @@ class SlidesController extends AbstractController
         return $this->render('@Studio/backend/decks/show.html.twig', $this->viewBuilder->showView($deck));
     }
 
+    /**
+     * The deck on paper, on a page that carries nothing else.
+     *
+     * `?print=1` when the editor opens it, so the dialog is already up; without
+     * it the page is a readable stack of the whole deck, which is a use of its
+     * own.
+     */
+    #[Route('/print', name: '_print', methods: [HttpMethodEnum::Get->value])]
+    public function print(Deck $deck, Request $request): Response
+    {
+        return $this->render('@Studio/backend/decks/print.html.twig', [
+            'deck' => $this->serializer->full($deck),
+            'autoPrint' => $request->query->getBoolean('print'),
+        ]);
+    }
+
     #[Route('/slides/create', name: '_slide_create', methods: [HttpMethodEnum::Post->value])]
     #[IsGranted('studio.decks.edit')]
     public function create(Deck $deck, Request $request): JsonResponse

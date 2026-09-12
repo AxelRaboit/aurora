@@ -5,6 +5,43 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.145] - 2026-09-12
+
+### Ajouté
+
+#### Présenter une présentation, et l'imprimer
+Le bouton « Présenter » ouvre le deck en plein écran, une slide à la fois.
+Flèches, espace, et les touches Page précédente et Page suivante qu'envoie une
+télécommande de présentation. Échap pour sortir. La slide est mise en boîte
+aux lettres plutôt qu'étirée : un cadre en 16/9 sur un vidéoprojecteur en 16/10
+a des bandes, et remplir l'écran rognerait un coin de ce que quelqu'un a écrit.
+
+**Les notes d'orateur ne sont pas dans le lecteur**, et c'est la raison pour
+laquelle elles sont une colonne et non un emplacement de gabarit : un seul
+écran est l'écran du public, donc tout ce qui y est dessiné est public.
+
+#### L'export, par l'impression du navigateur
+« Imprimer » ouvre une page qui ne porte que les slides, une par page, en
+paysage, et lance le dialogue d'impression. « Enregistrer en PDF » est dans le
+même dialogue.
+
+dompdf est pourtant déjà là, mais son propre commentaire dit à quoi il sert :
+un document légal à mise en page fixe, sans JavaScript, et il ne sait ni flex
+ni grid. Reconstruire les six gabarits une seconde fois dans ce sous-ensemble,
+puis tenir les deux versions d'accord, achèterait un export serveur que
+personne n'a demandé. Le navigateur qui a dessiné la slide imprime la slide
+qu'il a dessinée.
+
+Sa propre page plutôt qu'une feuille d'impression posée sur l'éditeur : masquer
+un back-office par sélecteur demande de connaître son balisage, puis de le
+connaître encore à chaque fois qu'il change.
+
+### Corrigé
+
+#### Les puces d'une slide n'avaient pas de puce
+La réinitialisation de Tailwind retire les marqueurs de toutes les listes, et
+une liste à puces sans puces se lit comme un paragraphe coupé.
+
 ## [0.9.144] - 2026-09-12
 
 ### Ajouté

@@ -70,6 +70,7 @@ final readonly class DecksViewBuilder
             'deck' => $this->serializer->full($deck),
             'layouts' => $this->layoutOptions(),
             'backPath' => $this->urlGenerator->generate('backend_studio_decks'),
+            'printPath' => $this->urlGenerator->generate('backend_studio_deck_print', ['id' => $deck->getId()]),
             'slideCreatePath' => $this->urlGenerator->generate('backend_studio_deck_slide_create', ['id' => $deck->getId()]),
             'slideUpdatePath' => $this->pathTemplates->generate('backend_studio_deck_slide_update', ['id' => $deck->getId(), 'slideId' => '__slideId__']),
             'slideDeletePath' => $this->pathTemplates->generate('backend_studio_deck_slide_delete', ['id' => $deck->getId(), 'slideId' => '__slideId__']),
