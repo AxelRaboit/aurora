@@ -6,6 +6,7 @@ import { useRequest } from "@/shared/composables/http/backend/useRequest.js";
 import { useFormAction } from "@/shared/composables/form/useFormAction.js";
 import { useDelete } from "@/shared/composables/form/useDelete.js";
 import { required } from "@/shared/utils/validation/validators.js";
+import { captureVideoPoster } from "@/shared/utils/media/captureVideoPoster.js";
 
 export const DOCUMENT_STATUS_BADGE = {
     draft: "gray",
@@ -30,6 +31,10 @@ function emptyForm() {
         size: null,
         width: null,
         height: null,
+        // The still shown for a file the browser cannot draw by itself: a
+        // PDF's first page, a film's poster frame. Carried on submit like
+        // filePath, or the document is saved without the one it just got.
+        thumbnailPath: null,
         // Image-only metadata (alt for a11y/SEO, caption shown alongside).
         alt: "",
         caption: "",
@@ -90,6 +95,31 @@ export function useDocumentsForm(
     }
 
     /**
+     * Body for the upload call: the file, plus the poster frame when the file
+     * is a film.
+     *
+     * A `<video preload="none">` without a poster is a black rectangle at the
+     * browser's default ratio, and the browser that is about to upload the
+     * film is the one place a frame can be drawn without asking the server to
+     * install a decoder. `captureVideoPoster` returns null for anything that
+     * is not a playable video, and for a video it could not draw, so the
+     * upload itself is never held up by it.
+     */
+    async function uploadBody(file) {
+        const rawBody = new FormData();
+        rawBody.append("file", file);
+
+        const capture = await captureVideoPoster(file);
+        if (capture) {
+            rawBody.append("poster", capture.poster);
+            rawBody.append("videoWidth", String(capture.width));
+            rawBody.append("videoHeight", String(capture.height));
+        }
+
+        return rawBody;
+    }
+
+    /**
      * Uploads a local file to /backend/ged/documents/upload, then hydrates
      * the form with the returned metadata. Two-step pattern: the actual
      * Document row is created later on form submit.
@@ -97,9 +127,9 @@ export function useDocumentsForm(
     async function onLocalFileCreate(file) {
         if (!uploadPath || !file) return;
         uploadingCreate.value = true;
-        const rawBody = new FormData();
-        rawBody.append("file", file);
-        const data = await request(uploadPath, null, { rawBody });
+        const data = await request(uploadPath, null, {
+            rawBody: await uploadBody(file),
+        });
         uploadingCreate.value = false;
         if (!data) return;
         if (data.success && data.filePath) {
@@ -110,6 +140,7 @@ export function useDocumentsForm(
             newDoc.value.size = data.size;
             newDoc.value.width = data.width;
             newDoc.value.height = data.height;
+            newDoc.value.thumbnailPath = data.thumbnailPath ?? null;
         } else {
             toast.error(t("shared.common.error"));
         }
@@ -162,6 +193,7 @@ export function useDocumentsForm(
             size: doc.fileSize ?? null,
             width: doc.width ?? null,
             height: doc.height ?? null,
+            thumbnailPath: doc.thumbnailPath ?? null,
             alt: doc.alt ?? "",
             caption: doc.caption ?? "",
         };
@@ -172,9 +204,9 @@ export function useDocumentsForm(
     async function onLocalFileEdit(file) {
         if (!uploadPath || !file) return;
         uploadingEdit.value = true;
-        const rawBody = new FormData();
-        rawBody.append("file", file);
-        const data = await request(uploadPath, null, { rawBody });
+        const data = await request(uploadPath, null, {
+            rawBody: await uploadBody(file),
+        });
         uploadingEdit.value = false;
         if (!data) return;
         if (data.success && data.filePath) {
@@ -185,6 +217,7 @@ export function useDocumentsForm(
             editForm.value.size = data.size;
             editForm.value.width = data.width;
             editForm.value.height = data.height;
+            editForm.value.thumbnailPath = data.thumbnailPath ?? null;
         } else {
             toast.error(t("shared.common.error"));
         }

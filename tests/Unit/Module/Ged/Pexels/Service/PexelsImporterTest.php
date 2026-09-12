@@ -9,6 +9,7 @@ use Aurora\Core\Storage\Adapter\LocalStorageAdapter;
 use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\Service\VideoPosterGenerator;
 use Aurora\Core\Storage\StorageManager;
 use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use Aurora\Module\Ged\Document\Dto\DocumentInputFactory;
@@ -232,6 +233,7 @@ final class PexelsImporterTest extends TestCase
         return new GedDocumentUploader(
             new AsciiSlugger(),
             new PdfThumbnailGenerator($workspace),
+            new VideoPosterGenerator($workspace),
             new ImageCropper($filesystem),
             new StorageManager(
                 [new LocalStorageAdapter($filesystem, $this->workDir)],

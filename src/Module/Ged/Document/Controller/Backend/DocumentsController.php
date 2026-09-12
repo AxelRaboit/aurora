@@ -9,6 +9,7 @@ use Aurora\Core\Http\JsonRequestTrait;
 use Aurora\Core\Http\JsonResponseTrait;
 use Aurora\Core\Storage\Enum\MimeGroupEnum;
 use Aurora\Core\Storage\Enum\StorageDiskEnum;
+use Aurora\Core\Storage\Service\VideoCapture;
 use Aurora\Core\Validation\Dto\PaginationRequest;
 use Aurora\Core\Validation\Service\PayloadValidator;
 use Aurora\Module\Configuration\Storage\Setting\StorageSettings;
@@ -369,7 +370,32 @@ final class DocumentsController extends AbstractController
             return $this->jsonFailure('backend.ged.documents.errors.upload_required');
         }
 
-        return $this->jsonSuccess($this->uploader->upload($file));
+        return $this->jsonSuccess($this->uploader->upload($file, $this->videoCapture($request)));
+    }
+
+    /**
+     * The frame the browser drew from a film before sending it, when it sent
+     * one.
+     *
+     * Nothing here decides that the upload is a video: the uploader does, from
+     * the file's own mime type. A capture posted alongside a PDF is read and
+     * then ignored, which is the only sane reading of a field that does not
+     * apply.
+     */
+    private function videoCapture(Request $request): ?VideoCapture
+    {
+        /** @var UploadedFile|null $poster */
+        $poster = $request->files->get('poster');
+
+        if (null === $poster) {
+            return null;
+        }
+
+        return new VideoCapture(
+            $poster,
+            $request->request->getInt('videoWidth') ?: null,
+            $request->request->getInt('videoHeight') ?: null,
+        );
     }
 
     /**

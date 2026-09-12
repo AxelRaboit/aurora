@@ -766,7 +766,7 @@ final readonly class GridViewBuilder
      * with nothing said anywhere. Same reasoning as {@see mediaData}, and the
      * same place to ask it: only the render knows what the file is today.
      *
-     * @return array{url: string, mimeType: string, poster: string|null}|null
+     * @return array{url: string, mimeType: string, poster: string|null, width: int|null, height: int|null}|null
      */
     private function videoFile(?DocumentInterface $media): ?array
     {
@@ -789,10 +789,15 @@ final readonly class GridViewBuilder
         return [
             'url' => $url,
             'mimeType' => $mime->value,
-            // The still the player shows before anything is downloaded. Null
-            // is fine: the browser then draws a black frame, which is what it
-            // did before this existed.
+            // The still the player shows before anything is downloaded.
             'poster' => $this->documentUrlGenerator->thumbnailPathUrl($media),
+            // The film's own pixel size, so the box is the right shape before
+            // a single byte is fetched. Without it a `preload="none"` player
+            // falls back to the browser's 300x150 default, which is why an
+            // unplayed portrait film used to render as a squat black
+            // rectangle. Null when the document predates the column.
+            'width' => $media->getWidth(),
+            'height' => $media->getHeight(),
         ];
     }
 

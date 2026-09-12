@@ -10,6 +10,8 @@ use Aurora\Core\Storage\Enum\MimeTypeEnum;
 use Aurora\Core\Storage\Enum\StorageAreaEnum;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
+use Aurora\Core\Storage\Service\VideoCapture;
+use Aurora\Core\Storage\Service\VideoPosterGenerator;
 use Aurora\Core\Storage\StorageManager;
 use Aurora\Core\Storage\Workspace\LocalWorkspace;
 use DateTimeImmutable;
@@ -32,15 +34,20 @@ final readonly class GedDocumentUploader
     public function __construct(
         private SluggerInterface $slugger,
         private PdfThumbnailGenerator $pdfThumbnailGenerator,
+        private VideoPosterGenerator $videoPosterGenerator,
         private ImageCropper $imageCropper,
         private StorageManager $storageManager,
         private LocalWorkspace $workspace,
     ) {}
 
     /**
+     * @param VideoCapture|null $capture frame the browser drew from a film it
+     *                                   was about to upload, when there was a
+     *                                   browser to draw it
+     *
      * @return array{filePath: string, fileName: string, originalName: string, mimeType: string, size: int, thumbnailPath: string|null, width: int|null, height: int|null}
      */
-    public function upload(UploadedFile $file): array
+    public function upload(UploadedFile $file, ?VideoCapture $capture = null): array
     {
         $mimeType = (string) $file->getMimeType();
         $size = (int) $file->getSize();
@@ -60,14 +67,26 @@ final readonly class GedDocumentUploader
         // and the temporary is swept at the end of the request either way.
         $adapter->writeFromLocalFile($relativePath, $file->getPathname());
 
+        $thumbDir = sprintf('%s/thumbnails/%s', StorageAreaEnum::Ged->value, $dateSlug);
+        $thumbBasename = pathinfo($newFilename, PATHINFO_FILENAME);
+
         $thumbnailPath = null;
+        [$width, $height] = $this->readImageDimensions($adapter, $relativePath, $mimeType);
+
         if (MimeTypeEnum::Pdf->value === $mimeType) {
-            $thumbDir = sprintf('%s/thumbnails/%s', StorageAreaEnum::Ged->value, $dateSlug);
-            $thumbBasename = pathinfo($newFilename, PATHINFO_FILENAME);
             $thumbnailPath = $this->pdfThumbnailGenerator->generate($adapter, $relativePath, $thumbDir, $thumbBasename);
         }
 
-        [$width, $height] = $this->readImageDimensions($adapter, $relativePath, $mimeType);
+        if (MimeTypeEnum::tryFrom($mimeType)?->isVideo() ?? false) {
+            // The browser's frame first: it cost nothing to make and needs
+            // nothing installed here. `fromSource` is the path for uploads no
+            // browser handled - an API call, a fixture, a console import.
+            $thumbnailPath = $capture instanceof VideoCapture
+                ? $this->videoPosterGenerator->fromCapture($adapter, $capture->poster, $thumbDir, $thumbBasename)
+                : $this->videoPosterGenerator->fromSource($adapter, $relativePath, $thumbDir, $thumbBasename);
+
+            [$width, $height] = $this->readVideoDimensions($adapter, $capture, $thumbnailPath);
+        }
 
         return [
             'filePath' => $relativePath,
@@ -172,5 +191,33 @@ final readonly class GedDocumentUploader
 
             return false === $info ? [null, null] : [$info[0], $info[1]];
         });
+    }
+
+    /**
+     * Pixel dimensions of a film, without opening the film.
+     *
+     * The player that uploaded it already knew them, so its answer wins. When
+     * there was no player, the poster stands in: `ffmpeg` writes the frame at
+     * the source's own resolution, so reading the still reads the film. With
+     * neither, the document keeps the nulls it would have had anyway - the
+     * ratio is then the browser's default, which is the state this whole
+     * feature exists to get out of.
+     *
+     * @return array{0: int|null, 1: int|null}
+     */
+    private function readVideoDimensions(
+        StorageAdapterInterface $adapter,
+        ?VideoCapture $capture,
+        ?string $posterKey,
+    ): array {
+        if ($capture instanceof VideoCapture && $capture->hasDimensions()) {
+            return [$capture->videoWidth, $capture->videoHeight];
+        }
+
+        if (null === $posterKey || $capture instanceof VideoCapture) {
+            return [null, null];
+        }
+
+        return $this->readImageDimensions($adapter, $posterKey, MimeTypeEnum::Jpeg->value);
     }
 }
