@@ -102,6 +102,12 @@ final readonly class StorageSettings
      *
      * Field by field, not wholesale: an operator who sets only the endpoint
      * should not silently lose the bucket an administrator saved.
+     *
+     * Normalised on the way out, and here rather than at the two sources,
+     * because this is the one place every reader goes through. An endpoint
+     * with the bucket pasted on it is corrected whether it came from the
+     * settings screen, from an environment variable, or from a database row
+     * written before any of this existed.
      */
     public function effectiveR2Configuration(): R2Configuration
     {
@@ -114,7 +120,7 @@ final readonly class StorageSettings
             accessKeyId: '' !== $environment->accessKeyId ? $environment->accessKeyId : $stored->accessKeyId,
             secretAccessKey: '' !== $environment->secretAccessKey ? $environment->secretAccessKey : $stored->secretAccessKey,
             publicBaseUrl: $environment->publicBaseUrl ?? $stored->publicBaseUrl,
-        );
+        )->withNormalisedEndpoint();
     }
 
     /** What this installation saved, ignoring the environment. */

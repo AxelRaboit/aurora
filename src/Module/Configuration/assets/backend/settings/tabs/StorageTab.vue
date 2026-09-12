@@ -127,18 +127,38 @@ onMounted(async () => {
     }
 });
 
+/**
+ * Saves, and returns the state on success or null when the server refused.
+ *
+ * The refusal carries a translation key naming the field: a key of the wrong
+ * length, an address with the bucket pasted on the end. Reading `success`
+ * rather than the mere presence of a response matters, because a refusal is
+ * an object too - treating it as state used to announce a save that had not
+ * happened.
+ */
+async function persist() {
+    const response = await request(SETTINGS_PATH, payload(), { noGuard: true });
+    if (!response) return null;
+
+    if (false === response.success) {
+        toast.error(t(response.error ?? "shared.common.error"));
+        if (response.state) apply(response.state);
+
+        return null;
+    }
+
+    apply(response);
+
+    return response;
+}
+
 async function save() {
     saving.value = true;
     try {
-        const state = await request(SETTINGS_PATH, payload(), { noGuard: true });
-
         // Nothing on this screen changes visibly when a save works: the keys
         // come back as "a value is stored", not as themselves. Without a word
         // said, pressing the button looks like pressing nothing.
-        if (state) {
-            apply(state);
-            toast.success(t("backend.settings.saved"));
-        }
+        if (await persist()) toast.success(t("backend.settings.saved"));
     } finally {
         saving.value = false;
     }
@@ -153,8 +173,10 @@ async function test() {
     testing.value = true;
     probe.value = null;
     try {
-        const saved = await request(SETTINGS_PATH, payload(), { noGuard: true });
-        if (saved) apply(saved);
+        // A configuration the server would not even store is not worth
+        // sending to Cloudflare: the refusal already says what is wrong, and
+        // probing it would answer with something less clear.
+        if (!(await persist())) return;
 
         const result = await request(`${SETTINGS_PATH}/test`, { disk: "r2" }, { noGuard: true });
         if (!result) return;
