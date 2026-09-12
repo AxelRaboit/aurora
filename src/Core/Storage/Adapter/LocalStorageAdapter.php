@@ -114,6 +114,35 @@ final readonly class LocalStorageAdapter implements StorageAdapterInterface, Loc
         return $contents;
     }
 
+    public function readStream(string $key): Generator
+    {
+        $path = $this->resolve($key);
+
+        if (!is_file($path)) {
+            throw StorageException::missingKey($key);
+        }
+
+        $handle = @fopen($path, 'r');
+
+        if (false === $handle) {
+            throw StorageException::readFailed($key, 'fopen() failed');
+        }
+
+        try {
+            while (!feof($handle)) {
+                $chunk = fread($handle, 1 << 19);
+
+                if (false === $chunk) {
+                    throw StorageException::readFailed($key, 'fread() failed');
+                }
+
+                yield $chunk;
+            }
+        } finally {
+            fclose($handle);
+        }
+    }
+
     public function copyToLocalFile(string $key, string $targetAbsolutePath): void
     {
         $source = $this->resolve($key);

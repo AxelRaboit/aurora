@@ -34,18 +34,28 @@ final class StorageManager
     public function __construct(
         #[AutowireIterator('aurora.storage_adapter')]
         private readonly iterable $adapters,
+        private readonly ActiveStorageDiskProviderInterface $activeDiskProvider,
     ) {}
 
     /**
-     * The disk new files go to.
+     * The disk new files go to, as an administrator chose it.
      *
-     * Local for now, and a setting once there is a second backend to choose.
-     * Callers ask this rather than naming a disk, so the day that setting
-     * appears none of them changes.
+     * Callers ask this rather than naming a disk, which is what let the choice
+     * move from a hardcoded constant to a setting without any of them
+     * changing.
      */
     public function active(): StorageAdapterInterface
     {
-        return $this->forDisk(StorageDiskEnum::Local);
+        return $this->forDisk($this->activeDiskProvider->activeDisk());
+    }
+
+    /**
+     * The active disk itself, for callers that have to record it rather than
+     * write through it - stamping a document with where its bytes just went.
+     */
+    public function activeDisk(): StorageDiskEnum
+    {
+        return $this->activeDiskProvider->activeDisk();
     }
 
     public function forDisk(StorageDiskEnum $disk): StorageAdapterInterface

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Aurora\Tests\Unit\Module\Ged\Pexels\Service;
 
+use Aurora\Core\Storage\ActiveStorageDiskProviderInterface;
 use Aurora\Core\Storage\Adapter\LocalStorageAdapter;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
 use Aurora\Core\Storage\StorageManager;
@@ -231,7 +233,15 @@ final class PexelsImporterTest extends TestCase
             new AsciiSlugger(),
             new PdfThumbnailGenerator($workspace),
             new ImageCropper($filesystem),
-            new StorageManager([new LocalStorageAdapter($filesystem, $this->workDir)]),
+            new StorageManager(
+                [new LocalStorageAdapter($filesystem, $this->workDir)],
+                new class implements ActiveStorageDiskProviderInterface {
+                    public function activeDisk(): StorageDiskEnum
+                    {
+                        return StorageDiskEnum::Local;
+                    }
+                },
+            ),
             $workspace,
         );
     }

@@ -61,6 +61,11 @@ final class InMemoryStorageAdapter implements StorageAdapterInterface
         return $this->objects[$key] ?? throw StorageException::missingKey($key);
     }
 
+    public function readStream(string $key): Generator
+    {
+        yield $this->read($key);
+    }
+
     public function copyToLocalFile(string $key, string $targetAbsolutePath): void
     {
         if (!isset($this->objects[$key])) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Document\Entity;
 
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -22,6 +23,14 @@ abstract class AbstractDocumentVersion implements DocumentVersionInterface
 
     #[ORM\Column(length: 255)]
     protected string $filePath;
+
+    /**
+     * The backend holding this version's bytes, which is not necessarily the
+     * one holding the document's current file: a document can be moved after a
+     * version was recorded, and an older version may lag behind.
+     */
+    #[ORM\Column(length: 20, enumType: StorageDiskEnum::class, options: ['default' => 'local'])]
+    protected StorageDiskEnum $storageDisk = StorageDiskEnum::Local;
 
     #[ORM\Column(length: 255)]
     protected string $fileName;
@@ -69,6 +78,18 @@ abstract class AbstractDocumentVersion implements DocumentVersionInterface
     public function setFilePath(string $filePath): static
     {
         $this->filePath = $filePath;
+
+        return $this;
+    }
+
+    public function getStorageDisk(): StorageDiskEnum
+    {
+        return $this->storageDisk;
+    }
+
+    public function setStorageDisk(StorageDiskEnum $storageDisk): static
+    {
+        $this->storageDisk = $storageDisk;
 
         return $this;
     }

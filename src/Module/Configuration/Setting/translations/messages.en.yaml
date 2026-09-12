@@ -32,7 +32,59 @@ backend:
       captcha_description: "Checking comments and forms: service, keys and activation."
       notes: Notes
       notes_description: "Markdown notes module settings: image upload size and quality."
+      storage: File storage
+      storage_description: "Where the application writes its files: the server's disk, or Cloudflare R2 object storage."
       modules: Modules
+    storage:
+      intro: "By default the files you upload are written to the server's disk. You can hand them to Cloudflare R2 object storage instead, on your own account."
+      when_useful: "Mostly worth it if you store a lot, or large files. Below a few gigabytes the server's disk does the job and needs no configuring."
+      how_title: How to get the credentials
+      how_step_bucket: "In the Cloudflare dashboard, open R2 and create a bucket, or pick an existing one."
+      how_step_token: "Create an API token with the \"Object Read & Write\" permission, scoped to that one bucket. Read only is not enough: the application has to write."
+      how_step_copy: "Copy the access key id and the secret access key. Cloudflare shows them once."
+      how_link: Open the Cloudflare R2 documentation
+      endpoint_label: Account address
+      endpoint_hint: "The account URL, with no bucket name at the end. The console shows one with the bucket appended: pasting that would put it in twice."
+      bucket_label: Bucket
+      bucket_hint: The bucket name on its own.
+      access_key_label: Access key id
+      secret_key_label: Secret access key
+      key_stored: A value is stored. Leave empty to keep it.
+      key_hint: Copied from Cloudflare when the token was created.
+      public_url_label: Public hostname
+      public_url_hint: "Optional. The hostname you mapped onto the bucket, if you mapped one. Without it, files stay served by the application."
+      delivery_title: How files are served
+      delivery_hint: "A document's address never changes, whichever you pick. What changes is only how the application answers it."
+      delivery_proxy: Through the application
+      delivery_proxy_hint: "The bytes cross the server. Simplest, and your access rules keep applying."
+      delivery_presigned: Through a temporary signed link
+      delivery_presigned_hint: "The bytes go straight from storage to the visitor, and the files stay private."
+      delivery_public_url: Through the public hostname
+      delivery_public_url_hint: "Fastest, and cached. Files become readable by anyone holding the address."
+      test_button: Test the connection
+      test_intro: "The test writes a witness file, reads it back, checks it is there, then deletes it. It is the only way to know a token may really write."
+      test_passed: "Connection verified on {date}."
+      test_never: "Never tested. The test is required before the storage can be switched."
+      active_disk_label: Write new files to
+      disk_local: The server's disk
+      disk_r2: Cloudflare R2
+      switch_blocked: Test the connection before switching.
+      switch_hint: "Only affects files from now on. The ones already stored do not move."
+      probe:
+        write: write
+        read_back: read back
+        exists: presence
+        metadata: size and date
+        listing: visible in the listing
+        cleanup: cleanup
+      hints:
+        incomplete: "Something is missing. Fill in the account address, the bucket and both keys."
+        signature: "The secret access key does not match the access key id. Both are shown once, at token creation: making a new token is quicker than hunting."
+        denied: "Cloudflare answers but refuses. Check the token carries \"Object Read & Write\" rather than read only, and that its scope includes this bucket."
+        no_bucket: "That bucket does not exist at this address. Note the account address must not end with the bucket name."
+        unreachable: "The address did not answer. Check it, and check this server can reach it."
+      errors:
+        verification_required: Test the connection before switching the storage.
     appearance:
       color_presets:
         title: Color picker palette

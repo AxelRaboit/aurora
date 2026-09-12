@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Aurora\Core\Storage\R2;
 
-use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Reads the credentials from the environment.
  *
- * The starting point, and the fallback once the settings tab exists: a server
- * that would rather keep its secrets in the environment than in its database
- * is a legitimate position, and one aurora-client's own deployment may take.
+ * Not the service the application resolves: the Configuration module wraps
+ * this one so an administrator can configure a bucket without touching a
+ * server, and lets the environment win field by field. It stays a first-class
+ * source because a server that would rather keep its secrets out of a database
+ * it backs up nightly is taking a defensible position.
  *
  * Every variable resolves through `default::`, so an installation that has
  * never heard of R2 boots with an empty configuration rather than a container
  * error about a missing environment variable.
  */
-#[AsAlias(R2ConfigurationProviderInterface::class)]
 final readonly class EnvR2ConfigurationProvider implements R2ConfigurationProviderInterface
 {
     public function __construct(

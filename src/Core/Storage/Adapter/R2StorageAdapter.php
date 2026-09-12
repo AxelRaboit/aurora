@@ -117,6 +117,22 @@ final readonly class R2StorageAdapter implements StorageAdapterInterface
         });
     }
 
+    public function readStream(string $key): Generator
+    {
+        // The attempt wrapper cannot cover the iteration itself: a generator
+        // that failed half way cannot be replayed from the start without
+        // sending the caller the first chunks twice. Only opening is retried.
+        $stream = $this->attempt('read', $key, function () use ($key) {
+            try {
+                return $this->client()->download($this->configurationProvider->current()->bucket, $key);
+            } catch (ClientException $clientException) {
+                throw $this->isNotFound($clientException) ? StorageException::missingKey($key) : $clientException;
+            }
+        });
+
+        yield from $stream->getChunks();
+    }
+
     public function copyToLocalFile(string $key, string $targetAbsolutePath): void
     {
         $this->filesystem->mkdir(dirname($targetAbsolutePath));

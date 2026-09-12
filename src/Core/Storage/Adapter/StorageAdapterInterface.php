@@ -63,6 +63,19 @@ interface StorageAdapterInterface
     public function read(string $key): string;
 
     /**
+     * The object's bytes, a chunk at a time.
+     *
+     * For everything too big to hold in memory, which on a storage layer meant
+     * to take video is most of the interesting cases. A caller streaming to a
+     * response must use this; `read()` is for the small and the known.
+     *
+     * @return iterable<string>
+     *
+     * @throws StorageException when the key holds nothing, or cannot be read
+     */
+    public function readStream(string $key): iterable;
+
+    /**
      * Places the object's bytes at a local absolute path, creating parent
      * directories as needed. The caller owns the resulting file.
      *

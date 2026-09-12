@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Document\Entity;
 
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Timestampable\TimestampableTrait;
 use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategoryInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
@@ -45,6 +46,18 @@ abstract class AbstractDocument implements DocumentInterface
     /** Relative path within var/uploads/ (e.g. ged/documents/2026/05/contract-abc.pdf). */
     #[ORM\Column(length: 255, nullable: true)]
     protected ?string $filePath = null;
+
+    /**
+     * Which backend actually holds the bytes of `filePath`.
+     *
+     * Carried per document rather than read from the settings, because the
+     * setting says where the NEXT file goes and says nothing about this one.
+     * Without this column, switching a backend would strand every file written
+     * before the switch, and there would be no way to move a document from one
+     * side to the other and back.
+     */
+    #[ORM\Column(length: 20, enumType: StorageDiskEnum::class, options: ['default' => 'local'])]
+    protected StorageDiskEnum $storageDisk = StorageDiskEnum::Local;
 
     /** Filename on disk (slug + extension). */
     #[ORM\Column(length: 255, nullable: true)]
@@ -211,6 +224,18 @@ abstract class AbstractDocument implements DocumentInterface
     public function setFilePath(?string $filePath): static
     {
         $this->filePath = $filePath;
+
+        return $this;
+    }
+
+    public function getStorageDisk(): StorageDiskEnum
+    {
+        return $this->storageDisk;
+    }
+
+    public function setStorageDisk(StorageDiskEnum $storageDisk): static
+    {
+        $this->storageDisk = $storageDisk;
 
         return $this;
     }

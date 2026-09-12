@@ -6,6 +6,7 @@ namespace Aurora\Module\Ged\Document\Manager;
 
 use Aurora\Core\Sequence\SequenceGenerator;
 use Aurora\Core\Storage\Enum\MimeTypeEnum;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Storage\Service\ImageVariantGenerator;
 use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Configuration\Setting\Enum\ApplicationParameterEnum;
@@ -52,6 +53,10 @@ class DocumentManager implements DocumentManagerInterface
         $prefix = $this->settingRepository->getOrDefault(GedSettingEnum::DocumentPrefix);
         $document->setReference($this->sequenceGenerator->next($prefix));
         $this->applyInput($document, $input);
+        // The uploader wrote these bytes moments ago, so they are wherever the
+        // active disk is. Stamped before the variants, which are generated
+        // alongside the source and therefore land on the same backend.
+        $document->setStorageDisk($this->storageManager->activeDisk());
         $this->regenerateVariantsIfImage($document);
         $this->entityManager->persist($document);
         $this->entityManager->flush();
@@ -79,9 +84,18 @@ class DocumentManager implements DocumentManagerInterface
         $this->applyInput($document, $input);
 
         if ($fileChanged) {
-            // Old variants are orphaned by the new file path - drop them on
-            // disk before re-encoding the new source.
-            $this->variantGenerator->deleteVariants($this->storageManager->active(), $previousVariants);
+            // The bytes were just written by the uploader, so they are on
+            // whichever disk is active now - not necessarily the one the
+            // previous file sat on.
+            $previousDisk = $document->getStorageDisk();
+            $document->setStorageDisk($this->storageManager->activeDisk());
+
+            // Old variants belong to the old file, and possibly to the old
+            // backend. Dropped through that one rather than the active one.
+            $this->variantGenerator->deleteVariants(
+                $this->storageManager->forDisk($previousDisk),
+                $previousVariants,
+            );
             $this->regenerateVariantsIfImage($document);
         }
 
@@ -100,12 +114,13 @@ class DocumentManager implements DocumentManagerInterface
 
         $owned = $this->collectOwnedFiles([$document]);
         $variants = $document->getVariants();
+        $disk = $document->getStorageDisk();
 
         $this->entityManager->remove($document);
         $this->entityManager->flush();
 
-        $this->variantGenerator->deleteVariants($this->storageManager->active(), $variants);
-        $this->deleteUnreferencedFiles($owned);
+        $this->variantGenerator->deleteVariants($this->storageManager->forDisk($disk), $variants);
+        $this->deleteUnreferencedFiles($owned, $disk);
     }
 
     public function move(DocumentInterface $document, ?DocumentFolderInterface $folder): void
@@ -147,17 +162,31 @@ class DocumentManager implements DocumentManagerInterface
 
         $documents = $this->documentRepository->findBy(['id' => $ids]);
         $owned = $this->collectOwnedFiles($documents);
-        $variants = [];
+
+        // Grouped by disk: a selection can span both backends, and each file
+        // has to be removed through the one that actually holds it.
+        $variantsByDisk = [];
+        $pathsByDisk = [];
         foreach ($documents as $document) {
             $this->auditDeleted($document);
-            $variants = array_merge($variants, $document->getVariants());
+            $disk = $document->getStorageDisk()->value;
+            $variantsByDisk[$disk] = array_merge($variantsByDisk[$disk] ?? [], $document->getVariants());
+            $pathsByDisk[$disk] = array_merge($pathsByDisk[$disk] ?? [], $this->collectOwnedFiles([$document]));
             $this->entityManager->remove($document);
         }
 
         $this->entityManager->flush();
 
-        $this->variantGenerator->deleteVariants($this->storageManager->active(), $variants);
-        $this->deleteUnreferencedFiles($owned);
+        foreach ($variantsByDisk as $disk => $variants) {
+            $this->variantGenerator->deleteVariants(
+                $this->storageManager->forDisk(StorageDiskEnum::from($disk)),
+                $variants,
+            );
+        }
+
+        foreach ($pathsByDisk as $disk => $paths) {
+            $this->deleteUnreferencedFiles($paths, StorageDiskEnum::from($disk));
+        }
 
         return count($documents);
     }
@@ -198,9 +227,14 @@ class DocumentManager implements DocumentManagerInterface
         // back to the file itself, so a stale PDF-style thumbnail must clear.
         $document->setThumbnailPath(null);
 
-        // Old variants point at the pre-crop file path - drop them and
-        // regenerate so srcset/object-fit consumers stay in sync.
-        $this->variantGenerator->deleteVariants($this->storageManager->active(), $previousVariants);
+        // The crop wrote to the active disk, so the document moves with it.
+        $previousDisk = $document->getStorageDisk();
+        $document->setStorageDisk($this->storageManager->activeDisk());
+
+        // Old variants point at the pre-crop file path, on the disk that held
+        // it - drop them there, then regenerate so srcset consumers stay in
+        // sync.
+        $this->variantGenerator->deleteVariants($this->storageManager->forDisk($previousDisk), $previousVariants);
         $this->regenerateVariantsIfImage($document);
 
         $this->entityManager->flush();
@@ -254,7 +288,7 @@ class DocumentManager implements DocumentManagerInterface
      *
      * @param list<string> $paths
      */
-    protected function deleteUnreferencedFiles(array $paths): void
+    protected function deleteUnreferencedFiles(array $paths, StorageDiskEnum $disk): void
     {
         if ([] === $paths) {
             return;
@@ -265,8 +299,10 @@ class DocumentManager implements DocumentManagerInterface
             $this->versionRepository->filterPathsInUse($paths),
         );
 
+        $adapter = $this->storageManager->forDisk($disk);
+
         foreach (array_diff($paths, $stillInUse) as $path) {
-            $this->uploader->deleteFile($path);
+            $adapter->delete($path);
         }
     }
 
@@ -297,6 +333,10 @@ class DocumentManager implements DocumentManagerInterface
             ->setOriginalName((string) $document->getOriginalName())
             ->setMimeType((string) $document->getMimeType())
             ->setSize((int) $document->getSize())
+            // The version points at the document's current file, so it points
+            // at the same backend. They diverge later, when the document moves
+            // and its history stays where it was.
+            ->setStorageDisk($document->getStorageDisk())
             ->setVersionNumber($this->versionRepository->getNextVersionNumber($document));
         $this->entityManager->persist($version);
         $this->entityManager->flush();
@@ -324,7 +364,9 @@ class DocumentManager implements DocumentManagerInterface
         $currentPath = $document->getFilePath();
         foreach ($prunable as $version) {
             if ($version->getFilePath() !== $currentPath) {
-                $this->uploader->deleteFile($version->getFilePath());
+                // Through the version's own backend: a document moved after
+                // this version was recorded left its history behind.
+                $this->storageManager->forDisk($version->getStorageDisk())->delete($version->getFilePath());
             }
 
             $this->entityManager->remove($version);
@@ -394,7 +436,7 @@ class DocumentManager implements DocumentManagerInterface
         }
 
         $variants = $this->variantGenerator->generate(
-            $this->storageManager->active(),
+            $this->storageManager->forDisk($document->getStorageDisk()),
             $filePath,
             (string) $document->getMimeType(),
         );

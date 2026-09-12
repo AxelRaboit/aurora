@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Aurora\Module\Ged\Document\Entity;
 
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use DateTimeImmutable;
 
 interface DocumentVersionInterface
@@ -17,6 +18,10 @@ interface DocumentVersionInterface
     public function getFilePath(): string;
 
     public function setFilePath(string $filePath): static;
+
+    public function getStorageDisk(): StorageDiskEnum;
+
+    public function setStorageDisk(StorageDiskEnum $storageDisk): static;
 
     public function getFileName(): string;
 

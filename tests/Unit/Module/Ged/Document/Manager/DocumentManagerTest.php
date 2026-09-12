@@ -6,7 +6,9 @@ namespace Aurora\Tests\Unit\Module\Ged\Document\Manager;
 
 use Aurora\Core\Sequence\SequenceGenerator;
 use Aurora\Core\Sequence\SequencePrefixEnum;
+use Aurora\Core\Storage\ActiveStorageDiskProviderInterface;
 use Aurora\Core\Storage\Adapter\LocalStorageAdapter;
+use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Storage\Service\ImageCropper;
 use Aurora\Core\Storage\Service\ImageVariantGenerator;
 use Aurora\Core\Storage\Service\PdfThumbnailGenerator;
@@ -70,7 +72,15 @@ final class DocumentManagerTest extends TestCase
 
         $filesystem = new Filesystem();
         $workspace = new LocalWorkspace($filesystem);
-        $storageManager = new StorageManager([new LocalStorageAdapter($filesystem, $this->workDir)]);
+        $storageManager = new StorageManager(
+            [new LocalStorageAdapter($filesystem, $this->workDir)],
+            new class implements ActiveStorageDiskProviderInterface {
+                public function activeDisk(): StorageDiskEnum
+                {
+                    return StorageDiskEnum::Local;
+                }
+            },
+        );
 
         $this->manager = new DocumentManager(
             $this->entityManager,
@@ -548,10 +558,8 @@ final class DocumentManagerTest extends TestCase
 
     public function testRecordingVersionPrunesVersionsBeyondTheLimit(): void
     {
-        $old1 = $this->createStub(DocumentVersionInterface::class);
-        $old1->method('getFilePath')->willReturn('ged/2026/05/old-1.pdf');
-        $old2 = $this->createStub(DocumentVersionInterface::class);
-        $old2->method('getFilePath')->willReturn('ged/2026/05/old-2.pdf');
+        $old1 = $this->makeVersion('ged/2026/05/old-1.pdf');
+        $old2 = $this->makeVersion('ged/2026/05/old-2.pdf');
         $this->versionRepository->method('findPrunable')->willReturn([$old1, $old2]);
 
         $removed = [];
@@ -592,6 +600,9 @@ final class DocumentManagerTest extends TestCase
     {
         $version = $this->createStub(DocumentVersionInterface::class);
         $version->method('getFilePath')->willReturn($filePath);
+        // PHPUnit cannot invent a return value for an enum, and pruning asks
+        // each version which backend holds its bytes.
+        $version->method('getStorageDisk')->willReturn(StorageDiskEnum::Local);
 
         return $version;
     }
