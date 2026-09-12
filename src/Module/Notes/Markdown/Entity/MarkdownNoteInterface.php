@@ -6,6 +6,7 @@ namespace Aurora\Module\Notes\Markdown\Entity;
 
 use Aurora\Core\Timestampable\TimestampableInterface;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Collection;
 
 interface MarkdownNoteInterface extends TimestampableInterface
@@ -40,4 +41,16 @@ interface MarkdownNoteInterface extends TimestampableInterface
     public function getPosition(): int;
 
     public function setPosition(int $position): static;
+
+    public function getDeletedAt(): ?DateTimeImmutable;
+
+    public function setDeletedAt(?DateTimeImmutable $deletedAt): static;
+
+    /** Whether this note sits in the trash rather than in the tree. */
+    public function isTrashed(): bool;
+
+    /** The note whose deletion took this one down, if any. */
+    public function getTrashedWithNoteId(): ?int;
+
+    public function setTrashedWithNoteId(?int $trashedWithNoteId): static;
 }

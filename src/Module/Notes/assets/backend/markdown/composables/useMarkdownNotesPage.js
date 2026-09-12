@@ -254,6 +254,7 @@ export function useMarkdownNotesPage(props, t) {
         requestDelete,
         cancelDelete,
         confirmDelete,
+        refreshList,
         onWikiLinkClick,
         onCheckboxToggle,
         onImageResize,

@@ -8,6 +8,7 @@ use Aurora\Core\Repository\ResolveTargetEntityRepository;
 use Aurora\Module\Notes\Markdown\Entity\MarkdownNote;
 use Aurora\Module\Notes\Markdown\Entity\MarkdownNoteInterface;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Order;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -30,6 +31,7 @@ class MarkdownNoteRepository extends ResolveTargetEntityRepository
         return $this->createQueryBuilder('n')
             ->select('n.id', 'n.title', 'n.tags', 'n.position', 'n.createdAt', 'n.updatedAt', 'IDENTITY(n.parent) AS parentId')
             ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NULL')
             ->setParameter('user', $user)
             ->orderBy('n.position', Order::Ascending->value)
             ->addOrderBy('n.createdAt', Order::Descending->value)
@@ -47,6 +49,7 @@ class MarkdownNoteRepository extends ResolveTargetEntityRepository
     {
         return $this->createQueryBuilder('n')
             ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NULL')
             ->setParameter('user', $user)
             ->getQuery()
             ->getResult();
@@ -104,6 +107,70 @@ class MarkdownNoteRepository extends ResolveTargetEntityRepository
         ksort($counts, SORT_NATURAL | SORT_FLAG_CASE);
 
         return $counts;
+    }
+
+    /**
+     * The user's trashed notes, most recently deleted first.
+     *
+     * Only those trashed on their own: a sub-note that fell with its parent is
+     * part of the branch that parent restores, not an entry of its own.
+     *
+     * @return list<MarkdownNoteInterface>
+     */
+    public function findTrashedRootsForUser(CoreUserInterface $user): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NOT NULL')
+            ->andWhere('n.trashedWithNoteId IS NULL')
+            ->setParameter('user', $user)
+            ->orderBy('n.deletedAt', Order::Descending->value)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return list<MarkdownNoteInterface> */
+    public function findTrashedWith(int $noteId): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.trashedWithNoteId = :id')
+            ->setParameter('id', $noteId)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return list<MarkdownNoteInterface> */
+    public function findLivingChildrenOf(int $noteId): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.parent = :id')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('id', $noteId)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countTrashedForUser(CoreUserInterface $user): int
+    {
+        return (int) $this->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NOT NULL')
+            ->andWhere('n.trashedWithNoteId IS NULL')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /** @return list<MarkdownNoteInterface> */
+    public function findTrashedBefore(DateTimeImmutable $cutoff): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.deletedAt IS NOT NULL')
+            ->andWhere('n.deletedAt < :cutoff')
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getResult();
     }
 
     public function findMaxPositionForUserAndParent(CoreUserInterface $user, ?int $parentId): ?int

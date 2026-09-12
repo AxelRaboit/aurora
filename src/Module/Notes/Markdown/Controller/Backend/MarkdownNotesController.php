@@ -25,6 +25,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+use const DATE_ATOM;
+
 #[Route('/backend/notes/markdown', name: 'backend_notes_markdown')]
 #[IsGranted('notes.markdown.use')]
 final class MarkdownNotesController extends AbstractController
@@ -79,7 +81,69 @@ final class MarkdownNotesController extends AbstractController
         /** @var CoreUserInterface $user */
         $user = $this->getUser();
 
-        return $this->jsonSuccess(['notes' => $this->repository->findFlatListForUser($user)]);
+        return $this->jsonSuccess([
+            'notes' => $this->repository->findFlatListForUser($user),
+            // Sent on every listing so the screen knows whether to offer the
+            // trash at all, and what number to show on it.
+            'trashedTotal' => $this->repository->countTrashedForUser($user),
+        ]);
+    }
+
+    /**
+     * The notes waiting in the trash.
+     *
+     * Titles only, and only the ones trashed on their own: a sub-note that
+     * fell with its parent comes back with it, and listing it separately would
+     * offer a restore that puts a page under a parent still deleted.
+     */
+    #[Route('/trash', name: '_trash', methods: [HttpMethodEnum::Get->value])]
+    public function trash(): JsonResponse
+    {
+        /** @var CoreUserInterface $user */
+        $user = $this->getUser();
+
+        $notes = array_map(
+            static fn (MarkdownNoteInterface $note): array => [
+                'id' => $note->getId(),
+                'title' => $note->getTitle(),
+                'deletedAt' => $note->getDeletedAt()?->format(DATE_ATOM),
+            ],
+            $this->repository->findTrashedRootsForUser($user),
+        );
+
+        return $this->jsonSuccess(['notes' => $notes]);
+    }
+
+    #[Route('/{id}/restore', name: '_restore', methods: [HttpMethodEnum::Post->value])]
+    public function restore(int $id): JsonResponse
+    {
+        /** @var CoreUserInterface $user */
+        $user = $this->getUser();
+
+        $note = $this->repository->findOneByUserAndId($user, $id);
+        if (!$note instanceof MarkdownNoteInterface) {
+            return $this->jsonNotFound();
+        }
+
+        $this->manager->restore($note);
+
+        return $this->jsonSuccess();
+    }
+
+    #[Route('/{id}/force-delete', name: '_force_delete', methods: [HttpMethodEnum::Post->value])]
+    public function forceDelete(int $id): JsonResponse
+    {
+        /** @var CoreUserInterface $user */
+        $user = $this->getUser();
+
+        $note = $this->repository->findOneByUserAndId($user, $id);
+        if (!$note instanceof MarkdownNoteInterface) {
+            return $this->jsonNotFound();
+        }
+
+        $this->manager->forceDelete($note);
+
+        return $this->jsonSuccess();
     }
 
     #[Route('/create', name: '_create', methods: [HttpMethodEnum::Post->value])]

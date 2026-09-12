@@ -25,9 +25,11 @@ backend:
     actions:
       notes_markdown:
         note:
+          trashed: Note moved to trash
+          restored: Note restored
           created: Note created
           updated: Note updated
-          deleted: Note deleted
+          deleted: Note permanently deleted
         share_link:
           created: Share link created
           revoked: Share link revoked
@@ -37,6 +39,15 @@ backend:
           removed: Tag removed
 notes:
   markdown:
+    trash:
+      title: Trash
+      banner: Deleted notes wait here. Restoring one puts its sub-notes back too.
+      empty: The trash is empty.
+      untitled: Untitled note
+      restore: Restore
+      restored: Note restored
+      delete_forever: Delete permanently
+      deleted_forever: Note permanently deleted
     share:
       button: Share
       title: Share this note

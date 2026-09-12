@@ -11,6 +11,7 @@ use Aurora\Module\Notes\Markdown\Entity\MarkdownNoteInterface;
 use Aurora\Module\Notes\Markdown\Repository\MarkdownNoteRepository;
 use Aurora\Module\Notes\Markdown\Service\MarkdownNoteImageService;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
@@ -67,14 +68,124 @@ class MarkdownNoteManager implements MarkdownNoteManagerInterface
         $this->auditUpdated($note);
     }
 
+    /**
+     * Moves a note to the trash, with everything under it.
+     *
+     * The images stay where they are. Cleaning them up here would empty the
+     * note of its illustrations while promising it can come back, and a
+     * restored page missing half its pictures is worse than no restore at all:
+     * they go with the purge, when the note really leaves.
+     */
     public function delete(MarkdownNoteInterface $note): void
     {
-        $this->auditDeleted($note);
+        if ($note->isTrashed()) {
+            return;
+        }
 
-        $this->cleanupOrphanedImages($note->getUser(), $note->getContent(), null);
+        $now = new DateTimeImmutable();
+        $noteId = (int) $note->getId();
 
-        $this->entityManager->remove($note);
+        $note->setDeletedAt($now)->setTrashedWithNoteId(null);
+
+        foreach ($this->descendantsOf($note) as $descendant) {
+            if ($descendant->isTrashed()) {
+                continue;
+            }
+
+            $descendant->setDeletedAt($now)->setTrashedWithNoteId($noteId);
+        }
+
         $this->entityManager->flush();
+
+        $this->auditTrashed($note);
+    }
+
+    /**
+     * Brings a note back, with the sub-notes that fell with it.
+     *
+     * A note restored under a parent that is still in the trash would be
+     * unreachable, so it comes back at the root instead.
+     */
+    public function restore(MarkdownNoteInterface $note): void
+    {
+        if (!$note->isTrashed()) {
+            return;
+        }
+
+        $parent = $note->getParent();
+        if ($parent instanceof MarkdownNoteInterface && $parent->isTrashed()) {
+            $note->setParent(null);
+        }
+
+        $note->setDeletedAt(null)->setTrashedWithNoteId(null);
+
+        foreach ($this->noteRepository->findTrashedWith((int) $note->getId()) as $descendant) {
+            $descendant->setDeletedAt(null)->setTrashedWithNoteId(null);
+        }
+
+        $this->entityManager->flush();
+
+        $this->auditRestored($note);
+    }
+
+    /**
+     * Deletes a note for good, images included.
+     *
+     * What fell with it goes too: unlike a GED folder, whose documents have a
+     * life of their own at the root, a sub-note without its parent is an
+     * orphan nobody asked for.
+     */
+    public function forceDelete(MarkdownNoteInterface $note): void
+    {
+        $this->destroy([$note, ...$this->noteRepository->findTrashedWith((int) $note->getId())]);
+    }
+
+    public function purgeTrashedBefore(DateTimeImmutable $cutoff): int
+    {
+        return $this->destroy($this->noteRepository->findTrashedBefore($cutoff));
+    }
+
+    /**
+     * Destroys a set of notes, their images with them.
+     *
+     * @param list<MarkdownNoteInterface> $notes
+     */
+    protected function destroy(array $notes): int
+    {
+        if ([] === $notes) {
+            return 0;
+        }
+
+        foreach ($notes as $note) {
+            $this->auditDeleted($note);
+            $this->cleanupOrphanedImages($note->getUser(), $note->getContent(), null);
+            $this->entityManager->remove($note);
+        }
+
+        $this->entityManager->flush();
+
+        return count($notes);
+    }
+
+    /**
+     * Every note below this one, at any depth.
+     *
+     * @return list<MarkdownNoteInterface>
+     */
+    protected function descendantsOf(MarkdownNoteInterface $note): array
+    {
+        $found = [];
+        $queue = [$note];
+
+        while ([] !== $queue) {
+            $current = array_shift($queue);
+            foreach ($this->noteRepository->findLivingChildrenOf((int) $current->getId()) as $child) {
+                $found[] = $child;
+                $queue[] = $child;
+            }
+        }
+
+        return $found;
     }
 
     public function move(MarkdownNoteInterface $note, ?MarkdownNoteInterface $parent): void
@@ -556,6 +667,16 @@ class MarkdownNoteManager implements MarkdownNoteManagerInterface
     protected function auditUpdated(MarkdownNoteInterface $note): void
     {
         $this->auditLogger->log('notes_markdown', 'note.updated', 'MarkdownNote', $note->getId(), $this->auditPayload($note));
+    }
+
+    protected function auditTrashed(MarkdownNoteInterface $note): void
+    {
+        $this->auditLogger->log('notes_markdown', 'note.trashed', 'MarkdownNote', $note->getId(), $this->auditPayload($note));
+    }
+
+    protected function auditRestored(MarkdownNoteInterface $note): void
+    {
+        $this->auditLogger->log('notes_markdown', 'note.restored', 'MarkdownNote', $note->getId(), $this->auditPayload($note));
     }
 
     protected function auditDeleted(MarkdownNoteInterface $note): void
