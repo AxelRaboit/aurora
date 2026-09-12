@@ -129,16 +129,16 @@ const SHOTS = [
     },
   },
 
-  { name: "customers", path: "/backend/accounting/customers" },
-  { name: "contracts", path: "/backend/accounting/contracts" },
-  { name: "templates", path: "/backend/accounting/contract-templates" },
+  { name: "customers", path: "/backend/studio/customers" },
+  { name: "contracts", path: "/backend/studio/contracts" },
+  { name: "templates", path: "/backend/studio/contract-templates" },
 
   { name: "users", path: "/backend/platform/users" },
   // One picture per settings tab: the thirteen pages of the Configuration
   // rubric each name a group, and a single shot of the first tab would have
   // illustrated twelve of them with somebody else's screen.
   ...["general", "reading", "localization", "branding", "appearance", "seo",
-      "system", "email", "media", "sequences", "navigation", "accounting"]
+      "system", "email", "media", "sequences", "navigation", "studio"]
       .map((tabId) => ({ name: `settings-${tabId}`, path: `/backend/configuration/settings/${tabId}` })),
   { name: "themes", path: "/backend/configuration/themes" },
 
