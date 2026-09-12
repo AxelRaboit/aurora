@@ -55,6 +55,38 @@ module, suivre `Module/Ged/Document` :
   `hasActiveFilter` et de `resetFilters` (réinitialiser les filtres ne doit pas
   faire sortir de la corbeille).
 
+### Une unicité doit devenir partielle
+
+Si l'entité porte une colonne `unique` que l'utilisateur choisit (slug, code,
+référence saisie), la corbeille la garde en otage : recréer une catégorie
+« factures » échouerait sur une contrainte, à cause d'une ligne que rien
+n'affiche. Ne pas maquiller la valeur en la préfixant - c'est du code qui se
+souvient d'une règle que la base sait dire :
+
+```sql
+DROP INDEX uniq_<ancien>;
+CREATE UNIQUE INDEX uniq_<x>_live ON <table> (slug) WHERE deleted_at IS NULL;
+```
+
+Côté mapping, retirer `unique: true` de la colonne et déclarer sur la concrete
+`#[ORM\UniqueConstraint(name: …, columns: ['slug'], options: ['where' => '(deleted_at IS NULL)'])]`,
+sinon le schéma repart en unicité totale au premier diff. Le finder qui teste
+la disponibilité (`slugExists`) doit filtrer les vivants lui aussi, et la
+restauration ne recalculer la valeur **que** si elle a été prise entre-temps :
+changer une adresse que personne ne disputait casse des liens pour rien.
+Couvert par `CategorySlugIsUniqueAmongTheLivingTest`, en intégration parce que
+seul PostgreSQL applique la règle.
+
+### Une cascade doit se souvenir d'où elle vient
+
+Quand supprimer un parent emporte ses enfants (dossier GED), chaque ligne qui
+tombe enregistre **qui** l'a emportée (`trashed_with_folder_id`). Restaurer le
+parent ne remonte que ce qui porte son id : sans ça, une restauration
+ressuscite ce que quelqu'un avait supprimé à la main des jours plus tôt, et
+déduire la différence des horodatages est une devinette. La suppression
+définitive du parent libère ce qui était tombé avec lui plutôt que de le
+détruire : les enfants sont la part que personne n'a demandé à perdre.
+
 Piège rencontré : le wording de confirmation. `delete_warning` disait « Cette
 action est irréversible » alors qu'elle ne l'est plus. Le message irréversible
 appartient désormais à la suppression définitive.

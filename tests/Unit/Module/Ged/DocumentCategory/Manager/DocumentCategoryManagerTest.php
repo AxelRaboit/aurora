@@ -153,14 +153,41 @@ final class DocumentCategoryManagerTest extends TestCase
         $this->manager->update($category, $this->makeInput('Y'));
     }
 
-    public function testDeleteCallsRemoveAndFlush(): void
+    public function testDeleteTrashesTheCategoryAndLeavesItsSlugAlone(): void
     {
         $category = new DocumentCategory();
-        $category->setName('ToDelete')->setSlug('to-delete');
+        $category->setName('Factures')->setSlug('factures');
 
-        $this->entityManager->expects(self::once())->method('remove')->with($category);
+        $this->entityManager->expects(self::never())->method('remove');
         $this->entityManager->expects(self::atLeastOnce())->method('flush');
 
         $this->manager->delete($category);
+
+        self::assertTrue($category->isTrashed());
+        // Readable in the trash, and free for anybody else: the unique index
+        // only looks at the rows that are still in the list.
+        self::assertSame('factures', $category->getSlug());
+    }
+
+    public function testRestoreKeepsTheSlugWhenNobodyTookIt(): void
+    {
+        $category = new DocumentCategory();
+        $category->setName('Factures')->setSlug('factures');
+
+        $this->manager->delete($category);
+        $this->manager->restore($category);
+
+        self::assertFalse($category->isTrashed());
+        self::assertSame('factures', $category->getSlug());
+    }
+
+    public function testForceDeleteRemovesTheRow(): void
+    {
+        $category = new DocumentCategory();
+        $category->setName('Gone')->setSlug('gone');
+
+        $this->entityManager->expects(self::once())->method('remove')->with($category);
+
+        $this->manager->forceDelete($category);
     }
 }
