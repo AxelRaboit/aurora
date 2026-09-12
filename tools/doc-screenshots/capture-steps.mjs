@@ -451,6 +451,34 @@ const FLOWS = {
    * changements d'écran, et une capture de réglages périmée montre un champ
    * que le lecteur ne trouvera pas.
    */
+  /**
+   * L'onglet de stockage, vierge.
+   *
+   * Les deux premiers champs sont vidés avant la prise, et ce n'est pas
+   * cosmétique. L'écran affiche la configuration réellement en vigueur, y
+   * compris celle qui vient de l'environnement du serveur : sur la machine
+   * d'un développeur qui a branché un vrai compartiment, la capture
+   * emporterait son identifiant de compte et le nom de son compartiment vers
+   * un dépôt public et une page que n'importe qui peut ouvrir.
+   *
+   * Vidé côté navigateur seulement : rien n'est enregistré, la configuration
+   * de la machine n'est pas touchée.
+   */
+  "stockage-des-fichiers": async () => {
+    await page.goto(`${BASE}/backend/configuration/settings/storage`, { waitUntil: "domcontentloaded" });
+    await wait(1500);
+
+    for (const label of ["Adresse du compte", "Compartiment"]) {
+      const field = page.locator(`label:has-text("${label}")`).locator("xpath=following::input[1]");
+      if (await field.count()) {
+        await field.first().fill("");
+      }
+    }
+
+    await wait(300);
+    await shot("onglet");
+  },
+
   "onglets-de-reglages": async () => {
     const tabs = [
       ["general", "general"],

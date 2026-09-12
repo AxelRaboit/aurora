@@ -5,6 +5,36 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.131] - 2026-09-12
+
+### Ajouté
+
+#### Le manuel décrit le stockage des fichiers
+Deux pages : celle des réglages, dans Configuration, et celle du déplacement
+d'un document, dans Médiathèque. Elles disent aussi quand **ne pas** s'en
+servir, ce qui manque à la plupart des manuels : en dessous de quelques
+giga-octets, le disque du serveur fait l'affaire et demande moins de réglages.
+
+### Corrigé
+
+#### La page des groupes de réglages annonçait treize onglets
+Il y en a quatorze depuis la 0.9.129. Rien n'échoue quand une page compte mal,
+et personne ne l'aurait vu.
+
+### Interne
+
+#### Une règle et un skill pour que la documentation suive
+Demandé le 12/09/2026. Toute évolution visible met à jour le manuel, **et les
+pages voisines qu'elle a rendues fausses**, et les captures des écrans
+touchés. Ce deuxième point est celui qu'on saute, et c'est exactement ce qui
+s'était produit avec la page des onglets.
+
+La capture du nouvel onglet vide ses deux premiers champs avant la prise de
+vue. L'écran affiche la configuration réellement en vigueur, identifiants de
+compte compris : sur la machine d'un développeur ayant branché un vrai
+compartiment, la capture aurait emporté son identifiant Cloudflare vers un
+dépôt public et une page ouverte à tous.
+
 ## [0.9.130] - 2026-09-12
 
 ### Ajouté
