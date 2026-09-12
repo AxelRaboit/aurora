@@ -438,6 +438,7 @@ backend:
             speaker_notes_placeholder: Ce que vous direz pendant que cette slide est à l'écran.
             bullets_placeholder: Une puce par ligne.
             prose_placeholder: Le texte affiché sur la slide.
+            image_hint: Choisie dans la médiathèque, ou déposée depuis votre machine.
             slots:
                 title: Titre
                 subtitle: Sous-titre

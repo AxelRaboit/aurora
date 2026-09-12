@@ -53,7 +53,13 @@ defineProps({
 
             <template v-else-if="slide.layout === 'image'">
                 <div class="sf-image">
-                    <span class="sf-image-mark" />
+                    <img
+                        v-if="slide.content.mediaUrl"
+                        class="sf-image-file"
+                        :src="slide.content.mediaUrl"
+                        :alt="slide.content.mediaAlt ?? ''"
+                    >
+                    <span v-else class="sf-image-mark" />
                 </div>
                 <p v-if="!compact && slide.content.caption" class="sf-caption">{{ slide.content.caption }}</p>
             </template>
@@ -122,8 +128,11 @@ defineProps({
 .sf-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; font-size: 3.6cqw; }
 .sf-columns p { margin: 0; }
 
-.sf-image { flex: 1; display: grid; place-items: center; border-radius: 0.25rem; background: var(--color-surface-3, #21262d); }
+.sf-image { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; border-radius: 0.25rem; background: var(--color-surface-3, #21262d); }
 .sf-image-mark { width: 12cqw; height: 12cqw; border-radius: 9999px; background: currentColor; opacity: 0.25; }
+/* `contain` et pas `cover` : une capture rognée pour remplir le cadre perd
+   justement le coin qu'on voulait montrer. */
+.sf-image-file { width: 100%; height: 100%; object-fit: contain; }
 
 /* The thumbnail's stand-in for body text: grey bars say "there are four
    bullets here" without pretending 3px of type is readable. */
