@@ -978,6 +978,128 @@ const FLOWS = {
   },
 
   /** Créer un client, jusqu'au refus du SIRET puis à l'enregistrement. */
+  /**
+   * La liste des présentations : ouvrir, créer, dupliquer.
+   */
+  "presentations": async () => {
+    await page.goto(`${BASE}/backend/studio/decks`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await shot("la-liste");
+
+    await page.getByRole("button", { name: /Créer une présentation/ }).first().click();
+    await wait(1800);
+    await page.getByPlaceholder("Audit du site, octobre").first().fill("Revue trimestrielle");
+    await page.getByPlaceholder("Une ligne, lue dans la liste.").first().fill("Ce qui a avancé, ce qui reste.");
+    await wait(600);
+    await shot("la-fenetre-de-creation");
+
+    await page.getByRole("button", { name: /^Annuler/ }).last().click();
+    await wait(1200);
+
+    // Le menu d'une ligne, sur la présentation des fixtures : c'est là que se
+    // trouve « Dupliquer », qui est le geste que la page explique.
+    const row = page.getByRole("row").filter({ hasText: /Audit du site/ }).first();
+    await row.getByRole("button", { name: /^Actions pour/ }).click();
+    await wait(1200);
+    await shot("le-menu-d-une-ligne");
+  },
+
+  /**
+   * L'éditeur : la page, les gabarits, le formulaire, les notes, l'ordre.
+   */
+  "composer-les-slides": async () => {
+    await page.goto(`${BASE}/backend/studio/decks`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await page.getByRole("link", { name: /Audit du site/ }).first().click();
+    await wait(3500);
+    await shot("la-page");
+
+    // `aside:not(#sidemenu)` : le menu latéral est un `aside` lui aussi, et
+    // `.first()` comme `.last()` tombent dessus une fois sur deux.
+    const column = page.locator("aside:not(#sidemenu)").first();
+
+    const adder = column.locator("div.grid").first();
+    await adder.scrollIntoViewIfNeeded();
+    await wait(600);
+    await shotOf(adder, "ajouter-une-slide", 16, 26);
+
+    // La deuxième slide est celle à puces, c'est-à-dire le gabarit que la page
+    // décrit en exemple.
+    await page.getByRole("button", { name: /2\./ }).first().click();
+    await wait(1800);
+
+    // Les notes remplies avant la photo du formulaire, pas après : sinon
+    // l'image montre un champ vide au premier passage et rempli au second,
+    // selon ce qu'une campagne précédente a laissé en base.
+    const notes = page.getByPlaceholder("Ce que vous direz pendant que cette slide est à l'écran.").first();
+    await notes.fill("Marquer un temps avant la troisième puce.");
+    await wait(800);
+
+    const form = page.locator("section .rounded-xl.border").first();
+    await form.scrollIntoViewIfNeeded();
+    await wait(800);
+    await shotOf(form, "le-formulaire", 16, 12);
+
+    // Les flèches n'apparaissent qu'au survol de la vignette. Marge verticale
+    // courte : les vignettes se touchent, et quelques pixels de plus font
+    // entrer le haut de la suivante dans le cadre.
+    const thumb = column.locator("div.group").first();
+    await thumb.scrollIntoViewIfNeeded();
+    await thumb.hover();
+    await wait(900);
+    await shotOf(thumb, "les-actions-d-une-vignette", 24, 6);
+  },
+
+  /**
+   * Le plein écran, puis la page d'impression.
+   */
+  "presenter-un-deck": async () => {
+    await page.goto(`${BASE}/backend/studio/decks`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    const href = await page.getByRole("link", { name: /Audit du site/ }).first().getAttribute("href");
+
+    await page.goto(`${BASE}${href}`, { waitUntil: "domcontentloaded" });
+    await wait(3000);
+    await page.getByRole("button", { name: /^Présenter/ }).first().click();
+    await wait(2000);
+    await shot("le-plein-ecran");
+
+    await page.keyboard.press("Escape");
+    await wait(1200);
+
+    // La page d'impression sans `?print=1` : le dialogue d'impression du
+    // navigateur n'est pas photographiable, et la page l'est.
+    await page.goto(`${BASE}${href}/print`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await shot("la-page-d-impression");
+  },
+
+  /**
+   * Le partage : la fenêtre, un lien créé, la page vue par le destinataire.
+   */
+  "partager-un-deck": async () => {
+    await page.goto(`${BASE}/backend/studio/decks`, { waitUntil: "domcontentloaded" });
+    await wait(2500);
+    await page.getByRole("link", { name: /Audit du site/ }).first().click();
+    await wait(3000);
+
+    await page.getByRole("button", { name: /^Partager/ }).first().click();
+    await wait(1500);
+    await page.getByPlaceholder("Envoyé à Marie, le 12 septembre").first().fill("Envoyé à Marie Dupont");
+    await wait(600);
+    await shot("la-fenetre");
+
+    await page.getByRole("button", { name: /^Créer le lien/ }).first().click();
+    await wait(2500);
+    await shotOf(page.locator("[role='dialog'] li").first(), "un-lien-dans-la-liste", 20, 12);
+
+    const url = await page.locator("[role='dialog'] .font-mono").first().innerText();
+
+    await page.goto(url.trim(), { waitUntil: "domcontentloaded" });
+    await wait(3000);
+    await shot("la-page-publique");
+  },
+
   "fiche-client": async () => {
     await page.goto(`${BASE}/backend/studio/customers`, { waitUntil: "domcontentloaded" });
     await wait(2500);
