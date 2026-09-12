@@ -23,4 +23,5 @@ use Aurora\Core\Storage\StorageManager;
 enum StorageDiskEnum: string
 {
     case Local = 'local';
+    case R2 = 'r2';
 }
