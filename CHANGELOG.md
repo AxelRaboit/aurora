@@ -5,6 +5,36 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.136] - 2026-09-12
+
+### Corrigé
+
+#### Deux erreurs de saisie du stockage R2 ne se voyaient qu'au moment du test
+Coller l'« adresse S3 » que Cloudflare affiche met le nom du compartiment à la
+fin de l'adresse du compte, et l'application l'ajoute derrière : il se
+retrouvait deux fois dans chaque requête. Le texte sous le champ le disait
+depuis l'origine, ce qui n'a empêché personne de tomber dedans le 12/09/2026.
+Un texte sous un champ n'attrape rien : l'adresse est maintenant corrigée à
+l'enregistrement, et à la lecture, ce qui répare aussi les configurations déjà
+en base.
+
+Une clé d'une longueur impossible partait également jusqu'à Cloudflare, qui
+répondait `InvalidArgument: Credential access key has length 24, should be 32`
+au milieu d'une URL, sans nommer ni le champ ni l'écran. L'identifiant de clé
+et la clé secrète sont vérifiés avant l'enregistrement, et le refus dit lequel
+des deux est en cause. Le test de connexion fait la même vérification, pour
+couvrir les valeurs venues de l'environnement du serveur, que rien ne validait.
+
+#### L'écran des réglages annonçait un enregistrement qui n'avait pas eu lieu
+Un refus du serveur est un objet comme un autre, et le composant ne regardait
+que sa présence, pas son `success`. Le message de succès s'affichait donc même
+quand rien n'avait été écrit, ce qui valait déjà pour le refus existant sur la
+bascule non testée. L'écran lit maintenant la réponse, affiche le message du
+serveur, et le bouton de test s'arrête au lieu d'interroger Cloudflare avec une
+configuration qui vient d'être rejetée.
+
+---
+
 ## [0.9.135] - 2026-09-12
 
 ### Corrigé
