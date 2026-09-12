@@ -162,6 +162,28 @@ class MarkdownNoteRepository extends ResolveTargetEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * When the oldest of this user's trashed notes was deleted, null when
+     * their trash is empty.
+     *
+     * Read by the trash overview to say how long is left before the purge
+     * takes it. Per user, like everything about a note: the count on that page
+     * is the reader's own, not the installation's.
+     */
+    public function oldestTrashedAtForUser(CoreUserInterface $user): ?DateTimeImmutable
+    {
+        $value = $this->createQueryBuilder('n')
+            ->select('MIN(n.deletedAt)')
+            ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NOT NULL')
+            ->andWhere('n.trashedWithNoteId IS NULL')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null === $value ? null : new DateTimeImmutable((string) $value);
+    }
+
     /** @return list<MarkdownNoteInterface> */
     public function findTrashedBefore(DateTimeImmutable $cutoff): array
     {

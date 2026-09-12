@@ -36,10 +36,17 @@ final class DocumentCategoriesController extends AbstractController
         private readonly DocumentCategoryInputFactoryInterface $inputFactory,
     ) {}
 
+    /**
+     * `?trashed=1` opens the page on its trash, which is how the overview
+     * screen links to the categories it counted.
+     */
     #[Route('', name: '', methods: [HttpMethodEnum::Get->value])]
-    public function index(PaginationRequest $pagination): Response
+    public function index(PaginationRequest $pagination, Request $request): Response
     {
-        return $this->render('@Ged/backend/categories/index.html.twig', $this->viewBuilder->indexView($pagination));
+        return $this->render(
+            '@Ged/backend/categories/index.html.twig',
+            $this->viewBuilder->indexView($pagination, $request->query->getBoolean('trashed')),
+        );
     }
 
     #[Route('/list', name: '_list', methods: [HttpMethodEnum::Get->value])]

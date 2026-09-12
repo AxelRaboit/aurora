@@ -5,6 +5,32 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.152] - 2026-09-13
+
+### Ajouté
+
+#### Une page qui dit où sont les choses supprimées
+Cinq corbeilles existent maintenant, chacune dans son écran : documents,
+dossiers, catégories, publications, notes. Rien ne disait combien elles
+contenaient, ni depuis quand, et une corbeille qu'on oublie est une corbeille
+qui se vide toute seule sans que personne l'ait voulu.
+
+**Général > Corbeille** les liste sur une page, avec ce qui attend dans
+chacune et le nombre de jours qui lui reste avant la purge. Ce qui n'est pas
+vide passe en tête, et chaque ligne mène à l'écran qui possède ces éléments :
+les documents et les catégories s'y ouvrent directement sur leur corbeille.
+
+La page ne restaure ni ne supprime, volontairement. Restaurer un document, un
+dossier et une catégorie n'obéit pas aux mêmes règles, et un bouton unique ici
+devrait toutes les redire, dans un second endroit où se tromper.
+
+Un module contribue sa corbeille par un `TrashSourceInterface` posé dans le
+noyau, comme il contribue ses chiffres au tableau de bord : la page ne nomme
+aucun module et n'en importe aucun. Un module éteint, ou une permission que le
+lecteur n'a pas, ne laisse pas de ligne derrière lui.
+
+---
+
 ## [0.9.151] - 2026-09-12
 
 ### Ajouté

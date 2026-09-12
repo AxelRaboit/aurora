@@ -17,10 +17,13 @@ final readonly class DocumentCategoriesViewBuilder
         private UrlGeneratorInterface $urlGenerator,
     ) {}
 
-    public function indexView(PaginationRequest $pagination): array
+    public function indexView(PaginationRequest $pagination, bool $trashed = false): array
     {
         return [
-            'categories' => $this->buildListPayload($pagination),
+            // Built for the view being opened, so a link into the trash does
+            // not show the live list for the time of one fetch.
+            'categories' => $this->buildListPayload($pagination, $trashed),
+            'trashed' => $trashed,
             'search' => $pagination->search ?? '',
             'createPath' => $this->urlGenerator->generate('backend_ged_categories_create'),
             'updatePath' => $this->urlGenerator->generate('backend_ged_categories_update', ['id' => '__id__']),

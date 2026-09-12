@@ -55,6 +55,8 @@ const { formatDate } = useDateFormat();
 const { formatSize } = useFileSize();
 const props = defineProps({
     documents: { type: Object, default: () => ({}) },
+    /** Opens the page on its trash, for a link that points at it. */
+    trashed: { type: Boolean, default: false },
     categories: { type: Array, default: () => [] },
     tags: { type: Array, default: () => [] },
     folders: { type: Array, default: () => [] },
@@ -103,7 +105,7 @@ const {
     // The arrow defers the read: `reset` comes from useListPage, which needs
     // these refs to exist before it is called.
     // eslint-disable-next-line no-use-before-define
-} = useDocumentFilters(() => reset());
+} = useDocumentFilters(() => reset(), { trashed: props.trashed });
 
 const mimeGroupOptions = [
     { value: "image", label: t("backend.ged.documents.type_image") },

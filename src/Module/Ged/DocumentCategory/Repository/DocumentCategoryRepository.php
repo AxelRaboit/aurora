@@ -8,6 +8,7 @@ use Aurora\Core\Repository\ResolveTargetEntityRepository;
 use Aurora\Core\Repository\Trait\PaginationTrait;
 use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategory;
 use Aurora\Module\Ged\DocumentCategory\Entity\DocumentCategoryInterface;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Order;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -56,6 +57,23 @@ class DocumentCategoryRepository extends ResolveTargetEntityRepository
             ->andWhere('c.deletedAt IS NOT NULL')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * When the oldest row now in the trash was deleted, null when it is empty.
+     *
+     * Read by the trash overview to say how long is left before the purge
+     * takes it. A date rather than a row: the overview shows neither.
+     */
+    public function oldestTrashedAt(): ?DateTimeImmutable
+    {
+        $value = $this->createQueryBuilder('c')
+            ->select('MIN(c.deletedAt)')
+            ->andWhere('c.deletedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null === $value ? null : new DateTimeImmutable((string) $value);
     }
 
     /** @return list<DocumentCategoryInterface> */

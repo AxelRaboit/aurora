@@ -537,6 +537,23 @@ class PostRepository extends ResolveTargetEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * When the oldest row now in the trash was deleted, null when it is empty.
+     *
+     * Read by the trash overview to say how long is left before the purge
+     * takes it. A date rather than a row: the overview shows neither.
+     */
+    public function oldestTrashedAt(): ?DateTimeImmutable
+    {
+        $value = $this->createQueryBuilder('p')
+            ->select('MIN(p.deletedAt)')
+            ->andWhere('p.deletedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null === $value ? null : new DateTimeImmutable((string) $value);
+    }
+
     /** @return list<PostInterface> */
     public function findTrashedBefore(DateTimeImmutable $threshold): array
     {

@@ -203,6 +203,8 @@ backend:
     settings_description: "Ajustes globales de la aplicación y preferencias por defecto."
     themes: Temas
     themes_description: "Vestir el sitio: colores, logotipo y favicon."
+    trash: Papelera
+    trash_description: "Lo que se ha eliminado en cada módulo, y el tiempo que le queda."
     users: Usuarios
     users_description: "Gestionar las cuentas, sus roles y el detalle de sus privilegios."
     resize_hint: Arrastre para redimensionar, doble clic para restablecer
