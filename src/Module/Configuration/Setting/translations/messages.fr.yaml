@@ -85,6 +85,10 @@ backend:
         unreachable: "L'adresse ne répond pas. Vérifiez-la, et vérifiez que le serveur peut l'atteindre."
       errors:
         verification_required: Testez la connexion avant de basculer le stockage.
+        endpoint_not_https: "L'adresse du compte doit commencer par https://."
+        endpoint_contains_bucket: "L'adresse du compte se termine par le nom du compartiment. Retirez-le : l'application l'ajoute elle-même, et il apparaîtrait deux fois."
+        access_key_length: "L'identifiant de clé doit faire 32 caractères. Celui-ci n'en fait pas autant : c'est probablement une autre valeur de la page Cloudflare, ou une copie incomplète."
+        secret_key_length: "La clé secrète doit faire 64 caractères. Celle-ci n'en fait pas autant : c'est probablement une copie incomplète."
     appearance:
       color_presets:
         title: Palette du sélecteur de couleurs

@@ -11,6 +11,7 @@ use Aurora\Core\Storage\Enum\StorageDeliveryModeEnum;
 use Aurora\Core\Storage\Enum\StorageDiskEnum;
 use Aurora\Core\Storage\Exception\StorageException;
 use Aurora\Core\Storage\Probe\StorageProbe;
+use Aurora\Core\Storage\R2\R2Configuration;
 use Aurora\Core\Storage\StorageManager;
 use Aurora\Module\Configuration\Storage\Setting\StorageSettings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -62,11 +63,33 @@ final class StorageSettingsController extends AbstractController
         $accessKeyId = array_key_exists('accessKeyId', $payload) ? mb_trim((string) $payload['accessKeyId']) : null;
         $secretAccessKey = array_key_exists('secretAccessKey', $payload) ? mb_trim((string) $payload['secretAccessKey']) : null;
 
+        // Checked before anything is written, against what was typed rather
+        // than against what is stored: a credential of the wrong length or an
+        // endpoint carrying the bucket cannot work, and R2's own refusal names
+        // neither the field nor the screen. The endpoint is corrected on the
+        // way in; the keys can only be reported, since nothing here can guess
+        // what the right one was.
+        $submitted = new R2Configuration(
+            endpoint: mb_trim((string) ($payload['endpoint'] ?? '')),
+            bucket: mb_trim((string) ($payload['bucket'] ?? '')),
+            accessKeyId: (string) $accessKeyId,
+            secretAccessKey: (string) $secretAccessKey,
+        )->withNormalisedEndpoint();
+
+        $problems = $submitted->shapeProblems();
+
+        if ([] !== $problems) {
+            return $this->jsonFailure(
+                'backend.settings.storage.errors.'.$problems[0],
+                extra: ['state' => $this->settings->state()],
+            );
+        }
+
         $this->settings->save(
             activeDisk: StorageDiskEnum::Local,
             deliveryMode: $deliveryMode,
-            endpoint: mb_trim((string) ($payload['endpoint'] ?? '')),
-            bucket: mb_trim((string) ($payload['bucket'] ?? '')),
+            endpoint: $submitted->endpoint,
+            bucket: $submitted->bucket,
             accessKeyId: $accessKeyId,
             secretAccessKey: $secretAccessKey,
             publicBaseUrl: mb_trim((string) ($payload['publicBaseUrl'] ?? '')),
@@ -107,6 +130,24 @@ final class StorageSettingsController extends AbstractController
     {
         $payload = $this->decodeJson($request);
         $disk = StorageDiskEnum::tryFrom((string) ($payload['disk'] ?? '')) ?? StorageDiskEnum::R2;
+
+        // The save screen refuses a malformed credential, but the environment
+        // is the other way in and nothing validates a deployment's variables.
+        // Saying which field is wrong beats letting the probe come back with
+        // Cloudflare's `InvalidArgument`, which names neither.
+        $problems = StorageDiskEnum::Local === $disk
+            ? []
+            : $this->settings->effectiveR2Configuration()->shapeProblems();
+
+        if ([] !== $problems) {
+            return $this->jsonSuccess([
+                'ok' => false,
+                'steps' => [],
+                'error' => null,
+                'hint' => 'backend.settings.storage.errors.'.$problems[0],
+                'state' => $this->settings->state(),
+            ]);
+        }
 
         try {
             $adapter = $this->storageManager->forDisk($disk);
