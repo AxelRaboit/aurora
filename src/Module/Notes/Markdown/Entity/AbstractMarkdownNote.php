@@ -8,6 +8,7 @@ use Aurora\Core\Encryption\Doctrine\EncryptedTextType;
 use Aurora\Core\Timestampable\TimestampableTrait;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
 use Aurora\Module\Platform\User\Entity\User;
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -46,6 +47,20 @@ abstract class AbstractMarkdownNote implements MarkdownNoteInterface
 
     #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true, 'default' => 0])]
     protected int $position = 0;
+
+    /** When the note was moved to the trash. */
+    #[ORM\Column(nullable: true)]
+    protected ?DateTimeImmutable $deletedAt = null;
+
+    /**
+     * The note whose deletion took this one down with it.
+     *
+     * Null when it was trashed on its own. Restoring a note brings back the
+     * sub-notes that carry its id, and only those, so a page deleted by hand
+     * last week stays where its author left it.
+     */
+    #[ORM\Column(nullable: true)]
+    protected ?int $trashedWithNoteId = null;
 
     public function getUser(): CoreUserInterface
     {
@@ -115,6 +130,35 @@ abstract class AbstractMarkdownNote implements MarkdownNoteInterface
     public function setPosition(int $position): static
     {
         $this->position = $position;
+
+        return $this;
+    }
+
+    public function getDeletedAt(): ?DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?DateTimeImmutable $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+
+    public function isTrashed(): bool
+    {
+        return $this->deletedAt instanceof DateTimeImmutable;
+    }
+
+    public function getTrashedWithNoteId(): ?int
+    {
+        return $this->trashedWithNoteId;
+    }
+
+    public function setTrashedWithNoteId(?int $trashedWithNoteId): static
+    {
+        $this->trashedWithNoteId = $trashedWithNoteId;
 
         return $this;
     }

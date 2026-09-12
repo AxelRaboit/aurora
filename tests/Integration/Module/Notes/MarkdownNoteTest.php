@@ -142,20 +142,68 @@ final class MarkdownNoteTest extends IntegrationTestCase
      * was the right choice. Losing a page because you deleted the folder above
      * it is not a trade anybody offered.
      */
-    public function testDeletingAParentKeepsItsChildren(): void
+    /**
+     * Deleting a parent takes its children to the trash with it.
+     *
+     * They used to be lifted to the root, which lost the filing for good. The
+     * branch now leaves whole and comes back whole, and the child keeps its
+     * parent link throughout - that link is what a restore puts back.
+     */
+    public function testDeletingAParentTakesItsChildrenToTheTrash(): void
     {
         $parent = $this->note($this->owner, 'Parent');
         $child = $this->note($this->owner, 'Enfant', $parent);
         $childId = (int) $child->getId();
+        $parentId = (int) $parent->getId();
 
         $this->client->loginUser($this->owner, 'admin');
-        $this->post('backend_notes_markdown_delete', [], ['id' => $parent->getId()]);
+        $this->post('backend_notes_markdown_delete', [], ['id' => $parentId]);
         self::assertResponseIsSuccessful();
 
         $this->entityManager->clear();
-        $survivor = $this->entityManager->find(MarkdownNote::class, $childId);
-        self::assertInstanceOf(MarkdownNoteInterface::class, $survivor);
-        self::assertNull($survivor->getParent(), 'The child should have been lifted to the root.');
+        $trashedChild = $this->entityManager->find(MarkdownNote::class, $childId);
+        self::assertInstanceOf(MarkdownNoteInterface::class, $trashedChild);
+        self::assertTrue($trashedChild->isTrashed(), 'The child should have followed its parent.');
+        self::assertSame($parentId, $trashedChild->getTrashedWithNoteId());
+        self::assertNotNull($trashedChild->getParent(), 'The filing has to survive for the restore to mean anything.');
+    }
+
+    public function testRestoringAParentBringsItsChildrenBack(): void
+    {
+        $parent = $this->note($this->owner, 'Parent');
+        $child = $this->note($this->owner, 'Enfant', $parent);
+        $childId = (int) $child->getId();
+        $parentId = (int) $parent->getId();
+
+        $this->client->loginUser($this->owner, 'admin');
+        $this->post('backend_notes_markdown_delete', [], ['id' => $parentId]);
+        $this->post('backend_notes_markdown_restore', [], ['id' => $parentId]);
+        self::assertResponseIsSuccessful();
+
+        $this->entityManager->clear();
+        $restored = $this->entityManager->find(MarkdownNote::class, $childId);
+        self::assertInstanceOf(MarkdownNoteInterface::class, $restored);
+        self::assertFalse($restored->isTrashed());
+        self::assertNull($restored->getTrashedWithNoteId());
+    }
+
+    public function testANoteTrashedOnItsOwnStaysThereWhenItsParentComesBack(): void
+    {
+        $parent = $this->note($this->owner, 'Parent');
+        $child = $this->note($this->owner, 'Enfant', $parent);
+        $childId = (int) $child->getId();
+        $parentId = (int) $parent->getId();
+
+        $this->client->loginUser($this->owner, 'admin');
+        // The child goes first, by hand: that is a decision of its own.
+        $this->post('backend_notes_markdown_delete', [], ['id' => $childId]);
+        $this->post('backend_notes_markdown_delete', [], ['id' => $parentId]);
+        $this->post('backend_notes_markdown_restore', [], ['id' => $parentId]);
+
+        $this->entityManager->clear();
+        $stillTrashed = $this->entityManager->find(MarkdownNote::class, $childId);
+        self::assertInstanceOf(MarkdownNoteInterface::class, $stillTrashed);
+        self::assertTrue($stillTrashed->isTrashed(), 'A note deleted on purpose must not be resurrected by a branch restore.');
     }
 
     /** Title and body are ciphertext in the database, and readable through the ORM. */

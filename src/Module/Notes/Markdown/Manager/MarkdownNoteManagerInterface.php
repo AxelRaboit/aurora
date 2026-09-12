@@ -7,6 +7,7 @@ namespace Aurora\Module\Notes\Markdown\Manager;
 use Aurora\Module\Notes\Markdown\Dto\MarkdownNoteInputInterface;
 use Aurora\Module\Notes\Markdown\Entity\MarkdownNoteInterface;
 use Aurora\Module\Platform\User\Entity\CoreUserInterface;
+use DateTimeImmutable;
 
 interface MarkdownNoteManagerInterface
 {
@@ -14,7 +15,17 @@ interface MarkdownNoteManagerInterface
 
     public function update(MarkdownNoteInterface $note, MarkdownNoteInputInterface $input): void;
 
+    /** Moves a note to the trash, with everything under it. */
     public function delete(MarkdownNoteInterface $note): void;
+
+    /** Brings a note back, with the sub-notes that fell with it. */
+    public function restore(MarkdownNoteInterface $note): void;
+
+    /** Deletes a note for good, its sub-notes and images with it. */
+    public function forceDelete(MarkdownNoteInterface $note): void;
+
+    /** Destroys what has been in the trash since before `$cutoff`. */
+    public function purgeTrashedBefore(DateTimeImmutable $cutoff): int;
 
     public function move(MarkdownNoteInterface $note, ?MarkdownNoteInterface $parent): void;
 

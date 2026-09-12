@@ -5,6 +5,35 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.151] - 2026-09-12
+
+### Ajouté
+
+#### Supprimer une note Markdown se défait
+Supprimer une note emportait son contenu, ses sous-pages et les images qu'elle
+citait, en un geste et sans retour possible. Le contenu étant chiffré au repos,
+même une sauvegarde de la base ne le rendait pas lisible : ce qui était parti
+était parti.
+
+La note part maintenant à la corbeille, avec ses sous-pages. La restaurer remet
+la branche en place, et seulement celle-là : chaque ligne retient quelle note
+l'a emportée, donc restaurer une page ne ressuscite pas une sous-page supprimée
+à la main la semaine précédente. Une note dont le parent est encore en
+corbeille revient à la racine plutôt que sous un parent invisible.
+
+La corbeille s'ouvre depuis la barre d'outils des notes, et ne liste que les
+notes supprimées pour elles-mêmes : proposer de restaurer séparément une
+sous-page tombée avec son parent poserait une page sous un parent absent. On y
+restaure, ou on supprime définitivement, et c'est à ce moment-là seulement que
+les images deviennent orphelines et sont nettoyées.
+
+La purge automatique tourne chaque nuit à 3 h et lit le même réglage
+`TrashAutoPurgeDays` que les autres corbeilles, trente jours par défaut : une
+durée de rétention est une promesse, et trois promesses différentes n'en font
+aucune.
+
+---
+
 ## [0.9.150] - 2026-09-12
 
 ### Ajouté
