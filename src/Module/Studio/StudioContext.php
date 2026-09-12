@@ -30,4 +30,9 @@ final readonly class StudioContext
     {
         return $this->moduleAccessChecker->isEnabled(ModuleParameterEnum::StudioContracts);
     }
+
+    public function areDecksEnabled(): bool
+    {
+        return $this->moduleAccessChecker->isEnabled(ModuleParameterEnum::StudioDecks);
+    }
 }
