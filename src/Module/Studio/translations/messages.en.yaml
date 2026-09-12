@@ -71,6 +71,7 @@ backend:
                     create: Create a presentation
                     edit: Edit a presentation
                     delete: Delete a presentation
+                    share: Share a presentation
                 deck_categories:
                     manage: Manage presentation categories
     studio:
@@ -391,6 +392,27 @@ backend:
                 title_required: The title is required.
                 title_too_long: The title is too long.
                 layout_unknown: That layout does not exist.
+            share: Share
+            share_intro: A secret address that opens this presentation without an account. The speaker notes are never on it.
+            share_label: Label
+            share_label_placeholder: Sent to Marie, 12 September
+            share_expiry: Expiry
+            share_no_expiry: No expiry
+            share_days: '{count} days'
+            share_create: Create the link
+            share_created: Link created
+            share_none: No link yet.
+            share_untitled: Link with no label
+            share_copy: Copy the address
+            share_copied: Address copied
+            share_copy_manually: Copy the address shown; the browser refused the clipboard.
+            share_revoke: Revoke
+            share_revoked: Revoked
+            share_revoked_toast: Link revoked
+            share_expires_on: 'Expires on {date}'
+            share_last_used: 'Opened on {date}'
+            share_never_opened: Never opened
+            share_footer: This link is personal to you. Please do not pass it on.
             present: Present
             print: Print
             print_hint: Use the browser's print dialog, then "Save as PDF". One slide per page, landscape.

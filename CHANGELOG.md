@@ -5,6 +5,43 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.146] - 2026-09-12
+
+### Ajouté
+
+#### Partager une présentation par une adresse secrète
+Un lien qui ouvre un deck sans compte, comme les Notes en ont un. Intitulé
+libre pour s'y retrouver des mois plus tard, expiration facultative, et la
+liste dit si le destinataire l'a ouvert et quand.
+
+**Les notes d'orateur ne partent jamais avec le lien**, et c'est le contrôleur
+qui les retire de la charge plutôt que le gabarit qui s'abstient de les
+afficher : un gabarit se modifie bien plus souvent qu'un sérialiseur.
+
+**Le jeton est stocké en clair**, comme celui des Notes et contrairement à
+celui d'un contrat. La différence est l'enjeu, pas un oubli : le jeton d'un
+contrat sépare une fuite de base d'une signature au nom de quelqu'un d'autre,
+tandis qu'un deck n'a rien à contrefaire. Une base de decks qui fuit a déjà
+fait fuiter les decks.
+
+**Révoquer appose une date, ça n'efface jamais la ligne.** « Qui pouvait ouvrir
+ceci, et jusqu'à quand » est une question à laquelle on veut pouvoir répondre
+après coup, et une ligne supprimée ne répond à rien. La liste montre donc les
+liens révoqués, estompés.
+
+Un lien inconnu, révoqué ou expiré donne la même réponse : le 404 d'une adresse
+qui n'existe pas. Dire laquelle des trois c'est confirmerait que l'adresse
+était bonne, ce qu'un jeton deviné ne doit surtout pas apprendre.
+
+Le privilège est `studio.decks.share` et non `edit` : remettre un document à
+quelqu'un hors de l'application n'est pas le même acte que l'écrire.
+
+### Migration
+
+Une table neuve, `core_deck_share_links`. Le lien vers le deck est
+`ON DELETE CASCADE` : une adresse vers un deck supprimé ne peut que répondre
+404, et la garder serait garder un secret pour rien.
+
 ## [0.9.145] - 2026-09-12
 
 ### Ajouté

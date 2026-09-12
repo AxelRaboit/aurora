@@ -117,6 +117,8 @@ use Aurora\Module\Studio\Deck\Entity\DeckCategoryInterface;
 use Aurora\Module\Studio\Deck\Entity\DeckInterface;
 use Aurora\Module\Studio\Deck\Entity\Slide;
 use Aurora\Module\Studio\Deck\Entity\SlideInterface;
+use Aurora\Module\Studio\Deck\Share\Entity\DeckShareLink;
+use Aurora\Module\Studio\Deck\Share\Entity\DeckShareLinkInterface;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Override;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -228,6 +230,7 @@ class AuroraBundle extends AbstractBundle
                     DeckInterface::class => Deck::class,
                     DeckCategoryInterface::class => DeckCategory::class,
                     SlideInterface::class => Slide::class,
+                    DeckShareLinkInterface::class => DeckShareLink::class,
                     ContractInterface::class => Contract::class,
                     ContractAccessLinkInterface::class => ContractAccessLink::class,
                     ContractSignatureInterface::class => ContractSignature::class,
