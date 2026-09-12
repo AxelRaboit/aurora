@@ -27,6 +27,10 @@ use Aurora\Module\Studio\Customer\Dto\CustomerInput;
 use Aurora\Module\Studio\Customer\Entity\CustomerInterface;
 use Aurora\Module\Studio\Customer\Manager\CustomerManagerInterface;
 use Aurora\Module\Studio\Customer\Repository\CustomerRepository;
+use Aurora\Module\Studio\Deck\Entity\DeckCategory;
+use Aurora\Module\Studio\Deck\Entity\DeckInterface;
+use Aurora\Module\Studio\Deck\Enum\SlideLayoutEnum;
+use Aurora\Module\Studio\Deck\Manager\DeckManager;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
@@ -93,6 +97,7 @@ class StudioDemoFixtures extends Fixture implements DependentFixtureInterface, F
         private readonly ContractTemplateRepository $templateRepository,
         private readonly ContractManagerInterface $contracts,
         private readonly ContractRepository $contractRepository,
+        private readonly DeckManager $decks,
         private readonly SettingRepository $settings,
         private readonly EntityManagerInterface $entityManager,
     ) {}
@@ -244,7 +249,79 @@ class StudioDemoFixtures extends Fixture implements DependentFixtureInterface, F
             'Fin de la mission, arret a l echeance annuelle.',
         );
 
+        $this->seedDecks($marie);
+
         $this->entityManager->flush();
+    }
+
+    /**
+     * Two decks, which is what it takes to show what the module is for.
+     *
+     * One addressed to a customer and one addressed to nobody, because the
+     * nullable customer is the decision worth seeing on screen: a deck written
+     * for oneself is the ordinary internal case, not a degraded one.
+     *
+     * Between them they use every layout, so the editor's six shapes can be
+     * looked at without anybody having to build them first.
+     */
+    private function seedDecks(CustomerInterface $customer): void
+    {
+        $audit = new DeckCategory();
+        $audit->setName('Audit')->setColor('#f59e0b')->setPosition(0);
+
+        $strategy = new DeckCategory();
+        $strategy->setName('Strategie')->setColor('#6366f1')->setPosition(1);
+
+        $this->entityManager->persist($audit);
+        $this->entityManager->persist($strategy);
+
+        $first = $this->decks->create('Audit du site, septembre');
+        $first->setDescription('Ce que le site fait mal, et dans quel ordre le reprendre.');
+        $first->setCategory($audit);
+        $first->setCustomer($customer);
+
+        $this->slide($first, SlideLayoutEnum::Title, [
+            'title' => 'Audit du site',
+            'subtitle' => 'Atelier Dupont, septembre 2026',
+        ], 'Remercier pour l acces aux statistiques.');
+
+        $this->slide($first, SlideLayoutEnum::Bullets, [
+            'title' => 'Ce qui bloque',
+            'bullets' => [
+                'Le temps de reponse depasse trois secondes sur mobile',
+                'Les images pesent quatre fois ce qu elles devraient',
+                'Aucune page n a de description pour les moteurs',
+            ],
+        ], null);
+
+        $this->slide($first, SlideLayoutEnum::Split, [
+            'title' => 'Avant, apres',
+            'left' => 'Trois secondes de chargement, un visiteur sur deux qui repart avant la premiere image.',
+            'right' => 'Moins d une seconde, et les images servies a la taille reellement affichee.',
+        ], null);
+
+        $this->slide($first, SlideLayoutEnum::Quote, [
+            'quote' => 'On ne repare pas un site lent, on arrete de le ralentir.',
+            'attribution' => 'La seule regle de cet audit',
+        ], 'Marquer un temps ici.');
+
+        $second = $this->decks->create('Trame de strategie annuelle');
+        $second->setDescription('La forme que prend une revue de fin d annee. A dupliquer par client.');
+        $second->setCategory($strategy);
+
+        $this->slide($second, SlideLayoutEnum::Section, ['title' => 'Ou en est-on'], null);
+
+        $this->slide($second, SlideLayoutEnum::Image, [
+            'caption' => 'La courbe de frequentation sur douze mois',
+        ], 'Laisser la courbe parler dix secondes avant de commenter.');
+    }
+
+    /** @param array<string, mixed> $content */
+    private function slide(DeckInterface $deck, SlideLayoutEnum $layout, array $content, ?string $notes): void
+    {
+        $slide = $this->decks->addSlide($deck, $layout);
+        $this->decks->writeContent($slide, $content);
+        $slide->setSpeakerNotes($notes);
     }
 
     /**

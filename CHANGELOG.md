@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.144] - 2026-09-12
+
+### Ajouté
+
+#### Composer les slides d'une présentation
+La page d'une présentation : les slides à gauche, celle qu'on écrit à droite,
+et son aperçu au-dessus du formulaire.
+
+**Pas de bouton Enregistrer, et c'est voulu.** Un deck s'écrit en sautant d'une
+slide à l'autre, et chaque saut est le moment où le travail sur celle qu'on
+quitte est fini. Enregistrer là ne demande rien à retenir ; un bouton serait
+une chose de plus à ne pas oublier avant de fermer l'onglet. La fermeture de
+l'onglet enregistre aussi.
+
+Le gabarit d'une slide peut changer en cours de route : une slide écrite en
+puces veut souvent devenir un intercalaire une fois que le deck a pris forme.
+Le contenu est alors filtré contre le **nouveau** gabarit, donc les
+emplacements qu'il n'a plus disparaissent.
+
+L'aperçu et les vignettes sont le même composant, au même rapport 16/9 fixe.
+C'est la raison d'être des gabarits : ce qu'on arrange ici est ce qui arrive au
+mur, et un aperçu qui se réagence serait un aperçu qui ment.
+
+L'ordre des slides se change par deux flèches plutôt qu'au glisser : un deck
+est une liste courte, et deux boutons marchent au clavier, sur un écran tactile
+et pour qui ne peut pas glisser. L'ordre part entier, donc le serveur n'a
+jamais à reconstituer un geste depuis une suite d'échanges.
+
+Les fixtures de démonstration portent deux présentations, dont une sans client,
+parce que c'est le cas interne ordinaire et non un cas dégradé.
+
 ## [0.9.143] - 2026-09-12
 
 ### Ajouté

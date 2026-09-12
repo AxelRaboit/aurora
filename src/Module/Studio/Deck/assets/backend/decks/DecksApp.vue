@@ -12,6 +12,7 @@
  */
 import { useI18n } from "vue-i18n";
 import { usePrivileges } from "@/shared/composables/usePrivileges.js";
+import { buildPath } from "@/shared/utils/http/buildPath.js";
 import { useDecksList } from "./composables/useDecksList.js";
 import AppButton from "@/shared/components/action/AppButton.vue";
 import AppInput from "@/shared/components/form/input/AppInput.vue";
@@ -41,6 +42,7 @@ const props = defineProps({
     categories: { type: Array, default: () => [] },
     customers: { type: Array, default: () => [] },
     layouts: { type: Array, default: () => [] },
+    showPath: { type: String, required: true },
     createPath: { type: String, required: true },
     updatePath: { type: String, required: true },
     deletePath: { type: String, required: true },
@@ -117,6 +119,8 @@ function actionsFor(deck) {
 }
 
 const filterOptions = () => categoryOptions.value;
+
+const deckUrl = (deck) => buildPath(props.showPath, { id: deck.id });
 </script>
 
 <template>
@@ -172,7 +176,14 @@ const filterOptions = () => categoryOptions.value;
                         class="border-b border-line/60 last:border-0 hover:bg-surface-2/50"
                     >
                         <td class="px-6 py-3">
-                            <span class="block font-medium text-primary">{{ deck.title }}</span>
+                            <!-- Le titre est le lien vers la page du deck : c'est
+                                 ce qu'on vise pour composer les slides, et une
+                                 action de plus dans le menu de ligne aurait mis
+                                 le geste principal derrière un clic. -->
+                            <a
+                                class="block font-medium text-primary no-underline hover:text-accent"
+                                :href="deckUrl(deck)"
+                            >{{ deck.title }}</a>
                             <span v-if="deck.description" class="block text-xs text-muted line-clamp-1">{{ deck.description }}</span>
                         </td>
                         <td class="hidden px-6 py-3 lg:table-cell">

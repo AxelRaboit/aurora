@@ -390,6 +390,35 @@ backend:
             errors:
                 title_required: The title is required.
                 title_too_long: The title is too long.
+                layout_unknown: That layout does not exist.
+            layout: Layout
+            add_slide: Add a slide
+            slide_added: Slide added
+            slide_deleted: Slide deleted
+            delete_slide: Delete the slide
+            delete_slide_confirm: This slide and its contents will be lost.
+            move_up: Move up
+            move_down: Move down
+            saving: Saving…
+            saved: Saved
+            unsaved: Unsaved changes
+            no_slide_title: No slide
+            no_slide_description: Pick a layout on the left to start the presentation.
+            speaker_notes: Speaker notes
+            speaker_notes_hint: They are never shown to the audience.
+            speaker_notes_placeholder: What you will say while this slide is on screen.
+            bullets_placeholder: One bullet per line.
+            prose_placeholder: The text shown on the slide.
+            slots:
+                title: Title
+                subtitle: Subtitle
+                bullets: Bullets
+                left: Left column
+                right: Right column
+                quote: Quote
+                attribution: Attribution
+                caption: Caption
+                mediaId: Image
             layouts:
                 title: Title
                 bullets: Title and bullets
