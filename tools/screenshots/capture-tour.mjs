@@ -58,22 +58,22 @@ const VIEWPORT = { width: 1600, height: 1000 };
  * say what they do once something is on them.
  */
 const SHOTS = [
-    { name: "contracts", path: "/backend/accounting/contracts" },
-    { name: "trames", path: "/backend/accounting/contract-templates" },
-    { name: "customers", path: "/backend/accounting/customers" },
+    { name: "contracts", path: "/backend/studio/contracts" },
+    { name: "trames", path: "/backend/studio/contract-templates" },
+    { name: "customers", path: "/backend/studio/customers" },
     {
         name: "contract-document",
         // The concluded one: the only state that shows the seal, both
         // signatures and the amendment chain at once. Reached through the row
         // actions rather than by a hard-coded id, because ids depend on what
         // the database already held when the fixtures ran.
-        path: "/backend/accounting/contracts",
+        path: "/backend/studio/contracts",
         async prepare(page) {
             // The countersigned one by its status rather than its reference:
             // references depend on what the sequence had already issued.
             const row = page.getByRole("row").filter({ hasText: "Contresigné" }).first();
             await row.getByRole("button", { name: /^Actions pour/ }).click();
-            await page.locator("a[href*='/backend/accounting/contracts/']").first().click();
+            await page.locator("a[href*='/backend/studio/contracts/']").first().click();
             await page.waitForLoadState("networkidle");
         },
     },

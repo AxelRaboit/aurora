@@ -89,7 +89,7 @@ async function shotOf(locator, name, padX = 16, padY = 0) {
  * donnée fabriquée à côté ne prouve pas que l'écran sait la produire.
  */
 async function createDraft() {
-  await page.goto(`${BASE}/backend/accounting/contracts`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/backend/studio/contracts`, { waitUntil: "domcontentloaded" });
   await wait(2500);
   await page.getByRole("button", { name: "Préparer un contrat" }).first().click();
   await wait(1800);
@@ -630,7 +630,7 @@ const FLOWS = {
     await wait(3500);
 
     // envoyer-le-lien
-    await page.goto(`${BASE}/backend/accounting/contracts`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contracts`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     const reference = await page.locator("text=/CTR-\\d{4}-\\d{4}/").first().innerText();
     flowName = "envoyer-le-lien";
@@ -664,7 +664,7 @@ const FLOWS = {
       throw new Error("DOC_CONTRACT_ID manquant");
     }
 
-    await page.goto(`${BASE}/backend/accounting/contracts/${id}`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contracts/${id}`, { waitUntil: "domcontentloaded" });
     await wait(3000);
 
     flowName = "pdf-signe";
@@ -682,7 +682,7 @@ const FLOWS = {
 
     flowName = "resiliation";
     step = 0;
-    await page.goto(`${BASE}/backend/accounting/contracts/${id}`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contracts/${id}`, { waitUntil: "domcontentloaded" });
     await wait(3000);
     await shot("les-actions-d-un-contrat-conclu");
 
@@ -829,9 +829,9 @@ const FLOWS = {
 
   /** L'identité du prestataire : les douze réglages que provider.* lit. */
   "identite-du-prestataire": async () => {
-    await page.goto(`${BASE}/backend/configuration/settings/accounting`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/configuration/settings/studio`, { waitUntil: "domcontentloaded" });
     await wait(2800);
-    await shot("l-onglet-comptabilite-des-reglages");
+    await shot("l-onglet-studio-des-reglages");
 
     await page.mouse.wheel(0, 900);
     await wait(900);
@@ -844,13 +844,13 @@ const FLOWS = {
 
   /** Les relances : le réglage, le délai, le plafond. */
   "relances": async () => {
-    await page.goto(`${BASE}/backend/configuration/settings/accounting`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/configuration/settings/studio`, { waitUntil: "domcontentloaded" });
     await wait(2800);
     await page.mouse.wheel(0, 2400);
     await wait(1000);
     await shot("les-reglages-de-relance");
 
-    await page.goto(`${BASE}/backend/accounting/contracts`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contracts`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     const row = page.getByRole("row").filter({ hasText: /Envoyé/ }).first();
     await row.getByRole("button", { name: /^Actions pour/ }).click();
@@ -863,7 +863,7 @@ const FLOWS = {
 
   /** Les trames : la liste, le filtre par type, les actions, les versions. */
   "trames-de-contrat": async () => {
-    await page.goto(`${BASE}/backend/accounting/contract-templates`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contract-templates`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     await shot("la-liste");
 
@@ -896,7 +896,7 @@ const FLOWS = {
     const template = process.env.DOC_TEMPLATE_ID ?? "3";
     const version = process.env.DOC_VERSION_ID ?? "5";
 
-    await page.goto(`${BASE}/backend/accounting/contract-templates/${template}/versions/${version}`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contract-templates/${template}/versions/${version}`, { waitUntil: "domcontentloaded" });
     await wait(3500);
     await shot("l-editeur-de-version");
 
@@ -911,7 +911,7 @@ const FLOWS = {
 
   /** Contresigner : ce qui conclut le contrat, une fois le client passé. */
   "contresigner": async () => {
-    await page.goto(`${BASE}/backend/accounting/contracts`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contracts`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     await shot("le-contrat-signe-par-le-client");
 
@@ -979,7 +979,7 @@ const FLOWS = {
 
   /** Créer un client, jusqu'au refus du SIRET puis à l'enregistrement. */
   "fiche-client": async () => {
-    await page.goto(`${BASE}/backend/accounting/customers`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/customers`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     await shot("la-liste");
 
@@ -1028,7 +1028,7 @@ const FLOWS = {
 
   /** Préparer un contrat, de la liste au brouillon enregistré. */
   "preparer-un-contrat": async () => {
-    await page.goto(`${BASE}/backend/accounting/contracts`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/backend/studio/contracts`, { waitUntil: "domcontentloaded" });
     await wait(2500);
     await shot("la-liste");
 
@@ -1860,7 +1860,7 @@ const FLOWS = {
     const entry = page.getByText(/Échéance facture/).first();
     await entry.scrollIntoViewIfNeeded();
     await wait(700);
-    await shotOf(entry, "une-echeance-venue-de-la-comptabilite", 24, 14);
+    await shotOf(entry, "une-echeance-venue-du-studio", 24, 14);
 
     await entry.click();
     await wait(2000);
