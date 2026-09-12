@@ -98,6 +98,7 @@ backend:
         relocate_description: "Déplace le fichier, ses variantes et son historique. Son adresse ne change pas."
         relocate_pending: Un déplacement est déjà en cours pour ce document.
       storage:
+        column: Stockage
         local: Serveur
         remote: Distant
         moving: Déplacement

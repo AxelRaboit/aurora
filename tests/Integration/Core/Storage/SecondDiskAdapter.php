@@ -31,6 +31,12 @@ final readonly class SecondDiskAdapter implements StorageAdapterInterface
         return StorageDiskEnum::R2;
     }
 
+    /** A local directory is always ready, like the adapter it delegates to. */
+    public function isReady(): bool
+    {
+        return true;
+    }
+
     public function writeFromLocalFile(string $key, string $sourceAbsolutePath): void
     {
         $this->inner->writeFromLocalFile($key, $sourceAbsolutePath);

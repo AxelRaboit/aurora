@@ -588,6 +588,7 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">{{ t("backend.ged.documents.status") }}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">{{ t("backend.ged.documents.file") }}</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">{{ t("backend.ged.documents.size") }}</th>
+                                    <th v-if="storageRelocationAvailable" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden lg:table-cell">{{ t("backend.ged.documents.storage.column") }}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted hidden xl:table-cell">{{ t("backend.ged.documents.preview") }}</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">{{ t("shared.common.actions") }}</th>
                                 </tr>
@@ -627,6 +628,17 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                                     <td class="px-6 py-3 text-right hidden lg:table-cell text-xs text-muted tabular-nums">
                                         <span v-if="doc.fileSize">{{ formatSize(doc.fileSize) }}</span>
                                         <span v-else>-</span>
+                                    </td>
+                                    <!-- A column of its own rather than a chip tucked under the title:
+                                         sorting a hundred rows by eye is what a column is for, and the
+                                         chip under the title is only in the card view. Hidden entirely
+                                         while a single backend exists, like the chip. -->
+                                    <td v-if="storageRelocationAvailable" class="px-6 py-3 hidden lg:table-cell">
+                                        <DocumentStorageChip
+                                            :disk="doc.storageDisk"
+                                            :state="doc.storageTransferState"
+                                            :error="doc.storageTransferError"
+                                        />
                                     </td>
                                     <td class="px-6 py-3 hidden xl:table-cell">
                                         <!-- A card in grid mode already opens the detail modal on click; the
@@ -944,6 +956,29 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                             class="w-full h-144"
                             :title="viewingDoc.fileName"
                         />
+                        <!-- A film used to land in the generic branch below and show a
+                             paper icon: the one file type whose whole point is to be
+                             played, and the screen offered no way to play it. Unlike the
+                             public page this one preloads its metadata, because somebody
+                             opening a document here asked for that document, and the
+                             duration is part of what they came to check. -->
+                        <video
+                            v-else-if="viewingDoc.fileMime?.startsWith('video/')"
+                            class="block w-full max-h-144 bg-black"
+                            controls
+                            playsinline
+                            preload="metadata"
+                            :poster="viewingDoc.thumbnailUrl ?? undefined"
+                        >
+                            <source :src="viewingDoc.fileUrl" :type="viewingDoc.fileMime">
+                        </video>
+                        <audio
+                            v-else-if="viewingDoc.fileMime?.startsWith('audio/')"
+                            class="block w-full p-4"
+                            controls
+                            preload="metadata"
+                            :src="viewingDoc.fileUrl"
+                        />
                         <div v-else class="flex flex-col items-center justify-center gap-3 px-4 py-16 bg-surface-2">
                             <FileText class="w-16 h-16 text-muted" :stroke-width="1.25" />
                             <p class="text-sm font-medium text-primary truncate max-w-full">{{ viewingDoc.fileName }}</p>
@@ -983,6 +1018,16 @@ const { cropTarget, onCropped } = useDocumentCrop(viewingDoc, reset);
                             <div v-if="viewingDoc.fileMime">
                                 <dt class="text-xs text-muted uppercase tracking-wide mb-0.5">{{ t("backend.ged.documents.type") }}</dt>
                                 <dd class="text-secondary">{{ viewingDoc.fileMime }}</dd>
+                            </div>
+                            <div v-if="storageRelocationAvailable">
+                                <dt class="text-xs text-muted uppercase tracking-wide mb-0.5">{{ t("backend.ged.documents.storage.column") }}</dt>
+                                <dd>
+                                    <DocumentStorageChip
+                                        :disk="viewingDoc.storageDisk"
+                                        :state="viewingDoc.storageTransferState"
+                                        :error="viewingDoc.storageTransferError"
+                                    />
+                                </dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-muted uppercase tracking-wide mb-0.5">{{ t("shared.common.created") }}</dt>

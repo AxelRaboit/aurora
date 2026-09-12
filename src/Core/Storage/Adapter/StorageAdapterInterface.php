@@ -40,6 +40,19 @@ interface StorageAdapterInterface
     public function disk(): StorageDiskEnum;
 
     /**
+     * Whether this backend can be asked anything at all.
+     *
+     * A remote backend nobody configured has no address, no credentials and
+     * no answers: calling it throws. Callers that sweep the registered
+     * adapters looking for a file need to skip it without catching an
+     * exception, because an exception is how a *configured* backend reports a
+     * real failure, and the two must not read the same.
+     *
+     * Answered locally and cheaply: no request, no round trip.
+     */
+    public function isReady(): bool;
+
+    /**
      * Copies a local file's bytes to `$key`, overwriting whatever was there.
      *
      * The source is left in place. Callers holding a file they no longer want
