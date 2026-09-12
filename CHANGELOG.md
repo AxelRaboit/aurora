@@ -5,6 +5,37 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.140] - 2026-09-12
+
+### Ajouté
+
+#### Supprimer un document de la GED ne détruit plus son fichier
+Le bouton Supprimer emportait la ligne, ses vignettes, ses versions et le
+fichier lui-même, en un geste et sans retour possible. Pour un document
+téléversé, ces octets n'existent souvent nulle part ailleurs.
+
+La suppression met désormais le document à la corbeille : il disparaît de la
+bibliothèque, de la recherche et des statistiques, mais son fichier reste sur
+le disque. Un bouton Corbeille apparaît dans la barre de la page Documents,
+avec le nombre d'éléments dedans, et la corbeille est la même liste avec la
+condition inversée : les filtres par catégorie, type ou dossier continuent d'y
+fonctionner.
+
+Un document en corbeille n'offre plus que trois gestes : le voir, le restaurer,
+le supprimer définitivement. Cette dernière action a sa propre confirmation,
+parce que c'est la seule de l'écran qui efface vraiment les octets. Le bouton
+Vider la corbeille annonce combien de documents il détruit.
+
+Ce qui reste dans la corbeille est purgé automatiquement au bout du délai déjà
+utilisé par les publications, réglable dans les paramètres et actuellement fixé
+à 30 jours. La purge passe par le même code que le bouton, donc un fichier
+encore référencé par un autre document est épargné dans les deux cas.
+
+Le journal d'audit distingue maintenant la mise à la corbeille, la restauration
+et la suppression définitive.
+
+---
+
 ## [0.9.139] - 2026-09-12
 
 ### Corrigé

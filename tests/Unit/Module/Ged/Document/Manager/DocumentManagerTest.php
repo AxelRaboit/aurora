@@ -392,9 +392,9 @@ final class DocumentManagerTest extends TestCase
         self::assertTrue($document->getTags()->contains($newTag));
     }
 
-    // --- delete() ---
+    // --- delete() / forceDelete() ---
 
-    public function testDeleteCallsRemoveAndFlush(): void
+    public function testForceDeleteCallsRemoveAndFlush(): void
     {
         $document = new Document();
         $document->setTitle('Doc')->setStatus(DocumentStatusEnum::Draft);
@@ -402,32 +402,32 @@ final class DocumentManagerTest extends TestCase
         $this->entityManager->expects(self::once())->method('remove')->with($document);
         $this->entityManager->expects(self::atLeastOnce())->method('flush');
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
     }
 
-    public function testDeleteErasesTheDocumentFileFromDisk(): void
+    public function testForceDeleteErasesTheDocumentFileFromDisk(): void
     {
         $absolute = $this->writeSourceImage('ged/2026/05/lonely.png', 10, 10);
         $document = $this->makeImageDocument('ged/2026/05/lonely.png');
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
 
         self::assertFileDoesNotExist($absolute);
     }
 
-    public function testDeleteErasesTheGeneratedThumbnailToo(): void
+    public function testForceDeleteErasesTheGeneratedThumbnailToo(): void
     {
         $this->writeSourceImage('ged/2026/05/contract.png', 10, 10);
         $thumbnail = $this->writeSourceImage('ged/thumbnails/2026/05/contract.png', 4, 4);
         $document = $this->makeImageDocument('ged/2026/05/contract.png');
         $document->setThumbnailPath('ged/thumbnails/2026/05/contract.png');
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
 
         self::assertFileDoesNotExist($thumbnail);
     }
 
-    public function testDeleteErasesTheFilesOfEveryVersionRow(): void
+    public function testForceDeleteErasesTheFilesOfEveryVersionRow(): void
     {
         // Version rows go away through an ON DELETE CASCADE, so their paths
         // have to be read before the flush or the bytes are unreachable.
@@ -440,13 +440,13 @@ final class DocumentManagerTest extends TestCase
             $this->makeVersion('ged/2026/04/draft-v1.png'),
         ]);
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
 
         self::assertFileDoesNotExist($old);
         self::assertFileDoesNotExist($current);
     }
 
-    public function testDeleteSparesAFileAnotherDocumentStillPointsAt(): void
+    public function testForceDeleteSparesAFileAnotherDocumentStillPointsAt(): void
     {
         $shared = $this->writeSourceImage('ged/2026/05/shared.png', 10, 10);
         $document = $this->makeImageDocument('ged/2026/05/shared.png');
@@ -456,12 +456,12 @@ final class DocumentManagerTest extends TestCase
         $this->documentRepository->method('filterPathsInUse')
             ->willReturn(['ged/2026/05/shared.png']);
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
 
         self::assertFileExists($shared);
     }
 
-    public function testDeleteSparesAFileAVersionRowStillPointsAt(): void
+    public function testForceDeleteSparesAFileAVersionRowStillPointsAt(): void
     {
         $shared = $this->writeSourceImage('ged/2026/05/kept.png', 10, 10);
         $document = $this->makeImageDocument('ged/2026/05/kept.png');
@@ -469,12 +469,12 @@ final class DocumentManagerTest extends TestCase
         $this->versionRepository->method('filterPathsInUse')
             ->willReturn(['ged/2026/05/kept.png']);
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
 
         self::assertFileExists($shared);
     }
 
-    public function testDeleteReadsTheOwnedPathsBeforeTheRowIsRemoved(): void
+    public function testForceDeleteReadsTheOwnedPathsBeforeTheRowIsRemoved(): void
     {
         // The guard query must see the deletion already committed, otherwise
         // the row being deleted answers for itself and nothing is ever erased.
@@ -493,23 +493,74 @@ final class DocumentManagerTest extends TestCase
             }
         );
 
-        $this->manager->delete($document);
+        $this->manager->forceDelete($document);
 
         self::assertSame(['flush', 'guard'], $calls);
         self::assertFileDoesNotExist($absolute);
     }
 
-    public function testBulkDeleteErasesTheFilesOfEveryDocument(): void
+    public function testDeleteKeepsTheRowAndItsFile(): void
+    {
+        $absolute = $this->writeSourceImage('ged/2026/05/kept.png', 10, 10);
+        $document = $this->makeImageDocument('ged/2026/05/kept.png');
+
+        $this->entityManager->expects(self::never())->method('remove');
+
+        $this->manager->delete($document);
+
+        self::assertTrue($document->isTrashed());
+        self::assertFileExists($absolute);
+    }
+
+    public function testDeleteIsIdempotent(): void
+    {
+        $document = $this->makeImageDocument('ged/2026/05/twice.png');
+
+        $this->manager->delete($document);
+        $stamp = $document->getDeletedAt();
+        $this->manager->delete($document);
+
+        self::assertSame($stamp, $document->getDeletedAt());
+    }
+
+    public function testRestoreClearsTheStamp(): void
+    {
+        $document = $this->makeImageDocument('ged/2026/05/back.png');
+
+        $this->manager->delete($document);
+        $this->manager->restore($document);
+
+        self::assertFalse($document->isTrashed());
+    }
+
+    public function testBulkDeleteTrashesEveryDocumentAndSparesTheirFiles(): void
     {
         $first = $this->writeSourceImage('ged/2026/05/one.png', 10, 10);
         $second = $this->writeSourceImage('ged/2026/05/two.png', 10, 10);
 
-        $this->documentRepository->method('findBy')->willReturn([
+        $documents = [
             $this->makeImageDocument('ged/2026/05/one.png'),
             $this->makeImageDocument('ged/2026/05/two.png'),
-        ]);
+        ];
+        $this->documentRepository->method('findBy')->willReturn($documents);
 
         self::assertSame(2, $this->manager->bulkDelete([1, 2]));
+        self::assertTrue($documents[0]->isTrashed());
+        self::assertFileExists($first);
+        self::assertFileExists($second);
+    }
+
+    public function testEmptyTrashErasesTheFilesOfEveryTrashedDocument(): void
+    {
+        $first = $this->writeSourceImage('ged/2026/05/gone-one.png', 10, 10);
+        $second = $this->writeSourceImage('ged/2026/05/gone-two.png', 10, 10);
+
+        $this->documentRepository->method('findAllTrashed')->willReturn([
+            $this->makeImageDocument('ged/2026/05/gone-one.png'),
+            $this->makeImageDocument('ged/2026/05/gone-two.png'),
+        ]);
+
+        self::assertSame(2, $this->manager->emptyTrash());
         self::assertFileDoesNotExist($first);
         self::assertFileDoesNotExist($second);
     }

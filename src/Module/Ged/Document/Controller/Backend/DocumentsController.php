@@ -98,7 +98,12 @@ final class DocumentsController extends AbstractController
         $diskValue = $request->query->getString('storageDisk');
         $storageDisk = '' !== $diskValue ? StorageDiskEnum::tryFrom($diskValue) : null;
 
-        return $this->json($this->viewBuilder->buildListPayload($pagination, $categoryId, $tagId, $folderId, $status, $mimeGroup, $rootOnly, $storageDisk));
+        // The trash is a view of this same listing, so it travels as a filter
+        // rather than as a screen of its own: every other filter keeps working
+        // inside it, and there is one payload shape to keep in sync.
+        $trashed = $request->query->getBoolean('trashed');
+
+        return $this->json($this->viewBuilder->buildListPayload($pagination, $categoryId, $tagId, $folderId, $status, $mimeGroup, $rootOnly, $storageDisk, $trashed));
     }
 
     /**
@@ -191,6 +196,53 @@ final class DocumentsController extends AbstractController
         $this->manager->delete($document);
 
         return $this->jsonSuccess();
+    }
+
+    /**
+     * Brings a document back from the trash.
+     *
+     * Under `delete` rather than `edit`: restoring undoes a deletion, and the
+     * person trusted with the trash is the one trusted to have emptied it.
+     */
+    #[Route('/{id}/restore', name: '_restore', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.documents.delete')]
+    public function restore(Document $document): JsonResponse
+    {
+        $this->manager->restore($document);
+
+        return $this->jsonSuccess();
+    }
+
+    /**
+     * Deletes a document for good, file included.
+     *
+     * Separate from `/delete` because it is a different promise: that one is
+     * reversible, this one takes the bytes with it.
+     */
+    #[Route('/{id}/force-delete', name: '_force_delete', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.documents.delete')]
+    public function forceDelete(Document $document): JsonResponse
+    {
+        $this->manager->forceDelete($document);
+
+        return $this->jsonSuccess();
+    }
+
+    #[Route('/bulk-restore', name: '_bulk_restore', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.documents.delete')]
+    public function bulkRestore(Request $request): JsonResponse
+    {
+        $payload = $this->decodeJson($request);
+        $ids = array_values(array_filter(array_map(intval(...), (array) ($payload['ids'] ?? []))));
+
+        return $this->jsonSuccess(['restored' => $this->manager->bulkRestore($ids)]);
+    }
+
+    #[Route('/empty-trash', name: '_empty_trash', methods: [HttpMethodEnum::Post->value])]
+    #[IsGranted('ged.documents.delete')]
+    public function emptyTrash(): JsonResponse
+    {
+        return $this->jsonSuccess(['deleted' => $this->manager->emptyTrash()]);
     }
 
     #[Route('/{id}/crop', name: '_crop', methods: [HttpMethodEnum::Post->value])]
