@@ -390,6 +390,35 @@ backend:
             errors:
                 title_required: Le titre est obligatoire.
                 title_too_long: Le titre est trop long.
+                layout_unknown: Ce gabarit n'existe pas.
+            layout: Gabarit
+            add_slide: Ajouter une slide
+            slide_added: Slide ajoutée
+            slide_deleted: Slide supprimée
+            delete_slide: Supprimer la slide
+            delete_slide_confirm: Cette slide et son contenu seront perdus.
+            move_up: Monter
+            move_down: Descendre
+            saving: Enregistrement…
+            saved: Enregistré
+            unsaved: Modifications non enregistrées
+            no_slide_title: Aucune slide
+            no_slide_description: Choisissez un gabarit à gauche pour commencer la présentation.
+            speaker_notes: Notes d'orateur
+            speaker_notes_hint: Elles ne sont jamais montrées au public.
+            speaker_notes_placeholder: Ce que vous direz pendant que cette slide est à l'écran.
+            bullets_placeholder: Une puce par ligne.
+            prose_placeholder: Le texte affiché sur la slide.
+            slots:
+                title: Titre
+                subtitle: Sous-titre
+                bullets: Puces
+                left: Colonne de gauche
+                right: Colonne de droite
+                quote: Citation
+                attribution: Attribution
+                caption: Légende
+                mediaId: Image
             layouts:
                 title: Titre
                 bullets: Titre et puces

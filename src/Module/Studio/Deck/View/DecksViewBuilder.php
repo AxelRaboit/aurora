@@ -55,6 +55,28 @@ final readonly class DecksViewBuilder
         ];
     }
 
+    /**
+     * One deck's own page: the deck, its slides, and where to write them.
+     *
+     * The layouts come along because the editor needs to know which fields a
+     * shape offers before anybody picks it, and the list of pictures because a
+     * media slot has to offer something to choose from.
+     *
+     * @return array<string, mixed>
+     */
+    public function showView(DeckInterface $deck): array
+    {
+        return [
+            'deck' => $this->serializer->full($deck),
+            'layouts' => $this->layoutOptions(),
+            'backPath' => $this->urlGenerator->generate('backend_studio_decks'),
+            'slideCreatePath' => $this->urlGenerator->generate('backend_studio_deck_slide_create', ['id' => $deck->getId()]),
+            'slideUpdatePath' => $this->pathTemplates->generate('backend_studio_deck_slide_update', ['id' => $deck->getId(), 'slideId' => '__slideId__']),
+            'slideDeletePath' => $this->pathTemplates->generate('backend_studio_deck_slide_delete', ['id' => $deck->getId(), 'slideId' => '__slideId__']),
+            'slideReorderPath' => $this->urlGenerator->generate('backend_studio_deck_slide_reorder', ['id' => $deck->getId()]),
+        ];
+    }
+
     /** @return array<string, mixed> */
     public function deckPayload(DeckInterface $deck): array
     {
@@ -121,6 +143,7 @@ final readonly class DecksViewBuilder
     private function paths(): array
     {
         return [
+            'showPath' => $this->pathTemplates->generate('backend_studio_deck', ['id' => '__id__']),
             'createPath' => $this->urlGenerator->generate('backend_studio_decks_create'),
             'updatePath' => $this->pathTemplates->generate('backend_studio_decks_update', ['id' => '__id__']),
             'deletePath' => $this->pathTemplates->generate('backend_studio_decks_delete', ['id' => '__id__']),
