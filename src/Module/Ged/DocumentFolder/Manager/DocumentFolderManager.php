@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Aurora\Module\Ged\DocumentFolder\Manager;
 
 use Aurora\Module\Dev\Audit\Service\AuditLogger;
+use Aurora\Module\Ged\Document\Repository\DocumentRepository;
 use Aurora\Module\Ged\DocumentFolder\Dto\DocumentFolderInputInterface;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolder;
 use Aurora\Module\Ged\DocumentFolder\Entity\DocumentFolderInterface;
 use Aurora\Module\Ged\DocumentFolder\Repository\DocumentFolderRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 
@@ -18,6 +20,7 @@ class DocumentFolderManager implements DocumentFolderManagerInterface
     public function __construct(
         protected readonly EntityManagerInterface $entityManager,
         protected readonly DocumentFolderRepository $folderRepository,
+        protected readonly DocumentRepository $documentRepository,
         protected readonly AuditLogger $auditLogger,
     ) {}
 
@@ -41,12 +44,154 @@ class DocumentFolderManager implements DocumentFolderManagerInterface
         $this->auditUpdated($folder);
     }
 
-    public function delete(DocumentFolderInterface $folder): void
+    /**
+     * Moves a folder to the trash.
+     *
+     * Two ways to do it, because they answer two different intentions. With
+     * `$cascade`, the folder leaves with everything under it and a restore
+     * puts the branch back exactly as it was - that is the only version where
+     * the gesture is genuinely reversible, since what a deletion destroys here
+     * is the filing rather than the files. Without it, the folder goes alone
+     * and its contents surface at the root, which is what deleting a folder
+     * has always done, except the folder itself can now be brought back.
+     */
+    public function delete(DocumentFolderInterface $folder, bool $cascade = true): void
     {
+        if ($folder->isTrashed()) {
+            return;
+        }
+
+        $now = new DateTimeImmutable();
+        $folderId = (int) $folder->getId();
+
+        $folder->setDeletedAt($now)->setTrashedWithFolderId(null);
+
+        if ($cascade) {
+            foreach ($this->descendantsOf($folder) as $descendant) {
+                if ($descendant->isTrashed()) {
+                    continue;
+                }
+
+                $descendant->setDeletedAt($now)->setTrashedWithFolderId($folderId);
+            }
+
+            foreach ($this->documentRepository->findLivingIn($this->branchIds($folder)) as $document) {
+                $document->setDeletedAt($now)->setTrashedWithFolderId($folderId);
+            }
+        } else {
+            // The contents surface at the root, as they always have. Detaching
+            // them here rather than relying on the database's SET NULL, which
+            // only fires on a real delete.
+            foreach ($folder->getChildren() as $child) {
+                if (!$child->isTrashed()) {
+                    $child->setParent(null);
+                }
+            }
+
+            foreach ($this->documentRepository->findLivingIn([$folderId]) as $document) {
+                $document->setFolder(null);
+            }
+        }
+
+        $this->entityManager->flush();
+
+        $this->auditTrashed($folder, $cascade);
+    }
+
+    /**
+     * Brings a folder back, with whatever fell alongside it.
+     *
+     * A folder restored under a parent that is still in the trash would be
+     * invisible, so the parent link is cut in that case and the folder comes
+     * back at the root rather than nowhere.
+     */
+    public function restore(DocumentFolderInterface $folder): void
+    {
+        if (!$folder->isTrashed()) {
+            return;
+        }
+
+        $folderId = (int) $folder->getId();
+
+        $parent = $folder->getParent();
+        if ($parent instanceof DocumentFolderInterface && $parent->isTrashed()) {
+            $folder->setParent(null);
+        }
+
+        $folder->setDeletedAt(null)->setTrashedWithFolderId(null);
+
+        foreach ($this->folderRepository->findTrashedWith($folderId) as $descendant) {
+            $descendant->setDeletedAt(null)->setTrashedWithFolderId(null);
+        }
+
+        foreach ($this->documentRepository->findTrashedWith($folderId) as $document) {
+            $document->setDeletedAt(null)->setTrashedWithFolderId(null);
+        }
+
+        $this->entityManager->flush();
+
+        $this->auditRestored($folder);
+    }
+
+    /**
+     * Deletes a folder for good.
+     *
+     * Only the folder: what fell with it is restored to the root instead of
+     * being destroyed, because the documents are the part nobody asked to lose.
+     * Emptying the document trash is what removes those, deliberately.
+     */
+    public function forceDelete(DocumentFolderInterface $folder): void
+    {
+        $folderId = (int) $folder->getId();
+
+        foreach ($this->folderRepository->findTrashedWith($folderId) as $descendant) {
+            $descendant->setParent(null)->setDeletedAt(null)->setTrashedWithFolderId(null);
+        }
+
+        foreach ($this->documentRepository->findTrashedWith($folderId) as $document) {
+            $document->setFolder(null)->setDeletedAt(null)->setTrashedWithFolderId(null);
+        }
+
         $this->auditDeleted($folder);
 
         $this->entityManager->remove($folder);
         $this->entityManager->flush();
+    }
+
+    /**
+     * Every folder below this one, at any depth.
+     *
+     * @return list<DocumentFolderInterface>
+     */
+    protected function descendantsOf(DocumentFolderInterface $folder): array
+    {
+        $found = [];
+        $queue = [$folder];
+
+        while ([] !== $queue) {
+            $current = array_shift($queue);
+            foreach ($this->folderRepository->findChildrenOf((int) $current->getId()) as $child) {
+                $found[] = $child;
+                $queue[] = $child;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * The folder and its descendants, as ids.
+     *
+     * @return list<int>
+     */
+    protected function branchIds(DocumentFolderInterface $folder): array
+    {
+        $ids = [(int) $folder->getId()];
+        foreach ($this->descendantsOf($folder) as $descendant) {
+            $ids[] = (int) $descendant->getId();
+        }
+
+        return $ids;
     }
 
     /**
@@ -160,6 +305,19 @@ class DocumentFolderManager implements DocumentFolderManagerInterface
     protected function auditUpdated(DocumentFolderInterface $folder): void
     {
         $this->auditLogger->log('ged', 'folder.updated', 'DocumentFolder', $folder->getId(), $this->auditPayload($folder));
+    }
+
+    protected function auditTrashed(DocumentFolderInterface $folder, bool $cascade): void
+    {
+        $this->auditLogger->log('ged', 'folder.trashed', 'DocumentFolder', $folder->getId(), [
+            ...$this->auditPayload($folder),
+            'cascade' => $cascade,
+        ]);
+    }
+
+    protected function auditRestored(DocumentFolderInterface $folder): void
+    {
+        $this->auditLogger->log('ged', 'folder.restored', 'DocumentFolder', $folder->getId(), $this->auditPayload($folder));
     }
 
     protected function auditDeleted(DocumentFolderInterface $folder): void

@@ -133,6 +133,9 @@ backend:
       delete_warning: The document goes to the trash. You can restore it until the trash is emptied.
       trash:
         title: Trash
+        folders_title: Folders in the trash
+        folder_restored: Folder restored
+        folder_deleted_forever: Folder permanently deleted
         banner: These documents are deleted. Their files are kept until the trash is emptied.
         empty: Empty the trash
         empty_confirm: "Permanently delete the {count} documents in the trash?"
@@ -199,6 +202,10 @@ backend:
       new_folder: New folder
       edit_folder: Edit folder
       delete_folder_confirm: "Delete folder « {name} »?"
+      delete_folder_cascade: Move the folder and its contents to the trash
+      delete_folder_cascade_hint: Documents and sub-folders go with it. Restoring puts everything back in place.
+      delete_folder_only: Delete the folder only
+      delete_folder_only_hint: Its contents surface at the root. Restoring the folder brings it back empty.
       folder_name: Folder name
       folder_name_placeholder: Folder name…
       parent_folder: Parent folder

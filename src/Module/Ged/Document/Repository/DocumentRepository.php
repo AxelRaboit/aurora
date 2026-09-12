@@ -285,6 +285,45 @@ class DocumentRepository extends ResolveTargetEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * The documents still in the library inside these folders.
+     *
+     * Used when a folder is deleted: what is already in the trash keeps the
+     * reason it got there, and must not be re-stamped as having fallen with
+     * the folder - otherwise restoring the folder would bring it back too.
+     *
+     * @param list<int> $folderIds
+     *
+     * @return list<Document>
+     */
+    public function findLivingIn(array $folderIds): array
+    {
+        if ([] === $folderIds) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('d')
+            ->where('d.folder IN (:ids)')
+            ->andWhere('d.deletedAt IS NULL')
+            ->setParameter('ids', $folderIds)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * The documents that fell with this folder.
+     *
+     * @return list<Document>
+     */
+    public function findTrashedWith(int $folderId): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.trashedWithFolderId = :id')
+            ->setParameter('id', $folderId)
+            ->getQuery()
+            ->getResult();
+    }
+
     /** @return list<Document> */
     public function findAllTrashed(): array
     {

@@ -54,6 +54,10 @@ export function useFolderPanelActions({ folders, allFlatFolders, onChanged }) {
     });
     const folderForm = reactive({ name: "", parentId: null });
     const deletingFolder = ref(null);
+    // What the delete modal is about to do. True: the folder leaves with its
+    // contents and a restore puts the branch back. False: the contents surface
+    // at the root, as they always have. The reversible one is the default.
+    const deleteCascade = ref(true);
 
     /**
      * Counts come from the documents listing, not from the folder endpoints, so
@@ -122,6 +126,7 @@ export function useFolderPanelActions({ folders, allFlatFolders, onChanged }) {
         try {
             const data = await deleteRequest(
                 buildPath(FOLDER_DELETE, { id: folder.id }),
+                { cascade: deleteCascade.value },
             );
             if (!data) return;
             if (!data.success) {
@@ -398,6 +403,7 @@ export function useFolderPanelActions({ folders, allFlatFolders, onChanged }) {
         folderModal,
         folderForm,
         deletingFolder,
+        deleteCascade,
         folderParentSelectOptions,
         openCreateFolder,
         openEditFolder,

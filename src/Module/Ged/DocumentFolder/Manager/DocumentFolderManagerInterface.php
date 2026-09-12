@@ -13,7 +13,19 @@ interface DocumentFolderManagerInterface
 
     public function update(DocumentFolderInterface $folder, DocumentFolderInputInterface $input): void;
 
-    public function delete(DocumentFolderInterface $folder): void;
+    /**
+     * Moves a folder to the trash.
+     *
+     * With `$cascade`, everything under it goes too and a restore puts the
+     * branch back as it was. Without, the contents surface at the root.
+     */
+    public function delete(DocumentFolderInterface $folder, bool $cascade = true): void;
+
+    /** Brings a folder back, with whatever fell alongside it. */
+    public function restore(DocumentFolderInterface $folder): void;
+
+    /** Deletes the folder for good, releasing its contents to the root. */
+    public function forceDelete(DocumentFolderInterface $folder): void;
 
     /**
      * Refiles a folder under a new parent, or at the root with null.
