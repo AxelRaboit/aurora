@@ -49,6 +49,10 @@ Le document prend une référence, et le fichier stocké reçoit un suffixe uniq
 
 ![Le document dans la bibliothèque](../../images/03-mediatheque/deposer-un-document-05-le-document-dans-la-bibliotheque.png)
 
+## Regarder un document
+
+Un clic sur l'aperçu d'une ligne ouvre la fiche du document : ses informations, et le fichier lui-même. Une image s'affiche, un PDF se feuillette, **une vidéo se lit sur place**, un son aussi. Le reste montre son nom et son type.
+
 ## Les trois statuts
 
 Brouillon, publié, archivé. Un document en brouillon reste utilisable dans l'administration mais n'est pas exposé côté visiteur.

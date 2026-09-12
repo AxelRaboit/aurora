@@ -52,6 +52,15 @@ final readonly class LocalStorageAdapter implements StorageAdapterInterface, Loc
     }
 
     /**
+     * Always. A directory that does not exist yet is created on write, so
+     * there is no state in which this backend cannot be asked.
+     */
+    public function isReady(): bool
+    {
+        return true;
+    }
+
+    /**
      * Here the key *is* the file, which is what lets
      * {@see LocalWorkspace} hand image and PDF
      * tooling the stored path itself rather than a temporary copy of it.

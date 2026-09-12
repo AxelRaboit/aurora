@@ -72,6 +72,18 @@ final readonly class R2StorageAdapter implements StorageAdapterInterface
         return StorageDiskEnum::R2;
     }
 
+    /**
+     * Whether an administrator has finished filling the four fields.
+     *
+     * Read off the configuration rather than by reaching for the bucket: a
+     * caller sweeping the adapters for a file must not pay a request, or a
+     * timeout, to learn that this one was never set up.
+     */
+    public function isReady(): bool
+    {
+        return $this->configurationProvider->current()->isComplete();
+    }
+
     public function writeFromLocalFile(string $key, string $sourceAbsolutePath): void
     {
         $handle = @fopen($sourceAbsolutePath, 'r');

@@ -7,6 +7,55 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ## [0.9.140] - 2026-09-12
 
+### Corrigé
+
+#### Un document déplacé vers le stockage distant devenait introuvable
+Le résolveur regardait le disque local, puis **le disque actif**, et s'arrêtait
+là. Quand les nouveaux fichiers vont sur le serveur et qu'un document a été
+déplacé à la main vers le compartiment, le disque actif est justement le local :
+le fichier n'était donc jamais cherché ailleurs, et toutes ses adresses
+répondaient 404.
+
+C'est pourtant la combinaison que le produit annonce comme normale, le
+commentaire de `isRelocationAvailable` le dit mot pour mot. Constaté en
+production le 12/09/2026 : quatre films et leurs quatre images d'attente,
+déplacés volontairement, disparus d'une page publique. Les octets n'ont jamais
+été en danger, rien n'allait les chercher.
+
+Le résolveur balaie maintenant tous les backends configurés. Le disque local
+reste interrogé en premier, par un appel système et non par une requête
+facturée, donc un fichier présent sur le serveur ne coûte toujours rien.
+
+Les adaptateurs répondent pour cela à une nouvelle question, `isReady()` : un
+backend jamais configuré est sauté au lieu d'être appelé, parce qu'une
+exception est la façon dont un backend *configuré* signale une vraie panne, et
+les deux ne doivent pas se ressembler.
+
+### Ajouté
+
+#### Savoir où vit un document, depuis la liste et depuis sa fiche
+Une colonne « Stockage » dans la vue liste de la médiathèque, avec la même
+pastille que la vue cartes, et la même information dans la modale de détail.
+Les deux disparaissent tant qu'un seul stockage existe.
+
+#### Un lecteur pour les vidéos et les sons dans la modale de détail
+Une vidéo tombait dans la branche générique et s'affichait comme une icône de
+fichier : le seul type dont l'intérêt est d'être lu, et l'écran n'offrait pas
+de le lire. Le son avait le même sort.
+
+Contrairement à la page publique, la modale précharge les métadonnées :
+quelqu'un qui ouvre un document a demandé ce document, et la durée fait partie
+de ce qu'il vient vérifier.
+
+### Dans aurora-client
+Rien à répercuter à la main. **Un document déplacé vers le stockage distant
+avant cette version redevient accessible sans rien faire** : ses octets étaient
+là, seule la recherche s'arrêtait trop tôt.
+
+---
+
+## [0.9.140] - 2026-09-12
+
 ### Ajouté
 
 #### Supprimer un document de la GED ne détruit plus son fichier

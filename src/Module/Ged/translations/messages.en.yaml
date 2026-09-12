@@ -98,6 +98,7 @@ backend:
         relocate_description: "Moves the file, its variants and its history. Its address does not change."
         relocate_pending: A move is already under way for this document.
       storage:
+        column: Storage
         local: Server
         remote: Remote
         moving: Moving

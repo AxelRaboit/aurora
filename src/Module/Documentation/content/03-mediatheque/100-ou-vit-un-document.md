@@ -7,7 +7,7 @@ Cette page ne concerne que les installations où un second stockage a été conf
 
 ## La pastille
 
-Quand un second stockage existe, chaque document porte une pastille disant où vivent ses octets : **Serveur** ou **Distant**. Elle apparaît dans la liste, sur les cartes, et sur la page du document.
+Quand un second stockage existe, chaque document porte une pastille disant où vivent ses octets : **Serveur** ou **Distant**. Elle apparaît dans une colonne de la vue liste, sur les cartes, dans la fiche qui s'ouvre au clic, et sur la page du document.
 
 Le filtre d'emplacement, dans la barre de filtres, ne montre que les documents d'un côté. Utile pour voir ce qui reste à déplacer, ou pour vérifier qu'un déplacement en lot est bien allé au bout.
 

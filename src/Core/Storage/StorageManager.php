@@ -58,6 +58,20 @@ final class StorageManager
         return $this->activeDiskProvider->activeDisk();
     }
 
+    /**
+     * Every registered backend, in no particular order.
+     *
+     * For the callers that have to ask all of them rather than one: a file
+     * written some time ago is on whichever disk held it then, and the path
+     * alone does not say which.
+     *
+     * @return list<StorageAdapterInterface>
+     */
+    public function all(): array
+    {
+        return array_values($this->index());
+    }
+
     public function forDisk(StorageDiskEnum $disk): StorageAdapterInterface
     {
         $adapter = $this->index()[$disk->value] ?? null;

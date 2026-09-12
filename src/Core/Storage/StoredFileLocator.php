@@ -16,9 +16,19 @@ use Aurora\Core\Storage\Workspace\LocalPathAware;
  * a query per image on every page, and the answer is cheaper than that: ask
  * the local disk, whose check is a syscall.
  *
- * So local first, then the active backend. A file present locally is served
- * locally, which is both correct and free. A file that is not is on the other
- * side, and no remote request was spent finding that out.
+ * So local first, then whatever else is configured. A file present locally is
+ * served locally, which is both correct and free, and that is the overwhelming
+ * majority of requests. A file that is not is on another backend, and only
+ * then is a remote question asked.
+ *
+ * **It used to stop at the active disk, and that was a data-loss-shaped bug.**
+ * An administrator is explicitly allowed to configure a bucket, leave new
+ * files on the server, and move a document across by hand - the relocation
+ * button exists for exactly that. The moved document then lived on a backend
+ * the locator would not consult, because the active disk was still the local
+ * one, and every one of its URLs answered 404. Seen in production on
+ * 12/09/2026: four films and their posters, moved on purpose, gone from a
+ * public page. The bytes were never at risk; nothing went looking for them.
  *
  * The one moment a path exists on both sides is while a document is being
  * moved. Local wins then, and serves the same bytes the other side holds, so
@@ -44,12 +54,26 @@ final readonly class StoredFileLocator
             return $local;
         }
 
-        $active = $this->storageManager->active();
+        foreach ($this->storageManager->all() as $adapter) {
+            // Already asked, and it answered no.
+            if ($adapter === $local) {
+                continue;
+            }
 
-        if ($active === $local) {
-            return null;
+            // Skipped rather than asked: a backend nobody configured has no
+            // address to ask and throws when called. Catching that would be
+            // wrong, not merely ugly - an exception is how a backend that *is*
+            // configured reports a real failure, and the two must not read the
+            // same.
+            if (!$adapter->isReady()) {
+                continue;
+            }
+
+            if ($adapter->exists($key)) {
+                return $adapter;
+            }
         }
 
-        return $active->exists($key) ? $active : null;
+        return null;
     }
 }
