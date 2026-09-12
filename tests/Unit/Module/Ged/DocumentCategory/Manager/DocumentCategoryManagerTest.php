@@ -153,7 +153,7 @@ final class DocumentCategoryManagerTest extends TestCase
         $this->manager->update($category, $this->makeInput('Y'));
     }
 
-    public function testDeleteTrashesTheCategoryAndParksItsSlug(): void
+    public function testDeleteTrashesTheCategoryAndLeavesItsSlugAlone(): void
     {
         $category = new DocumentCategory();
         $category->setName('Factures')->setSlug('factures');
@@ -164,11 +164,12 @@ final class DocumentCategoryManagerTest extends TestCase
         $this->manager->delete($category);
 
         self::assertTrue($category->isTrashed());
-        self::assertStringStartsWith('trashed-', $category->getSlug());
-        self::assertStringEndsWith('factures', $category->getSlug());
+        // Readable in the trash, and free for anybody else: the unique index
+        // only looks at the rows that are still in the list.
+        self::assertSame('factures', $category->getSlug());
     }
 
-    public function testRestoreGivesTheCategoryAFreeSlugAgain(): void
+    public function testRestoreKeepsTheSlugWhenNobodyTookIt(): void
     {
         $category = new DocumentCategory();
         $category->setName('Factures')->setSlug('factures');

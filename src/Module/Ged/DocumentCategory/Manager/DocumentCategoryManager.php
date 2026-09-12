@@ -17,9 +17,6 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 #[AsAlias(DocumentCategoryManagerInterface::class)]
 class DocumentCategoryManager implements DocumentCategoryManagerInterface
 {
-    /** Prefix that parks a trashed category's slug out of the unique index. */
-    private const string TRASHED_SLUG_PREFIX = 'trashed-';
-
     public function __construct(
         protected readonly EntityManagerInterface $entityManager,
         protected readonly DocumentCategoryRepository $categoryRepository,
@@ -53,10 +50,9 @@ class DocumentCategoryManager implements DocumentCategoryManagerInterface
      * classification back: the `SET NULL` that used to scatter them only fires
      * on a real delete, and it was the part nobody could undo.
      *
-     * The slug is parked out of the way at the same time. It is unique across
-     * the table, and a trashed category holding "factures" would make creating
-     * a new one under that name fail on a constraint the screen cannot explain,
-     * over a row nothing displays.
+     * The slug is left exactly as it was. It has to survive the stay untouched
+     * for the trash to show a readable name, and it can: the unique index is
+     * partial, so a category waiting here holds no name hostage.
      */
     public function delete(DocumentCategoryInterface $category): void
     {
@@ -65,7 +61,6 @@ class DocumentCategoryManager implements DocumentCategoryManagerInterface
         }
 
         $category->setDeletedAt(new DateTimeImmutable());
-        $category->setSlug(self::TRASHED_SLUG_PREFIX.$category->getId().'-'.$category->getSlug());
 
         $this->entityManager->flush();
 
@@ -73,11 +68,12 @@ class DocumentCategoryManager implements DocumentCategoryManagerInterface
     }
 
     /**
-     * Brings a category back, under a slug that is free again.
+     * Brings a category back, keeping its slug when it is still free.
      *
-     * Recomputed from the name rather than restored from the parked value: the
-     * original may well have been taken by a category created in the meantime,
-     * and coming back as `factures-2` beats failing on a constraint.
+     * Only recomputed when a category created in the meantime has taken the
+     * name: coming back as `factures-2` beats failing on a constraint, but
+     * changing an address nothing was competing for would break links for no
+     * reason.
      */
     public function restore(DocumentCategoryInterface $category): void
     {
@@ -86,7 +82,10 @@ class DocumentCategoryManager implements DocumentCategoryManagerInterface
         }
 
         $category->setDeletedAt(null);
-        $category->setSlug($this->uniqueSlug($category->getName(), $category->getId()));
+
+        if ($this->slugExists($category->getSlug(), $category->getId())) {
+            $category->setSlug($this->uniqueSlug($category->getName(), $category->getId()));
+        }
 
         $this->entityManager->flush();
 
@@ -183,6 +182,7 @@ class DocumentCategoryManager implements DocumentCategoryManagerInterface
         $qb = $this->categoryRepository->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->where('c.slug = :slug')
+            ->andWhere('c.deletedAt IS NULL')
             ->setParameter('slug', $slug);
 
         if (null !== $excludeId) {

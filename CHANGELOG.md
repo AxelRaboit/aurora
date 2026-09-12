@@ -20,12 +20,13 @@ Catégories dès qu'il y a quelque chose dedans, et une catégorie en corbeille
 n'offre plus que deux gestes : la restaurer, ou la supprimer définitivement,
 avec sa propre confirmation.
 
-Un détail invisible mais nécessaire : le slug d'une catégorie est unique dans
-toute la table. Une catégorie en corbeille est donc garée sous un slug préfixé,
-faute de quoi recréer une catégorie du même nom échouerait sur une contrainte
-que l'écran ne saurait pas expliquer, à cause d'une ligne que rien n'affiche. À
-la restauration, le slug est recalculé depuis le nom : si un homonyme est né
-entre-temps, la catégorie revient en « factures-2 » plutôt que d'échouer.
+Un détail invisible mais nécessaire : le slug d'une catégorie est unique, et
+une catégorie en corbeille ne doit pas garder un nom en otage. L'unicité est
+donc devenue partielle, côté base : un nom est pris seulement par une catégorie
+qui est réellement dans la liste. Une catégorie en attente garde son slug, tel
+quel et lisible, et deux « factures » peuvent cohabiter dans la corbeille. À la
+restauration, le slug n'est recalculé que si quelqu'un l'a pris entre-temps,
+auquel cas la catégorie revient en « factures-2 » au lieu d'échouer.
 
 ---
 
