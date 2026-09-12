@@ -44,6 +44,7 @@ shared:
   chart:
     share: "{count} de {total} ({percent} %)"
   common:
+    help: Ayuda
     list_view: Vista de lista
     grid_view: Vista de tarjetas
     search: Buscar
@@ -141,6 +142,29 @@ shared:
     cropped: Imagen recortada
 
 backend:
+  help:
+    storage:
+      delivery_mode:
+        title: Cómo se sirven los archivos
+        intro: "Esta opción no cambia dónde se guardan los archivos, solo el camino que recorren hasta el visitante."
+        address_title: La dirección nunca cambia
+        address_body: "Sea cual sea el modo, un documento conserva la misma dirección. Un enlace pegado en un artículo, un correo u otro sitio sigue funcionando si cambia de opinión más adelante."
+        proxy_title: Por la aplicación
+        proxy_body: "Los bytes pasan por su servidor antes de llegar al visitante. Es lo más sencillo y sus reglas de acceso siguen aplicándose: un documento en borrador permanece invisible. A cambio, su servidor trabaja en cada descarga."
+        presigned_title: Por enlace firmado temporal
+        presigned_body: "La aplicación crea un enlace válido unos minutos y envía allí al visitante. Los bytes van directamente del almacenamiento a su navegador, sin pasar por su servidor, y los archivos siguen siendo privados. El enlace caduca, así que no puede compartirse de forma duradera."
+        public_url_title: Por el dominio público
+        public_url_body: "Los archivos los sirve el dominio que haya conectado al contenedor, con caché cerca del visitante. Es lo más rápido. A cambio, cualquiera que conozca la dirección de un archivo puede leerlo, incluido un documento que creía reservado."
+        choosing_title: Cuál elegir
+        choosing_body: "Quédese en «por la aplicación» mientras nada le moleste. Pase al enlace firmado si su servidor sufre con archivos grandes. Tome el dominio público solo para archivos que cualquiera pueda leer sin problema."
+      connection:
+        title: La conexión al almacenamiento remoto
+        what_is_tested_title: Qué comprueba la prueba
+        what_is_tested_body: "Escribe un archivo testigo real en el contenedor, lo vuelve a leer, comprueba que aparece en la lista y lo borra. Cuatro campos rellenos no prueban nada: solo una escritura real demuestra que el token puede escribir."
+        what_is_stored_title: Qué se guarda
+        what_is_stored_body: "La dirección de la cuenta, el contenedor y las dos claves, estas últimas cifradas. Nunca se le vuelven a mostrar: los campos solo indican que existe un valor."
+        disconnecting_title: Desconectar
+        disconnecting_body: "El botón «Desconectar el almacenamiento» borra ambas claves, olvida la dirección y el contenedor, anula la verificación y devuelve los archivos nuevos al disco del servidor. Los documentos ya enviados al almacenamiento remoto permanecen allí: recupérelos antes o quedarán inaccesibles."
   documentation:
     enlarge: Ampliar la captura
     rubrics: Secciones

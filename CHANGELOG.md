@@ -5,6 +5,76 @@ projets clients doivent répercuter après avoir lancé `make aurora-update`.
 
 ---
 
+## [0.9.138] - 2026-09-12
+
+### Ajouté
+
+#### Une aide dépliable à côté d'un libellé, réutilisable partout
+Un texte sous un champ a une ligne pour lui, une page de documentation demande
+d'aller ailleurs et de revenir. Entre les deux il manquait trois paragraphes
+qu'on ouvre quand on en a besoin.
+
+`AppHelp` est branché sur `AppFieldLabel`, le libellé que **onze contrôles
+partagent déjà** : n'importe quel champ de l'application en obtient un en
+ajoutant `help="mon.sujet"`, sans avoir à se demander quels composants le
+supportent. Les onze qui n'en passent pas s'affichent exactement comme avant.
+
+Quatre types, chacun avec son icône et sa couleur : champ, notion, sécurité,
+facturation. Un lecteur qui a déjà vu le bouclier sait de quoi il s'agit avant
+de lire.
+
+Le contenu vit dans les fichiers de traduction, pas dans les composants : un
+paragraphe écrit dans un composant n'existerait qu'en français. Deux sujets
+pour commencer, sur les réglages du stockage.
+
+#### Un bandeau d'état en haut des réglages du stockage
+Il dit si le stockage distant est branché, sur quel compartiment, quand il a
+été vérifié et où partent les nouveaux fichiers. Quatre champs remplis et une
+date perdue à côté d'un bouton ne répondaient pas à la question qui amène sur
+cet écran.
+
+#### Un bouton pour débrancher le stockage distant
+C'est le seul geste qui efface une clé : le formulaire n'envoie un champ de clé
+que s'il contient quelque chose, donc un champ vide y veut dire « garde ce qui
+est enregistré » et rien n'a jamais voulu dire « oublie-la ». Une configuration
+posée une fois pouvait être pointée ailleurs, jamais retirée.
+
+Refusé tant qu'un document vit encore sur le stockage distant, en disant
+combien il en reste : les identifiants sont le seul chemin vers ces fichiers.
+
+Refusé aussi quand la configuration vient de l'environnement du serveur, qui
+prime sur la table des réglages. Sans cette vérification le bouton effaçait
+bien les lignes, le formulaire se remplissait à nouveau depuis l'environnement,
+et le geste passait pour sans effet. Le bandeau annonce désormais l'origine de
+la configuration, et le bouton n'est pas proposé dans ce cas.
+
+### Dans aurora-client
+Rien à répercuter à la main.
+
+---
+
+## [0.9.137] - 2026-09-12
+
+### Corrigé
+
+#### Un refus des réglages du stockage vidait les deux champs de clé
+Le refus renvoyait l'état courant, l'écran s'y rafraîchissait, et les deux
+champs de clé étant en écriture seule, ils repartaient vides. Se tromper sur
+l'un obligeait donc à recoller les deux, à chaque essai.
+
+Un refus ne porte plus d'état quand rien n'a été écrit, et l'écran ne se
+rafraîchit que lorsqu'il en reçoit un. Le refus sur la bascule non testée, lui,
+en porte toujours un : à ce moment-là les identifiants ont bien été enregistrés.
+
+#### Une vérification qui ne pouvait pas se déclencher
+Le message signalant un compartiment collé au bout de l'adresse du compte
+n'était atteignable par aucun appelant : tous normalisent l'adresse avant de
+poser la question, donc le défaut est réparé avant d'être cherché. Le contrôle
+et ses trois traductions sont retirés, et la raison est écrite à côté de ceux
+qui restent.
+
+---
+
 ## [0.9.136] - 2026-09-12
 
 ### Corrigé

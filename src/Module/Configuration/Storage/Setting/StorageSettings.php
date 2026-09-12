@@ -170,6 +170,9 @@ final readonly class StorageSettings
             'hasAccessKeyId' => '' !== $configuration->accessKeyId,
             'hasSecretAccessKey' => '' !== $configuration->secretAccessKey,
             'isComplete' => $configuration->isComplete(),
+            // Where the answer above comes from. Without it the screen cannot
+            // explain why clearing a field changes nothing.
+            'fromEnvironment' => $this->isConfiguredByEnvironment(),
             'verifiedAt' => $this->verifiedAt(),
         ];
     }
@@ -220,6 +223,52 @@ final readonly class StorageSettings
         }
 
         $this->settingRepository->saveMany($entries);
+    }
+
+    /**
+     * Whether the server's environment supplies any part of the R2
+     * configuration.
+     *
+     * It matters because the environment wins over the settings table, field
+     * by field. An administrator who clears the screen while a deployment
+     * exports `R2_ENDPOINT` would see the form fill itself back in and
+     * conclude nothing happened - when in fact the settings really were
+     * cleared and simply have no say. The screen has to name that, and
+     * disconnecting has to refuse rather than pretend.
+     */
+    public function isConfiguredByEnvironment(): bool
+    {
+        $environment = $this->environment->current();
+
+        return '' !== $environment->endpoint
+            || '' !== $environment->bucket
+            || '' !== $environment->accessKeyId
+            || '' !== $environment->secretAccessKey;
+    }
+
+    /**
+     * Forgets the remote backend entirely and brings new files back home.
+     *
+     * Every field, including the two credentials, which is the one thing the
+     * save form cannot do: it only sends a key somebody typed, so an empty
+     * field there means "keep what is stored" and nothing ever means "forget
+     * it". Without this, a configuration entered once could be pointed
+     * elsewhere but never removed.
+     *
+     * The verification goes with it. Keeping a green mark for credentials that
+     * no longer exist would offer a move to a backend nothing can reach.
+     */
+    public function disconnectR2(): void
+    {
+        $this->settingRepository->saveMany([
+            [StorageSettingEnum::ActiveDisk->value, StorageDiskEnum::Local->value],
+            [StorageSettingEnum::R2Endpoint->value, null],
+            [StorageSettingEnum::R2Bucket->value, null],
+            [StorageSettingEnum::R2AccessKeyId->value, null],
+            [StorageSettingEnum::R2SecretAccessKey->value, null],
+            [StorageSettingEnum::R2PublicBaseUrl->value, null],
+            [StorageSettingEnum::R2VerifiedAt->value, null],
+        ]);
     }
 
     /** Records that the backend answered, so the toggle may be turned on. */

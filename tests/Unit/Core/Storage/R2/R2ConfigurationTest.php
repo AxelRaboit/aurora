@@ -85,11 +85,16 @@ final class R2ConfigurationTest extends TestCase
         self::assertContains('secret_key_length', $configuration->shapeProblems());
     }
 
-    public function testAnEndpointCarryingTheBucketIsNamed(): void
+    /**
+     * The bucket pasted onto the endpoint is repaired, not reported: every
+     * caller normalises before asking, so raising a problem for it would be a
+     * branch nothing could reach.
+     */
+    public function testTheBucketOnTheEndpointIsRepairedRatherThanReported(): void
     {
         $configuration = $this->make(endpoint: 'https://account.r2.cloudflarestorage.com/my-bucket', bucket: 'my-bucket');
 
-        self::assertContains('endpoint_contains_bucket', $configuration->shapeProblems());
+        self::assertSame([], $configuration->withNormalisedEndpoint()->shapeProblems());
     }
 
     public function testAnEndpointThatIsNotHttpsIsNamed(): void
